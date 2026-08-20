@@ -1,0 +1,26 @@
+{
+    "control": [
+        { "VTOY_DEFAULT_MENU_MODE": "0" },
+        { "VTOY_FILTERS_ALL": "1" }
+    ],
+    "theme": {
+        "file": "/ventoy/theme/theme.txt",
+        "gfxmode": "1920x1080",
+        "display_mode": "GUI",
+        "serial_param": "--unit=0 --speed=115200"
+    },
+    "menu_alias": [
+        {
+            "image": "/libre_core_autoloader.iso",
+            "alias": "Libre_Core AutoLoader (Live Environment)"
+        }
+    ],
+    "auto_install": [
+        {
+            "image": "/libre_core_autoloader.iso",
+            "template": [
+                "/ventoy/script/arch_autoinstall.sh"
+            ]
+        }
+    ]
+}

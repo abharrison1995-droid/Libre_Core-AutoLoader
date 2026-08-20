@@ -1,0 +1,14 @@
+ _      _ _                 _____               
+| |    (_) |               /  __ \              
+| |     _| |__  _ __ ___   | /  \/___  _ __ ___ 
+| |    | | '_ \| '__/ _ \  | |   / _ \| '__/ _ \
+| |____| | |_) | | |  __/  | \__/\ (_) | | |  __/
+\_____/|_|_.__/|_|  \___|   \____/\___/|_|  \___|
+                                                
+           A u t o L o a d e r
+
+Welcome to the Libre_Core AutoLoader Live USB Environment.
+Your system will automatically launch the flashing utility.
+If you exit the utility, you will be dropped to a root shell.
+
+Warning: Firmware modification carries risks. Proceed with caution.

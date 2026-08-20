@@ -1,0 +1,93 @@
+﻿{
+  "x230": {
+    "name": "ThinkPad X230",
+    "generation": "Ivy Bridge",
+    "machine_type": "2325B11",
+    "bios_vendor": "LENOVO",
+    "bios_version": "G2ET64WW (2.60)",
+    "bios_date": "04/18/2013",
+    "chips": "Dual (4MB Top + 8MB Bottom)",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=2325B11,version=ThinkPad X230,serial=PC0X230TEST,sku=LENOVO_MT_2325",
+      "-smbios", "type=0,vendor=LENOVO,version=G2ET64WW (2.60),date=04/18/2013"
+    ]
+  },
+  "x230_high_bios": {
+    "name": "ThinkPad X230 (Late BIOS 2.77 - Needs Downgrade)",
+    "generation": "Ivy Bridge",
+    "machine_type": "2325B11",
+    "bios_vendor": "LENOVO",
+    "bios_version": "G2ET77WW (2.77)",
+    "bios_date": "09/10/2019",
+    "chips": "Dual (4MB Top + 8MB Bottom)",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=2325B11,version=ThinkPad X230,serial=PC0X230TEST2,sku=LENOVO_MT_2325",
+      "-smbios", "type=0,vendor=LENOVO,version=G2ET77WW (2.77),date=09/10/2019"
+    ]
+  },
+  "t430": {
+    "name": "ThinkPad T430",
+    "generation": "Ivy Bridge",
+    "machine_type": "2342CTO",
+    "bios_vendor": "LENOVO",
+    "bios_version": "G1ET64WW (2.64)",
+    "bios_date": "07/11/2013",
+    "chips": "Dual (4MB Top + 8MB Bottom)",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=2342CTO,version=ThinkPad T430,serial=PC0T430TEST,sku=LENOVO_MT_2342",
+      "-smbios", "type=0,vendor=LENOVO,version=G1ET64WW (2.64),date=07/11/2013"
+    ]
+  },
+  "t440p": {
+    "name": "ThinkPad T440p",
+    "generation": "Haswell",
+    "machine_type": "20AN001KUS",
+    "bios_vendor": "LENOVO",
+    "bios_version": "GLET82WW (2.36)",
+    "bios_date": "03/25/2015",
+    "chips": "Dual (4MB Top + 8MB Bottom)",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=20AN001KUS,version=ThinkPad T440p,serial=PC0T440PTEST,sku=LENOVO_MT_20AN",
+      "-smbios", "type=0,vendor=LENOVO,version=GLET82WW (2.36),date=03/25/2015"
+    ]
+  },
+  "t480": {
+    "name": "ThinkPad T480 (Boot Guard / Experimental)",
+    "generation": "Kaby Lake",
+    "machine_type": "20L5CTO1WW",
+    "bios_vendor": "LENOVO",
+    "bios_version": "N24ET63W (1.38)",
+    "bios_date": "08/12/2021",
+    "chips": "16MB System + 1MB Thunderbolt",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=20L5CTO1WW,version=ThinkPad T480,serial=PC0T480TEST,sku=LENOVO_MT_20L5",
+      "-smbios", "type=0,vendor=LENOVO,version=N24ET63W (1.38),date=08/12/2021"
+    ]
+  },
+  "x200": {
+    "name": "ThinkPad X200 (Core 2 Duo - 100% Free Libreboot)",
+    "generation": "Core 2 Duo",
+    "machine_type": "74542GU",
+    "bios_vendor": "LENOVO",
+    "bios_version": "6DET44WW (3.22)",
+    "bios_date": "09/15/2011",
+    "chips": "Single 4MB / 8MB SOIC-8",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=74542GU,version=ThinkPad X200,serial=PC0X200TEST,sku=LENOVO_MT_7454",
+      "-smbios", "type=0,vendor=LENOVO,version=6DET44WW (3.22),date=09/15/2011"
+    ]
+  },
+  "t500": {
+    "name": "ThinkPad T500 (Core 2 Duo - ME Removable)",
+    "generation": "Core 2 Duo",
+    "machine_type": "2055CTO",
+    "bios_vendor": "LENOVO",
+    "bios_version": "6FET92WW (3.22)",
+    "bios_date": "09/15/2011",
+    "chips": "Single 4MB / 8MB SOIC-8",
+    "smbios_args": [
+      "-smbios", "type=1,manufacturer=LENOVO,product=2055CTO,version=ThinkPad T500,serial=PC0T500TEST,sku=LENOVO_MT_2055",
+      "-smbios", "type=0,vendor=LENOVO,version=6FET92WW (3.22),date=09/15/2011"
+    ]
+  }
+}
