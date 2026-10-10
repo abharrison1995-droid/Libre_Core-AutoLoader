@@ -18,8 +18,12 @@ flowchart TD
   Orch --> FakeBuild[Simulated build loop]
   Screens --> FakeFlash[Canned flash and verify success]
   Builder[ROM builder classes] -. not connected .-> Orch
+  Reversion --> IVprep[IVPrepManager / WinFlash]
+  Reversion --> BIOSDB[BIOS target version database]
+  Onevy[OnevyRainManager] -. separate pathway .-> Runner
   USB[Archiso build script/profile] --> Start[Live startup script]
   Start --> App
+  VM[test_vm QEMU harness] -. practice only .-> Screens
 ```
 
 The CLI's `flash` path bypasses the orchestrator, while TUI build and flash completion are simulated. The current API is therefore not one operational, shared workflow backend. Phase 01 removes false success and makes unavailable operations fail closed; the compatibility and authorized workflow controller belongs to Phase 02.
@@ -33,11 +37,14 @@ The CLI's `flash` path bypasses the orchestrator, while TUI build and flash comp
 | Detection and compatibility data | `autoloader/detection/*`, `autoloader/database/*` |
 | ROM preparation | `autoloader/rom_builder/*` |
 | Flash, verification, backup | `autoloader/flasher/*` |
-| IVprep/reversion | `autoloader/reversion/*` |
+| 1vyrain unlock | `autoloader/flasher/onevy.py` (`OnevyRainManager`) |
+| BIOS targets and downgrade | `autoloader/database/bios_versions.py`, `autoloader/reversion/{chains,ivprep,winflash}.py` |
+| Backup restore | `autoloader/flasher/backup.py` (`restore_from_backup`, physical write surface) |
 | UI | `autoloader/ui/screens/*`, `autoloader/ui/widgets/*` |
 | Live USB | `usb_builder/build_usb.sh`, `usb_builder/archiso_profile/*` |
+| VM/practice harness | `test_vm/launch_vm.py`, `test_vm/launch_vm.bat`, `test_vm/mock_chips/*` |
 | Tests | `tests/*` |
 
 ## Target direction
 
-Phases 02–03 should introduce one model-specific, validated operation plan and backend interface. The CLI and Textual screens should request operations through that interface. Backends must return structured outcomes; UI progress and navigation must reflect those outcomes. A simulation backend must be unable to invoke physical writes. Real-device hardware validation remains a separate acceptance layer.
+Phase 01 quarantines physical CLI writes and removes fake completion paths. Phases 02–03 should introduce one model-specific, validated operation plan and backend interface. The CLI and Textual screens should request operations through that interface. Backends must return structured outcomes; UI progress and navigation must reflect those outcomes. A simulation backend must be unable to invoke physical writes. Real-device hardware validation remains a separate acceptance layer.
