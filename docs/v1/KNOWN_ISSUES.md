@@ -42,9 +42,9 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 
 ## Phase 05 implementation and remaining limitations
 
-- Phase 05 now provides a standalone T430 handoff state machine, pinned source-instruction descriptors, strict BIOS token checks, human preflight/media evidence, UTC approvals, and checksummed durable checkpoints. It has not been reviewed by SOL yet.
+- Phase 05 now provides a standalone T430 handoff state machine, pinned source-instruction descriptors, strict BIOS token checks, human preflight/media evidence, UTC approvals, and checksummed durable checkpoints. The 1vyrain preflight binds Secure Boot disabled and intended direct onboard USB use (no dock/ultrabase/hub) to the current capture; media evidence binds DD mode and the operator-reported Rev 5 MD5. It has not been reviewed by SOL yet.
 - A valid IVprep or 1vyrain return consumes the pending checkpoint and records the reported result/capture; consumed authorizations cannot resume. A fresh same-device detection after the recorded approval is required before recording return evidence. The evidence is human-reported and not hardware-attested.
-- The 1vyrain image SHA-256 and USB/media identity are user-reported identifiers only. Upstream image authenticity is not verified; neither 1vyrain nor IVprep binaries are bundled. IVprep/WinFlash/reversion download and execution APIs are fail-closed.
+- The pinned 1vyrain README publishes the Rev 5 image at its Google Drive URL with MD5 `dd30313a8665e870360920b00cec55c4` only. A matching user-reported MD5 is a weak legacy checksum comparison, not authentication; the local SHA-256 and USB/media identity are user-reported fingerprints only. No 1vyrain image or IVprep binary is bundled. IVprep/WinFlash/reversion download and execution APIs are fail-closed. Descriptors carry the pinned IVprep settings/power/reboot warnings and 1vyrain boot/media instructions.
 - The handoff service is not wired into CLI/TUI. No physical T430 detection, BIOS downgrade, 1vyrain run, firmware/media write, boot test or post-install hardware validation occurred. T430 remains **HARDWARE PENDING**; Phase 05 software status is **PENDING SOL REVIEW**.
 
 ## Hardware state
