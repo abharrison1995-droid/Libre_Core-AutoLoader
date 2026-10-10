@@ -1,10 +1,12 @@
 """Profile-specific workflow status and controller-derived actions."""
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
+from textual.events import ScreenResume
 from textual.widgets import Button, Footer, Header, Static
 
 from autoloader.application_controller import ApplicationAction, ApplicationController
 from autoloader.ui.screens.controller_screen import ControllerScreen
+from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 
 
 class PathwaySelectScreen(ControllerScreen):
@@ -26,12 +28,14 @@ class PathwaySelectScreen(ControllerScreen):
                 yield Button("Import Candidate Evidence", id="action-import")
                 yield Button("Resume / Load Checkpoint", id="action-resume")
                 yield Button("Inspect Operation Checkpoint", id="action-inspect")
+                yield Button("Submit T430 Handoff Stage", id="action-t430-stage")
                 yield Button("View Evidence", id="action-evidence")
                 yield Button("1vyrain Handoff Guidance", id="action-handoff")
             with Horizontal(classes="button-container"):
                 yield Button("Prepare Workflow", id="action-prepare", disabled=True)
-                yield Button("Backup", id="action-backup", disabled=True)
-                yield Button("Build", id="action-build", disabled=True)
+                yield Button("Capture / Reopen Verified Backup", id="action-accept-backup", disabled=True)
+                yield Button("Build Pinned Artifact", id="action-build", disabled=True)
+                yield Button("Accept Completed Artifact", id="action-accept-artifact", disabled=True)
             with Horizontal(classes="button-container"):
                 yield Button("Flash", id="action-flash", disabled=True)
                 yield Button("Restore", id="action-restore", disabled=True)
@@ -43,6 +47,10 @@ class PathwaySelectScreen(ControllerScreen):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.refresh_status()
+
+    def on_screen_resume(self, event: ScreenResume) -> None:
+        """Refresh controller-derived stage/actions after a child action returns."""
         self.refresh_status()
 
     def refresh_status(self) -> None:
@@ -71,11 +79,13 @@ class PathwaySelectScreen(ControllerScreen):
             "action-import": ApplicationAction.IMPORT_EVIDENCE,
             "action-resume": ApplicationAction.RESUME,
             "action-inspect": ApplicationAction.INSPECT_CHECKPOINT,
+            "action-t430-stage": ApplicationAction.T430_HANDOFF_STEP,
             "action-evidence": ApplicationAction.VIEW_EVIDENCE,
             "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
             "action-prepare": ApplicationAction.PREPARE,
-            "action-backup": ApplicationAction.BACKUP,
+            "action-accept-backup": ApplicationAction.ACCEPT_BACKUP,
             "action-build": ApplicationAction.BUILD,
+            "action-accept-artifact": ApplicationAction.ACCEPT_ARTIFACT,
             "action-flash": ApplicationAction.FLASH,
             "action-restore": ApplicationAction.RESTORE,
             "action-readback": ApplicationAction.READBACK,
@@ -100,34 +110,50 @@ class PathwaySelectScreen(ControllerScreen):
         if button_id == "action-resume":
             status = self.controller_app.controller.profile_status()
             if ApplicationAction.RESUME in status.allowed_next_actions:
-                self.app.push_screen("evidence_import")
+                if status.profile_id == "t430-1vyrain":
+                    self.app.push_screen("evidence_import")
+                else:
+                    self.app.push_screen(XWorkflowActionScreen(ApplicationAction.RESUME))
             return
         if button_id == "action-inspect":
             status = self.controller_app.controller.profile_status()
-            if ApplicationAction.INSPECT_CHECKPOINT not in status.allowed_next_actions or not status.checkpoint_ref:
+            if ApplicationAction.INSPECT_CHECKPOINT not in status.allowed_next_actions or not status.operation_journal_ref:
                 return
             result = self.controller_app.controller.request_action(
                 ApplicationAction.INSPECT_CHECKPOINT,
                 profile_id=status.profile_id,
-                checkpoint_path=status.checkpoint_ref,
+                checkpoint_path=status.operation_journal_ref,
             )
             self.app.notify(f"{result.code}: {result.message}", title="Checkpoint", timeout=12)
+            return
+        if button_id == "action-t430-stage":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.T430_HANDOFF_STEP in status.allowed_next_actions:
+                self.app.push_screen("t430_handoff")
+            return
+        if button_id in {"action-prepare", "action-accept-backup", "action-build", "action-accept-artifact"}:
+            action = {
+                "action-prepare": ApplicationAction.PREPARE,
+                "action-accept-backup": ApplicationAction.ACCEPT_BACKUP,
+                "action-build": ApplicationAction.BUILD,
+                "action-accept-artifact": ApplicationAction.ACCEPT_ARTIFACT,
+            }[button_id]
+            status = self.controller_app.controller.profile_status()
+            if action in status.allowed_next_actions:
+                self.app.push_screen(XWorkflowActionScreen(action))
             return
         action_by_button = {
             "action-detect": ApplicationAction.DETECT_DEVICE,
             "action-evidence": ApplicationAction.VIEW_EVIDENCE,
             "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
-            "action-prepare": ApplicationAction.PREPARE,
-            "action-backup": ApplicationAction.BACKUP,
-            "action-build": ApplicationAction.BUILD,
             "action-flash": ApplicationAction.FLASH,
             "action-restore": ApplicationAction.RESTORE,
             "action-readback": ApplicationAction.READBACK,
             "action-boot": ApplicationAction.BOOT_CHECK,
         }
-        action = action_by_button.get(button_id or "")
-        if action is None:
+        routed_action = action_by_button.get(button_id or "")
+        if routed_action is None:
             return
-        result = self.controller_app.controller.request_action(action)
+        result = self.controller_app.controller.request_action(routed_action)
         self.app.notify(f"{result.code}: {result.message}", title="Workflow status", timeout=8)
         self.refresh_status()

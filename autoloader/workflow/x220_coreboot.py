@@ -239,6 +239,16 @@ class X220CorebootWorkflow:
             self.recovery_readiness, self.operation_plan, self.proposed_external_spi_plan,
         )
 
+    @property
+    def validated_blob_inputs(self) -> tuple[BlobInput, ...]:
+        """Expose only fresh backup-derived blobs for the shared app builder."""
+        if self.stage is not X220WorkflowStage.RECOVERY_READY or self.backup_set is None:
+            raise SafetyError("X220 build inputs require a current verified backup and recovery readiness")
+        self._revalidate_backup()
+        if {item.name for item in self._blob_inputs} != {"descriptor.bin", "me.bin", "gbe.bin"}:
+            raise SafetyError("X220 build inputs are incomplete or not derived from the observed IFD map")
+        return self._blob_inputs
+
     def validate_build_intent(self) -> CompatibilityResult:
         if self.stage is not X220WorkflowStage.DRAFT:
             raise SafetyError("X220 intent can only be validated once from DRAFT")
@@ -296,18 +306,20 @@ class X220CorebootWorkflow:
         )
         return self.accept_backup(backup)
 
-    def build_and_stage(
+    def build_artifact(
         self, *, source_dir: str | Path, output_root: str | Path, cpu_count: int = 1
-    ) -> X220WorkflowResult:
+    ) -> ArtifactBuildResult:
+        """Build with freshly revalidated backup-derived descriptor/ME/GbE inputs."""
         if self.stage is not X220WorkflowStage.RECOVERY_READY or self.backup_set is None:
             raise SafetyError("X220 build requires current full-chip backup and recovery readiness")
+        blob_inputs = self.validated_blob_inputs
         self._cpu_count = cpu_count
-        result = self.artifact_engine.build(
+        return self.artifact_engine.build(
             BuildRequest(
                 recipe_id=X220_COREBOOT.recipe_id,
                 source_dir=Path(source_dir),
                 output_root=Path(output_root),
-                blob_inputs=self._blob_inputs,
+                blob_inputs=blob_inputs,
                 expected_regions=self.intent.topology.regions,
                 observed_chip_capacity_bytes=8 * MIB,
                 backup_intent=self.intent,
@@ -315,7 +327,13 @@ class X220CorebootWorkflow:
                 cpu_count=cpu_count,
             )
         )
-        return self.accept_artifact_result(result)
+
+    def build_and_stage(
+        self, *, source_dir: str | Path, output_root: str | Path, cpu_count: int = 1
+    ) -> X220WorkflowResult:
+        return self.accept_artifact_result(
+            self.build_artifact(source_dir=source_dir, output_root=output_root, cpu_count=cpu_count)
+        )
 
     def accept_artifact_result(self, result: ArtifactBuildResult) -> X220WorkflowResult:
         if self.stage is not X220WorkflowStage.RECOVERY_READY:

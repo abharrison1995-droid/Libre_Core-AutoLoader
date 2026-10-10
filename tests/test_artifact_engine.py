@@ -233,7 +233,14 @@ def _make_x220_backup_fixture(tmp_path: Path):
         ),
         topology=ChipTopology(
             observed=True,
-            chips=(ChipEvidence("main", size, True, physical_label="main", voltage_mv=3300),),
+            chips=(ChipEvidence(
+                "main", size, True, physical_label="main", voltage_mv=3300,
+                voltage_evidence_source="synthetic-test-fixture",
+                voltage_attested_by="fixture-operator",
+                voltage_attested_at="2026-10-10T00:00:00+00:00",
+                voltage_instrument_id="fixture-meter",
+                voltage_test_point="fixture-vcc",
+            ),),
             regions=regions,
         ),
         programmer=ProgrammerEvidence(
@@ -242,6 +249,11 @@ def _make_x220_backup_fixture(tmp_path: Path):
             interface_verified=True,
             wiring_verified=True,
             voltage_mv=3300,
+            evidence_source="synthetic-test-fixture",
+            attested_by="fixture-operator",
+            attested_at="2026-10-10T00:00:00+00:00",
+            instrument_id="fixture-meter",
+            measurement_test_point="fixture-vcc",
         ),
         recipe_id=X220_COREBOOT.recipe_id,
         source_url=COREBOOT_2609.repository_url,

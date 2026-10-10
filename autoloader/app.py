@@ -13,6 +13,8 @@ from autoloader.ui.screens.flash_guide import FlashGuideScreen
 from autoloader.ui.screens.backup_screen import BackupScreen
 from autoloader.ui.screens.verify_screen import VerifyScreen
 from autoloader.ui.screens.evidence_import import EvidenceImportScreen
+from autoloader.ui.screens.t430_handoff import T430HandoffScreen
+from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 from autoloader.application_controller import ApplicationController
 
 class AutoLoaderApp(App[None]):
@@ -38,6 +40,8 @@ class AutoLoaderApp(App[None]):
         "backup_screen": BackupScreen,
         "verify_screen": VerifyScreen,
         "evidence_import": EvidenceImportScreen,
+        "t430_handoff": T430HandoffScreen,
+        "x_workflow_action": XWorkflowActionScreen,
     }
 
     def __init__(self, *, controller: ApplicationController | None = None, **kwargs):

@@ -221,8 +221,10 @@ def test_attached_staged_workflow_exposes_operation_summary_and_checkpoint_actio
     )
     status = ApplicationController().attach_x200_workflow(workflow)
     assert status.operation_id == journal.operation_id
-    assert status.checkpoint_ref == str(journal_path)
+    assert status.checkpoint_ref is None
+    assert status.operation_journal_ref == str(journal_path)
     assert ApplicationAction.INSPECT_CHECKPOINT in status.allowed_next_actions
+    assert ApplicationAction.RESUME not in status.allowed_next_actions
     assert any("3300 mV" in item for item in status.evidence_summary)
     assert any("Observed region COREBOOT" in item for item in status.evidence_summary)
 
@@ -256,8 +258,8 @@ def test_resume_action_is_t430_only_and_uses_validated_session_loader(monkeypatc
     x200 = ApplicationController()
     x200.select_profile("x200-libreboot")
     blocked = x200.request_action(ApplicationAction.RESUME, checkpoint_path=tmp_path / "pending.json")
-    assert blocked.code == "SAFE_RESUME_UNAVAILABLE"
-    assert ApplicationAction.RESUME not in x200.profile_status().allowed_next_actions
+    assert blocked.code == "UNSAFE_CHECKPOINT_PATH"
+    assert ApplicationAction.RESUME in x200.profile_status().allowed_next_actions
 
 
 def test_detection_during_t430_handoff_is_candidate_only_and_does_not_advance(monkeypatch):
@@ -282,8 +284,9 @@ def test_detection_during_t430_handoff_is_candidate_only_and_does_not_advance(mo
     controller.attach_t430_session(session)
     outcome = controller.request_action(ApplicationAction.DETECT_DEVICE, profile_id="t430-1vyrain")
     assert outcome.code == "T430_RETURN_CAPTURE_CANDIDATE_ONLY"
-    assert controller.capture is not None
-    assert controller.capture.capture_id != session._capture_id
+    assert controller.capture is None
+    assert controller._t430_return_capture_candidate is not None
+    assert controller._t430_return_capture_candidate.capture_id != session._capture_id
     assert session.stage is T430HandoffStage.AWAITING_IVPREP_REDETECTION
     assert controller.profile_status().stage == T430HandoffStage.AWAITING_IVPREP_REDETECTION.value
 
@@ -294,11 +297,89 @@ def test_controller_advertises_only_routed_safe_actions_without_active_workflow(
         status = controller.select_profile(profile_id)
         expected = (ApplicationAction.DETECT_DEVICE, ApplicationAction.IMPORT_EVIDENCE)
         if profile_id == "t430-1vyrain":
-            expected += (ApplicationAction.RESUME,)
+            expected += (ApplicationAction.T430_HANDOFF_STEP, ApplicationAction.RESUME)
+        else:
+            expected += (ApplicationAction.PREPARE, ApplicationAction.RESUME)
         assert status.allowed_next_actions == expected
         assert controller.request_action(ApplicationAction.VIEW_EVIDENCE).code == "PROFILE_STATUS"
         missing = controller.request_action(ApplicationAction.IMPORT_EVIDENCE)
         assert missing.code == "TYPED_EVIDENCE_REQUIRED"
+
+
+def test_controller_routes_typed_t430_ivprep_approval_to_durable_session(monkeypatch, tmp_path):
+    from datetime import datetime, timezone
+    from autoloader.reversion.t430_handoff import T430DetectionCapture, T430HandoffStage
+
+    observed = datetime(2026, 10, 9, 12, 0, tzinfo=timezone.utc)
+    capture = T430DetectionCapture(
+        "capture-ivprep", observed,
+        DeviceEvidence(
+            raw_dmi_product_name="ThinkPad T430",
+            raw_dmi_product_version="2342-ABC",
+            raw_dmi_system_family="ThinkPad T430",
+            raw_mtm="2342-ABC",
+            raw_bios_version="Version: G1ET75WW (2.65 )",
+            raw_bios_vendor="LENOVO",
+            stock_lenovo_bios=True,
+        ),
+        "a" * 64,
+    )
+    monkeypatch.setattr(T430DetectionCapture, "detect_now", classmethod(lambda cls, **kwargs: capture))
+    request = {
+        "version": 1,
+        "profile_id": "t430-1vyrain",
+        "action": "approve-current-handoff",
+        "actor": "operator",
+        "explicit_approval": True,
+        "approved_at": "2026-10-09T12:10:00+00:00",
+        "preflight": {
+            "attested_at": "2026-10-09T12:05:00+00:00",
+            "bios_passwords_removed": True,
+            "end_user_bios_update_enabled": True,
+            "secure_rollback_prevention_disabled": True,
+            "ac_connected": True,
+            "battery_percent": 100,
+            "uefi_booted": None,
+            "secure_boot_disabled": None,
+            "will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub": None,
+        },
+    }
+    checkpoint = tmp_path / "pending-ivprep.json"
+    controller = ApplicationController()
+    result = controller.request_action(
+        ApplicationAction.T430_HANDOFF_STEP,
+        profile_id="t430-1vyrain",
+        checkpoint_path=checkpoint,
+        request_document=json.dumps(request),
+    )
+    assert result.code == "T430_IVPREP_HANDOFF_PENDING_RETURN", result.message
+    assert checkpoint.is_file()
+    assert controller.t430_session is not None
+    assert controller.t430_session.stage is T430HandoffStage.AWAITING_IVPREP_REDETECTION
+    assert "does not download or execute" in result.message.lower() or "nothing was downloaded" in result.message.lower()
+
+
+def test_t430_stage_rejects_candidate_identity_fields_and_does_not_leave_draft_session(tmp_path):
+    request = json.dumps({
+        "version": 1,
+        "profile_id": "t430-1vyrain",
+        "action": "approve-current-handoff",
+        "actor": "operator",
+        "explicit_approval": True,
+        "approved_at": "2030-01-01T12:10:00+00:00",
+        "raw_mtm": "2342-ABC",
+        "capture_id": "caller-controlled",
+    })
+    controller = ApplicationController()
+    result = controller.request_action(
+        ApplicationAction.T430_HANDOFF_STEP,
+        profile_id="t430-1vyrain",
+        checkpoint_path=tmp_path / "pending.json",
+        request_document=request,
+    )
+    assert result.code == "T430_HANDOFF_STAGE_REJECTED"
+    assert controller.t430_session is None
+    assert "unsupported" in result.message.lower()
 
 
 def test_mutating_or_hardware_actions_fail_closed_with_no_writer_build_or_spi_calls(monkeypatch):
@@ -318,7 +399,7 @@ def test_mutating_or_hardware_actions_fail_closed_with_no_writer_build_or_spi_ca
 
     expected_codes = {
         ApplicationAction.BACKUP: "BACKUP_UNAVAILABLE",
-        ApplicationAction.BUILD: "BUILD_UNAVAILABLE",
+        ApplicationAction.BUILD: "ARTIFACT_REQUEST_REQUIRED",
         ApplicationAction.FLASH: "FLASH_UNAVAILABLE",
         ApplicationAction.RESTORE: "RESTORE_UNAVAILABLE",
         ApplicationAction.READBACK: "READBACK_NOT_PERFORMED",

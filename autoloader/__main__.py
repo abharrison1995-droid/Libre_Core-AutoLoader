@@ -140,19 +140,114 @@ def workflow_status(profile: str, evidence_file: Path | None) -> None:
 
 
 @cli.command("resume-checkpoint")
-@click.option("--profile", required=True, type=click.Choice(("t430-1vyrain",)), help="T430 human-handoff profile only.")
-@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Checksummed pending T430 handoff checkpoint.")
-def resume_checkpoint(profile: str, checkpoint: Path) -> None:
-    """Resume a validated pending T430 human-handoff record; no hardware action occurs."""
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Checksummed handoff or operation checkpoint.")
+@click.option("--request", "request_file", type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Fresh X200/X220 operator setup request; required for those profiles.")
+def resume_checkpoint(profile: str, checkpoint: Path, request_file: Path | None) -> None:
+    """Resume from freshly revalidated evidence and an exact safe checkpoint."""
     controller = ApplicationController()
     controller.select_profile(profile)
-    result = controller.request_action(ApplicationAction.RESUME, profile_id=profile, checkpoint_path=checkpoint)
-    if result.code != "T430_CHECKPOINT_RESUMED":
+    document = request_file.read_text(encoding="utf-8") if request_file is not None else None
+    result = controller.request_action(
+        ApplicationAction.RESUME, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code not in {"T430_CHECKPOINT_RESUMED", "EXACT_PLAN_WORKFLOW_RESUMED"}:
         raise click.ClickException(f"[{result.code}] {result.message}")
     status = controller.profile_status(profile)
     console.print(f"[yellow]{result.code}: {result.message}[/yellow]")
     console.print(f"Stage: {status.stage} · operation {status.operation_id}")
     console.print("No hardware read, write, IVprep execution, or 1vyrain execution was performed.")
+
+
+@cli.command("t430-stage")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Version 1 T430 human-attestation JSON; DMI fields are captured locally and cannot be supplied here.")
+@click.option("--checkpoint", required=True, type=click.Path(dir_okay=False, path_type=Path), help="New absolute path for an approval, or existing pending checkpoint for a return.")
+def t430_stage(request_file: Path, checkpoint: Path) -> None:
+    """Submit an explicit human T430 stage; no upstream program is executed."""
+    controller = ApplicationController()
+    controller.select_profile("t430-1vyrain")
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[T430_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.T430_HANDOFF_STEP,
+        profile_id="t430-1vyrain",
+        checkpoint_path=checkpoint,
+        request_document=document,
+    )
+    accepted_codes = {
+        "T430_IVPREP_HANDOFF_PENDING_RETURN",
+        "T430_ONEVYRAIN_HANDOFF_PENDING_RETURN",
+        "T430_IVPREP_RETURN_ACCEPTED_ONEVYRAIN_PENDING_RETURN",
+        "T430_POST_INSTALL_EVIDENCE_PENDING_ACCEPTANCE",
+    }
+    console.print(f"[{result.code}] {result.message}")
+    for reason in result.reasons:
+        console.print(f"- {reason}")
+    console.print("No IVprep/1vyrain execution, media write, firmware write, or hardware success was performed.")
+    if result.code not in accepted_codes:
+        raise click.ClickException(f"[{result.code}] T430 stage was not accepted")
+
+
+@cli.command("prepare-workflow")
+@click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
+@click.option("--checkpoint", required=True, type=click.Path(dir_okay=False, path_type=Path), help="New absolute evidence checkpoint path; parent directory must already exist.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Versioned operator request with storage paths and user-reported SPI setup measurement.")
+def prepare_workflow(profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Capture fresh identity/probe evidence and persist the exact pre-build intent."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WORKFLOW_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.PREPARE, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code != "WORKFLOW_INTENT_VALIDATED":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
+
+
+@cli.command("accept-verified-backup")
+@click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint path.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Fresh versioned operator request; this action captures two full-chip reads.")
+def accept_verified_backup(profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Capture a new backup or reopen an existing verified dual-read backup."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WORKFLOW_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.ACCEPT_BACKUP, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code != "VERIFIED_BACKUP_ACCEPTED":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
+
+
+@cli.command("accept-completed-artifact")
+@click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint path.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Fresh versioned operator request to revalidate local evidence.")
+def accept_completed_artifact(profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Reopen and revalidate an existing pinned build result; no compile is run."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WORKFLOW_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.ACCEPT_ARTIFACT, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code != "ARTIFACT_STAGED_HARDWARE_PENDING":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
 
 
 @cli.command("inspect-checkpoint")
@@ -171,14 +266,23 @@ def inspect_checkpoint(checkpoint: Path) -> None:
 
 
 @cli.command("build-rom")
-@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted model-specific V1 workflow profile.")
-@click.pass_context
-def build_rom(ctx: click.Context, profile: str) -> None:
-    """Request model-specific preparation through the shared controller."""
+@click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint with verified backup.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Fresh versioned operator request; X200/X220 build requires Linux tooling.")
+def build_rom(profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Run the pinned profile-specific build through the shared controller."""
     controller = ApplicationController()
     controller.select_profile(profile)
-    result = controller.request_action(ApplicationAction.BUILD, profile_id=profile)
-    raise click.ClickException(f"[{result.code}] {result.message}")
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WORKFLOW_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.BUILD, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code != "ARTIFACT_STAGED_HARDWARE_PENDING":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
 
 
 @cli.command()
@@ -193,14 +297,23 @@ def usb(output_dir: str) -> None:
 
 
 @cli.command()
-@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
-@click.pass_context
-def backup(ctx: click.Context, profile: str) -> None:
-    """Request a model-specific backup through the shared controller."""
+@click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 workflow profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint path.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Fresh operator setup request; captures two full-chip reads when no backup exists.")
+def backup(profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Capture/reopen the model-specific full-chip backup through the controller."""
     controller = ApplicationController()
     controller.select_profile(profile)
-    result = controller.request_action(ApplicationAction.BACKUP, profile_id=profile)
-    raise click.ClickException(f"[{result.code}] {result.message}")
+    try:
+        document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WORKFLOW_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.ACCEPT_BACKUP, profile_id=profile, checkpoint_path=checkpoint, request_document=document
+    )
+    if result.code not in {"VERIFIED_BACKUP_ACCEPTED", "VERIFIED_BACKUP_REOPENED"}:
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
 
 
 @cli.command()

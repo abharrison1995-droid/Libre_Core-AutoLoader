@@ -369,20 +369,33 @@ def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
     assert "no writer or subprocess was invoked" in (result.output or "")
 
 
-def test_cli_backup_command_is_registered_but_unavailable_without_topology(monkeypatch):
+def test_cli_backup_rejects_invalid_request_before_any_hardware_read(monkeypatch, tmp_path):
     from click.testing import CliRunner
     from autoloader.__main__ import cli
-    from autoloader.flasher.backup import BackupManager
+    from autoloader.flasher.backup_service import BackupSetService
+    from autoloader.flasher.flashrom import FlashromRunner
 
-    def unexpected_backup(*args, **kwargs):
-        raise AssertionError("CLI backup must not read unobserved hardware")
+    calls = []
 
-    monkeypatch.setattr(BackupManager, "create_backup", unexpected_backup)
+    def unexpected(*args, **kwargs):
+        calls.append("called")
+        raise AssertionError("An invalid request must be rejected before hardware I/O")
 
-    result = CliRunner().invoke(cli, ["backup", "--profile", "x200-libreboot"])
+    monkeypatch.setattr(FlashromRunner, "run_command", unexpected)
+    monkeypatch.setattr(FlashromRunner, "read_rom", unexpected)
+    monkeypatch.setattr(BackupSetService, "capture", unexpected)
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("{}", encoding="utf-8")
+    request = tmp_path / "request.json"
+    request.write_text('{"version": 2}', encoding="utf-8")
+
+    result = CliRunner().invoke(cli, [
+        "backup", "--profile", "x200-libreboot", "--checkpoint", str(checkpoint),
+        "--request", str(request),
+    ])
     assert result.exit_code != 0
-    assert "BACKUP_UNAVAILABLE" in (result.output or "")
-    assert "no spi read was attempted" in (result.output or "").lower()
+    assert "VERIFIED_BACKUP_REJECTED" in (result.output or "")
+    assert calls == []
 
 
 def test_entropy_calculation_accuracy_and_speed():

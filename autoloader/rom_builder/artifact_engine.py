@@ -31,9 +31,15 @@ from autoloader.workflow.types import (
     ArtifactEvidence,
     BackupEvidence,
     BuildIntentEvidence,
+    BackupPairEvidence,
+    ChipEvidence,
+    ChipTopology,
     CompatibilityDecision,
+    DeviceEvidence,
     FirmwareFamily,
     OperationPlan,
+    ProgrammerEvidence,
+    ProgrammerKind,
 )
 from autoloader.workflow.types import RegionEvidence
 from autoloader.workflow.types import build_intent_record, build_intent_sha256
@@ -1229,6 +1235,59 @@ def _require_disjoint_paths(source: Path, output_root: Path) -> None:
 class ArtifactEngine:
     """Build only from immutable upstream pins and record verified outputs."""
 
+    def load_completed_result(self, manifest_path: str | Path) -> ArtifactBuildResult:
+        """Reopen a persisted COMPLETE result without trusting caller JSON objects.
+
+        The workflow acceptance boundary performs the model-specific source,
+        log, CBFS, layout, backup and staged-path checks after this parser has
+        reconstructed immutable records. This method also checks the manifest
+        sidecar and selected file bytes before returning a typed result.
+        """
+        path = Path(manifest_path).expanduser()
+        if path.name != "manifest.json" or path.is_symlink() or not path.is_file():
+            raise ValueError("Artifact manifest path must be a regular manifest.json file")
+        raw = path.read_bytes()
+        checksum = path.with_name("manifest.sha256")
+        if checksum.is_symlink() or not checksum.is_file():
+            raise ValueError("Artifact manifest checksum sidecar is missing or unsafe")
+        sidecar = checksum.read_text(encoding="ascii").strip().split()
+        if len(sidecar) != 2 or sidecar[1] != "manifest.json" or sidecar[0] != hashlib.sha256(raw).hexdigest():
+            raise ValueError("Artifact manifest checksum sidecar does not match its bytes")
+        try:
+            document = json.loads(raw)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError("Artifact manifest JSON is malformed") from exc
+        manifest = _artifact_manifest_from_mapping(document)
+        if manifest.status != "complete":
+            raise ValueError("Only a COMPLETE persisted artifact can be reopened")
+        if manifest.selected_artifact_relative_path is None:
+            raise ValueError("Complete artifact manifest lacks a selected relative path")
+        selected = path.parent.joinpath(*PurePosixPath(manifest.selected_artifact_relative_path).parts)
+        if selected.is_symlink() or not selected.is_file():
+            raise ValueError("Manifest-selected artifact is missing or unsafe")
+        try:
+            selected.resolve(strict=True).relative_to(path.parent.resolve(strict=True))
+        except ValueError as exc:
+            raise ValueError("Manifest-selected artifact escapes its operation directory") from exc
+        if (
+            selected.stat().st_size != next(
+                item.size_bytes for item in manifest.artifacts
+                if item.relative_path == manifest.selected_artifact_relative_path
+                and item.sha256 == manifest.selected_artifact_sha256
+            )
+            or sha256_file(selected) != manifest.selected_artifact_sha256
+        ):
+            raise ValueError("Manifest-selected artifact size or SHA-256 changed")
+        return ArtifactBuildResult(
+            BuildStatus.COMPLETE,
+            "PERSISTED_ARTIFACT_REOPENED",
+            "Persisted manifest and selected artifact bytes were reopened; workflow-specific acceptance remains required.",
+            manifest.recipe_id,
+            (selected,),
+            manifest,
+            path,
+        )
+
     def build(self, request: BuildRequest) -> ArtifactBuildResult:
         if request.recipe_id in HANDOFF_RECIPES:
             handoff = HANDOFF_RECIPES[request.recipe_id]
@@ -1853,3 +1912,250 @@ class ArtifactEngine:
         payload = json.dumps(asdict(manifest), sort_keys=True, indent=2) + "\n"
         with path.open("x", encoding="utf-8", newline="\n") as file_obj:
             file_obj.write(payload)
+
+
+def _mapping(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise ValueError(f"Persisted {label} must be a JSON object")
+    return value
+
+
+def _array(value: object, label: str) -> list[object]:
+    if not isinstance(value, list):
+        raise ValueError(f"Persisted {label} must be a JSON array")
+    return value
+
+
+def _integer(row: Mapping[str, object], key: str) -> int:
+    value = row.get(key)
+    if type(value) is not int:
+        raise ValueError(f"Persisted {key} must be an integer")
+    return value
+
+
+def _optional_integer(row: Mapping[str, object], key: str) -> int | None:
+    value = row.get(key)
+    if value is None:
+        return None
+    if type(value) is not int:
+        raise ValueError(f"Persisted {key} must be an integer or null")
+    return value
+
+
+def _optional_bool(row: Mapping[str, object], key: str) -> bool | None:
+    value = row.get(key)
+    if value is None:
+        return None
+    if type(value) is not bool:
+        raise ValueError(f"Persisted {key} must be a boolean or null")
+    return value
+
+
+def _required_bool(row: Mapping[str, object], key: str) -> bool:
+    value = row.get(key)
+    if type(value) is not bool:
+        raise ValueError(f"Persisted {key} must be a boolean")
+    return value
+
+
+def _optional_text(row: Mapping[str, object], key: str) -> str | None:
+    value = row.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"Persisted {key} must be text or null")
+    return value
+
+
+def _region_from_mapping(value: object) -> RegionEvidence:
+    row = _mapping(value, "region")
+    return RegionEvidence(str(row["name"]), _integer(row, "start_byte"), _integer(row, "end_byte"))
+
+
+def _operation_plan_from_mapping(value: object) -> OperationPlan:
+    row = _mapping(value, "operation plan")
+    device_row = _mapping(row["device"], "device")
+    topology_row = _mapping(row["topology"], "topology")
+    programmer_row = _mapping(row["programmer"], "programmer")
+    artifact_row = _mapping(row["artifact"], "artifact")
+    chips: list[ChipEvidence] = []
+    for raw_chip in _array(topology_row["chips"], "chip topology"):
+        chip = _mapping(raw_chip, "chip")
+        chips.append(ChipEvidence(
+            chip_id=str(chip["chip_id"]),
+            capacity_bytes=_integer(chip, "capacity_bytes"),
+            observed=_required_bool(chip, "observed"),
+            physical_label=str(chip.get("physical_label", "")),
+            voltage_mv=_optional_integer(chip, "voltage_mv"),
+            manufacturer=_optional_text(chip, "manufacturer"),
+            model_number=_optional_text(chip, "model_number"),
+            voltage_evidence_source=_optional_text(chip, "voltage_evidence_source"),
+            voltage_attested_by=_optional_text(chip, "voltage_attested_by"),
+            voltage_attested_at=_optional_text(chip, "voltage_attested_at"),
+            voltage_instrument_id=_optional_text(chip, "voltage_instrument_id"),
+            voltage_test_point=_optional_text(chip, "voltage_test_point"),
+        ))
+    topology = ChipTopology(
+        observed=_required_bool(topology_row, "observed"),
+        chips=tuple(chips),
+        regions=tuple(_region_from_mapping(item) for item in _array(topology_row.get("regions"), "regions")),
+    )
+    programmer = ProgrammerEvidence(
+        kind=ProgrammerKind(str(programmer_row["kind"])),
+        observed=_required_bool(programmer_row, "observed"),
+        interface_verified=_optional_bool(programmer_row, "interface_verified"),
+        wiring_verified=_optional_bool(programmer_row, "wiring_verified"),
+        voltage_mv=_optional_integer(programmer_row, "voltage_mv"),
+        evidence_source=_optional_text(programmer_row, "evidence_source"),
+        attested_by=_optional_text(programmer_row, "attested_by"),
+        attested_at=_optional_text(programmer_row, "attested_at"),
+        instrument_id=_optional_text(programmer_row, "instrument_id"),
+        measurement_test_point=_optional_text(programmer_row, "measurement_test_point"),
+    )
+    artifact = ArtifactEvidence(
+        path=str(artifact_row["path"]),
+        model_id=str(artifact_row["model_id"]),
+        firmware_family=FirmwareFamily(str(artifact_row["firmware_family"])),
+        expected_sha256=str(artifact_row["expected_sha256"]),
+        expected_size_bytes=_integer(artifact_row, "expected_size_bytes"),
+        source_url=str(artifact_row["source_url"]),
+        source_revision=str(artifact_row["source_revision"]),
+        regions=tuple(_region_from_mapping(item) for item in _array(artifact_row.get("regions", []), "artifact regions")),
+    )
+    backup_row = _mapping(row.get("backup", {}), "backup")
+    pairs: list[BackupPairEvidence] = []
+    for raw_pair in _array(backup_row.get("pairs", []), "backup pairs"):
+        pair = _mapping(raw_pair, "backup pair")
+        pairs.append(BackupPairEvidence(
+            chip_id=str(pair["chip_id"]),
+            first_path=str(pair["first_path"]),
+            second_path=str(pair["second_path"]),
+            first_sha256=str(pair["first_sha256"]),
+            second_sha256=str(pair["second_sha256"]),
+            first_capture_id=str(pair.get("first_capture_id", "")),
+            second_capture_id=str(pair.get("second_capture_id", "")),
+            transient=_required_bool(pair, "transient"),
+        ))
+    device = DeviceEvidence(
+        raw_dmi_product_name=_optional_text(device_row, "raw_dmi_product_name"),
+        raw_dmi_product_version=_optional_text(device_row, "raw_dmi_product_version"),
+        raw_dmi_system_family=_optional_text(device_row, "raw_dmi_system_family"),
+        raw_mtm=_optional_text(device_row, "raw_mtm"),
+        raw_bios_version=_optional_text(device_row, "raw_bios_version"),
+        raw_bios_vendor=_optional_text(device_row, "raw_bios_vendor"),
+        stock_lenovo_bios=_optional_bool(device_row, "stock_lenovo_bios"),
+        manual_model_candidate=_optional_text(device_row, "manual_model_candidate"),
+        internal_flash_unlock_status=_optional_bool(device_row, "internal_flash_unlock_status"),
+        internal_flash_unlock_observed=_required_bool(device_row, "internal_flash_unlock_observed"),
+    )
+    return OperationPlan(
+        profile_id=str(row["profile_id"]),
+        requested_model_id=str(row["requested_model_id"]),
+        firmware_family=FirmwareFamily(str(row["firmware_family"])),
+        device=device,
+        topology=topology,
+        programmer=programmer,
+        artifact=artifact,
+        backup=BackupEvidence(tuple(pairs)),
+    )
+
+
+def _artifact_manifest_from_mapping(value: object) -> ArtifactManifest:
+    row = _mapping(value, "artifact manifest")
+    expected_keys = set(ArtifactManifest.__dataclass_fields__)
+    if set(row) != expected_keys:
+        raise ValueError("Persisted artifact manifest has missing or unsupported fields")
+    artifacts: list[ArtifactRecord] = []
+    for raw_item in _array(row["artifacts"], "artifact inventory"):
+        item = _mapping(raw_item, "artifact record")
+        cbfs_value = item.get("cbfs_inspection")
+        cbfs: CBFSInspectionRecord | None = None
+        if cbfs_value is not None:
+            entry = _mapping(cbfs_value, "CBFS inspection")
+            entries = tuple(CBFSEntry(
+                name=str(_mapping(raw_entry, "CBFS entry")["name"]),
+                offset_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "offset_bytes"),
+                entry_type=str(_mapping(raw_entry, "CBFS entry")["entry_type"]),
+                metadata_size_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "metadata_size_bytes"),
+                data_size_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "data_size_bytes"),
+                total_size_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "total_size_bytes"),
+            ) for raw_entry in _array(entry["inventory"], "CBFS inventory"))
+            cbfs = CBFSInspectionRecord(
+                tool_relative_path=str(entry["tool_relative_path"]),
+                tool_sha256=str(entry["tool_sha256"]),
+                source_repository_url=str(entry["source_repository_url"]),
+                source_revision=str(entry["source_revision"]),
+                source_tree_id=str(entry["source_tree_id"]),
+                region=str(entry["region"]),
+                required_payload=str(entry["required_payload"]),
+                inventory=entries,
+                source_file_hashes=tuple((str(pair[0]), str(pair[1])) for pair in _array(entry["source_file_hashes"], "CBFS source hashes") if isinstance(pair, list) and len(pair) == 2),
+            )
+        provenance_value = item.get("backup_provenance")
+        provenance = None
+        if provenance_value is not None:
+            p = _mapping(provenance_value, "backup provenance")
+            provenance = BackupProvenanceRecord(
+                operation_id=str(p["operation_id"]), profile_id=str(p["profile_id"]),
+                primary_manifest_sha256=str(p["primary_manifest_sha256"]),
+                recovery_manifest_sha256=str(p["recovery_manifest_sha256"]),
+                original_chip_sha256=str(p["original_chip_sha256"]),
+                build_intent_sha256=str(p["build_intent_sha256"]),
+                preserved_regions=tuple(str(v) for v in _array(p["preserved_regions"], "preserved regions")),
+            )
+        tool_value = item.get("region_inspection_tool")
+        region_tool = None
+        if tool_value is not None:
+            tool = _mapping(tool_value, "region inspection tool")
+            region_tool = ToolEvidence(**{key: str(tool[key]) for key in ToolEvidence.__dataclass_fields__})
+        artifacts.append(ArtifactRecord(
+            relative_path=str(item["relative_path"]) if item.get("relative_path") is not None else None,
+            sha256=str(item["sha256"]),
+            size_bytes=_integer(item, "size_bytes"),
+            regions=tuple(_region_from_mapping(region) for region in _array(item["regions"], "artifact record regions")),
+            source_relative_path=str(item["source_relative_path"]),
+            cbfs_inspection=cbfs,
+            backup_provenance=provenance,
+            region_inspection_tool=region_tool,
+        ))
+    commands: list[CommandRecord] = []
+    for raw_command in _array(row["commands"], "command records"):
+        command = _mapping(raw_command, "command record")
+        commands.append(CommandRecord(
+            argv=tuple(str(arg) for arg in _array(command["argv"], "command argv")),
+            exit_code=_integer(command, "exit_code"),
+            log_relative_path=str(command["log_relative_path"]),
+            log_sha256=str(command["log_sha256"]),
+        ))
+    repro_row = _mapping(row["reproducibility"], "reproducibility record")
+    finalized = row.get("finalized_operation_plan")
+    return ArtifactManifest(
+        schema_version=_integer(row, "schema_version"), operation_id=str(row["operation_id"]),
+        created_at_utc=str(row["created_at_utc"]), recipe_id=str(row["recipe_id"]),
+        workflow_id=str(row["workflow_id"]), status=str(row["status"]),
+        source_repository_url=str(row["source_repository_url"]), source_revision=str(row["source_revision"]),
+        source_tree_id=str(row["source_tree_id"]),
+        source_files=tuple((str(pair[0]), str(pair[1])) for pair in _array(row["source_files"], "source files") if isinstance(pair, list) and len(pair) == 2),
+        commands=tuple(commands), host_platform=str(row["host_platform"]),
+        toolchain=tuple((str(pair[0]), str(pair[1])) for pair in _array(row["toolchain"], "toolchain") if isinstance(pair, list) and len(pair) == 2),
+        build_environment=tuple((str(pair[0]), str(pair[1])) for pair in _array(row["build_environment"], "build environment") if isinstance(pair, list) and len(pair) == 2),
+        container_image_digest=str(row["container_image_digest"]) if row.get("container_image_digest") is not None else None,
+        configuration_sha256=str(row["configuration_sha256"]),
+        resolved_configuration_sha256=str(row["resolved_configuration_sha256"]) if row.get("resolved_configuration_sha256") is not None else None,
+        observed_chip_capacity_bytes=_optional_integer(row, "observed_chip_capacity_bytes"),
+        expected_regions=tuple(_region_from_mapping(region) for region in _array(row["expected_regions"], "expected regions")),
+        blob_sha256=tuple((str(pair[0]), str(pair[1])) for pair in _array(row["blob_sha256"], "blob hashes") if isinstance(pair, list) and len(pair) == 2),
+        artifacts=tuple(artifacts),
+        selected_artifact_relative_path=str(row["selected_artifact_relative_path"]) if row.get("selected_artifact_relative_path") is not None else None,
+        selected_artifact_sha256=str(row["selected_artifact_sha256"]) if row.get("selected_artifact_sha256") is not None else None,
+        failure_code=str(row["failure_code"]) if row.get("failure_code") is not None else None,
+        failure_detail=str(row["failure_detail"]) if row.get("failure_detail") is not None else None,
+        reproducibility=ReproducibilityRecord(
+            status=str(repro_row["status"]),
+            first_artifact_sha256=str(repro_row["first_artifact_sha256"]) if repro_row.get("first_artifact_sha256") is not None else None,
+            second_artifact_sha256=str(repro_row["second_artifact_sha256"]) if repro_row.get("second_artifact_sha256") is not None else None,
+            explanation=str(repro_row["explanation"]),
+        ),
+        finalized_operation_plan=_operation_plan_from_mapping(finalized) if finalized is not None else None,
+        prebuild_intent_sha256=str(row["prebuild_intent_sha256"]) if row.get("prebuild_intent_sha256") is not None else None,
+    )

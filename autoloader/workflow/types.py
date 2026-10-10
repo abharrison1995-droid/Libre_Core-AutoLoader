@@ -101,6 +101,11 @@ class ChipEvidence:
     voltage_mv: int | None = None
     manufacturer: str | None = None
     model_number: str | None = None
+    voltage_evidence_source: str | None = None
+    voltage_attested_by: str | None = None
+    voltage_attested_at: str | None = None
+    voltage_instrument_id: str | None = None
+    voltage_test_point: str | None = None
 
 
 @dataclass(frozen=True)
@@ -132,6 +137,11 @@ class ProgrammerEvidence:
     interface_verified: bool | None = None
     wiring_verified: bool | None = None
     voltage_mv: int | None = None
+    evidence_source: str | None = None
+    attested_by: str | None = None
+    attested_at: str | None = None
+    instrument_id: str | None = None
+    measurement_test_point: str | None = None
 
 
 @dataclass(frozen=True)
@@ -232,6 +242,11 @@ def build_intent_record(intent: BuildIntentEvidence) -> dict[str, object]:
                     "voltage_mv": chip.voltage_mv,
                     "manufacturer": chip.manufacturer,
                     "model_number": chip.model_number,
+                    "voltage_evidence_source": chip.voltage_evidence_source,
+                    "voltage_attested_by": chip.voltage_attested_by,
+                    "voltage_attested_at": chip.voltage_attested_at,
+                    "voltage_instrument_id": chip.voltage_instrument_id,
+                    "voltage_test_point": chip.voltage_test_point,
                 }
                 for chip in intent.topology.chips
             ],
@@ -246,6 +261,11 @@ def build_intent_record(intent: BuildIntentEvidence) -> dict[str, object]:
             "interface_verified": intent.programmer.interface_verified,
             "wiring_verified": intent.programmer.wiring_verified,
             "voltage_mv": intent.programmer.voltage_mv,
+            "evidence_source": intent.programmer.evidence_source,
+            "attested_by": intent.programmer.attested_by,
+            "attested_at": intent.programmer.attested_at,
+            "instrument_id": intent.programmer.instrument_id,
+            "measurement_test_point": intent.programmer.measurement_test_point,
         },
         "recipe_id": intent.recipe_id,
         "source_url": intent.source_url,

@@ -5,6 +5,7 @@ from textual.widgets import Button, Footer, Header, Static
 
 from autoloader.application_controller import ApplicationAction, ApplicationController
 from autoloader.ui.screens.controller_screen import ControllerScreen
+from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 
 
 class RomConfigScreen(ControllerScreen):
@@ -54,6 +55,5 @@ class RomConfigScreen(ControllerScreen):
         if event.button.id == "btn-back":
             self.app.pop_screen()
         elif event.button.id == "btn-prepare":
-            result = self.controller_app.controller.request_action(ApplicationAction.PREPARE)
-            self.query_one("#prepare-status", Static).update(f"{result.code}: {result.message}")
-            self.refresh_status()
+            if ApplicationAction.PREPARE in self.controller_app.controller.profile_status().allowed_next_actions:
+                self.app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))

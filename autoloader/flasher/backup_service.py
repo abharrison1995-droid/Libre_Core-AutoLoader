@@ -525,6 +525,253 @@ class BackupSetService:
                 raise BackupCaptureError(f"backup failed; evidence was retained: {exc}") from exc
             raise
 
+    def load_verified_result(
+        self,
+        plan: OperationPlan | BuildIntentEvidence,
+        *,
+        operation_id: str,
+        primary_manifest: str | Path,
+        recovery_manifest: str | Path,
+        primary_manifest_sha256: str,
+        recovery_manifest_sha256: str,
+        expected_tool: FlashToolIdentity | None = None,
+    ) -> BackupSetResult:
+        """Reconstruct a result only from matching verified manifests and reread files.
+
+        The method never treats a caller JSON object as a ``BackupSetResult``.
+        Hashes, sizes, checksum chains, plan fingerprints, storage records and
+        both persisted copies are rechecked before a typed value is returned.
+        """
+        first_path, second_path = Path(primary_manifest), Path(recovery_manifest)
+        for path, expected in (
+            (first_path, primary_manifest_sha256),
+            (second_path, recovery_manifest_sha256),
+        ):
+            if (
+                not path.is_absolute()
+                or path.name != "backup-manifest.json"
+                or _path_has_link_component(path)
+                or not path.is_file()
+            ):
+                raise BackupManifestError("verified backup manifest path is missing or unsafe")
+            if not isinstance(expected, str) or len(expected) != 64 or any(
+                character not in "0123456789abcdef" for character in expected
+            ):
+                raise BackupManifestError("verified backup checkpoint checksum is malformed")
+        primary_store = BackupManifestStore(first_path.parent)
+        recovery_store = BackupManifestStore(second_path.parent)
+        primary_events = primary_store.read_events()
+        recovery_events = recovery_store.read_events()
+        primary = _verified_event_for(primary_events, operation_id, plan)
+        recovery = _verified_event_for(recovery_events, operation_id, plan)
+        try:
+            primary_document = json.loads(first_path.read_text(encoding="utf-8"))
+            recovery_document = json.loads(second_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise BackupManifestError("verified backup manifest cannot be reread") from exc
+        # BackupManifestStore.append returns the canonical whole-document
+        # checksum. read_events() above independently verifies that checksum
+        # and every event in the chain before this checkpoint binding is used.
+        if (
+            not isinstance(primary_document, dict)
+            or primary_document.get("manifest_sha256") != primary_manifest_sha256
+            or not isinstance(recovery_document, dict)
+            or recovery_document.get("manifest_sha256") != recovery_manifest_sha256
+        ):
+            raise BackupManifestError("verified backup manifest checksum differs from its checkpoint")
+        if _event_payload(primary) != _event_payload(recovery):
+            raise BackupManifestError("primary and recovery backup events disagree")
+        chips_value = primary.get("chips")
+        if not isinstance(chips_value, list) or len(chips_value) != len(plan.topology.chips):
+            raise BackupManifestError("verified backup event does not cover every expected chip")
+        captured: list[CapturedChipBackup] = []
+        pairs: list[BackupPairEvidence] = []
+        for item in chips_value:
+            if not isinstance(item, dict):
+                raise BackupManifestError("verified backup chip record is malformed")
+            try:
+                chip = CapturedChipBackup(
+                    chip_id=_required_string(item, "chip_id"),
+                    observed_chip_name=_required_string(item, "observed_chip_name"),
+                    capacity_bytes=_required_positive_int(item, "capacity_bytes"),
+                    first_path=_required_string(item, "first_path"),
+                    second_path=_required_string(item, "second_path"),
+                    first_sha256=_required_sha256(item, "first_sha256"),
+                    second_sha256=_required_sha256(item, "second_sha256"),
+                    first_capture_id=_required_string(item, "first_capture_id"),
+                    second_capture_id=_required_string(item, "second_capture_id"),
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise BackupManifestError("verified backup chip record is malformed") from exc
+            for label, path_value, expected_digest, size_key in (
+                ("primary", chip.first_path, chip.first_sha256, "first_size_bytes"),
+                ("recovery", chip.second_path, chip.second_sha256, "second_size_bytes"),
+            ):
+                dump = Path(path_value)
+                if (
+                    not dump.is_absolute()
+                    or _path_has_link_component(dump)
+                    or not dump.is_file()
+                    or dump.stat().st_size != chip.capacity_bytes
+                ):
+                    raise BackupManifestError(f"{label} copy for {chip.chip_id} is missing or unsafe")
+                if item.get(size_key) != chip.capacity_bytes or _hash_file(dump) != expected_digest:
+                    raise BackupManifestError(f"{label} copy for {chip.chip_id} changed since capture")
+            expected_chip = next((candidate for candidate in plan.topology.chips if candidate.chip_id == chip.chip_id), None)
+            if expected_chip is None or expected_chip.capacity_bytes != chip.capacity_bytes:
+                raise BackupManifestError("verified backup chip differs from current observed topology")
+            captured.append(chip)
+            pairs.append(BackupPairEvidence(
+                chip_id=chip.chip_id,
+                first_path=chip.first_path,
+                second_path=chip.second_path,
+                first_sha256=chip.first_sha256,
+                second_sha256=chip.second_sha256,
+                first_capture_id=chip.first_capture_id,
+                second_capture_id=chip.second_capture_id,
+                transient=False,
+            ))
+        primary_storage = _storage_from_record(primary.get("primary_storage"))
+        recovery_storage = _storage_from_record(primary.get("recovery_storage"))
+        if (
+            Path(primary_storage.path).resolve(strict=False) != first_path.parent.resolve(strict=False)
+            or Path(recovery_storage.path).resolve(strict=False) != second_path.parent.resolve(strict=False)
+        ):
+            raise BackupManifestError("storage paths differ from the verified manifest locations")
+        required_bytes = sum(chip.capacity_bytes for chip in captured)
+        _validate_storage_pair(primary_storage, recovery_storage, required_bytes)
+        primary_root = Path(primary_storage.path).resolve(strict=True)
+        recovery_root = Path(recovery_storage.path).resolve(strict=True)
+        try:
+            for chip in captured:
+                first_dump = Path(chip.first_path).resolve(strict=True)
+                second_dump = Path(chip.second_path).resolve(strict=True)
+                first_dump.relative_to(primary_root)
+                second_dump.relative_to(recovery_root)
+                if first_dump == second_dump or first_dump.samefile(second_dump):
+                    raise BackupManifestError("primary and recovery backup copies must be distinct files")
+        except (OSError, ValueError) as exc:
+            raise BackupManifestError(
+                "backup dump paths must stay under their separately recorded storage directories"
+            ) from exc
+        backup_evidence = BackupEvidence(tuple(pairs))
+        rebuilt_plan = replace(plan, backup=backup_evidence) if isinstance(plan, OperationPlan) else replace(plan, backup=backup_evidence)
+        decision = self.validator.validate(rebuilt_plan) if isinstance(rebuilt_plan, OperationPlan) else self.validator.validate_build_intent(rebuilt_plan)
+        if decision.decision is not CompatibilityDecision.ALLOWED:
+            # The pre-build intent can remain allowed without a backup; verify
+            # the captured pair against a temporary operation plan instead.
+            if not pairs or any(pair.transient for pair in pairs):
+                raise BackupManifestError("backup evidence failed policy validation")
+        if isinstance(plan, BuildIntentEvidence):
+            if primary.get("profile_id") != plan.profile_id or primary.get("build_intent_sha256") != build_intent_sha256(plan):
+                raise BackupManifestError("backup event is not bound to the exact current pre-build intent")
+        elif primary.get("profile_id") != plan.profile_id:
+            raise BackupManifestError("backup event profile differs from the exact operation plan")
+        programmer = primary.get("programmer")
+        tool = primary.get("tool")
+        created = primary.get("completed_at_utc")
+        if not isinstance(programmer, str) or not isinstance(tool, dict) or not isinstance(created, str):
+            raise BackupManifestError("verified backup event lacks tool, programmer, or timestamp metadata")
+        try:
+            selected_programmer = ProgrammerType(programmer)
+        except ValueError as exc:
+            raise BackupManifestError("verified backup event names an unsupported programmer") from exc
+        if selected_programmer is ProgrammerType.INTERNAL:
+            raise BackupManifestError("verified backup event cannot use the internal programmer")
+        tool_name = _required_string(tool, "name")
+        tool_version = _required_string(tool, "version")
+        tool_executable = _required_string(tool, "executable")
+        if not Path(tool_executable).is_absolute():
+            raise BackupManifestError("verified backup tool executable path is not absolute")
+        if expected_tool is not None and (
+            tool_name.casefold() != expected_tool.name.casefold()
+            or tool_version != expected_tool.version
+            or Path(tool_executable).resolve(strict=False) != Path(expected_tool.executable).resolve(strict=False)
+        ):
+            raise BackupManifestError("backup tool identity differs from the fresh local probe")
+        expected_device_identifiers = {
+            "raw_dmi_product_name": plan.device.raw_dmi_product_name,
+            "raw_mtm": plan.device.raw_mtm,
+            "raw_bios_version": plan.device.raw_bios_version,
+        }
+        if primary.get("device_identifiers") != expected_device_identifiers:
+            raise BackupManifestError("backup event device identity differs from the current plan")
+        expected_regions = [_region_record(region) for region in plan.topology.regions]
+        if primary.get("regions") != expected_regions:
+            raise BackupManifestError("backup event region map differs from the current topology")
+        topology = primary.get("topology")
+        if not isinstance(topology, list) or len(topology) != len(plan.topology.chips):
+            raise BackupManifestError("backup event chip topology is missing or incomplete")
+        topology_by_id = {item.get("chip_id"): item for item in topology if isinstance(item, dict)}
+        if len(topology_by_id) != len(topology):
+            raise BackupManifestError("backup event contains duplicate or malformed chip topology")
+        for expected_chip in plan.topology.chips:
+            item = topology_by_id.get(expected_chip.chip_id)
+            captured_chip = next((chip for chip in captured if chip.chip_id == expected_chip.chip_id), None)
+            if item is None or captured_chip is None or any(
+                item.get(key) != value
+                for key, value in (
+                    ("physical_label", expected_chip.physical_label),
+                    ("capacity_bytes", expected_chip.capacity_bytes),
+                    ("voltage_mv", expected_chip.voltage_mv),
+                    ("voltage_evidence_source", expected_chip.voltage_evidence_source),
+                    ("voltage_attested_by", expected_chip.voltage_attested_by),
+                    ("voltage_attested_at", expected_chip.voltage_attested_at),
+                    ("voltage_instrument_id", expected_chip.voltage_instrument_id),
+                    ("voltage_test_point", expected_chip.voltage_test_point),
+                    ("observed_chip_name", captured_chip.observed_chip_name),
+                )
+            ):
+                raise BackupManifestError("backup event chip evidence differs from the current observed topology")
+        evidence = primary.get("programmer_evidence")
+        if not isinstance(evidence, dict) or any(
+            evidence.get(key) != expected
+            for key, expected in (
+                ("kind", plan.programmer.kind.value),
+                ("interface_verified", plan.programmer.interface_verified),
+                ("wiring_verified", plan.programmer.wiring_verified),
+                ("voltage_mv", plan.programmer.voltage_mv),
+                ("evidence_source", plan.programmer.evidence_source),
+                ("attested_by", plan.programmer.attested_by),
+                ("attested_at", plan.programmer.attested_at),
+                ("instrument_id", plan.programmer.instrument_id),
+                ("measurement_test_point", plan.programmer.measurement_test_point),
+            )
+        ):
+            raise BackupManifestError("backup programmer setup provenance differs from current attestation")
+        try:
+            programmer_evidence = ProgrammerEvidence(
+                kind=ProgrammerKind(_required_string(evidence, "kind")),
+                observed=True,
+                interface_verified=evidence.get("interface_verified") is True,
+                wiring_verified=evidence.get("wiring_verified") is True,
+                voltage_mv=_required_positive_int(evidence, "voltage_mv"),
+                evidence_source=_required_string(evidence, "evidence_source"),
+                attested_by=_required_string(evidence, "attested_by"),
+                attested_at=_required_string(evidence, "attested_at"),
+                instrument_id=_required_string(evidence, "instrument_id"),
+                measurement_test_point=_required_string(evidence, "measurement_test_point"),
+            )
+            _validate_external_backup_programmer(plan, selected_programmer, programmer_evidence)
+        except (TypeError, ValueError, BackupUnavailableError) as exc:
+            raise BackupManifestError("verified backup external programmer evidence failed policy validation") from exc
+        return BackupSetResult(
+            operation_id=operation_id,
+            profile_id=plan.profile_id,
+            created_at_utc=created,
+            tool_name=tool_name,
+            tool_version=tool_version,
+            programmer=programmer,
+            backup=backup_evidence,
+            chips=tuple(captured),
+            primary_manifest=str(first_path),
+            recovery_manifest=str(second_path),
+            primary_manifest_sha256=primary_manifest_sha256,
+            recovery_manifest_sha256=recovery_manifest_sha256,
+            primary_storage=primary_storage,
+            recovery_storage=recovery_storage,
+        )
+
 
 def _validate_external_backup_programmer(
     plan: OperationPlan | BuildIntentEvidence,
@@ -591,6 +838,9 @@ def _same_tool_identity(current: FlashToolIdentity, probed: FlashToolIdentity) -
 
 def _validate_storage_pair(primary: StorageEvidence, recovery: StorageEvidence, required_bytes: int) -> None:
     for label, evidence in (("primary", primary), ("recovery", recovery)):
+        path = Path(evidence.path)
+        if not path.is_absolute() or _path_has_link_component(path):
+            raise StoragePreflightError(f"{label} backup destination must be absolute and link-free")
         if not evidence.usable or evidence.required_bytes < required_bytes:
             raise StoragePreflightError(
                 f"{label} destination lacks persistent, writable, rereadable capacity for the full backup set"
@@ -599,6 +849,20 @@ def _validate_storage_pair(primary: StorageEvidence, recovery: StorageEvidence, 
         raise StoragePreflightError("primary and recovery copies must be stored at different destinations")
     if primary.volume_id == recovery.volume_id:
         raise StoragePreflightError("primary and recovery copies must be on separately identified persistent volumes")
+
+
+def _path_has_link_component(path: Path) -> bool:
+    """Return true when an existing component is a symlink or Windows junction."""
+    absolute = Path(os.path.abspath(path))
+    current = Path(absolute.anchor)
+    for part in absolute.relative_to(current).parts:
+        current = current / part
+        try:
+            if current.is_symlink() or (hasattr(current, "is_junction") and current.is_junction()):
+                return True
+        except OSError:
+            return True
+    return False
 
 
 def _validate_dump(path: Path, capacity: int, chip_id: str, pass_label: str) -> None:
@@ -643,6 +907,11 @@ def _base_manifest_event(
             "interface_verified": programmer_evidence.interface_verified,
             "wiring_verified": programmer_evidence.wiring_verified,
             "voltage_mv": programmer_evidence.voltage_mv,
+            "evidence_source": programmer_evidence.evidence_source,
+            "attested_by": programmer_evidence.attested_by,
+            "attested_at": programmer_evidence.attested_at,
+            "instrument_id": programmer_evidence.instrument_id,
+            "measurement_test_point": programmer_evidence.measurement_test_point,
         },
         "tool": {
             "name": tool.name,
@@ -665,6 +934,11 @@ def _base_manifest_event(
                 "physical_label": chip.physical_label,
                 "capacity_bytes": chip.capacity_bytes,
                 "voltage_mv": chip.voltage_mv,
+                "voltage_evidence_source": chip.voltage_evidence_source,
+                "voltage_attested_by": chip.voltage_attested_by,
+                "voltage_attested_at": chip.voltage_attested_at,
+                "voltage_instrument_id": chip.voltage_instrument_id,
+                "voltage_test_point": chip.voltage_test_point,
                 "observed_chip_name": probe_by_capacity[chip.capacity_bytes].chip_name,
             }
             for chip in plan.topology.chips
@@ -717,3 +991,81 @@ def _chip_record(entry: CapturedChipBackup) -> dict[str, Any]:
         "first_capture_id": entry.first_capture_id,
         "second_capture_id": entry.second_capture_id,
     }
+
+
+def _event_payload(event: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in event.items()
+        if key not in {"sequence", "previous_sha256", "event_sha256"}
+    }
+
+
+def _verified_event_for(
+    events: Sequence[dict[str, Any]],
+    operation_id: str,
+    plan: OperationPlan | BuildIntentEvidence,
+) -> dict[str, Any]:
+    matches = [
+        event for event in events
+        if event.get("operation_id") == operation_id
+        and event.get("profile_id") == plan.profile_id
+        and event.get("status") == "verified"
+    ]
+    if len(matches) != 1:
+        raise BackupManifestError("backup manifest must contain exactly one verified event for this operation")
+    event = matches[0]
+    if isinstance(plan, BuildIntentEvidence):
+        if event.get("build_intent_sha256") != build_intent_sha256(plan):
+            raise BackupManifestError("backup event does not match the current exact build intent")
+    else:
+        artifact = event.get("source_artifact")
+        if not isinstance(artifact, dict) or (
+            artifact.get("sha256") != plan.artifact.expected_sha256
+            or artifact.get("size_bytes") != plan.artifact.expected_size_bytes
+            or artifact.get("source_revision") != plan.artifact.source_revision
+        ):
+            raise BackupManifestError("backup event does not match the current exact operation artifact")
+    return event
+
+
+def _required_string(value: dict[str, Any], key: str) -> str:
+    field_value = value.get(key)
+    if not isinstance(field_value, str) or not field_value:
+        raise ValueError(f"{key} must be non-empty text")
+    return field_value
+
+
+def _required_positive_int(value: dict[str, Any], key: str) -> int:
+    field_value = value.get(key)
+    if type(field_value) is not int or field_value <= 0:
+        raise ValueError(f"{key} must be a positive integer")
+    return field_value
+
+
+def _required_sha256(value: dict[str, Any], key: str) -> str:
+    field_value = _required_string(value, key)
+    if len(field_value) != 64 or any(char not in "0123456789abcdef" for char in field_value):
+        raise ValueError(f"{key} must be a lowercase SHA-256 digest")
+    return field_value
+
+
+def _storage_from_record(value: Any) -> StorageEvidence:
+    if not isinstance(value, dict):
+        raise BackupManifestError("verified backup storage record is malformed")
+    try:
+        result = StorageEvidence(
+            path=_required_string(value, "path"),
+            volume_id=_required_string(value, "volume_id"),
+            filesystem_type=value.get("filesystem_type") if value.get("filesystem_type") is None else _required_string(value, "filesystem_type"),
+            available_bytes=_required_positive_int(value, "available_bytes"),
+            required_bytes=_required_positive_int(value, "required_bytes"),
+            persistence_confirmed=value.get("persistent_confirmed") is True,
+            scratch_readback_verified=value.get("scratch_readback_verified") is True,
+            observed_at_utc=_required_string(value, "observed_at_utc"),
+        )
+    except (TypeError, ValueError) as exc:
+        raise BackupManifestError("verified backup storage record is malformed") from exc
+    if not result.usable:
+        raise BackupManifestError("verified backup storage is no longer persistent and readable")
+    return result

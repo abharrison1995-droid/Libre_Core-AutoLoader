@@ -17,6 +17,7 @@ from autoloader.exceptions import SafetyError
 from autoloader.rom_builder.artifact_engine import (
     COREBOOT_2609,
     X220_COREBOOT,
+    ArtifactEngine,
     ArtifactBuildResult,
     ArtifactManifest,
     ArtifactRecord,
@@ -270,6 +271,70 @@ def test_x220_positive_synthetic_path_stops_hardware_pending(tmp_path, monkeypat
     assert "No firmware write" in result.message
     assert workflow.resume_from_checkpoint().state.value == "backup-verified"
     assert original[:0x500000] == Path(backup.chips[0].first_path).read_bytes()[:0x500000]
+
+
+def test_x220_persisted_operation_plan_roundtrips_provenance_and_tampering_blocks(
+    tmp_path, monkeypatch
+):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    expected_plan = result.manifest.finalized_operation_plan
+    assert expected_plan is not None
+
+    reopened = ArtifactEngine().load_completed_result(result.manifest_path)
+    reopened_plan = reopened.manifest.finalized_operation_plan
+    assert reopened_plan == expected_plan
+    chip = reopened_plan.topology.chips[0]
+    assert (
+        chip.voltage_evidence_source,
+        chip.voltage_attested_by,
+        chip.voltage_attested_at,
+        chip.voltage_instrument_id,
+        chip.voltage_test_point,
+    ) == (
+        "synthetic-test-fixture",
+        "fixture-operator",
+        "2026-10-10T00:00:00+00:00",
+        "fixture-meter",
+        "fixture-vcc",
+    )
+    assert (
+        reopened_plan.programmer.evidence_source,
+        reopened_plan.programmer.attested_by,
+        reopened_plan.programmer.attested_at,
+        reopened_plan.programmer.instrument_id,
+        reopened_plan.programmer.measurement_test_point,
+    ) == (
+        "synthetic-test-fixture",
+        "fixture-operator",
+        "2026-10-10T00:00:00+00:00",
+        "fixture-meter",
+        "fixture-vcc",
+    )
+
+    # A manifest checksum only detects accidental corruption; recomputing it
+    # must not let altered provenance pass the workflow's exact-plan boundary.
+    document = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    malformed = json.loads(json.dumps(document))
+    malformed["finalized_operation_plan"]["topology"]["chips"][0]["observed"] = "true"
+    malformed_raw = (json.dumps(malformed, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    result.manifest_path.write_bytes(malformed_raw)
+    result.manifest_path.with_name("manifest.sha256").write_text(
+        f"{hashlib.sha256(malformed_raw).hexdigest()}  manifest.json\n", encoding="ascii"
+    )
+    with pytest.raises(ValueError, match="boolean"):
+        ArtifactEngine().load_completed_result(result.manifest_path)
+
+    document["finalized_operation_plan"]["topology"]["chips"][0]["voltage_attested_by"] = "forged-operator"
+    raw = (json.dumps(document, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    result.manifest_path.write_bytes(raw)
+    result.manifest_path.with_name("manifest.sha256").write_text(
+        f"{hashlib.sha256(raw).hexdigest()}  manifest.json\n", encoding="ascii"
+    )
+    tampered = ArtifactEngine().load_completed_result(result.manifest_path)
+    blocked = workflow.accept_artifact_result(tampered)
+    assert blocked.stage is X220WorkflowStage.BLOCKED
+    assert any("finalized operation plan" in reason.lower() for reason in blocked.reasons)
 
 
 @pytest.mark.parametrize(
