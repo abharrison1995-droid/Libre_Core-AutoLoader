@@ -17,6 +17,10 @@ class DetectionResult:
     machine_type: Optional[str]
     serial_number: Optional[str]
     confidence: str  # "high", "medium", "low"
+    raw_product_name: Optional[str] = None
+    raw_product_version: Optional[str] = None
+    raw_system_family: Optional[str] = None
+    raw_mtm: Optional[str] = None
 
 class ModelDetector:
     """Detects the ThinkPad model and associated metadata."""
@@ -44,6 +48,21 @@ class ModelDetector:
 
     def __init__(self):
         self.os_type = platform.system().lower()
+
+    def _extract_raw_mtm(self, *values: str) -> Optional[str]:
+        """Retain the full known machine-type/MTM token from raw DMI strings."""
+        for value in values:
+            if not value:
+                continue
+            for machine_type in sorted(self.MACHINE_TYPES, key=len, reverse=True):
+                match = re.search(
+                    rf"(?<![A-Z0-9]){re.escape(machine_type)}[A-Z0-9-]*",
+                    value,
+                    re.IGNORECASE,
+                )
+                if match:
+                    return match.group(0)
+        return None
 
     def machine_type_to_model(self, machine_type: str) -> Optional[str]:
         """Maps a Lenovo machine type to a known model ID."""
@@ -110,6 +129,7 @@ class ModelDetector:
         """Detects hardware on Linux using sysfs and dmidecode."""
         product_name = self._read_sysfs("/sys/class/dmi/id/product_name")
         product_version = self._read_sysfs("/sys/class/dmi/id/product_version")
+        system_family = self._read_sysfs("/sys/class/dmi/id/product_family")
         sys_vendor = self._read_sysfs("/sys/class/dmi/id/sys_vendor")
         serial_number = self._read_sysfs("/sys/class/dmi/id/product_serial")
 
@@ -119,6 +139,8 @@ class ModelDetector:
             for line in dmidecode_out.splitlines():
                 if "Product Name:" in line:
                     product_name = line.split(":", 1)[1].strip()
+                elif "Family:" in line:
+                    system_family = line.split(":", 1)[1].strip()
                 elif "Version:" in line:
                     product_version = line.split(":", 1)[1].strip()
                 elif "Serial Number:" in line:
@@ -146,7 +168,11 @@ class ModelDetector:
             model_name=f"ThinkPad {model_id}" if model_id else "Unknown",
             machine_type=machine_type,
             serial_number=serial_number or None,
-            confidence=confidence
+            confidence=confidence,
+            raw_product_name=product_name or None,
+            raw_product_version=product_version or None,
+            raw_system_family=system_family or None,
+            raw_mtm=self._extract_raw_mtm(product_name, product_version),
         )
 
     def detect_windows(self) -> DetectionResult:
@@ -164,6 +190,28 @@ class ModelDetector:
                 elif len(parts) == 1:
                     product_name = parts[0]
                 break
+
+        # Keep independent SMBIOS fields when WMIC exposes them; a normalized
+        # model inferred from one string is not enough for V1 compatibility.
+        product_version = ""
+        csproduct_out = self._run_subprocess(["wmic", "csproduct", "get", "name,version", "/format:list"])
+        for line in csproduct_out.splitlines():
+            if "=" not in line:
+                continue
+            key, value = (part.strip() for part in line.split("=", 1))
+            if key.casefold() == "version" and value:
+                product_version = value
+            elif key.casefold() == "name" and value and not product_name:
+                product_name = value
+
+        family_out = self._run_subprocess(["wmic", "computersystem", "get", "systemfamily", "/format:list"])
+        system_family = ""
+        for line in family_out.splitlines():
+            if "=" not in line:
+                continue
+            key, value = (part.strip() for part in line.split("=", 1))
+            if key.casefold() == "systemfamily" and value:
+                system_family = value
 
         # 'wmic bios get serialnumber'
         wmic_sn = self._run_subprocess(["wmic", "bios", "get", "serialnumber"])
@@ -194,7 +242,11 @@ class ModelDetector:
             model_name=f"ThinkPad {model_id}" if model_id else "Unknown",
             machine_type=machine_type,
             serial_number=serial_number or None,
-            confidence=confidence
+            confidence=confidence,
+            raw_product_name=product_name or None,
+            raw_product_version=product_version or None,
+            raw_system_family=system_family or None,
+            raw_mtm=self._extract_raw_mtm(product_name, product_version),
         )
 
     def detect(self) -> DetectionResult:

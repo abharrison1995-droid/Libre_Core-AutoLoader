@@ -1,4 +1,4 @@
-# Current architecture and Phase 01 target
+# Current architecture and Phase 02 safety core
 
 ## Current call paths
 
@@ -24,9 +24,16 @@ flowchart TD
   USB[Archiso build script/profile] --> Start[Live startup script]
   Start --> App
   VM[test_vm QEMU harness] -. practice only .-> Screens
+  Plan[Immutable V1 operation plan] --> Policy[CompatibilityValidator]
+  Policy --> Journal[WorkflowSession and OperationJournal]
+  Journal --> Approval[Single-use digest-bound approval]
+  Approval -. Phase 02 always blocks writes .-> Result
+  Policy -. standalone; not wired to CLI/TUI .-> Screens
 ```
 
-At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and flash completion were simulated. Phase 01 quarantines all application CLI physical writes, routes build/backup/flash requests to explicit unavailable outcomes, and removes false success. The TUI's build request uses the same orchestrator; capture and write controls remain disabled. Verification uses the shared orchestrator and can perform a read-only comparison when invoked. The compatibility and authorized workflow controller belongs to Phase 02.
+At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and flash completion were simulated. Phase 01 quarantines all application CLI physical writes, routes build/backup/flash requests to explicit unavailable outcomes, and removes false success. The TUI's build request uses the same orchestrator; capture and write controls remain disabled. Verification uses the shared orchestrator and can perform a read-only comparison when invoked.
+
+Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It uses three immutable V1 profiles, raw detection evidence, exact chip/programmer/artifact checks, a tri-state validator, an append-only in-memory journal, and one-use approvals bound to current plan and file digests. The core is not yet connected to the CLI/TUI or any hardware backend; `WorkflowSession.request_write` always returns `WRITES_DISABLED_PHASE_02` and never invokes a writer. CLI/TUI unification and hardware I/O remain later phases.
 
 ## Main modules
 
@@ -44,7 +51,8 @@ At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and 
 | Live USB | `usb_builder/build_usb.sh`, `usb_builder/archiso_profile/*` |
 | VM/practice harness | `test_vm/launch_vm.py`, `test_vm/launch_vm.bat`, `test_vm/mock_chips/*` |
 | Tests | `tests/*` |
+| V1 evidence and workflow policy | `autoloader/workflow/{types,profiles,compatibility,authorization,engine}.py` |
 
 ## Target direction
 
-Phase 01 quarantines physical CLI writes and removes fake completion paths. Phases 02–03 should replace unavailable outcomes with one model-specific, validated operation plan and backend interface. The CLI and Textual screens should request operations through that interface. Backends must return structured outcomes; UI progress and navigation must reflect those outcomes. A simulation backend must be unable to invoke physical writes. Real-device hardware validation remains a separate acceptance layer.
+Phases 01–02 quarantine physical CLI writes, remove fake completion paths, and implement the model-specific validated operation plan. Phase 02 policy deliberately ignores broad database support flags and fails closed on missing/conflicting evidence. Phase 03 must add a separate write/read/backup backend only after probing and backup/recovery checks are designed and reviewed. Later CLI/TUI integration should use this service; no simulation may invoke physical writes. Real-device hardware validation remains a separate acceptance layer.

@@ -36,7 +36,7 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 
 ## Phase 01 — Stabilization
 
-**Status: SOFTWARE COMPLETE — SOL ACCEPT WITH NON-BLOCKING FOLLOW-UP**
+**Status: SOFTWARE COMPLETE — SOL ACCEPT**
 
 - Packaging: constrained setuptools discovery to `autoloader*`; editable `pip install -e '.[dev]'` succeeds in the isolated Python 3.12.14 environment.
 - CLI/TUI startup: `python -m autoloader --help` succeeds; CLI command registration, all nine screen mounts/compositions, fail-closed screen state and command routing are covered by automated smoke tests.
@@ -44,10 +44,26 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 - Physical writes: the CLI `flash` command now routes through the shared orchestrator and always fails closed; the old `--write` and `--yes` bypass options are removed. The TUI restore control provides an unavailable notice and does not issue a write command. Low-level flash/restore primitives remain for later backend work and unit testing; application paths do not invoke them for physical writes.
 - Build status: `build-rom` validates configuration but returns `ROM_BUILD_UNAVAILABLE` and does not create an artifact. The `usb` command only prepares a directory and clearly says no ISO was built.
 - User-facing claims: welcome screen uses package version and identifies the app as in development; CLI and model-selection database entries are labeled provisional and unvalidated. Model chip sizes are database estimates that must be checked against each observed chip. Backup manifests are shown as recorded until the explicit pair verification action runs.
-- Review: SOL accepted Phase 01 with a non-blocking follow-up to correct the welcome/version and provisional compatibility wording; this polish change resolves that follow-up. Hardware workflows remain pending.
-- Latest software checks: `python -m pytest -q` — **80 passed**; `mypy autoloader` — **no issues in 75 source files**; `python -m autoloader --help` — passed; `git diff --check` — passed. The editable install succeeded after the packaging fix. No interactive firmware operation, IVprep execution, or destructive media operation was performed.
+- Review: SOL accepted Phase 01; its wording follow-up was resolved in `207a7df`. Hardware workflows remain pending.
+- Phase 01 software checks at acceptance: `python -m pytest -q` — **80 passed**; `mypy autoloader` — **no issues in 75 source files**; `python -m autoloader --help` — passed; editable install passed. No interactive firmware operation, IVprep execution, or destructive media operation was performed.
 - Remaining environment limit: this Windows 11 host has no WSL Linux distribution or Docker/Podman, bash, make or cmake. Archiso and upstream firmware toolchain builds remain unperformed, not successful.
 - Hardware evidence: none. The T430 1vyrain, X200 Libreboot and X220 Coreboot workflows remain **HARDWARE PENDING**.
+
+## Phase 02 — Compatibility, workflow state and authorization
+
+**Status: IMPLEMENTED — PENDING SOL REVIEW**
+
+- Domain evidence: added frozen device, chip topology, programmer, region, artifact/provenance, backup-pair, operation-plan, compatibility/result and verification records in `autoloader/workflow/types.py`. `DeviceEvidence` retains raw DMI product name/version/family, MTM and raw BIOS version; normalized detector values and manual selections cannot substitute for missing raw identity evidence.
+- Detection: Linux DMI fallback now preserves `Family:` and Windows detection attempts independent WMIC product version and system family fields. BIOS detection retains the raw BIOS version separately from its parsed display value.
+- Explicit profiles: `autoloader/workflow/profiles.py` exposes only T430/1vyrain, regular X200/Libreboot and X220/Coreboot in an immutable allowlist. Broad database support flags are not consulted. Identity requires matching product-name, system-family and allowlisted MTM evidence; aliases, conflicts and manual-only selection fail closed.
+- T430 source rule: pinned upstream 1vyrain `start.sh` at commit `a3427b34102f8f9887acf65e23d7fd5900fe1d40` reads the third BIOS version token, strips `(` and `.`, and accepts the T430 only when the resulting number is below `265`. Policy accepts an explicit bare `N.NN` value or a raw DMI form such as `G1ET74WW (2.64 )`, blocks `2.65` and newer, and leaves missing, malformed or ambiguous strings UNKNOWN. Parenthesized raw DMI must retain the whitespace before `)` that makes upstream's third-token parsing unambiguous. It records an IVprep handoff reason when the threshold is exceeded; it never executes IVprep or 1vyrain.
+- Topology/artifacts: X200 requires one observed 4 or 8 MiB chip and matching artifact size. T430 requires the profile's observed 8 MiB bottom/4 MiB top chips and a 4 MiB artifact. X220 requires one observed 8 MiB chip, complete non-overlapping IFD/GBE/ME/BIOS maps, a 3 MiB BIOS region and exact artifact-to-observed map agreement. Artifact bytes must match the declared SHA-256; moving tags/branches are rejected and source revisions must be full 40-hex commits.
+- Programmer and backups: external SPI requires a verified interface/wiring and programmer output at 3300 mV, plus each observed chip recorded at the same voltage. Backups require one exact-capacity pair per chip, separate files and capture IDs, stable/nonblank content, declared SHA-256 matches and identical independent reads. Unknown or conflicting evidence blocks progression.
+- State and approval: `WorkflowSession` owns DRAFT → VALIDATED → BACKUP_VERIFIED → AUTHORIZED → WRITE_BLOCKED/BLOCKED transitions and an append-only in-memory journal. Human approval tokens bind the plan, device, artifact content, topology and backup content digests, and are single-use; changed or replayed evidence is rejected. The only `request_write` behavior returns `WRITES_DISABLED_PHASE_02`; no physical writer is connected or called.
+- Tests: added `tests/test_workflow_safety.py` with **12 focused tests** covering DMI conflict/aliases/manual candidates, T430 threshold and unknown strings, X200 capacity and artifact corruption, X220 topology/region/layout, external chip voltage, partial/transient/blank backup evidence, illegal transitions, changed/reused approvals, and zero writer calls for blocked/simulation/Phase02 paths.
+- Current checks: `python -m pytest -q` — **92 passed**; `mypy autoloader` — **no issues in 81 source files**; `pip install -e '.[dev]'` — passed in isolated Python 3.12.14 venv; `python -m autoloader --help` — passed; `git diff --check` — passed.
+- Limits: this core is standalone and is not wired to CLI/TUI; Phase 03/08 work remains. Input observations and capture IDs are not hardware-attested, artifact source-commit ownership is not independently fetched/verified, and the journal is in-memory only. No physical hardware, SPI gear, flash writes, IVprep, recovery operation or destructive media operation was used. No firmware or Live USB build was performed; the host lacks WSL/Linux/container tooling.
+- Review/commit: SOL review pending. Implementation commit SHA will be recorded here after commit. Hardware workflows remain **HARDWARE PENDING**.
 
 ### Defect register (initial)
 
