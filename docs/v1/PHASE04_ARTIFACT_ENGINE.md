@@ -25,7 +25,7 @@ The source-file hashes recorded in code include Coreboot's X220 builder config, 
 - X200 requires the chosen recipe's exact observed chip capacity and parsed CBFS payload inventory. X220 additionally requires the 8 MiB device capacity, complete matching original full-chip backup, exact descriptor/ME/GbE slices from that backup, and the complete observed IFD/GBE/ME/BIOS region map; original and generated maps must match it exactly, and non-BIOS regions must be byte-preserved.
 - A complete software build result requires an artifact record and a complete immutable manifest. Failures keep their command logs and failure code/detail. Reproducibility is explicitly `not_attempted`; a single build would not prove reproducibility.
 - No writer is connected. This phase does not authorize `flashrom`, internal flashing, backup restoration, IVprep, or recovery.
-- The engine is not integrated into CLI/TUI or the Phase 02/03 workflow services. Existing application build requests remain unavailable.
+- Phase 08 integrates the engine into explicit CLI/TUI X200/X220 build and artifact-acceptance actions, bound to fresh intent and verified backup evidence. On this Windows host these explicit build requests return `LINUX_BUILD_ENV_REQUIRED` before spawning a build command or creating output. No successful upstream build or generated-ROM parser output has been obtained.
 
 ## Checks and limits
 
