@@ -347,6 +347,23 @@ def test_x220_result_path_must_match_manifest_selected_path(tmp_path, monkeypatc
     assert "manifest-selected" in staged.reasons[0]
 
 
+@pytest.mark.parametrize("bad_path", [
+    r"C:\outside.rom",
+    "C:/outside.rom",
+    r"\\server\share\coreboot.rom",
+])
+def test_x220_windows_drive_and_unc_manifest_paths_are_rejected(tmp_path, monkeypatch, bad_path):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    manifest = result.manifest
+    object.__setattr__(manifest.artifacts[0], "relative_path", bad_path)
+    object.__setattr__(manifest, "selected_artifact_relative_path", bad_path)
+    result = _rewrite_manifest(result, manifest)
+    staged = workflow.accept_artifact_result(result)
+    assert staged.stage is X220WorkflowStage.BLOCKED
+    assert "selected artifact" in staged.reasons[0].lower()
+
+
 def test_x220_manifest_log_path_traversal_is_rejected(tmp_path, monkeypatch):
     workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
     result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)

@@ -15,7 +15,7 @@ import uuid
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from enum import Enum
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Sequence
 
 from autoloader.exceptions import SafetyError
@@ -467,9 +467,17 @@ class X220CorebootWorkflow:
         if len(result.artifacts) != 1 or len(manifest.artifacts) != 1:
             raise ValueError("X220 manifest/result must expose exactly its single recipe-selected ROM")
         selected = manifest.artifacts[0]
+        selected_path_text = selected.relative_path or ""
+        selected_path_posix = PurePosixPath(selected_path_text)
+        selected_path_windows = PureWindowsPath(selected_path_text)
         if (
             selected.source_relative_path != X220_COREBOOT.output_relative_path
             or selected.relative_path != manifest.selected_artifact_relative_path
+            or selected_path_text != "artifacts/coreboot.rom"
+            or selected_path_posix.is_absolute()
+            or selected_path_windows.is_absolute()
+            or bool(selected_path_windows.drive)
+            or "\\" in selected_path_text
             or selected.sha256 != manifest.selected_artifact_sha256
             or selected.size_bytes != 8 * MIB
             or selected.regions != self.intent.topology.regions
@@ -477,7 +485,7 @@ class X220CorebootWorkflow:
             or selected.backup_provenance != self._backup_provenance
         ):
             raise ValueError("X220 selected artifact record is incomplete or differs from the verified original backup")
-        if PurePosixPath(selected.relative_path or "").is_absolute() or ".." in PurePosixPath(selected.relative_path or "").parts:
+        if selected_path_posix.is_absolute() or ".." in selected_path_posix.parts:
             raise ValueError("X220 selected artifact path escapes its manifest operation directory")
         if manifest_path.name != "manifest.json" or _path_has_link_component(manifest_path) or not manifest_path.is_file():
             raise ValueError("X220 manifest must be a regular manifest.json file")
@@ -494,7 +502,12 @@ class X220CorebootWorkflow:
                 raise ValueError("X220 selected artifact path contains a symlink component")
         if _path_has_link_component(result.artifacts[0]) or result.artifacts[0].resolve(strict=True) != artifact.resolve(strict=True):
             raise ValueError("X220 ArtifactBuildResult path is not the manifest-selected staged file")
-        if not artifact.is_file() or artifact.stat().st_size != 8 * MIB or sha256_file(artifact) != selected.sha256:
+        resolved_artifact = artifact.resolve(strict=True)
+        try:
+            resolved_artifact.relative_to(operation_root)
+        except ValueError as exc:
+            raise ValueError("X220 selected artifact resolves outside its manifest operation directory") from exc
+        if not resolved_artifact.is_file() or resolved_artifact.stat().st_size != 8 * MIB or sha256_file(resolved_artifact) != selected.sha256:
             raise ValueError("X220 staged artifact is missing, wrong-sized or changed")
         try:
             if str(uuid.UUID(manifest.operation_id)) != manifest.operation_id:
