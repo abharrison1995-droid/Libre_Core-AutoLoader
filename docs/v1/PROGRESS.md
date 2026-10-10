@@ -130,6 +130,15 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 - Software checks: 22 focused X220 tests passed; LUNA's local full `python -m pytest -q` run passed **240 in 149.07 seconds**; the root agent's independent full run passed **240 in 144.19 seconds**. Mypy reports no issues in 90 source files; CLI help and diff-check passed. SOL reviewed these reports and accepted the software scope; SOL did not run the test suite.
 - Limits: the Windows host has no supported Linux build environment, so no Coreboot build ran. No physical probe, measured voltage, physical backup, firmware write/restore, post-write read-back, recovery procedure, or boot test occurred. The workflow is not integrated into CLI/TUI; no writer is enabled. X220 remains **HARDWARE PENDING**.
 
+## Phase 08 — Shared application controller and CLI/TUI integration
+
+**Status: SOFTWARE IMPLEMENTED — PENDING SOL REVIEW; PARTIAL INTEGRATION**
+
+- Implementation commit: `5519b1106c4d2973b44828e492805fa0c9e46ccf` (`Add shared profile workflow controller and UI routes`). `ApplicationController` is now the common backend for CLI and Textual safe workflow actions. It exposes only T430/1vyrain, regular X200/Libreboot and X220/Coreboot profiles; handles candidate evidence import and explicit non-overwriting persistence; reports typed status/reasons/evidence/operation summaries and allowed actions; supports safe checkpoint inspection and T430 checkpoint resume. Textual navigation uses controller status/actions, and CLI status/import/checkpoint commands use the same controller.
+- Final software gates: `python -m pytest -q` — **256 passed in 150.44 seconds**; `python -m mypy autoloader` — **Success: no issues found in 94 source files**; `python -m autoloader --help` — passed; `git diff --check` — passed. The `checkpoint_ref` values for X200/X220 are converted to strings only after safe-path validation; the controller test asserts this public type.
+- Remaining app integration gaps: resumed T430 sessions do not yet accept return attestations through CLI/TUI; explicit detection in those stages yields a candidate capture only. X200/X220 workflow sessions cannot yet be created/prepared from the app, and exact typed plans are not reconstructed for resume; existing attached sessions can be summarized and safe journals inspected. The app routes build, backup, flash, restore, read-back and boot requests to unavailable outcomes without side effects. These limits are part of the pending SOL review.
+- No hardware input or firmware build was performed. The tests use software fixtures; they do not prove a firmware build, device compatibility, physical backup, write, read-back, recovery or boot. All three hardware workflows remain **HARDWARE PENDING**; no writer is enabled. Phase 09 has not started.
+
 ### Defect register (initial)
 
 | Priority | Finding | Evidence | Planned phase |
