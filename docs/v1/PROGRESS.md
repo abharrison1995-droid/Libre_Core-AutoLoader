@@ -17,9 +17,9 @@
 
 ## Phase 00 — Repository audit and baseline
 
-**Status: SOFTWARE COMPLETE — SOL ACCEPT WITH NON-BLOCKING FOLLOW-UP**
+**Status: SOFTWARE COMPLETE — SOL ACCEPT**
 
-SOL review follow-ups were closed in commit `4dc9c19`: exact phase order, four-category feature matrix, baseline test/package/type/build evidence, expanded architecture inventory, and source-backed provisional reference-machine constraints. The Phase 00 report is accepted; device-specific details remain provisional and hardware validation remains pending.
+SOL's four review follow-ups were finalized in commit `2d0e2d1`: exact phase order, four-category feature matrix, baseline test/package/type/build evidence, expanded architecture inventory, and source-backed provisional reference-machine constraints. The Phase 00 report is accepted; device-specific details remain provisional and hardware validation remains pending.
 
 - Entry point: `autoloader.__main__:main` (Click, also `python -m autoloader`). `run` launches `AutoLoaderApp`; `detect` calls model/BIOS/EC detectors; `build-rom` validates configuration only; `usb` creates a directory only; baseline `flash --write` directly called flashrom. Phase 01 quarantines that route pending the shared safety backend.
 - TUI: `autoloader/app.py` registers screens; the build, flash and verification screens currently own simulated/canned operation outcomes. Backup routes through `Orchestrator` and `BackupManager`.
