@@ -16,6 +16,8 @@ from autoloader.reversion.ivprep import (
 )
 from autoloader.reversion.t430_handoff import (
     ONEVYRAIN_README_SHA256,
+    ONEVYRAIN_REV5_MD5,
+    ONEVYRAIN_REV5_MEDIA_URL,
     ONEVYRAIN_START_SHA256,
     T430DetectionCapture,
     T430HandoffSession,
@@ -79,6 +81,8 @@ def preflight(
         "ac_connected": True,
         "battery_percent": 80,
         "uefi_booted": uefi,
+        "secure_boot_disabled": True,
+        "will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub": True,
     }
     values.update(overrides)
     return T430PreflightEvidence(**values)
@@ -90,14 +94,19 @@ def media_evidence(
     actor: str = "operator",
     selected_at: datetime | None = None,
     fingerprint: str | None = None,
+    image_md5: str | None = ONEVYRAIN_REV5_MD5,
+    dd_mode: bool | None = True,
+    image_source_url: str = ONEVYRAIN_REV5_MEDIA_URL,
 ) -> T430MediaEvidence:
     return T430MediaEvidence(
         capture_id=detection.capture_id,
         device_fingerprint_sha256=fingerprint or detection.device_fingerprint_sha256,
         user_reported_image_sha256="c" * 64,
+        user_reported_image_md5=image_md5,
         image_size_bytes=2_000_000,
-        image_source_url="https://github.com/n4ru/1vyrain",
+        image_source_url=image_source_url,
         user_reported_media_fingerprint_sha256="d" * 64,
+        written_in_dd_mode=dd_mode,
         selected_at=selected_at or detection.observed_at + timedelta(minutes=2),
         selected_by=actor,
     )
@@ -155,6 +164,15 @@ def test_ivprep_source_pin_and_manual_handoff_only():
     assert descriptor.downgrade_script_sha256 == IVPREP_DOWNGRADE_SCRIPT_SHA256 == "cb5528d6f1d001937b224f3d9b7f075a928c2692e12d8f74b24533dd12d2dd31"
     assert descriptor.required_platform == "Windows 64-bit"
     assert descriptor.power_loss_can_brick_device is True
+    ivprep_instructions = " ".join(descriptor.instructions)
+    assert "Windows 64-bit" in ivprep_instructions
+    assert "Flash BIOS Updating by End-Users" in ivprep_instructions
+    assert "Secure RollBack Prevention" in ivprep_instructions
+    assert "Connect AC power" in ivprep_instructions
+    assert "Do not run downgrade.bat as Administrator" in ivprep_instructions
+    assert "WinFlash requests elevation" in ivprep_instructions
+    assert "reboots" in ivprep_instructions and "BIOS region" in ivprep_instructions
+    assert "Power loss" in ivprep_instructions and "brick" in ivprep_instructions
     assert descriptor.binaries_included is False
     assert descriptor.binary_assets_verified is False
     assert descriptor.executes_anything is False
@@ -331,6 +349,10 @@ def test_onevyrain_requires_fresh_preflight_media_and_same_human():
         {"ac_connected": False},
         {"battery_percent": None},
         {"battery_percent": 29},
+        {"secure_boot_disabled": None},
+        {"secure_boot_disabled": False},
+        {"will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub": None},
+        {"will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub": False},
     ],
 )
 def test_t430_handoff_preflight_unknown_or_failed_values_block(overrides):
@@ -342,6 +364,75 @@ def test_t430_handoff_preflight_unknown_or_failed_values_block(overrides):
         session.approve_onevyrain_handoff(
             actor="operator", explicit_approval=True, approved_at=BASE + timedelta(minutes=4)
         )
+
+
+@pytest.mark.parametrize(
+    ("image_md5", "dd_mode", "source_url", "expected_message"),
+    [
+        (None, True, ONEVYRAIN_REV5_MEDIA_URL, "MD5 is required"),
+        ("0" * 32, True, ONEVYRAIN_REV5_MEDIA_URL, "does not match"),
+        (ONEVYRAIN_REV5_MD5.upper(), None, ONEVYRAIN_REV5_MEDIA_URL, "DD mode"),
+        (ONEVYRAIN_REV5_MD5, False, ONEVYRAIN_REV5_MEDIA_URL, "DD mode"),
+        (ONEVYRAIN_REV5_MD5, True, "https://example.invalid/image.iso", "pinned upstream Rev 5 link"),
+    ],
+)
+def test_onevyrain_media_requires_pinned_legacy_md5_source_and_dd_mode(
+    image_md5, dd_mode, source_url, expected_message
+):
+    initial = capture(t430_device(), "initial", 0)
+    session = T430HandoffSession(initial)
+    session.record_preflight(preflight(initial, uefi=True))
+    with pytest.raises(SafetyError, match=expected_message):
+        session.record_onevyrain_media(
+            media_evidence(
+                initial,
+                image_md5=image_md5,
+                dd_mode=dd_mode,
+                image_source_url=source_url,
+            )
+        )
+    assert session._media is None
+
+
+@pytest.mark.parametrize(
+    ("preflight_field", "bad_value", "media_field", "expected_message"),
+    [
+        ("secure_boot_disabled", None, None, "Secure Boot disabled"),
+        ("secure_boot_disabled", False, None, "Secure Boot disabled"),
+        (
+            "will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub",
+            None,
+            None,
+            "direct onboard USB boot",
+        ),
+        (
+            "will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub",
+            False,
+            None,
+            "direct onboard USB boot",
+        ),
+        (None, None, "user_reported_image_md5", "Rev 5 MD5"),
+        (None, None, "written_in_dd_mode", "DD-mode"),
+    ],
+)
+def test_onevyrain_approval_rechecks_required_human_attestations(
+    preflight_field, bad_value, media_field, expected_message
+):
+    initial = capture(t430_device(), "initial", 0)
+    session = T430HandoffSession(initial)
+    session.record_preflight(preflight(initial, uefi=True))
+    session.record_onevyrain_media(media_evidence(initial))
+    if preflight_field is not None:
+        setattr(session, "_preflight", preflight(initial, uefi=True, **{preflight_field: bad_value}))
+    if media_field == "user_reported_image_md5":
+        setattr(session, "_media", media_evidence(initial, image_md5="0" * 32))
+    elif media_field == "written_in_dd_mode":
+        setattr(session, "_media", media_evidence(initial, dd_mode=None))
+    with pytest.raises(SafetyError, match=expected_message):
+        session.approve_onevyrain_handoff(
+            actor="operator", explicit_approval=True, approved_at=BASE + timedelta(minutes=4)
+        )
+    assert session._handoff_approved is False
 
 
 def test_onevyrain_requires_fresh_reboot_evidence_and_remains_pending(tmp_path):
@@ -360,8 +451,21 @@ def test_onevyrain_requires_fresh_reboot_evidence_and_remains_pending(tmp_path):
     assert descriptor.image_integrity_claim == "user-reported local SHA-256 fingerprint only; upstream authenticity is not verified"
     assert descriptor.user_reported_image_sha256 == "c" * 64
     assert descriptor.image_size_bytes == 2_000_000
-    assert descriptor.user_reported_image_source_url == "https://github.com/n4ru/1vyrain"
+    assert descriptor.user_reported_image_source_url == ONEVYRAIN_REV5_MEDIA_URL
     assert descriptor.user_reported_media_fingerprint_sha256 == "d" * 64
+    assert descriptor.upstream_rev5_media_url == ONEVYRAIN_REV5_MEDIA_URL
+    assert descriptor.upstream_rev5_published_md5 == ONEVYRAIN_REV5_MD5
+    assert descriptor.user_reported_image_md5 == ONEVYRAIN_REV5_MD5
+    assert descriptor.md5_integrity_claim == "user-reported MD5 matches the pinned README's legacy checksum; weak checksum, not authentication"
+    assert descriptor.image_authenticated is False
+    assert descriptor.written_in_dd_mode is True
+    instructions = " ".join(descriptor.instructions)
+    assert "UEFI" in instructions and "Secure Boot" in instructions
+    assert "onboard USB" in instructions and "dock, ultrabase" in instructions
+    assert "DD mode" in instructions
+    assert "AC power" in instructions and "BIOS passwords" in instructions
+    assert ONEVYRAIN_REV5_MEDIA_URL in instructions and ONEVYRAIN_REV5_MD5 in instructions
+    assert "not authenticate" in instructions
     assert descriptor.binaries_included is False
     assert descriptor.binaries_verified is False
     assert descriptor.executes_anything is False
@@ -369,7 +473,15 @@ def test_onevyrain_requires_fresh_reboot_evidence_and_remains_pending(tmp_path):
     resumed = T430HandoffSession.resume_from_checkpoint(checkpoint)
     assert resumed.operation_id == session.operation_id
     assert resumed.stage is T430HandoffStage.AWAITING_POST_INSTALL_REDETECTION
+    assert resumed._preflight == session._preflight
+    assert resumed._preflight is not None
+    assert resumed._preflight.secure_boot_disabled is True
+    assert resumed._preflight.will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub is True
     assert resumed._media == session._media
+    assert resumed._media is not None
+    assert resumed._media.user_reported_image_md5 == ONEVYRAIN_REV5_MD5
+    assert resumed._media.written_in_dd_mode is True
+    assert json.loads(checkpoint.read_text(encoding="utf-8"))["payload"]["version"] == 2
 
     with pytest.raises(SafetyError, match="Stale detection"):
         resumed.record_post_install_return(

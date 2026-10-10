@@ -33,6 +33,9 @@ ONEVYRAIN_REPOSITORY = "https://github.com/n4ru/1vyrain"
 ONEVYRAIN_TREE = "2298fa23e74c7112b7227d8354a0e51404fda4da"
 ONEVYRAIN_README_SHA256 = "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e335b14e8c33a"
 ONEVYRAIN_START_SHA256 = "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a"
+ONEVYRAIN_REV5_MEDIA_URL = "https://drive.google.com/open?id=1yusq98ja6NmI4G4txKVueFqY_ZEwaZvO"
+ONEVYRAIN_REV5_MD5 = "dd30313a8665e870360920b00cec55c4"
+_MD5 = re.compile(r"^[0-9a-f]{32}$", re.I)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$", re.I)
 
 
@@ -95,7 +98,7 @@ class T430DetectionCapture:
 
 @dataclass(frozen=True)
 class T430PreflightEvidence:
-    """Human-attested BIOS, power, UEFI, and identity checks for one capture."""
+    """Human-attested BIOS, power, boot path, and identity checks for one capture."""
 
     capture_id: str
     device_fingerprint_sha256: str
@@ -107,6 +110,8 @@ class T430PreflightEvidence:
     ac_connected: bool | None
     battery_percent: int | None
     uefi_booted: bool | None
+    secure_boot_disabled: bool | None
+    will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub: bool | None
 
     def __post_init__(self) -> None:
         if not self.capture_id.strip() or not self.attested_by.strip():
@@ -124,9 +129,11 @@ class T430MediaEvidence:
     capture_id: str
     device_fingerprint_sha256: str
     user_reported_image_sha256: str
+    user_reported_image_md5: str | None
     image_size_bytes: int
     image_source_url: str
     user_reported_media_fingerprint_sha256: str
+    written_in_dd_mode: bool | None
     selected_at: datetime
     selected_by: str
     integrity_claim: str = "user-reported local SHA-256 fingerprint only; upstream authenticity is not verified"
@@ -138,6 +145,8 @@ class T430MediaEvidence:
             raise ValueError("Media evidence device fingerprint must be a SHA-256 digest")
         if not _SHA256.fullmatch(self.user_reported_image_sha256):
             raise ValueError("User-reported image SHA-256 must be 64 hexadecimal characters")
+        if self.user_reported_image_md5 is not None and not _MD5.fullmatch(self.user_reported_image_md5):
+            raise ValueError("User-reported image MD5 must be 32 hexadecimal characters when supplied")
         if not _SHA256.fullmatch(self.user_reported_media_fingerprint_sha256):
             raise ValueError("USB/media fingerprint must be a SHA-256 digest")
         if self.image_size_bytes <= 0:
@@ -166,6 +175,20 @@ class OnevyRainHandoffDescriptor:
     image_size_bytes: int
     user_reported_image_source_url: str
     user_reported_media_fingerprint_sha256: str
+    user_reported_image_md5: str
+    upstream_rev5_media_url: str = ONEVYRAIN_REV5_MEDIA_URL
+    upstream_rev5_published_md5: str = ONEVYRAIN_REV5_MD5
+    md5_integrity_claim: str = "user-reported MD5 matches the pinned README's legacy checksum; weak checksum, not authentication"
+    image_authenticated: bool = False
+    written_in_dd_mode: bool = True
+    instructions: tuple[str, ...] = (
+        "Use UEFI boot mode and disable Secure Boot before starting.",
+        "Boot the media from a direct onboard USB port; do not use a dock, ultrabase, or external USB hub.",
+        "Write the upstream image to the selected media in DD mode.",
+        "Connect AC power, charge the battery, and remove BIOS passwords before running.",
+        "Use the upstream Rev 5 image at https://drive.google.com/open?id=1yusq98ja6NmI4G4txKVueFqY_ZEwaZvO; compare its README-published MD5 dd30313a8665e870360920b00cec55c4.",
+        "That MD5 is weak/legacy and does not authenticate the image; the user-reported SHA-256 is only a local fingerprint, and the application does not authenticate or execute the image.",
+    )
     image_integrity_claim: str = "user-reported local SHA-256 fingerprint only; upstream authenticity is not verified"
     upstream_sha256_verified: bool = False
     requires_external_human_run: bool = True
@@ -199,7 +222,7 @@ class T430HandoffCheckpointStore:
     cannot resume into a firmware write or a completed state.
     """
 
-    VERSION = 1
+    VERSION = 2
     RESUMABLE_STAGES = {
         T430HandoffStage.AWAITING_IVPREP_REDETECTION,
         T430HandoffStage.AWAITING_POST_INSTALL_REDETECTION,
@@ -536,6 +559,10 @@ class T430HandoffSession:
         require_uefi = self.stage is T430HandoffStage.ONEVYRAIN_READY
         if require_uefi:
             required["UEFI boot confirmed"] = evidence.uefi_booted
+            required["Secure Boot disabled"] = evidence.secure_boot_disabled
+            required["will boot 1vyrain from direct onboard USB without dock/ultrabase/hub"] = (
+                evidence.will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub
+            )
         missing = [name for name, value in required.items() if value is None]
         if missing:
             raise SafetyError("Preflight evidence is unknown: " + ", ".join(missing))
@@ -553,6 +580,10 @@ class T430HandoffSession:
             raise BIOSReversionError("External media evidence is only accepted before the T430 1vyrain handoff")
         if self._preflight is None or self._preflight.uefi_booted is not True:
             raise SafetyError("Fresh passing UEFI preflight is required before recording 1vyrain media")
+        if self._preflight.secure_boot_disabled is not True:
+            raise SafetyError("1vyrain requires current-capture human attestation that Secure Boot is disabled")
+        if self._preflight.will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub is not True:
+            raise SafetyError("1vyrain requires current-capture attestation to use direct onboard USB without dock or hub")
         if evidence.capture_id != self._capture_id:
             raise SafetyError("Selected image/media must be tied to the current T430 detection capture")
         if evidence.device_fingerprint_sha256 != self._device_fingerprint_sha256:
@@ -562,6 +593,14 @@ class T430HandoffSession:
         selected_at = self._require_utc(evidence.selected_at)
         if selected_at < self._observed_at or selected_at < self._preflight.attested_at:
             raise SafetyError("Image/media selection must follow the current detection and preflight")
+        if evidence.image_source_url != ONEVYRAIN_REV5_MEDIA_URL:
+            raise SafetyError("1vyrain media source must be the pinned upstream Rev 5 link")
+        if evidence.user_reported_image_md5 is None:
+            raise SafetyError("User-reported Rev 5 MD5 is required; it is only a weak legacy checksum")
+        if evidence.user_reported_image_md5.casefold() != ONEVYRAIN_REV5_MD5:
+            raise SafetyError("User-reported image MD5 does not match the pinned README's Rev 5 value")
+        if evidence.written_in_dd_mode is not True:
+            raise SafetyError("1vyrain requires an explicit human attestation that media was written in DD mode")
         self._media = evidence
 
     def approve_ivprep_handoff(
@@ -649,13 +688,21 @@ class T430HandoffSession:
         if not actor.strip() or not explicit_approval:
             raise SafetyError("Explicit human approval is required before 1vyrain handoff")
         preflight = self._require_preflight(actor, require_uefi=True)
+        if preflight.secure_boot_disabled is not True:
+            raise SafetyError("1vyrain approval requires explicit current-capture Secure Boot disabled attestation")
+        if preflight.will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub is not True:
+            raise SafetyError("1vyrain approval requires explicit direct onboard USB/no dock or hub attestation")
         media = self._media
         if media is None:
-            raise SafetyError("User-reported image digest/size and external media identity are required")
+            raise SafetyError("User-reported image digests/size, DD-mode attestation and external media identity are required")
         if media.capture_id != self._capture_id or media.device_fingerprint_sha256 != self._device_fingerprint_sha256:
             raise SafetyError("Image/media evidence is stale or belongs to a different T430")
         if media.selected_by.strip() != actor.strip():
             raise SafetyError("1vyrain approver must be the human who selected the image/media")
+        if media.user_reported_image_md5 is None or media.user_reported_image_md5.casefold() != ONEVYRAIN_REV5_MD5:
+            raise SafetyError("1vyrain approval requires the user-reported Rev 5 MD5 to match the pinned README")
+        if media.written_in_dd_mode is not True:
+            raise SafetyError("1vyrain approval requires explicit DD-mode media-write attestation")
         approval_time = self._validate_approval_time(approved_at, preflight)
         if approval_time <= media.selected_at:
             raise SafetyError("1vyrain approval must follow image/media selection")
@@ -679,6 +726,7 @@ class T430HandoffSession:
             image_size_bytes=media.image_size_bytes,
             user_reported_image_source_url=media.image_source_url,
             user_reported_media_fingerprint_sha256=media.user_reported_media_fingerprint_sha256,
+            user_reported_image_md5=media.user_reported_image_md5,
         )
 
     def record_post_install_return(
@@ -796,6 +844,10 @@ class T430HandoffSession:
             raise SafetyError("Handoff approver must be the human who attested the current preflight")
         if require_uefi and evidence.uefi_booted is not True:
             raise SafetyError("1vyrain requires human-attested UEFI boot confirmation")
+        if require_uefi and evidence.secure_boot_disabled is not True:
+            raise SafetyError("1vyrain requires human-attested Secure Boot disabled confirmation")
+        if require_uefi and evidence.will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub is not True:
+            raise SafetyError("1vyrain requires direct onboard USB boot without dock or hub")
         return evidence
 
     def _validate_approval_time(

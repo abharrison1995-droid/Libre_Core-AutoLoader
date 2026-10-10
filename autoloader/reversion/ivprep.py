@@ -37,6 +37,15 @@ class IVprepHandoffDescriptor:
     approved_by: str
     approved_at: datetime
     required_platform: str = "Windows 64-bit"
+    instructions: tuple[str, ...] = (
+        "Use Windows 64-bit and follow the pinned upstream IVprep README.",
+        "In BIOS, set Flash BIOS Updating by End-Users to Enabled.",
+        "In BIOS, set Secure RollBack Prevention to Disabled.",
+        "Connect AC power and keep power connected throughout the downgrade.",
+        "Do not run downgrade.bat as Administrator; upstream WinFlash requests elevation when needed.",
+        "The device reboots and the external tool writes the BIOS region; allow the process to finish.",
+        "Power loss during the downgrade can brick the device. AutoLoader does not download or execute IVprep.",
+    )
     requires_external_human_run: bool = True
     power_loss_can_brick_device: bool = True
     binaries_included: bool = False
