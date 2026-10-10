@@ -30,6 +30,8 @@ from autoloader.rom_builder.artifact_engine import (
     CommandRecord,
     ReproducibilityRecord,
     derive_lbmk_output_inventory,
+    _build_environment_record,
+    _ensure_operation_git_config,
 )
 from autoloader.workflow.compatibility import CompatibilityValidator
 from autoloader.workflow.profiles import MIB
@@ -145,6 +147,7 @@ def _fake_complete_result(
     logs_dir = run_dir / "logs"
     artifact_dir.mkdir(parents=True)
     logs_dir.mkdir()
+    _, git_config_sha256 = _ensure_operation_git_config(run_dir)
     selected_relative = f"artifacts/{Path(recipe.output_relative_path).name}"
     selected_path = run_dir / selected_relative
     content = artifact_bytes if artifact_bytes is not None else _payload(recipe.expected_size_bytes, 91)
@@ -201,7 +204,7 @@ def _fake_complete_result(
         commands=(command,),
         host_platform="fake test fixture; no build executed",
         toolchain=(("make", "fake fixture"),),
-        build_environment=(("LC_ALL", "C"),),
+        build_environment=_build_environment_record(git_config_sha256),
         container_image_digest=None,
         configuration_sha256=recipe.expected_config_sha256,
         resolved_configuration_sha256="b" * 64,

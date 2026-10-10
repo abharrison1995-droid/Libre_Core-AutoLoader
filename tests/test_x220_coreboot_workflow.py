@@ -29,6 +29,8 @@ from autoloader.rom_builder.artifact_engine import (
     PinnedFile,
     ReproducibilityRecord,
     ToolEvidence,
+    _build_environment_record,
+    _ensure_operation_git_config,
 )
 from autoloader.workflow.compatibility import CompatibilityValidator
 from autoloader.workflow.profiles import MIB
@@ -105,6 +107,7 @@ def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry
     staged_dir = run / "artifacts"
     logs.mkdir(parents=True)
     staged_dir.mkdir()
+    _, git_config_sha256 = _ensure_operation_git_config(run)
     staged = staged_dir / "coreboot.rom"
     assert workflow._original_backup is not None
     generated = bytearray(workflow._original_backup)
@@ -207,7 +210,7 @@ def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry
         commands=tuple(commands),
         host_platform="synthetic fixture; no compilation occurred",
         toolchain=(("make", "synthetic"),),
-        build_environment=(("fixture", "synthetic only"),),
+        build_environment=_build_environment_record(git_config_sha256),
         container_image_digest=None,
         configuration_sha256=workflow.intent.configuration_sha256,
         resolved_configuration_sha256="b" * 64,
@@ -335,6 +338,18 @@ def test_x220_persisted_operation_plan_roundtrips_provenance_and_tampering_block
     blocked = workflow.accept_artifact_result(tampered)
     assert blocked.stage is X220WorkflowStage.BLOCKED
     assert any("finalized operation plan" in reason.lower() for reason in blocked.reasons)
+
+
+def test_x220_reopen_rejects_changed_operation_git_config(tmp_path, monkeypatch):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    config_path = result.manifest_path.parent / "gitconfig"
+    assert hashlib.sha256(config_path.read_bytes()).hexdigest() == dict(result.manifest.build_environment)[
+        "GIT_CONFIG_GLOBAL_SHA256"
+    ]
+    config_path.write_text("[user]\n\tname = altered after build\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="Operation Git config"):
+        ArtifactEngine().load_completed_result(result.manifest_path)
 
 
 @pytest.mark.parametrize(

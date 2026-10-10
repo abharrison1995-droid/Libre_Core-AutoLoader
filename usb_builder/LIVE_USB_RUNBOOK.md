@@ -126,8 +126,7 @@ The offline network-namespace probe, real `mkarchiso` build, post-build
 `chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
 **NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 65
-passed, 2 skipped; Windows — 59 passed, 8 skipped; `mypy usb_builder` and
+Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 66 passed, 2 skipped; Windows — 60 passed, 8 skipped; `mypy usb_builder` and
 `git diff --check` passed. The real Arch WSL namespace probe is
 **UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
 closed, and these focused software tests do not constitute offline builder
@@ -152,8 +151,7 @@ remained empty, and no ISO was produced. The builder now resolves such aliases,
 requires an executable regular canonical target, and checks that `pacman -Qo`
 output exactly identifies that canonical path as owned by `archiso 91-1`.
 Tests cover an usrmerge-style alias and wrong-path/wrong-version owner output.
-SOL accepted this correction. No build retry has occurred; no ISO was
-produced, and no `mkarchiso` invocation/build has been run.
+SOL accepted the canonical-path correction. A third attempt invoked `mkarchiso` but failed BIOS profile validation before package installation because `syslinux` was absent. The output directory remained empty and no ISO was produced. The pinned `core.db` contains `syslinux` 6.04.pre3.r3.g05ac953c-5 with package-signature metadata. The profile and required package policy now include `syslinux`; canonical LF package-list SHA-256 is `520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329`; SOL accepted the syslinux package-list correction. No further retry has occurred.
 
 ## Runtime storage and logs
 

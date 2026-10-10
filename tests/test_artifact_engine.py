@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import shutil
 import subprocess
 import uuid
 from dataclasses import FrozenInstanceError, replace
@@ -38,6 +40,10 @@ from autoloader.rom_builder.artifact_engine import (
     validate_recipe_config,
     validate_x220_region_preservation,
     validate_x220_backup_evidence,
+    _BUILD_GIT_CONFIG_BYTES,
+    _BUILD_GIT_CONFIG_SHA256,
+    _build_environment_record,
+    _ensure_operation_git_config,
 )
 from autoloader.flasher.backup_service import (
     BackupManifestStore,
@@ -814,6 +820,7 @@ def test_fake_command_failure_is_logged_and_never_returns_success(tmp_path: Path
     run_dir = tmp_path / "run"
     logs = run_dir / "logs"
     logs.mkdir(parents=True)
+    _ensure_operation_git_config(run_dir)
     observed: dict[str, object] = {}
 
     def fake_run(argv, **kwargs):
@@ -831,6 +838,200 @@ def test_fake_command_failure_is_logged_and_never_returns_success(tmp_path: Path
     assert isinstance(env, dict)
     assert "MAKEFLAGS" not in env
     assert env["HOME"] == str(run_dir)
+    assert env["GIT_CONFIG_GLOBAL"] == str(run_dir / "gitconfig")
+    assert env["GIT_CONFIG_NOSYSTEM"] == "1"
+    assert (run_dir / "gitconfig").read_bytes() == _BUILD_GIT_CONFIG_BYTES
+    assert hashlib.sha256((run_dir / "gitconfig").read_bytes()).hexdigest() == _BUILD_GIT_CONFIG_SHA256
+
+
+def test_operation_git_config_isolated_from_operator_global_config(tmp_path: Path) -> None:
+    git = shutil.which("git")
+    if git is None:
+        pytest.skip("UNVALIDATED: Git executable is unavailable for the read-only config check")
+    run_dir = tmp_path / "operation"
+    run_dir.mkdir()
+    config_path, config_digest = _ensure_operation_git_config(run_dir)
+    manifest_environment = dict(_build_environment_record(config_digest))
+    assert manifest_environment["GIT_CONFIG_GLOBAL_SHA256"] == config_digest
+    assert manifest_environment["GIT_CONFIG_GLOBAL"] == "<operation-output-directory>/gitconfig"
+    operator_config = tmp_path / ".gitconfig"
+    operator_config.write_text("[user]\n\tname = Operator Global Identity\n", encoding="utf-8")
+    environment = {
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": str(tmp_path),
+        "GIT_CONFIG_GLOBAL": str(config_path),
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
+    result = subprocess.run(
+        [git, "config", "--global", "user.name"],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=environment,
+        timeout=10,
+    )
+    assert result.returncode == 0
+    assert result.stdout.strip() == "Libre Core AutoLoader Build"
+    assert config_digest == _BUILD_GIT_CONFIG_SHA256
+    assert operator_config.read_text(encoding="utf-8") == "[user]\n\tname = Operator Global Identity\n"
+
+
+@pytest.mark.parametrize("child_action", ["modify", "delete"])
+def test_operation_git_config_mutation_during_child_blocks_command_success(
+    child_action: str,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    logs = tmp_path / "operation" / "logs"
+    logs.mkdir(parents=True)
+    _ensure_operation_git_config(logs.parent)
+
+    def fake_run(argv, **kwargs):
+        config_path = Path(kwargs["env"]["GIT_CONFIG_GLOBAL"])
+        if child_action == "delete":
+            config_path.unlink()
+        else:
+            config_path.write_text("[user]\n\tname = changed by child\n", encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    commands: list[CommandRecord] = []
+    with pytest.raises(RuntimeError, match="Git config changed"):
+        ArtifactEngine()._run_logged(("fake-tool", "build"), tmp_path, logs, commands)
+    assert len(commands) == 1
+    assert commands[0].exit_code == 0
+    assert (logs.parent / "gitconfig").exists() is (child_action != "delete")
+
+
+@pytest.mark.parametrize("postprocess_action", ["modify", "delete"])
+def test_operation_git_config_mutation_during_artifact_postprocessing_never_publishes_complete(
+    postprocess_action: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The final manifest boundary revalidates config after output inspection."""
+    import autoloader.rom_builder.artifact_engine as module
+    from autoloader.workflow.x200_libreboot import create_x200_build_intent
+
+    recipe = X200_4MB
+    source = tmp_path / "pinned-source"
+    source.mkdir()
+    output = tmp_path / "artifacts"
+    intent = create_x200_build_intent(
+        device=DeviceEvidence(
+            raw_dmi_product_name="ThinkPad X200",
+            raw_dmi_product_version="7458CTO",
+            raw_dmi_system_family="ThinkPad X200",
+            raw_mtm="7458CTO",
+        ),
+        topology=ChipTopology(
+            observed=True,
+            chips=(ChipEvidence("flash0", recipe.expected_size_bytes, True, physical_label="main", voltage_mv=3300),),
+        ),
+        programmer=ProgrammerEvidence(
+            kind=ProgrammerKind.EXTERNAL_SPI,
+            observed=True,
+            interface_verified=True,
+            wiring_verified=True,
+            voltage_mv=3300,
+        ),
+    )
+    request = BuildRequest(
+        recipe_id=recipe.recipe_id,
+        source_dir=source,
+        output_root=output,
+        observed_chip_capacity_bytes=recipe.expected_size_bytes,
+        build_intent=intent,
+    )
+    engine = ArtifactEngine()
+    monkeypatch.setattr(
+        engine,
+        "inspect_source",
+        lambda _recipe_id, _source: module.SourceAudit(
+            recipe.source.repository_url,
+            recipe.source.revision,
+            recipe.source.tree_id,
+            True,
+            tuple((item.path, item.sha256) for item in recipe.source.files),
+        ),
+    )
+    monkeypatch.setattr(engine, "_assert_no_stale_outputs", lambda _recipe, _source: None)
+    monkeypatch.setattr(engine, "_validate_lbmk_target", lambda _recipe, _source: None)
+    monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("git.version", "fixture"),))
+    monkeypatch.setattr(module, "validate_recipe_config", lambda _recipe, _config: "a" * 64)
+
+    selected_raw = source / module.PurePosixPath(recipe.output_relative_path)
+
+    def fake_build_command(argv, _cwd, logs_dir, commands):
+        build_log = logs_dir / "01-build.log"
+        build_log.write_text("Synthetic build command; no compilation performed.\n", encoding="utf-8")
+        commands.append(CommandRecord(
+            tuple(argv),
+            0,
+            "logs/01-build.log",
+            hashlib.sha256(build_log.read_bytes()).hexdigest(),
+        ))
+        resolved_config = source / "src" / "coreboot" / "default" / ".config"
+        resolved_config.parent.mkdir(parents=True)
+        resolved_config.write_text("synthetic resolved config\n", encoding="utf-8")
+        selected_raw.parent.mkdir(parents=True)
+        selected_raw.write_bytes(b"R" * recipe.expected_size_bytes)
+
+    monkeypatch.setattr(engine, "_run_logged", fake_build_command)
+    monkeypatch.setattr(module, "validated_lbmk_artifacts", lambda _source, _recipe: (selected_raw,))
+
+    def mutate_during_cbfs_inspection(_recipe, _source, _artifact, logs_dir, _commands):
+        git_config = logs_dir.parent / "gitconfig"
+        if postprocess_action == "delete":
+            git_config.unlink()
+        else:
+            git_config.write_text("[user]\n\tname = altered after build\n", encoding="utf-8")
+        return module.CBFSInspectionRecord(
+            tool_relative_path="fixture/cbfstool",
+            tool_sha256="b" * 64,
+            source_repository_url="https://github.com/coreboot/coreboot.git",
+            source_revision=module._LBMK_COREBOOT_REVISION,
+            source_tree_id=module._LBMK_COREBOOT_TREE,
+            region="whole_flash",
+            required_payload="fallback/payload",
+            inventory=(module.CBFSEntry("fallback/payload", 0, "payload", 0, 1, 1),),
+            source_file_hashes=tuple((item.path, item.sha256) for item in module._LBMK_COREBOOT_CBFSTOOL_SOURCES),
+        )
+
+    monkeypatch.setattr(engine, "_inspect_cbfs", mutate_during_cbfs_inspection)
+
+    result = engine._build_linux(recipe, request)
+
+    assert result.status is BuildStatus.FAILED
+    assert result.code == "ARTIFACT_VALIDATION_FAILED"
+    assert result.manifest is not None
+    assert result.manifest.status == "failed"
+    assert result.manifest.failure_code == "ARTIFACT_VALIDATION_FAILED"
+    assert "final publication validation" in (result.manifest.failure_detail or "")
+    assert result.artifacts == ()
+
+
+def test_operation_git_config_refuses_modified_existing_file(tmp_path: Path) -> None:
+    from autoloader.rom_builder.artifact_engine import _ensure_operation_git_config
+
+    operation = tmp_path / "operation"
+    operation.mkdir()
+    (operation / "gitconfig").write_text("[user]\n\tname = unexpected\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="differs from the pinned deterministic identity"):
+        _ensure_operation_git_config(operation)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="UNVALIDATED: POSIX permission bits are not meaningful on Windows")
+def test_operation_git_config_rejects_group_or_world_access(tmp_path: Path) -> None:
+    from autoloader.rom_builder.artifact_engine import _ensure_operation_git_config
+
+    operation = tmp_path / "operation"
+    operation.mkdir()
+    config_path, _ = _ensure_operation_git_config(operation)
+    config_path.chmod(0o644)
+    with pytest.raises(ValueError, match="permissions must be owner-only"):
+        _ensure_operation_git_config(operation)
 
 
 def test_fake_command_timeout_is_recorded_as_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -838,6 +1039,7 @@ def test_fake_command_timeout_is_recorded_as_failure(tmp_path: Path, monkeypatch
 
     logs = tmp_path / "run" / "logs"
     logs.mkdir(parents=True)
+    _ensure_operation_git_config(logs.parent)
 
     def fake_run(argv, **kwargs):
         raise subprocess.TimeoutExpired(argv, 1, output="timeout")

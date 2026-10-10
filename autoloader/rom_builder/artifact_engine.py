@@ -13,6 +13,7 @@ import os
 import platform
 import re
 import shutil
+import stat
 import subprocess
 import uuid
 from dataclasses import asdict, dataclass, replace
@@ -54,6 +55,15 @@ _IFDTOOL_REGION_RE = re.compile(
     r"([0-9a-fA-F]{1,8})\s*-\s*([0-9a-fA-F]{1,8})\s*$"
 )
 _CBFS_HEX_RE = re.compile(r"^0x[0-9a-fA-F]+$")
+_BUILD_GIT_USER_NAME = "Libre Core AutoLoader Build"
+_BUILD_GIT_USER_EMAIL = "firmware-build@localhost.invalid"
+_BUILD_GIT_CONFIG_BYTES = (
+    b"[user]\n"
+    b"\tname = Libre Core AutoLoader Build\n"
+    b"\temail = firmware-build@localhost.invalid\n"
+)
+_BUILD_GIT_CONFIG_SHA256 = hashlib.sha256(_BUILD_GIT_CONFIG_BYTES).hexdigest()
+_BUILD_GIT_CONFIG_MANIFEST_PATH = "<operation-output-directory>/gitconfig"
 _LBMK_COREBOOT_REVISION = "fcd716d9a272461da1fdbaf1c048eb5a52c7896b"
 _LBMK_COREBOOT_TREE = "e16fe240567cb3fa08619c6a23e51c4af142f6ac"
 _LBMK_COREBOOT_ORIGINS = frozenset({
@@ -408,6 +418,15 @@ class ArtifactManifest:
                     or tuple(bound_parts[-len(selected_parts):]) != selected_parts
                 ):
                     raise ValueError("Finalized X220 operation plan does not bind the selected generated artifact")
+            build_environment = dict(self.build_environment)
+            if (
+                build_environment.get("GIT_CONFIG_GLOBAL") != _BUILD_GIT_CONFIG_MANIFEST_PATH
+                or build_environment.get("GIT_CONFIG_GLOBAL_SHA256") != _BUILD_GIT_CONFIG_SHA256
+                or build_environment.get("GIT_CONFIG_NOSYSTEM") != "1"
+                or build_environment.get("GIT_USER_NAME") != _BUILD_GIT_USER_NAME
+                or build_environment.get("GIT_USER_EMAIL") != _BUILD_GIT_USER_EMAIL
+            ):
+                raise ValueError("A complete artifact manifest must record the isolated deterministic Git identity")
         elif self.selected_artifact_relative_path is not None or self.selected_artifact_sha256 is not None:
             raise ValueError("A failed manifest cannot select an artifact")
         if self.status == "failed" and not self.failure_code:
@@ -1232,6 +1251,95 @@ def _require_disjoint_paths(source: Path, output_root: Path) -> None:
         raise ValueError("Pinned source checkout and artifact output root must be separate directories")
 
 
+def _ensure_operation_git_config(operation_dir: Path) -> tuple[Path, str]:
+    """Create or verify the build's private, deterministic Git global config.
+
+    Upstream lbmk checks for a global ``user.name``. Pointing GIT_CONFIG_GLOBAL
+    at this operation-owned file avoids reading or modifying the operator's
+    account config; the exact fixed bytes are rechecked around every command.
+    """
+    directory = Path(operation_dir)
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("Build operation directory must be a real directory")
+    root = directory.resolve(strict=True)
+    config_path = root / "gitconfig"
+    if config_path.is_symlink():
+        raise ValueError("Operation Git config must not be a symlink")
+    if not config_path.exists():
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(config_path, flags, 0o600)
+        with os.fdopen(descriptor, "wb") as file_obj:
+            file_obj.write(_BUILD_GIT_CONFIG_BYTES)
+            file_obj.flush()
+            os.fsync(file_obj.fileno())
+    return _verify_operation_git_config(root)
+
+
+def _verify_operation_git_config(operation_dir: Path) -> tuple[Path, str]:
+    """Verify an existing operation Git config without recreating missing state."""
+    directory = Path(operation_dir)
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("Build operation directory must be a real directory")
+    root = directory.resolve(strict=True)
+    config_path = root / "gitconfig"
+    if config_path.is_symlink():
+        raise ValueError("Operation Git config must not be a symlink")
+    try:
+        metadata = os.lstat(config_path)
+    except OSError as exc:
+        raise ValueError("Operation Git config cannot be inspected") from exc
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+        raise ValueError("Operation Git config must be a single-link regular file")
+    if os.name != "nt" and stat.S_IMODE(metadata.st_mode) & 0o077:
+        raise ValueError("Operation Git config permissions must be owner-only")
+    try:
+        payload = config_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("Operation Git config cannot be read") from exc
+    if payload != _BUILD_GIT_CONFIG_BYTES:
+        raise ValueError("Operation Git config differs from the pinned deterministic identity")
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != _BUILD_GIT_CONFIG_SHA256:
+        raise ValueError("Operation Git config digest differs from its fixed identity")
+    return config_path, digest
+
+
+def _build_environment_record(git_config_sha256: str | None) -> tuple[tuple[str, str], ...]:
+    return (
+        ("HOME", "<operation-output-directory>"),
+        ("TMPDIR", "<operation-output-directory>/tmp"),
+        ("GIT_CONFIG_GLOBAL", _BUILD_GIT_CONFIG_MANIFEST_PATH),
+        ("GIT_CONFIG_GLOBAL_SHA256", git_config_sha256 or "unavailable"),
+        ("GIT_CONFIG_NOSYSTEM", "1"),
+        ("GIT_USER_NAME", _BUILD_GIT_USER_NAME),
+        ("GIT_USER_EMAIL", _BUILD_GIT_USER_EMAIL),
+        ("PATH_SHA256", hashlib.sha256(os.environ.get("PATH", "").encode()).hexdigest()),
+        ("LC_ALL", "C"),
+        ("LANG", "C"),
+        ("TZ", "UTC"),
+    )
+
+
+def _validate_persisted_git_config(operation_dir: Path, build_environment: Sequence[tuple[str, str]]) -> None:
+    """Reopen and verify the operation-scoped Git identity recorded in a manifest."""
+    values = dict(build_environment)
+    if (
+        values.get("GIT_CONFIG_GLOBAL") != _BUILD_GIT_CONFIG_MANIFEST_PATH
+        or values.get("GIT_CONFIG_GLOBAL_SHA256") != _BUILD_GIT_CONFIG_SHA256
+        or values.get("GIT_CONFIG_NOSYSTEM") != "1"
+        or values.get("GIT_USER_NAME") != _BUILD_GIT_USER_NAME
+        or values.get("GIT_USER_EMAIL") != _BUILD_GIT_USER_EMAIL
+    ):
+        raise ValueError("Artifact manifest lacks the pinned isolated Git identity evidence")
+    config_path, digest = _verify_operation_git_config(operation_dir)
+    if digest != values["GIT_CONFIG_GLOBAL_SHA256"]:
+        raise ValueError("Persisted operation Git config differs from its manifest digest")
+    try:
+        config_path.resolve(strict=True).relative_to(operation_dir.resolve(strict=True))
+    except ValueError as exc:
+        raise ValueError("Persisted operation Git config escapes its artifact directory") from exc
+
+
 class ArtifactEngine:
     """Build only from immutable upstream pins and record verified outputs."""
 
@@ -1260,6 +1368,7 @@ class ArtifactEngine:
         manifest = _artifact_manifest_from_mapping(document)
         if manifest.status != "complete":
             raise ValueError("Only a COMPLETE persisted artifact can be reopened")
+        _validate_persisted_git_config(path.parent, manifest.build_environment)
         if manifest.selected_artifact_relative_path is None:
             raise ValueError("Complete artifact manifest lacks a selected relative path")
         selected = path.parent.joinpath(*PurePosixPath(manifest.selected_artifact_relative_path).parts)
@@ -1433,8 +1542,10 @@ class ArtifactEngine:
         finalized_operation_plan: OperationPlan | None = None
         failure_code: str | None = None
         failure_detail: str | None = None
+        git_config_sha256: str | None = None
 
         try:
+            _, git_config_sha256 = _ensure_operation_git_config(run_dir)
             if recipe is X220_COREBOOT:
                 self._stage_x220_inputs(source, prepared_blobs, blob_hashes)
                 seed_path = source / ".config"
@@ -1560,6 +1671,20 @@ class ArtifactEngine:
             failure_code = "ARTIFACT_VALIDATION_FAILED"
             failure_detail = str(exc)
 
+        # Post-command validation can take a long time and touches upstream
+        # output paths. Recheck the operation-scoped identity at the final
+        # publication boundary so a later postprocessing mutation cannot
+        # leave a COMPLETE manifest behind merely because each child command
+        # initially exited with the expected config present.
+        if failure_code is None:
+            try:
+                _, final_git_config_sha256 = _verify_operation_git_config(run_dir)
+                if final_git_config_sha256 != git_config_sha256:
+                    raise ValueError("Operation Git config digest changed before artifact publication")
+            except (OSError, ValueError) as exc:
+                failure_code = "ARTIFACT_VALIDATION_FAILED"
+                failure_detail = f"Operation Git identity failed final publication validation: {exc}"
+
         status = "complete" if artifacts and failure_code is None else "failed"
         manifest = ArtifactManifest(
             schema_version=1,
@@ -1575,14 +1700,7 @@ class ArtifactEngine:
             commands=tuple(commands),
             host_platform=platform.platform(),
             toolchain=toolchain,
-            build_environment=(
-                ("HOME", "<operation-output-directory>"),
-                ("TMPDIR", "<operation-output-directory>/tmp"),
-                ("PATH_SHA256", hashlib.sha256(os.environ.get("PATH", "").encode()).hexdigest()),
-                ("LC_ALL", "C"),
-                ("LANG", "C"),
-                ("TZ", "UTC"),
-            ),
+            build_environment=_build_environment_record(git_config_sha256),
             container_image_digest=None,
             configuration_sha256=config_hash,
             resolved_configuration_sha256=resolved_config_hash,
@@ -1832,10 +1950,13 @@ class ArtifactEngine:
         log_path = logs_dir / f"{len(commands) + 1:02d}.log"
         temporary_dir = logs_dir.parent / "tmp"
         temporary_dir.mkdir(exist_ok=True)
+        git_config_path, git_config_sha256 = _verify_operation_git_config(logs_dir.parent)
         environment = {
             "PATH": os.environ.get("PATH", ""),
             "HOME": str(logs_dir.parent),
             "TMPDIR": str(temporary_dir),
+            "GIT_CONFIG_GLOBAL": str(git_config_path),
+            "GIT_CONFIG_NOSYSTEM": "1",
             "LC_ALL": "C",
             "LANG": "C",
             "TZ": "UTC",
@@ -1875,6 +1996,12 @@ class ArtifactEngine:
         log_path.write_text(log_text, encoding="utf-8")
         digest = sha256_file(log_path)
         commands.append(CommandRecord(tuple(argv), result.returncode, log_path.relative_to(logs_dir.parent).as_posix(), digest))
+        try:
+            _, actual_git_config_sha256 = _verify_operation_git_config(logs_dir.parent)
+        except (OSError, ValueError) as exc:
+            raise RuntimeError("Operation Git config changed or became unavailable during the command") from exc
+        if actual_git_config_sha256 != git_config_sha256:
+            raise RuntimeError("Operation Git config changed during the command")
         if result.returncode != 0:
             raise RuntimeError(f"Pinned upstream command failed with exit code {result.returncode}: {argv[0]}")
         return result.stdout or "" if capture else ""
