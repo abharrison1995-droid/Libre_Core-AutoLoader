@@ -29,6 +29,12 @@ class PhysicalFlashUnavailableError(OperationUnavailableError):
     code = "PHYSICAL_FLASH_UNAVAILABLE"
 
 
+class OnevyUnavailableError(OperationUnavailableError):
+    """Raised when an upstream-pinned 1vyrain compatibility or operation backend is absent."""
+
+    code = "ONEVY_UNAVAILABLE"
+
+
 class DetectionError(AutoLoaderError):
     """Raised when hardware detection fails."""
 

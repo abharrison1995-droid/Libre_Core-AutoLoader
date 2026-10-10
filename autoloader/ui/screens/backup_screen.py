@@ -20,7 +20,7 @@ class BackupScreen(Screen[None]):
             yield Static("ROM Backup Operations", classes="header-text")
             
             with Vertical():
-                self.backup_list_widget = Static("Existing Backups:\n (Scanning backups directory...)", classes="success", id="backup-list")
+                self.backup_list_widget = Static("Recorded Backups:\n (Scanning backups directory...)", id="backup-list")
                 yield self.backup_list_widget
                 yield Static(
                     "New backup capture is unavailable until the actual chip topology and "
@@ -51,7 +51,7 @@ class BackupScreen(Screen[None]):
             manager = BackupManager()
             manifest = manager.get_manifest()
             if manifest:
-                lines = ["Existing Verified Backups:"]
+                lines = ["Recorded Backups (not reverified):"]
                 for item in manifest[-4:]:  # show up to 4 most recent
                     model = item.get("model", "unknown")
                     ts = item.get("timestamp", "")
@@ -59,10 +59,10 @@ class BackupScreen(Screen[None]):
                     lines.append(f" • [{model}] {ts} - SHA256: {sha}...")
                 self.backup_list_widget.update("\n".join(lines))
             else:
-                self.backup_list_widget.update("Existing Backups:\n No previous backups recorded in manifest.")
+                self.backup_list_widget.update("Recorded Backups:\n No previous backups recorded in manifest.")
         except Exception as e:
             logger.debug(f"Could not load backup manifest: {e}")
-            self.backup_list_widget.update("Existing Backups:\n No backups found.")
+            self.backup_list_widget.update("Recorded Backups:\n No backups found.")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press events."""

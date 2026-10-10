@@ -40,10 +40,10 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 
 - Packaging: constrained setuptools discovery to `autoloader*`; editable `pip install -e '.[dev]'` succeeds in the isolated Python 3.12.14 environment.
 - CLI/TUI startup: `python -m autoloader --help` succeeds; CLI command registration, all nine screen mounts/compositions, fail-closed screen state and command routing are covered by automated smoke tests.
-- False-success paths: the orchestrator no longer fabricates build completion, backup capture or flash completion. Build and flash return structured unavailable errors; backup is unavailable until observed topology and complete recovery coverage can be established. The Textual build/flash/backup screens do not enable downstream or capture actions, and verification reports `NOT PERFORMED` until an actual result exists.
+- False-success paths: the orchestrator no longer fabricates build completion, backup capture or flash completion. Build and flash return structured unavailable errors; backup is unavailable until observed topology and complete recovery coverage can be established. The Textual build/flash/backup screens do not enable downstream or capture actions, and verification reports `NOT PERFORMED` until an actual result exists. `OnevyRainManager` now fails closed for compatibility, preparation, exploit, unlock verification and flash; it cannot claim `UNLOCKED` or `COMPLETE`.
 - Physical writes: the CLI `flash` command now routes through the shared orchestrator and always fails closed; the old `--write` and `--yes` bypass options are removed. The TUI restore control provides an unavailable notice and does not issue a write command. Low-level flash/restore primitives remain for later backend work and unit testing; application paths do not invoke them for physical writes.
 - Build status: `build-rom` validates configuration but returns `ROM_BUILD_UNAVAILABLE` and does not create an artifact. The `usb` command only prepares a directory and clearly says no ISO was built.
-- Latest software checks: `python -m pytest -q` — **77 passed**; `mypy autoloader` — **no issues in 75 source files**; `python -m autoloader --help` — passed; `git diff --check` — passed. The editable install succeeded after the packaging fix. No interactive firmware operation, IVprep execution, or destructive media operation was performed.
+- Latest software checks: `python -m pytest -q` — **78 passed**; `mypy autoloader` — **no issues in 75 source files**; `python -m autoloader --help` — passed; `git diff --check` — passed. The editable install succeeded after the packaging fix. No interactive firmware operation, IVprep execution, or destructive media operation was performed.
 - Remaining environment limit: this Windows 11 host has no WSL Linux distribution or Docker/Podman, bash, make or cmake. Archiso and upstream firmware toolchain builds remain unperformed, not successful.
 - Hardware evidence: none. The T430 1vyrain, X200 Libreboot and X220 Coreboot workflows remain **HARDWARE PENDING**.
 
@@ -53,6 +53,7 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 |---|---|---|---|
 | P0 | Build orchestrator sleeps through fake stages, emits completion and names a ROM that was never built. | `autoloader/orchestrator.py:184-223` | 01 |
 | P0 | Flash guide simulates a write/readback and unlocks verification; verify screen displays success regardless of an operation. | `autoloader/ui/screens/flash_guide.py`; `verify_screen.py` | 01 |
+| P0 | `OnevyRainManager` accepts any BIOS on provisionally supported models, simulates exploit timing, always approves unlock, and reports flash completion without a writer. | `autoloader/flasher/onevy.py` | 01 |
 | P0 | Baseline CLI write path was not model/artifact/topology validated; `--yes` bypassed interactive acknowledgement. | `autoloader/__main__.py` at baseline | 01 (quarantine), then 02–03 |
 | P0 | Backup selects a database-assumed chip; internal path reads only the BIOS region; dual-chip/full-chip coverage is not ensured. | `autoloader/orchestrator.py:120-149`; `flasher/backup.py` | 02–03 |
 | P1 | `build-rom` only validates and prints a summary; it does not build despite command description. | `autoloader/__main__.py:123-154` | 01 |
@@ -69,10 +70,4 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 | Operational and tested (software only) | Database lookup/config validation; some detector/parser logic; backup-pair comparison utilities; screen construction/composition. Tests do not establish a safe hardware workflow. |
 | Implemented but untested | Firmware toolchain builders, some CLI flash/backup/restore wrappers, IVprep execution path, Archiso build and QEMU harness. No real target workflow is accepted. |
 | Partially implemented | Model/BIOS detection, model compatibility data, two-pass flash backup, read-back utility, Coreboot/Libreboot builders, USB payload preparation. |
-| Simulated or missing | Orchestrator build, TUI flash result and TUI verification report are simulated/canned at baseline; model-specific authorization/state machine and full-device recovery evidence are missing. |
-
-## Phase 01 — Stabilization
-
-**Status: IN PROGRESS**
-
-The standalone verification helper is already present, so stabilization preserves that API and tests its import/use rather than removing it. Phase 01 quarantines all application CLI physical writes, including the `--yes` bypass, until a shared safety backend and model checks are implemented.
+| Simulated or missing | Orchestrator build, TUI flash result, TUI verification report, and `OnevyRainManager` unlock/flash outcomes are simulated/canned at baseline; model-specific authorization/state machine and full-device recovery evidence are missing. |

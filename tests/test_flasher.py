@@ -70,13 +70,42 @@ def test_flash_verifier_structure(tmp_path):
     assert verifier.check_rom_structure(zero_rom) is False
 
 
-def test_onevy_supported_models():
-    from autoloader.flasher.onevy import OnevyRainManager
+def test_onevy_prerequisites_fail_closed_without_pinned_bios_rules():
+    from autoloader.exceptions import OnevyUnavailableError
+    from autoloader.flasher.onevy import ExploitState, OnevyRainManager
+
     mgr = OnevyRainManager()
-    assert mgr.verify_prerequisites("x230", "2.60") is True
-    assert mgr.verify_prerequisites("X230", "2.60") is True
-    assert mgr.verify_prerequisites("T430", "2.64") is True
     assert mgr.verify_prerequisites("T480", "1.00") is False
+
+    for model, version in (("x230", "2.60"), ("X230", "unknown"), ("T430", "2.64"), ("T430", "2.65")):
+        with pytest.raises(OnevyUnavailableError, match="compatibility was not verified"):
+            mgr.verify_prerequisites(model, version)
+        assert mgr.state is ExploitState.UNAVAILABLE
+
+
+def test_onevy_actions_never_simulate_unlock_or_flash():
+    from autoloader.exceptions import OnevyUnavailableError
+    from autoloader.flasher.onevy import ExploitState, OnevyRainManager
+
+    mgr = OnevyRainManager()
+    messages = []
+    with pytest.raises(OnevyUnavailableError, match="did not execute an exploit"):
+        mgr.execute_exploit(messages.append)
+    assert messages and "unavailable" in messages[0].lower()
+    assert "successfully" not in messages[0].lower()
+    assert mgr.state is ExploitState.UNAVAILABLE
+
+    for action in (mgr.prepare_exploit, mgr._run_exploit_binary, mgr.verify_unlock):
+        with pytest.raises(OnevyUnavailableError):
+            action()
+        assert mgr.state is ExploitState.UNAVAILABLE
+
+    # Even a stale or externally assigned UNLOCKED state cannot reach a writer.
+    mgr.state = ExploitState.UNLOCKED
+    with pytest.raises(OnevyUnavailableError, match="no write was attempted"):
+        mgr.flash_rom("candidate.rom")
+    assert mgr.state is ExploitState.UNAVAILABLE
+    assert mgr.state is not ExploitState.COMPLETE
 
 
 def test_ec_mods_battery_keyboard_compatibility():

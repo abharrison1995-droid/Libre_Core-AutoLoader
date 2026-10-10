@@ -86,6 +86,9 @@ def test_hardware_screens_remain_fail_closed_without_operation_results():
             await app.push_screen("backup_screen")
             await pilot.pause()
             assert app.screen.query_one("#btn-create", Button).disabled
+            backup_label = str(app.screen.query_one("#backup-list", Static).render())
+            assert "Recorded Backups" in backup_label
+            assert "Verified Backups" not in backup_label
 
             await app.push_screen("flash_guide")
             await pilot.pause()
