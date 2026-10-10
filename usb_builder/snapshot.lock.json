@@ -6,8 +6,13 @@
   "repository_base": "https://archive.archlinux.org/repos/2026/09/29",
   "archiso_package": "archiso",
   "archiso_version": "91-1",
+  "archiso_source_commit": "723da192226e1c9d5def9168f13332793c82a85e",
   "packages_x86_64_sha256": "70032fecf478ee2b0d9c65837837206596592db671cdf00a61bbdfbf27827595",
-  "package_signature_policy": "Required DatabaseRequired",
+  "repository_database_sha256": {
+    "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
+    "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1"
+  },
+  "package_signature_policy": "Required DatabaseOptional",
   "wheel_build_backend": {
     "backend": "setuptools.build_meta",
     "minimum_setuptools_version": "61.0",
@@ -22,5 +27,5 @@
   ],
   "snapshot_pin_status": "fixed-candidate",
   "release_validation_status": "pending-linux-build-and-qemu",
-  "notes": "The dated official package source and profile package list are fixed for candidate builds. Pacman must verify signed package databases and archives; installed versions are recorded in build provenance. A candidate ISO is not release validated until BIOS and UEFI Linux/QEMU evidence is reviewed."
+  "notes": "The dated official package source, exact core.db and extra.db bytes, and profile package list are fixed for candidate builds. Pacman must verify every package archive signature. Database signatures are optional only because the dated archive currently publishes no core.db.sig or extra.db.sig; when present they must verify, and database bytes must match these SHA-256 pins before and after use. Installed versions are recorded in build provenance. A candidate ISO is not release validated until BIOS and UEFI Linux/QEMU evidence is reviewed."
 }

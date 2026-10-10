@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -16,6 +17,9 @@ import pytest
 from click.testing import CliRunner
 
 from usb_builder import build_usb
+
+
+_FIXTURE_DB_BYTES = {"core": b"fixture-core-db\n", "extra": b"fixture-extra-db\n"}
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +51,7 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
     _write(profile / "packages.x86_64", package_text)
     _write(
         profile / "pacman.conf",
-        "[options]\nSigLevel = Required DatabaseRequired\n\n"
+        "[options]\nSigLevel = Required DatabaseOptional\nLocalFileSigLevel = Required\n\n"
         "[core]\nServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch\n\n"
         "[extra]\nServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch\n",
     )
@@ -85,8 +89,12 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
                 "repository_base": "https://archive.archlinux.org/repos/2026/09/29",
                 "archiso_package": "archiso",
                 "archiso_version": "91-1",
+                "archiso_source_commit": build_usb.ARCHISO_V91_SOURCE_COMMIT,
                 "packages_x86_64_sha256": hashlib.sha256(package_text.encode("utf-8")).hexdigest(),
-                "package_signature_policy": "Required DatabaseRequired",
+                "repository_database_sha256": {
+                    name: hashlib.sha256(value).hexdigest() for name, value in _FIXTURE_DB_BYTES.items()
+                },
+                "package_signature_policy": "Required DatabaseOptional",
                 "wheel_build_backend": {
                     "backend": "setuptools.build_meta",
                     "minimum_setuptools_version": "61.0",
@@ -127,16 +135,16 @@ def _offline_config(tmp_path: Path) -> build_usb.BuildConfig:
     files: dict[str, str] = {}
     paths = [
         "core/os/x86_64/core.db",
-        "core/os/x86_64/core.db.sig",
         "extra/os/x86_64/extra.db",
-        "extra/os/x86_64/extra.db.sig",
     ]
     for package in sorted(build_usb.REQUIRED_PACKAGES):
         archive = f"extra/os/x86_64/{package}-1-1-x86_64.pkg.tar.zst"
         paths.extend((archive, archive + ".sig"))
     for index, name in enumerate(paths):
         item = repository / name
-        _write(item, f"synthetic local fixture {index}\n")
+        repository_name = Path(name).parts[0]
+        item.parent.mkdir(parents=True, exist_ok=True)
+        item.write_bytes(_FIXTURE_DB_BYTES[repository_name] if name.endswith(".db") else f"synthetic local fixture {index}\n".encode())
         files[name] = _sha(item)
     manifest = tmp_path / "offline-repo.json"
     manifest.write_text(
@@ -166,7 +174,15 @@ def _offline_config(tmp_path: Path) -> build_usb.BuildConfig:
     )
 
 
+def _write_offline_manifest(config: build_usb.BuildConfig, document: dict[str, Any]) -> None:
+    assert config.offline_manifest is not None
+    _, lock_bytes = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    document["snapshot_lock_sha256"] = hashlib.sha256(lock_bytes).hexdigest()
+    config.offline_manifest.write_text(json.dumps(document, sort_keys=True), encoding="utf-8")
+
+
 def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
+    compile(build_usb._SNAPSHOT_FETCH_SCRIPT, "snapshot-fetch-fixture", "exec")
     lock, raw = build_usb._load_json(build_usb.DEFAULT_SNAPSHOT, "snapshot lock")
     profile = build_usb.DEFAULT_PROFILE
     build_usb._validate_online_pacman_config(profile, lock)
@@ -175,8 +191,45 @@ def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
     assert build_usb._sha256_bytes(raw) == hashlib.sha256(raw).hexdigest()
     assert lock["snapshot_pin_status"] == "fixed-candidate"
     assert lock["release_validation_status"] == "pending-linux-build-and-qemu"
+    assert lock["package_signature_policy"] == "Required DatabaseOptional"
+    assert lock["repository_database_sha256"] == {
+        "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
+        "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1",
+    }
     assert set(lock["required_boot_modes"]) == build_usb.REQUIRED_BOOT_MODES
     assert set(build_usb._profile_boot_modes(profile)) >= build_usb.REQUIRED_BOOT_MODES
+
+
+@pytest.mark.parametrize(
+    "injection",
+    [
+        "Server = https://mirror.example.invalid/$repo/os/$arch\n",
+        "CacheServer = https://mirror.example.invalid/$repo/os/$arch\n",
+        "\n[thirdparty]\nServer = https://mirror.example.invalid/$repo/os/$arch\n",
+        "XferCommand = /tmp/unreviewed-transfer-tool %u %o\n",
+    ],
+)
+def test_snapshot_database_refresh_cannot_fall_back_to_another_server(tmp_path, injection):
+    config = _config(tmp_path)
+    original = config.profile_dir.joinpath("pacman.conf").read_text(encoding="utf-8")
+    if injection.startswith("XferCommand"):
+        mutated = original.replace("[core]\n", injection + "\n[core]\n", 1)
+    else:
+        mutated = original.replace("[core]\n", "[core]\n" + injection, 1)
+    config.profile_dir.joinpath("pacman.conf").write_text(mutated, encoding="utf-8")
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    with pytest.raises(build_usb.BuildContractError, match="pacman config|pinned core"):
+        build_usb._validate_online_pacman_config(config.profile_dir, snapshot)
+
+
+@pytest.mark.parametrize("bad_pins", [None, {"core": "0" * 64}, {"core": "0" * 64, "extra": "z" * 64}])
+def test_preflight_requires_exact_valid_database_hash_pins(tmp_path, bad_pins):
+    config = _config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    snapshot["repository_database_sha256"] = bad_pins
+    config.snapshot_lock.write_text(json.dumps(snapshot), encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="snapshot lock"):
+        build_usb.preflight(config, host_platform="linux")
 
 
 def test_preflight_rejects_unpinned_snapshot_before_commands(tmp_path):
@@ -266,16 +319,18 @@ def test_offline_mode_requires_snapshot_bound_complete_local_hash_manifest(tmp_p
     files: dict[str, str] = {}
     paths = [
         "core/os/x86_64/core.db",
-        "core/os/x86_64/core.db.sig",
         "extra/os/x86_64/extra.db",
-        "extra/os/x86_64/extra.db.sig",
     ]
     for package in sorted(build_usb.REQUIRED_PACKAGES):
         archive = f"extra/os/x86_64/{package}-1-1-x86_64.pkg.tar.zst"
         paths.extend((archive, archive + ".sig"))
     for index, name in enumerate(paths):
         path = repository / name
-        _write(path, f"synthetic local fixture {index}\n")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if name.endswith(".db"):
+            path.write_bytes(_FIXTURE_DB_BYTES[Path(name).parts[0]])
+        else:
+            path.write_bytes(f"synthetic local fixture {index}\n".encode())
         files[name] = _sha(path)
     _, lock_bytes = build_usb._load_json(config.snapshot_lock, "snapshot lock")
     manifest = tmp_path / "offline-repo.json"
@@ -306,27 +361,266 @@ def test_offline_mode_requires_snapshot_bound_complete_local_hash_manifest(tmp_p
     )
     ready = build_usb.preflight(offline, host_platform="linux")
     assert ready.offline_repository == repository.resolve()
-    pacman = build_usb._install_offline_conf(config.profile_dir, ready.offline_repository, tmp_path)
+    pacman = build_usb._install_snapshot_conf(
+        config.profile_dir,
+        tmp_path / "snapshot-databases",
+        tmp_path,
+        offline_repository=ready.offline_repository,
+    )
     content = pacman.read_text(encoding="utf-8")
-    assert "file://" in content
+    assert "Server = file://" in content
+    assert "CacheServer = file://" in content
     assert "https://" not in content
+    server_lines = [line.strip() for line in content.splitlines() if line.strip().startswith("Server =")]
+    cache_lines = [line.strip() for line in content.splitlines() if line.strip().startswith("CacheServer =")]
+    assert len(server_lines) == len(cache_lines) == 2
+    assert all((tmp_path / "snapshot-databases").as_uri() in line for line in server_lines)
+    assert all(ready.offline_repository.as_uri() in line for line in cache_lines)
 
     (repository / paths[0]).write_text("tampered\n", encoding="utf-8")
     with pytest.raises(build_usb.BuildContractError, match="changed"):
         build_usb.preflight(offline, host_platform="linux")
 
 
-def test_offline_manifest_rejects_missing_package_or_database_signatures(tmp_path):
+def test_offline_manifest_rejects_missing_package_signature(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_manifest is not None
+    manifest, _ = build_usb._load_json(config.offline_manifest, "offline repository manifest")
+    package = sorted(build_usb.REQUIRED_PACKAGES)[0]
+    archive = manifest["packages"][package]
+    real_signature = config.offline_repository / (archive + ".sig")
+    assert real_signature.is_file()
+    real_signature.unlink()
+    manifest["files"].pop(archive + ".sig")
+    _write_offline_manifest(config, manifest)
+    with pytest.raises(build_usb.BuildContractError, match="no enumerated signature file"):
+        build_usb.preflight(config, host_platform="linux")
+    assert list(config.output_dir.iterdir()) == []
+
+
+def test_offline_manifest_rejects_an_unlisted_file(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None
+    _write(config.offline_repository / "extra/os/x86_64/unlisted.txt", "unlisted fixture")
+    with pytest.raises(build_usb.BuildContractError, match="unlisted or has changed"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_offline_database_hash_must_match_snapshot_lock(tmp_path):
+    config = _offline_config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    snapshot["repository_database_sha256"]["core"] = "0" * 64
+    config.snapshot_lock.write_text(json.dumps(snapshot, sort_keys=True), encoding="utf-8")
+    assert config.offline_manifest is not None
+    manifest, _ = build_usb._load_json(config.offline_manifest, "offline repository manifest")
+    _write_offline_manifest(config, manifest)
+    with pytest.raises(build_usb.BuildContractError, match="core.db does not match"):
+        build_usb.preflight(config, host_platform="linux")
+    assert list(config.output_dir.iterdir()) == []
+    assert list(config.work_parent.iterdir()) == []
+
+
+def test_offline_requires_signatures_for_transitive_archives_and_rejects_traversal(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None and config.offline_manifest is not None
+    manifest, _ = build_usb._load_json(config.offline_manifest, "offline repository manifest")
+    transitive = "extra/os/x86_64/transitive-fixture-1-any.pkg.tar.zst"
+    transitive_path = config.offline_repository / transitive
+    _write(transitive_path, "synthetic transitive package archive")
+    manifest["files"][transitive] = _sha(transitive_path)
+    _write_offline_manifest(config, manifest)
+    with pytest.raises(build_usb.BuildContractError, match="dependency archive has no enumerated signature"):
+        build_usb.preflight(config, host_platform="linux")
+
+    del manifest["files"][transitive]
+    manifest["files"]["../escape.pkg.tar.zst"] = "0" * 64
+    _write_offline_manifest(config, manifest)
+    with pytest.raises(build_usb.BuildContractError, match="relative and traversal-free"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_invalid_transitive_package_signature_is_rejected(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None and config.offline_manifest is not None
+    manifest, _ = build_usb._load_json(config.offline_manifest, "offline repository manifest")
+    archive_rel = "extra/os/x86_64/transitive-fixture-1-any.pkg.tar.zst"
+    archive = config.offline_repository / archive_rel
+    signature = archive.with_name(archive.name + ".sig")
+    _write(archive, "synthetic transitive archive")
+    _write(signature, "synthetic transitive signature")
+    manifest["files"][archive_rel] = _sha(archive)
+    manifest["files"][archive_rel + ".sig"] = _sha(signature)
+    _write_offline_manifest(config, manifest)
+    build_usb.preflight(config, host_platform="linux")
+
+    def reject_transitive(command, **kwargs):
+        if command[:2] == ["pacman-key", "--verify"] and "transitive-fixture" in command[-1]:
+            return subprocess.CompletedProcess(command, 1, "BAD TRANSITIVE SIGNATURE\n", "")
+        return subprocess.CompletedProcess(command, 0, "Good fixture signature\n", "")
+
+    with pytest.raises(build_usb.BuildContractError, match="pacman-key --verify"):
+        build_usb._verify_offline_package_signatures(config.offline_repository, reject_transitive)
+    assert list(config.output_dir.iterdir()) == []
+
+
+def test_optional_offline_database_signature_must_verify_when_present(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None and config.offline_manifest is not None
+    signature_rel = "core/os/x86_64/core.db.sig"
+    signature = config.offline_repository / signature_rel
+    _write(signature, "synthetic optional db signature")
+    manifest, _ = build_usb._load_json(config.offline_manifest, "offline repository manifest")
+    manifest["files"][signature_rel] = _sha(signature)
+    _write_offline_manifest(config, manifest)
+    build_usb.preflight(config, host_platform="linux")
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    work = tmp_path / "signature-work"
+    work.mkdir()
+
+    def invalid_signature(command, **kwargs):
+        if command[:2] == ["pacman-key", "--verify"]:
+            return subprocess.CompletedProcess(command, 1, "BAD SIGNATURE fixture\n", "")
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    with pytest.raises(build_usb.BuildContractError, match="pacman-key --verify"):
+        build_usb._stage_repository_databases(
+            snapshot,
+            work,
+            runner=invalid_signature,
+            offline_repository=config.offline_repository,
+        )
+
+
+def test_staged_database_hash_is_rechecked_after_pacman_use(tmp_path):
     config = _config(tmp_path)
-    repository = tmp_path / "offline-repo"
-    repository.mkdir()
-    manifest = tmp_path / "offline.json"
-    manifest.write_text(
-        json.dumps({"schema_version": 1, "snapshot_lock_sha256": "0" * 64, "files": {}, "packages": {}}),
-        encoding="utf-8",
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    work = tmp_path / "db-work"
+    work.mkdir()
+    root, evidence = build_usb._stage_repository_databases(
+        snapshot,
+        work,
+        runner=_FakeBuilder(),
+        offline_repository=None,
     )
-    with pytest.raises(build_usb.BuildContractError, match="exact snapshot lock"):
-        build_usb._validate_offline_repository(repository, manifest, "1" * 64, tuple(build_usb.REQUIRED_PACKAGES))
+    build_usb._verify_staged_repository_databases(root, evidence, runner=_FakeBuilder())
+    (root / build_usb.SNAPSHOT_DATABASE_RELATIVE_PATHS["core"]).write_bytes(b"tampered before/after pacman\n")
+    with pytest.raises(build_usb.BuildContractError, match="staged core.db changed"):
+        build_usb._verify_staged_repository_databases(root, evidence, runner=_FakeBuilder())
+
+
+def test_offline_repository_is_copied_and_reverified_before_use(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None and config.offline_manifest is not None
+    ready = build_usb.preflight(config, host_platform="linux")
+    assert ready.offline_manifest_sha256 == _sha(config.offline_manifest)
+    staged, hashes = build_usb._copy_verified_offline_repository(
+        ready.offline_repository,
+        config.offline_manifest,
+        ready.snapshot_sha256,
+        ready.package_names,
+        build_usb._snapshot_database_pins(ready.snapshot),
+        tmp_path / "staged-offline-repository",
+    )
+    assert staged != ready.offline_repository
+    assert hashes == {
+        path.relative_to(staged).as_posix(): _sha(path)
+        for path in staged.rglob("*")
+        if path.is_file()
+    }
+    archive = next(iter(hashes))
+    source_file = ready.offline_repository / archive
+    before = _sha(staged / archive)
+    _write(source_file, "changed source after verified staging")
+    assert _sha(staged / archive) == before
+    with pytest.raises(build_usb.BuildContractError, match="unlisted or has changed"):
+        build_usb._validate_offline_repository(
+            ready.offline_repository,
+            config.offline_manifest,
+            ready.snapshot_sha256,
+            ready.package_names,
+            build_usb._snapshot_database_pins(ready.snapshot),
+        )
+
+
+@pytest.mark.parametrize(
+    ("redirect_to", "expected_error"),
+    [
+        (
+            "http://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db",
+            "exact official archive host",
+        ),
+        (
+            "https://archive.archlinux.org.attacker.invalid/repos/2026/09/29/core/os/x86_64/core.db",
+            "exact official archive host",
+        ),
+        (
+            "https://archive.archlinux.org/repos/2026/09/28/core/os/x86_64/core.db",
+            "exact requested archive resource path",
+        ),
+        (
+            "https://archive.archlinux.org/repos/2026/09/29/extra/os/x86_64/extra.db",
+            "exact requested archive resource path",
+        ),
+    ],
+)
+def test_candidate_rejects_snapshot_redirect_outside_exact_locked_resource(tmp_path, redirect_to, expected_error):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(redirect_to=redirect_to)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match=expected_error):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert list(config.output_dir.iterdir()) == []
+    assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 0
+
+
+@pytest.mark.parametrize(
+    "redirect_to",
+    [
+        "https://archive.archlinux.org/repos/2026/09/28/core/os/x86_64/core.db",
+        "https://archive.archlinux.org/repos/2026/09/29/extra/os/x86_64/extra.db",
+        "http://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db",
+    ],
+)
+def test_snapshot_fetcher_rejects_same_host_or_downgrade_redirect_before_following(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, redirect_to: str
+) -> None:
+    requested = "https://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db"
+    destination = tmp_path / "core.db"
+    followed: list[str] = []
+
+    class FakeOpener:
+        def __init__(self, handlers: tuple[object, ...]) -> None:
+            handler_type = next(
+                handler
+                for handler in handlers
+                if isinstance(handler, type) and issubclass(handler, urllib.request.HTTPRedirectHandler)
+            )
+            self.redirect_handler = handler_type()
+
+        def open(self, url: str, *, timeout: int) -> object:
+            request = urllib.request.Request(url)
+            request = self.redirect_handler.redirect_request(
+                request, None, 302, "Found", {}, redirect_to
+            )
+            followed.append(request.full_url)
+            raise AssertionError("invalid redirect target must never be opened")
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *handlers: FakeOpener(handlers))
+    monkeypatch.setattr(sys, "argv", ["snapshot-fetch", requested, str(destination), "required"])
+    with pytest.raises(RuntimeError, match="snapshot redirect"):
+        exec(compile(build_usb._SNAPSHOT_FETCH_SCRIPT, "snapshot-fetch-test", "exec"), {})
+    assert followed == []
+    assert not destination.exists()
 
 
 def test_cleanup_rechecks_owner_prefix_and_mounts(tmp_path):
@@ -359,6 +653,12 @@ class _FakeBuilder:
         activation: bool = True,
         startup: bool = True,
         namespace_ok: bool = True,
+        mutate_database_after_build: bool = False,
+        wrong_downloaded_database: bool = False,
+        retain_sync_databases: bool = False,
+        wrong_retained_database: bool = False,
+        redirect_to: str | None = None,
+        mutate_offline_source_during_build: Path | None = None,
     ) -> None:
         self.calls: list[list[str]] = []
         self.embedded_provenance = ""
@@ -368,6 +668,13 @@ class _FakeBuilder:
         self.activation = activation
         self.startup = startup
         self.namespace_ok = namespace_ok
+        self.mutate_database_after_build = mutate_database_after_build
+        self.wrong_downloaded_database = wrong_downloaded_database
+        self.retain_sync_databases = retain_sync_databases
+        self.wrong_retained_database = wrong_retained_database
+        self.redirect_to = redirect_to
+        self.mutate_offline_source_during_build = mutate_offline_source_during_build
+        self.pacman_conf_content = ""
 
     def __call__(self, command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         command = list(command)
@@ -379,6 +686,25 @@ class _FakeBuilder:
                 output = build_usb.OFFLINE_NETWORK_PROBE_MARKER + "\n" if self.namespace_ok else "network namespace probe failed\n"
                 return subprocess.CompletedProcess(command, 0 if self.namespace_ok else 1, output, "")
             command = inner
+        if len(command) >= 6 and command[1] == "-c" and build_usb.SNAPSHOT_FETCH_MARKER in command[2]:
+            url, destination, _optionality = command[-3:]
+            final_url = self.redirect_to or url
+            if url.endswith(".sig"):
+                return subprocess.CompletedProcess(
+                    command,
+                    0,
+                    f"{build_usb.SNAPSHOT_FETCH_MARKER}\nFINAL_URL={final_url}\nHTTP_STATUS=404\n",
+                    "",
+                )
+            repository = url.rstrip("/").split("/")[-4]
+            payload = b"wrong database fixture\n" if self.wrong_downloaded_database else _FIXTURE_DB_BYTES[repository]
+            Path(destination).write_bytes(payload)
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                f"{build_usb.SNAPSHOT_FETCH_MARKER}\nFINAL_URL={final_url}\nHTTP_STATUS=200\n",
+                "",
+            )
         stdout = kwargs.get("stdout")
         if isinstance(stdout, (object,)) and hasattr(stdout, "write"):
             stdout.write("fake command log\n")
@@ -394,6 +720,8 @@ class _FakeBuilder:
             return subprocess.CompletedProcess(command, 0, "archiso 91-1\n", "")
         if command[:2] == ["pacman", "-Qo"]:
             return subprocess.CompletedProcess(command, 0, f"{command[-1]} is owned by archiso 91-1\n", "")
+        if command[:2] == ["pacman-key", "--verify"]:
+            return subprocess.CompletedProcess(command, 0, "Good signature fixture\n", "")
         if command == ["pacman", "-Q"]:
             return subprocess.CompletedProcess(command, 0, "archiso 91-1\nbash 5.3-1\npacman 7.0-1\n", "")
         if len(command) >= 3 and command[1:3] == ["-m", "pip"] and command[-1] == "--version":
@@ -431,11 +759,25 @@ class _FakeBuilder:
             output = Path(command[command.index("-o") + 1])
             work = Path(command[command.index("-w") + 1])
             profile = Path(command[-1])
+            self.pacman_conf_content = Path(command[command.index("-C") + 1]).read_text(encoding="utf-8")
             self.embedded_provenance = (
                 profile / "airootfs/usr/share/doc/libre-core-autoloader/image-build-inputs.json"
             ).read_text(encoding="utf-8")
+            if self.mutate_offline_source_during_build is not None:
+                _write(self.mutate_offline_source_during_build, "mutated external offline source fixture")
             (output / "libre_core_autoloader-test-x86_64.iso").write_bytes(b"synthetic fake ISO")
             self._populate_target_root(work / "x86_64" / "airootfs", profile)
+            if self.retain_sync_databases:
+                sync_directory = work / "x86_64" / "airootfs" / "var/lib/pacman/sync"
+                sync_directory.mkdir(parents=True, exist_ok=True)
+                for repository in ("core", "extra"):
+                    source_database = work.parent / f"snapshot-databases/{repository}/os/x86_64/{repository}.db"
+                    shutil.copy2(source_database, sync_directory / f"{repository}.db")
+                if self.wrong_retained_database:
+                    _write(sync_directory / "core.db", "wrong retained sync DB fixture")
+            if self.mutate_database_after_build:
+                staged_database = work.parent / "snapshot-databases/core/os/x86_64/core.db"
+                staged_database.write_bytes(b"mutated database during fake pacman use\n")
             return subprocess.CompletedProcess(command, 0, "fake mkarchiso completed\n", "")
         return subprocess.CompletedProcess(command, 0, "", "")
 
@@ -508,10 +850,48 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
         clock=lambda: 1_800_000_000,
     )
     assert result.iso_path.is_file()
+    bundle = result.iso_path.parent
+    assert bundle.parent == config.output_dir
+    assert bundle.name == "candidate-bundle"
+    assert result.manifest_path.parent == bundle
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["status"] == "CANDIDATE_ISO_BUILD_COMPLETED; NOT_RELEASE_VALIDATED"
     assert manifest["release_validation_status"] == "PENDING_LINUX_QEMU_REVIEW"
+    assert manifest["publication"] == {
+        "mode": "ATOMIC_DIRECTORY_RENAME",
+        "bundle_directory": "candidate-bundle",
+        "checksum_file": "SHA256SUMS",
+        "complete_before_visible": True,
+    }
     assert manifest["snapshot"]["archiso_version"] == "91-1"
+    consumption = manifest["pacman_sync_database_consumption"]
+    assert consumption["status"] == "SOURCE_LEVEL_INVARIANT_ONLY"
+    assert consumption["runtime_capture_absence_reason"].startswith("Archiso v91 successful cleanup")
+    assert consumption["archiso_source_contract"]["source_commit"] == build_usb.ARCHISO_V91_SOURCE_COMMIT
+    assert consumption["archiso_source_contract"]["source_invariant_tested"] is True
+    assert consumption["archiso_source_contract"]["config_transform_lines"] == "284-286"
+    assert consumption["archiso_source_contract"]["pacstrap_config_argument_lines"] == "320-345"
+    assert consumption["archiso_source_contract"]["target_sync_database_cleanup_lines"] == "153-162"
+    assert "not a runtime capture of pacman" in consumption["archiso_source_contract"]["contract"]
+    assert consumption["staged_sync_databases"]["core"]["sha256_before_and_after"] == (
+        manifest["snapshot"]["repository_database_sha256"]["core"]
+    )
+    mkarchiso_command = next(
+        command for command in manifest["commands"] if Path(command[0]).name == "mkarchiso"
+    )
+    assert Path(mkarchiso_command[mkarchiso_command.index("-C") + 1]).name == Path(
+        consumption["effective_pacman_config_relative_to_work"]
+    ).name
+    database_evidence = manifest["snapshot"]["repository_databases"]
+    assert database_evidence["core"]["sha256"] == manifest["snapshot"]["repository_database_sha256"]["core"]
+    assert database_evidence["core"]["url"].endswith("/core/os/x86_64/core.db")
+    assert database_evidence["core"]["final_url"] == database_evidence["core"]["url"]
+    assert database_evidence["core"]["signature_status"] == "ABSENT_DATABASEOPTIONAL"
+    assert database_evidence["core"]["signature_final_url"] is None
+    assert database_evidence["extra"]["signature_present"] is False
+    assert "Server = file://" in runner.pacman_conf_content
+    assert "CacheServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch" in runner.pacman_conf_content
+    assert runner.pacman_conf_content.count("Server = file://") == 2
     assert manifest["host"]["mkarchiso"]["sha256"] == _sha(fake_mkarchiso)
     assert manifest["host"]["mkarchiso"]["package_owner_output"].endswith("owned by archiso 91-1")
     assert manifest["host"]["package_inventory_sha256"] == hashlib.sha256(
@@ -547,11 +927,209 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     )
     assert any(command[0] == str(fake_mkarchiso.resolve()) and "-C" in command for command in manifest["commands"])
     assert any("--no-index" in command and "--no-deps" in command for command in manifest["commands"])
-    assert (config.output_dir / "build.log").is_file()
-    assert (config.output_dir / "wheel-build.log").is_file()
-    assert (config.output_dir / "SHA256SUMS").is_file()
+    assert (bundle / "build.log").is_file()
+    assert (bundle / "wheel-build.log").is_file()
+    assert (bundle / "SHA256SUMS").is_file()
+    sums = (bundle / "SHA256SUMS").read_text(encoding="ascii").splitlines()
+    assert f"{result.sha256}  {result.iso_path.name}" in sums
+    assert f"{result.manifest_sha256}  {result.manifest_path.name}" in sums
+    assert f"{_sha(bundle / 'build.log')}  build.log" in sums
+    assert f"{_sha(bundle / 'wheel-build.log')}  wheel-build.log" in sums
+    assert {line.split("  ", 1)[1] for line in sums} == {
+        result.iso_path.name,
+        result.manifest_path.name,
+        "build.log",
+        "wheel-build.log",
+    }
+    assert list(config.output_dir.iterdir()) == [bundle]
     assert list(config.work_parent.iterdir()) == []
     assert all(command[0] not in {"sudo", "flashrom"} for command in runner.calls)
+
+
+def test_offline_candidate_build_uses_only_verified_owned_cache_copy(tmp_path):
+    config = _offline_config(tmp_path)
+    assert config.offline_repository is not None
+    source_archive = config.offline_repository / "extra/os/x86_64/base-1-1-x86_64.pkg.tar.zst"
+    assert source_archive.is_file()
+    runner = _FakeBuilder(mutate_offline_source_during_build=source_archive)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    fake_unshare = fake_tools / "unshare"
+    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    result = build_usb.execute_build(
+        config,
+        host_platform="linux",
+        mkarchiso_path=str(fake_mkarchiso),
+        unshare_path=str(fake_unshare),
+        host_namespace_identity="net:[host-fixture]",
+        runner=runner,
+        mountpoints_reader=lambda: (),
+        clock=lambda: 1_800_000_000,
+    )
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    cache_lines = [
+        line for line in runner.pacman_conf_content.splitlines()
+        if line.strip().startswith("CacheServer =")
+    ]
+    assert len(cache_lines) == 2
+    assert all("offline-repository/$repo/os/$arch" in line for line in cache_lines)
+    assert all(config.offline_repository.as_uri() not in line for line in cache_lines)
+    offline_evidence = manifest["offline_repository"]
+    assert offline_evidence["manifest_sha256"] == _sha(config.offline_manifest)
+    assert offline_evidence["staged_copy_removed_with_owned_workdir"] is True
+    assert len(offline_evidence["staged_file_sha256"]) == len(
+        json.loads(config.offline_manifest.read_text(encoding="utf-8"))["files"]
+    )
+    assert _sha(source_archive) != offline_evidence["staged_file_sha256"][
+        "extra/os/x86_64/base-1-1-x86_64.pkg.tar.zst"
+    ]
+    assert manifest["snapshot"]["repository_databases"]["core"]["source_kind"] == "offline-manifest"
+    assert manifest["snapshot"]["repository_databases"]["core"]["final_url"] is None
+    embedded = json.loads(runner.embedded_provenance)
+    assert embedded["offline_repository"]["manifest_sha256"] == offline_evidence["manifest_sha256"]
+    assert embedded["offline_repository"]["staged_file_sha256"] == offline_evidence["staged_file_sha256"]
+
+
+@pytest.mark.parametrize("failure_point", ["copy", "write", "hash", "directory-fsync", "bundle-rename"])
+def test_bundle_publication_failure_leaves_no_candidate_iso(tmp_path, monkeypatch, failure_point):
+    output = tmp_path / "output"
+    output.mkdir()
+    image = tmp_path / "candidate.iso"
+    build_log = tmp_path / "build.log"
+    wheel_log = tmp_path / "wheel-build.log"
+    image.write_bytes(b"synthetic candidate ISO payload")
+    build_log.write_bytes(b"synthetic mkarchiso log")
+    wheel_log.write_bytes(b"synthetic wheel log")
+    expected_image = _sha(image)
+    expected_build = _sha(build_log)
+    expected_wheel = _sha(wheel_log)
+
+    if failure_point == "copy":
+        original = build_usb._copy_publication_file
+
+        def fail_copy(source, destination, expected):
+            if destination.name == "build.log":
+                destination.write_bytes(b"partial copied log")
+                raise OSError("injected copy failure")
+            return original(source, destination, expected)
+
+        monkeypatch.setattr(build_usb, "_copy_publication_file", fail_copy)
+    elif failure_point == "write":
+        original = build_usb._write_publication_file
+
+        def fail_write(destination, content):
+            if destination.name == "SHA256SUMS":
+                destination.write_bytes(b"partial checksum list")
+                raise OSError("injected metadata write failure")
+            return original(destination, content)
+
+        monkeypatch.setattr(build_usb, "_write_publication_file", fail_write)
+    elif failure_point == "hash":
+        original = build_usb._sha256_file
+
+        def fail_hash(path):
+            if path.name == ".candidate.iso.pending":
+                raise OSError("injected hash failure")
+            return original(path)
+
+        monkeypatch.setattr(build_usb, "_sha256_file", fail_hash)
+    elif failure_point == "directory-fsync":
+        original = build_usb._fsync_directory
+
+        def fail_staged_bundle_fsync(path):
+            if path.name.startswith(".candidate-stage-"):
+                raise build_usb.BuildContractError("injected candidate bundle fsync failure")
+            return original(path)
+
+        monkeypatch.setattr(build_usb, "_fsync_directory", fail_staged_bundle_fsync)
+    else:
+        original = build_usb.os.replace
+
+        def fail_bundle_rename(source, destination):
+            if Path(source).name.startswith(".candidate-stage-") and Path(destination).name == "candidate-bundle":
+                raise OSError("injected atomic bundle publication failure")
+            return original(source, destination)
+
+        monkeypatch.setattr(build_usb.os, "replace", fail_bundle_rename)
+
+    with pytest.raises((OSError, build_usb.BuildContractError)):
+        build_usb._publish_candidate_bundle(
+            output,
+            artifact_paths=(image,),
+            selected_iso=image,
+            build_log=build_log,
+            wheel_log=wheel_log,
+            provenance={"schema_version": 1},
+            expected_artifact_sha256={image.name: expected_image},
+            expected_build_log_sha256=expected_build,
+            expected_wheel_log_sha256=expected_wheel,
+        )
+
+    assert list(output.iterdir()) == []
+    assert list(output.rglob("*.iso")) == []
+
+
+def test_candidate_build_rejects_wrong_database_bytes_before_mkarchiso_or_output(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(wrong_downloaded_database=True)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match="snapshot core.db bytes do not match"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert list(config.output_dir.iterdir()) == []
+    assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 0
+
+
+def test_pacman_sync_database_bytes_are_captured_when_archiso_retains_them(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(retain_sync_databases=True)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    result = build_usb.execute_build(
+        config,
+        host_platform="linux",
+        mkarchiso_path=str(fake_mkarchiso),
+        runner=runner,
+        mountpoints_reader=lambda: (),
+        clock=lambda: 1_800_000_000,
+    )
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    evidence = manifest["pacman_sync_database_consumption"]
+    assert evidence["status"] == "RUNTIME_SYNC_DATABASES_HASH_CAPTURED"
+    assert evidence["runtime_capture"]["core.db"]["sha256"] == manifest["snapshot"]["repository_database_sha256"]["core"]
+    assert evidence["runtime_capture"]["extra.db"]["sha256"] == manifest["snapshot"]["repository_database_sha256"]["extra"]
+
+
+def test_wrong_retained_pacman_sync_database_blocks_candidate_publication(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(retain_sync_databases=True, wrong_retained_database=True)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match="retained a different core.db"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert list(config.output_dir.iterdir()) == []
 
 
 @pytest.mark.parametrize(
@@ -584,6 +1162,26 @@ def test_candidate_build_fails_closed_when_target_install_or_service_is_missing(
         )
     assert list(config.output_dir.iterdir()) == [], "unvalidated image must not appear as a candidate output"
     assert not (config.output_dir / "build-provenance.json").exists()
+
+
+def test_candidate_build_rejects_database_mutated_during_mkarchiso_before_output(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(mutate_database_after_build=True)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match="staged core.db changed"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert list(config.output_dir.iterdir()) == []
+    assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 1
 
 
 def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_path):
