@@ -6,7 +6,7 @@ This plan tracks the multiphase V1 scope from `pasted-text-1.txt`. Statuses desc
 |---|---|---|---|
 | 00 | Repository audit and baseline | SOFTWARE COMPLETE | SOL accepted; review follow-ups finalized in `2d0e2d1` and wording cleanup in `4c33444`. |
 | 01 | Startup, CLI/TUI stabilization, no false success | SOFTWARE COMPLETE — SOL ACCEPT | Packaging, CLI/TUI smoke coverage, fail-closed operation outcomes, and passing tests/type check; follow-up resolved in `207a7df`. |
-| 02 | Compatibility engine, shared workflow state and authorization | IMPLEMENTED — PENDING SOL REVIEW | Three-profile tri-state validator, immutable evidence, operation journal, one-use digest-bound approval, blocked write boundary, and 12 focused tests; see `PROGRESS.md`. |
+| 02 | Compatibility engine, shared workflow state and authorization | IMPLEMENTED — PENDING SOL RE-REVIEW | Three-profile tri-state validator, immutable evidence, durable checksummed journal with safe pre-authorization resume, one-use digest-bound approval, blocked write boundary, and 20 focused tests; see `PROGRESS.md`. |
 | 03 | SPI probing, complete backup, read-back and recovery | NOT STARTED | Hardware-independent safety tests plus real-device evidence. |
 | 04 | Real firmware build and artifact engine | NOT STARTED | Pinned, validated build and artifact pipeline. |
 | 05 | 1vyrain and IVprep workflow | NOT STARTED | Upstream-pinned, human-gated workflow and T430 acceptance report. |

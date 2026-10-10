@@ -9,6 +9,13 @@ from .authorization import (
 )
 from .compatibility import CompatibilityValidator
 from .engine import JournalEntry, OperationJournal, WorkflowSession, WorkflowTransitionError
+from .journal import (
+    JournalConflictError,
+    JournalCorruptionError,
+    JournalError,
+    JournalPlanMismatchError,
+    UnsafeCheckpointError,
+)
 from .profiles import V1_PROFILES, V1Profile
 from .types import (
     ArtifactEvidence,
@@ -48,6 +55,10 @@ __all__ = [
     "DeviceEvidence",
     "EvidenceConfidence",
     "JournalEntry",
+    "JournalConflictError",
+    "JournalCorruptionError",
+    "JournalError",
+    "JournalPlanMismatchError",
     "FirmwareFamily",
     "OperationJournal",
     "OperationPlan",
@@ -63,5 +74,6 @@ __all__ = [
     "VerificationStatus",
     "WorkflowSession",
     "WorkflowTransitionError",
+    "UnsafeCheckpointError",
     "WriteAuthorization",
 ]

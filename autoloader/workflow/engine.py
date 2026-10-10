@@ -1,4 +1,4 @@
-"""Finite-state operation session and append-only in-memory journal.
+"""Finite-state operation session and durable append-only journal.
 
 The Phase 02 state machine is a safety model only. Its write request always
 terminates in WRITE_BLOCKED and has no call site to a flash or restore backend.
@@ -6,8 +6,8 @@ terminates in WRITE_BLOCKED and has no call site to a flash or restore backend.
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from dataclasses import replace
+from pathlib import Path
 from typing import Callable
 
 from .authorization import (
@@ -16,6 +16,11 @@ from .authorization import (
     WriteAuthorization,
 )
 from .compatibility import CompatibilityValidator
+from .journal import (
+    JournalEntry,
+    OperationJournal,
+    UnsafeCheckpointError,
+)
 from .types import (
     BackupEvidence,
     CompatibilityDecision,
@@ -28,52 +33,6 @@ from .types import (
 
 class WorkflowTransitionError(RuntimeError):
     """An operation attempted an illegal state transition."""
-
-
-@dataclass(frozen=True)
-class JournalEntry:
-    sequence: int
-    timestamp_utc: str
-    action: str
-    from_state: OperationState
-    to_state: OperationState
-    code: str
-    message: str
-
-
-class OperationJournal:
-    """Append-only, thread-safe operation event journal."""
-
-    def __init__(self) -> None:
-        self._entries: list[JournalEntry] = []
-        self._lock = threading.Lock()
-
-    @property
-    def entries(self) -> tuple[JournalEntry, ...]:
-        with self._lock:
-            return tuple(self._entries)
-
-    def append(
-        self,
-        *,
-        action: str,
-        from_state: OperationState,
-        to_state: OperationState,
-        code: str,
-        message: str,
-    ) -> JournalEntry:
-        with self._lock:
-            entry = JournalEntry(
-                sequence=len(self._entries) + 1,
-                timestamp_utc=datetime.now(timezone.utc).isoformat(),
-                action=action,
-                from_state=from_state,
-                to_state=to_state,
-                code=code,
-                message=message,
-            )
-            self._entries.append(entry)
-            return entry
 
 
 _TRANSITIONS: dict[OperationState, frozenset[OperationState]] = {
@@ -99,22 +58,47 @@ class WorkflowSession:
         validator: CompatibilityValidator | None = None,
         ledger: AuthorizationLedger | None = None,
         journal: OperationJournal | None = None,
+        journal_path: str | Path | None = None,
     ) -> None:
         self.plan = plan
         self.validator = validator or CompatibilityValidator()
         self.ledger = ledger or AuthorizationLedger(self.validator)
-        self.journal = journal or OperationJournal()
-        self.state = OperationState.DRAFT
+        self.journal = journal or OperationJournal(journal_path, plan=plan)
+        if journal is not None:
+            self.journal.bind_plan(plan)
+        self.state = self.journal.state
         self.compatibility: CompatibilityResult | None = None
         self.backup_verification: CompatibilityResult | None = None
         self.authorization: WriteAuthorization | None = None
         self._lock = threading.RLock()
+        if self.state in {OperationState.VALIDATED, OperationState.BACKUP_VERIFIED}:
+            compatibility = self.validator.validate(self.plan)
+            if compatibility.decision is not CompatibilityDecision.ALLOWED:
+                raise UnsafeCheckpointError("saved checkpoint no longer passes compatibility validation")
+            self.compatibility = compatibility
+        if self.state is OperationState.BACKUP_VERIFIED:
+            backup = self.validator.validate_backup(self.plan)
+            if backup.decision is not CompatibilityDecision.ALLOWED:
+                raise UnsafeCheckpointError("saved backup checkpoint no longer verifies")
+            self.backup_verification = backup
+
+    @classmethod
+    def resume(
+        cls,
+        plan: OperationPlan,
+        checkpoint_path: str | Path,
+        *,
+        validator: CompatibilityValidator | None = None,
+        ledger: AuthorizationLedger | None = None,
+    ) -> WorkflowSession:
+        """Restore only a validated safe checkpoint; authorization is never restored."""
+        journal = OperationJournal.load_checkpoint(checkpoint_path, expected_plan=plan)
+        return cls(plan, validator=validator, ledger=ledger, journal=journal)
 
     def _transition(self, target: OperationState, *, action: str, code: str, message: str) -> None:
         current = self.state
         if target not in _TRANSITIONS[current]:
             raise WorkflowTransitionError(f"illegal workflow transition {current.value} -> {target.value}")
-        self.state = target
         self.journal.append(
             action=action,
             from_state=current,
@@ -122,6 +106,7 @@ class WorkflowSession:
             code=code,
             message=message,
         )
+        self.state = target
 
     def validate(self) -> CompatibilityResult:
         with self._lock:
@@ -153,6 +138,7 @@ class WorkflowSession:
                 # Replacing the immutable plan binds later approval to this
                 # exact backup evidence and its on-disk content fingerprints.
                 self.plan = replace(self.plan, backup=backup)
+                self.journal.update_plan(self.plan)
             result = self.validator.validate_backup(self.plan)
             self.backup_verification = result
             if result.decision is CompatibilityDecision.ALLOWED:

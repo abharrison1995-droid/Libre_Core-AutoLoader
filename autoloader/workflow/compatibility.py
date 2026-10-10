@@ -28,11 +28,11 @@ from .types import (
 )
 
 _MODEL_TOKEN = re.compile(r"(?<![a-z0-9])(t430|x200|x220)(?![a-z0-9])", re.I)
-_MTM_TOKEN = re.compile(r"^([0-9A-Z]{4})[0-9A-Z-]*$", re.I)
+_MTM_TOKEN = re.compile(r"^([0-9]{4})[0-9A-Z-]*$", re.I)
+_EMBEDDED_MTM_TOKEN = re.compile(r"(?<![A-Z0-9])([0-9]{4}[A-Z0-9-]*)(?![A-Z0-9])", re.I)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$", re.I)
 _PINNED_REVISION = re.compile(r"^[0-9a-f]{40}$", re.I)
 _T430_BIOS_TOKEN = re.compile(r"\(\s*(\d{1,2}\.\d{2})\s+\)")
-_T430_BIOS_PLAIN = re.compile(r"^(\d{1,2}\.\d{2})$")
 
 
 class CompatibilityValidator:
@@ -91,6 +91,53 @@ class CompatibilityValidator:
         match = _MTM_TOKEN.fullmatch(raw_mtm.strip())
         return match.group(1).upper() if match else None
 
+    @staticmethod
+    def _pinned_family_token(raw_family: str | None) -> str | None:
+        """Apply upstream's ``awk '{print $3$4}'`` to a Family line.
+
+        Detection records the DMI value without its label on most platforms,
+        so add the ``Family:`` prefix before applying the same field selection.
+        Unsupported formatting is left unknown instead of being accepted by a
+        broader model-name search.
+        """
+        if not raw_family or not raw_family.strip():
+            return None
+        line = raw_family.strip()
+        if not line.casefold().startswith("family:"):
+            line = f"Family: {line}"
+        fields = line.split()
+        if len(fields) < 3 or fields[0].casefold() != "family:":
+            return None
+        return "".join(fields[2:4]).casefold()
+
+    @staticmethod
+    def _mtm_prefixes(device: DeviceEvidence, blocked: list[str], unknown: list[str]) -> set[str]:
+        found: dict[str, set[str]] = {}
+        fields = {
+            "raw MTM": device.raw_mtm,
+            "DMI product version": device.raw_dmi_product_version,
+            "DMI product name": device.raw_dmi_product_name,
+        }
+        for label, raw in fields.items():
+            if not raw:
+                continue
+            tokens = {match.group(1)[:4].upper() for match in _EMBEDDED_MTM_TOKEN.finditer(raw)}
+            if label == "raw MTM" and not CompatibilityValidator._mtm_prefix(raw):
+                unknown.append("raw machine type/MTM evidence is malformed")
+            if len(tokens) > 1:
+                blocked.append(f"{label} contains contradictory MTM prefixes")
+            if tokens:
+                found[label] = tokens
+                for prefix in tokens:
+                    # Unsupported machine types must be a hard mismatch even
+                    # when another DMI field happens to name an allowlisted one.
+                    if prefix not in {candidate for profile in V1_PROFILES.values() for candidate in profile.accepted_mtm_prefixes}:
+                        blocked.append(f"{label} contains unsupported MTM prefix {prefix}")
+        all_prefixes = {prefix for prefixes in found.values() for prefix in prefixes}
+        if len(all_prefixes) > 1:
+            blocked.append("raw MTM, product version and product name contain conflicting MTM prefixes")
+        return all_prefixes
+
     def _validate_identity(
         self, profile: V1Profile, device: DeviceEvidence, blocked: list[str], unknown: list[str]
     ) -> bool:
@@ -110,11 +157,25 @@ class CompatibilityValidator:
         if len(explicit_models) > 1:
             blocked.append("independent DMI model fields conflict")
 
-        mtm = self._mtm_prefix(device.raw_mtm)
-        if mtm is None:
+        mtm_prefixes = self._mtm_prefixes(device, blocked, unknown)
+        if not mtm_prefixes:
             unknown.append("raw machine type/MTM evidence is missing or malformed")
-        elif mtm not in profile.accepted_mtm_prefixes:
-            blocked.append(f"MTM prefix {mtm} is not allowlisted for {profile.model_id}")
+        elif len(mtm_prefixes) == 1:
+            mtm = next(iter(mtm_prefixes))
+            if mtm not in profile.accepted_mtm_prefixes:
+                blocked.append(f"MTM prefix {mtm} is not allowlisted for {profile.model_id}")
+
+        if profile.bios_numeric_threshold_exclusive is not None:
+            pinned_family = self._pinned_family_token(device.raw_dmi_system_family)
+            if pinned_family is None:
+                unknown.append("raw DMI system-family format is unsupported by the pinned upstream parser")
+            elif pinned_family != profile.model_id:
+                if family_model and family_model != profile.model_id:
+                    blocked.append(f"pinned DMI family token identifies {pinned_family}, not {profile.model_id}")
+                else:
+                    unknown.append("raw DMI system-family does not match the pinned upstream token format")
+        else:
+            pinned_family = family_model
 
         if product_model is None:
             unknown.append("raw DMI product name does not independently identify an allowlisted model")
@@ -128,7 +189,9 @@ class CompatibilityValidator:
         return bool(
             product_model == profile.model_id
             and family_model == profile.model_id
-            and mtm in profile.accepted_mtm_prefixes
+            and mtm_prefixes == {next(iter(mtm_prefixes), None)}
+            and bool(mtm_prefixes & set(profile.accepted_mtm_prefixes))
+            and pinned_family == profile.model_id
         )
 
     @staticmethod
@@ -139,14 +202,20 @@ class CompatibilityValidator:
             blocked.append("1vyrain V1 requires the supported stock Lenovo BIOS state")
         elif device.stock_lenovo_bios is None:
             unknown.append("stock Lenovo BIOS status is unknown")
+        vendor = (device.raw_bios_vendor or "").strip().casefold()
+        if not vendor:
+            unknown.append("raw BIOS vendor evidence is missing")
+        elif device.stock_lenovo_bios is not None:
+            raw_vendor_is_lenovo = "lenovo" in vendor or "ibm" in vendor
+            if raw_vendor_is_lenovo is not device.stock_lenovo_bios:
+                blocked.append("raw BIOS vendor contradicts the stock Lenovo BIOS classification")
         raw = (device.raw_bios_version or "").strip()
         parenthesized = _T430_BIOS_TOKEN.findall(raw)
-        if len(parenthesized) == 1 and raw.count("(") == 1 and raw.count(")") == 1:
+        expected_format = re.fullmatch(r"\S+\s+\(\s*\d{1,2}\.\d{2}\s+\)", raw)
+        if len(parenthesized) == 1 and raw.count("(") == 1 and raw.count(")") == 1 and expected_format:
             token = parenthesized[0]
-        elif not parenthesized and _T430_BIOS_PLAIN.fullmatch(raw):
-            token = raw
         else:
-            unknown.append("T430 BIOS version is missing, ambiguous, or not in the pinned upstream format")
+            unknown.append("T430 BIOS version is missing, ambiguous, or not in the pinned upstream DMI format")
             return
         # Upstream start.sh removes the decimal point and compares the numeric token.
         numeric_version = int(token.replace(".", ""))

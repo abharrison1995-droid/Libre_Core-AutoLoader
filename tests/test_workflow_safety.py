@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import replace
 from pathlib import Path
 
@@ -23,6 +24,9 @@ from autoloader.workflow import (
     CompatibilityValidator,
     DeviceEvidence,
     FirmwareFamily,
+    JournalCorruptionError,
+    JournalPlanMismatchError,
+    OperationJournal,
     OperationPlan,
     OperationState,
     ProgrammerEvidence,
@@ -30,6 +34,7 @@ from autoloader.workflow import (
     RegionEvidence,
     WorkflowSession,
     WorkflowTransitionError,
+    UnsafeCheckpointError,
 )
 
 MIB = 1024 * 1024
@@ -38,6 +43,11 @@ PINNED_REVISION = "a3427b34102f8f9887acf65e23d7fd5900fe1d40"
 
 def _hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@pytest.fixture(autouse=True)
+def isolate_default_journals(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "app-state"))
 
 
 @pytest.fixture(scope="module")
@@ -157,6 +167,7 @@ def test_t430_bios_boundary_matches_pinned_upstream_and_unknown_fails_closed(tmp
     unspaced = make_t430_plan(artifact, "G1ET74WW (2.64)")
     blocked = make_t430_plan(artifact, "G1ET75WW (2.65 )")
     unknown = make_t430_plan(artifact, "G1ET74WW")
+    bare = make_t430_plan(artifact, "2.64")
 
     assert CompatibilityValidator().validate(allowed).decision is CompatibilityDecision.ALLOWED
     assert CompatibilityValidator().validate(whitespace).decision is CompatibilityDecision.ALLOWED
@@ -164,12 +175,13 @@ def test_t430_bios_boundary_matches_pinned_upstream_and_unknown_fails_closed(tmp
     assert any("threshold 265" in reason for reason in _assert_decision(blocked, CompatibilityDecision.BLOCKED))
     assert any("ambiguous" in reason for reason in _assert_decision(unknown, CompatibilityDecision.UNKNOWN))
     assert any("ambiguous" in reason for reason in _assert_decision(unspaced, CompatibilityDecision.UNKNOWN))
+    assert any("ambiguous" in reason for reason in _assert_decision(bare, CompatibilityDecision.UNKNOWN))
 
 
 def test_identity_conflict_alias_and_manual_candidate_do_not_authorize(tmp_path: Path) -> None:
     artifact = tmp_path / "t430.rom"
     artifact.write_bytes(b"R" * (4 * MIB))
-    base = make_t430_plan(artifact, "2.64")
+    base = make_t430_plan(artifact, "G1ET74WW (2.64 )")
     conflicting = replace(base, device=replace(base.device, raw_dmi_system_family="ThinkPad X220"))
     conflicting_version = replace(
         base,
@@ -190,6 +202,64 @@ def test_identity_conflict_alias_and_manual_candidate_do_not_authorize(tmp_path:
     assert _assert_decision(alias, CompatibilityDecision.BLOCKED)
     assert _assert_decision(manual_only, CompatibilityDecision.UNKNOWN)
     assert _assert_decision(manual_conflict, CompatibilityDecision.BLOCKED)
+
+
+def test_t430_family_must_match_upstream_field_parsing(tmp_path: Path) -> None:
+    artifact = tmp_path / "t430.rom"
+    artifact.write_bytes(b"R" * (4 * MIB))
+    valid = make_t430_plan(artifact, "G1ET74WW (2.64 )", family="Family: ThinkPad T430")
+    unsupported_shape = make_t430_plan(
+        artifact, "G1ET74WW (2.64 )", family="Lenovo ThinkPad T430"
+    )
+
+    assert CompatibilityValidator().validate(valid).decision is CompatibilityDecision.ALLOWED
+    result = CompatibilityValidator().validate(unsupported_shape)
+    assert result.decision is CompatibilityDecision.UNKNOWN
+    assert any("pinned upstream" in reason for reason in result.reasons)
+
+
+def test_t430_mtm_prefixes_are_cross_checked_across_raw_dmi_fields(tmp_path: Path) -> None:
+    artifact = tmp_path / "t430.rom"
+    artifact.write_bytes(b"R" * (4 * MIB))
+    base = make_t430_plan(artifact, "G1ET74WW (2.64 )")
+    product_version_conflict = replace(
+        base, device=replace(base.device, raw_dmi_product_version="2344CTO")
+    )
+    product_name_conflict = replace(
+        base, device=replace(base.device, raw_dmi_product_name="ThinkPad T430 2344CTO")
+    )
+    unsupported_product_version = replace(
+        base, device=replace(base.device, raw_dmi_product_version="9999CTO")
+    )
+    unsupported_product_name = replace(
+        base, device=replace(base.device, raw_dmi_product_name="ThinkPad T430 9999CTO")
+    )
+
+    for candidate in (
+        product_version_conflict,
+        product_name_conflict,
+        unsupported_product_version,
+        unsupported_product_name,
+    ):
+        assert _assert_decision(candidate, CompatibilityDecision.BLOCKED)
+
+
+def test_t430_bios_vendor_must_agree_with_stock_classification(tmp_path: Path) -> None:
+    artifact = tmp_path / "t430.rom"
+    artifact.write_bytes(b"R" * (4 * MIB))
+    base = make_t430_plan(artifact, "G1ET74WW (2.64 )")
+    vendor_mismatch = replace(
+        base, device=replace(base.device, raw_bios_vendor="American Megatrends")
+    )
+    missing_vendor = replace(base, device=replace(base.device, raw_bios_vendor=None))
+    opposite_flag = replace(
+        base,
+        device=replace(base.device, raw_bios_vendor="LENOVO", stock_lenovo_bios=False),
+    )
+
+    assert _assert_decision(vendor_mismatch, CompatibilityDecision.BLOCKED)
+    assert _assert_decision(opposite_flag, CompatibilityDecision.BLOCKED)
+    assert _assert_decision(missing_vendor, CompatibilityDecision.UNKNOWN)
 
 
 def test_model_family_and_firmware_mismatches_block(x200_files: dict[str, Path]) -> None:
@@ -426,4 +496,134 @@ def test_illegal_stale_transitions_and_no_human_approval_fail_closed(x200_files:
     with pytest.raises(AuthorizationError, match="explicit human approval"):
         session.authorize(actor="test operator", explicit_approval=False)
     assert session.state is OperationState.BACKUP_VERIFIED
+
+
+def test_durable_journal_resumes_only_pre_authorization_and_never_writes(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    complete_plan = make_x200_plan(x200_files)
+    start_plan = replace(complete_plan, backup=BackupEvidence())
+    default_session = WorkflowSession(start_plan)
+    assert default_session.journal.path.is_file()
+
+    checkpoint = tmp_path / "operation.json"
+    session = WorkflowSession(start_plan, journal_path=checkpoint)
+    operation_id = session.journal.operation_id
+    initial = json.loads(checkpoint.read_text(encoding="utf-8"))
+
+    assert initial["operation_id"] == operation_id
+    assert initial["device_fingerprint"]
+    assert initial["artifact_metadata"]["actual_sha256"] == _hash(x200_files["libreboot.rom"])
+    assert session.validate().decision is CompatibilityDecision.ALLOWED
+
+    resumed = WorkflowSession.resume(start_plan, checkpoint)
+    assert resumed.state is OperationState.VALIDATED
+    assert resumed.compatibility is not None
+    assert resumed.verify_backup(complete_plan.backup).decision is CompatibilityDecision.ALLOWED
+    backup_checkpoint = WorkflowSession.resume(complete_plan, checkpoint)
+    assert backup_checkpoint.state is OperationState.BACKUP_VERIFIED
+    assert backup_checkpoint.backup_verification is not None
+
+    token = backup_checkpoint.authorize(actor="test operator", explicit_approval=True)
+    with pytest.raises(UnsafeCheckpointError, match="not a supported resume point"):
+        OperationJournal.load_checkpoint(checkpoint, expected_plan=complete_plan)
+    calls: list[OperationPlan] = []
+    result = backup_checkpoint.request_write(token, writer=lambda plan: calls.append(plan))
+    assert result.code == "WRITES_DISABLED_PHASE_02"
+    assert calls == []
+
+    terminal = OperationJournal.inspect_checkpoint(checkpoint, expected_plan=complete_plan)
+    assert terminal.state is OperationState.WRITE_BLOCKED
+    with pytest.raises(UnsafeCheckpointError, match="read-only"):
+        terminal.append(
+            action="attempt-resume",
+            from_state=OperationState.WRITE_BLOCKED,
+            to_state=OperationState.BLOCKED,
+            code="NOOP",
+            message="must remain read-only",
+        )
+    with pytest.raises(UnsafeCheckpointError, match="not a supported resume point"):
+        WorkflowSession.resume(complete_plan, checkpoint)
+
+
+def test_backup_evidence_and_transition_are_atomic_at_failure_boundary(
+    x200_files: dict[str, Path], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    complete_plan = make_x200_plan(x200_files)
+    start_plan = replace(complete_plan, backup=BackupEvidence())
+    checkpoint = tmp_path / "atomic-backup.json"
+    session = WorkflowSession(start_plan, journal_path=checkpoint)
+    assert session.validate().decision is CompatibilityDecision.ALLOWED
+    before = checkpoint.read_bytes()
+
+    def fail_backup_validation(_: OperationPlan):
+        raise RuntimeError("simulated interruption before transition append")
+
+    monkeypatch.setattr(session.validator, "validate_backup", fail_backup_validation)
+    with pytest.raises(RuntimeError, match="simulated interruption"):
+        session.verify_backup(complete_plan.backup)
+
+    assert checkpoint.read_bytes() == before
+    recovered = OperationJournal.load_checkpoint(checkpoint, expected_plan=start_plan)
+    assert recovered.state is OperationState.VALIDATED
+    assert recovered.backup_checksums == ()
+    assert WorkflowSession.resume(start_plan, checkpoint).state is OperationState.VALIDATED
+
+
+def test_journal_rejects_corruption_changed_plan_and_resumes_no_terminal_state(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "corrupt.json"
+    session = WorkflowSession(plan, journal_path=checkpoint)
+    assert session.validate().decision is CompatibilityDecision.ALLOWED
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+
+    changed_plan = replace(plan, device=replace(plan.device, raw_dmi_system_family="ThinkPad X220"))
+    with pytest.raises(JournalPlanMismatchError):
+        WorkflowSession.resume(changed_plan, checkpoint)
+
+    document["entries"][0]["message"] = "tampered"
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(JournalCorruptionError, match="checksum"):
+        OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+
+
+def test_journal_append_does_not_overwrite_corruption_after_resume(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "tampered-after-load.json"
+    original = WorkflowSession(plan, journal_path=checkpoint)
+    assert original.validate().decision is CompatibilityDecision.ALLOWED
+    loaded = OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+    resumed = WorkflowSession(plan, journal=loaded)
+
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+    document["entries"][0]["message"] = "changed after checkpoint validation"
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+    corrupted_bytes = checkpoint.read_bytes()
+
+    with pytest.raises(JournalCorruptionError, match="before append"):
+        resumed.verify_backup()
+    assert resumed.state is OperationState.VALIDATED
+    assert checkpoint.read_bytes() == corrupted_bytes
+
+
+def test_blocked_journal_persists_failure_details_for_inspection(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    simulated = replace(plan, programmer=replace(plan.programmer, kind=ProgrammerKind.SIMULATION))
+    checkpoint = tmp_path / "blocked.json"
+    session = WorkflowSession(simulated, journal_path=checkpoint)
+    assert session.validate().decision is CompatibilityDecision.BLOCKED
+
+    inspected = OperationJournal.inspect_checkpoint(checkpoint, expected_plan=simulated)
+    entry = inspected.entries[-1]
+    assert entry.failure is True
+    assert entry.failure_code == entry.code
+    assert entry.failure_message == entry.message
+    with pytest.raises(UnsafeCheckpointError, match="not a supported resume point"):
+        OperationJournal.load_checkpoint(checkpoint, expected_plan=simulated)
 

@@ -22,7 +22,8 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 - Device, programmer-voltage, capture-ID and region observations are immutable inputs, but the policy core cannot establish that a human supplied observation is true. Physical probe and measurement integration belongs to Phase 03.
 - A backup capture ID records distinct reads but is not signed acquisition provenance. The core additionally requires separate files, exact chip capacity, nonblank contents, matching declared hashes and equal reads; capture-origin proof remains to be integrated.
 - Artifact content is checked against its declared SHA-256 and source revision must be a full 40-hex commit. The current core does not fetch upstream source or prove that the commit belongs to the URL; Phase 04/05/06/07 must produce independently reviewable provenance.
-- The operation journal is append-only only for the lifetime of the process. Durable audit storage and crash-recovery semantics remain future work.
+- The Phase 02 journal now durably records operation IDs, timestamps, state transitions, device fingerprints, artifact provenance/content checksums, backup capture/checksums and failure details. It rejects corrupt checkpoints and permits resume only from DRAFT, VALIDATED or BACKUP_VERIFIED after exact evidence matching and revalidation. Its SHA-256 chain detects accidental corruption but is not keyed against a hostile editor; the journal is not a signed hardware-attestation source.
+- Terminal BLOCKED, FAILED and WRITE_BLOCKED journals can be inspected but cannot be resumed. AUTHORIZED and later states cannot be resumed. No writer is connected, and the software state remains blocked from physical writes.
 - External SPI profiles currently fail closed unless both the programmer output and every observed chip are independently recorded at exactly 3300 mV. This software policy does not measure voltage.
 
 ## Hardware state

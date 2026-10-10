@@ -33,7 +33,7 @@ flowchart TD
 
 At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and flash completion were simulated. Phase 01 quarantines all application CLI physical writes, routes build/backup/flash requests to explicit unavailable outcomes, and removes false success. The TUI's build request uses the same orchestrator; capture and write controls remain disabled. Verification uses the shared orchestrator and can perform a read-only comparison when invoked.
 
-Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It uses three immutable V1 profiles, raw detection evidence, exact chip/programmer/artifact checks, a tri-state validator, an append-only in-memory journal, and one-use approvals bound to current plan and file digests. The core is not yet connected to the CLI/TUI or any hardware backend; `WorkflowSession.request_write` always returns `WRITES_DISABLED_PHASE_02` and never invokes a writer. CLI/TUI unification and hardware I/O remain later phases.
+Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It uses three immutable V1 profiles, cross-checked raw DMI/MTM/BIOS evidence, exact chip/programmer/artifact checks, a tri-state validator, and a durable checksummed operation journal. Each record includes an operation ID, UTC timestamps, state transition, device fingerprint, artifact provenance/content metadata, backup capture/content checksums and failure details. Checkpoints are atomically replaced and corruption is rejected. Only DRAFT, VALIDATED and BACKUP_VERIFIED checkpoints can be resumed; resume requires the exact evidence fingerprints, revalidation, and a fresh human approval. BLOCKED, FAILED and WRITE_BLOCKED records are read-only inspection records. AUTHORIZED and later checkpoints are never resumable. The core is not yet connected to the CLI/TUI or any hardware backend; `WorkflowSession.request_write` always returns `WRITES_DISABLED_PHASE_02` and never invokes a writer. CLI/TUI unification and hardware I/O remain later phases.
 
 ## Main modules
 
@@ -51,7 +51,7 @@ Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It us
 | Live USB | `usb_builder/build_usb.sh`, `usb_builder/archiso_profile/*` |
 | VM/practice harness | `test_vm/launch_vm.py`, `test_vm/launch_vm.bat`, `test_vm/mock_chips/*` |
 | Tests | `tests/*` |
-| V1 evidence and workflow policy | `autoloader/workflow/{types,profiles,compatibility,authorization,engine}.py` |
+| V1 evidence, policy, journal and workflow state | `autoloader/workflow/{types,profiles,compatibility,authorization,engine,journal}.py` |
 
 ## Target direction
 
