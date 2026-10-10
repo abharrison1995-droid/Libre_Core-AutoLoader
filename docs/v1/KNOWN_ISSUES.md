@@ -49,7 +49,7 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 
 ## Phase 06 implementation and remaining limitations
 
-- Phase 06 adds a standalone regular-X200 Libreboot staging service at `autoloader/workflow/x200_libreboot.py`, commit `91ec91edaadba1e19dba4a15efc4dbe040680377`. It validates evidence supplied by the caller, calls the read-only two-read backup service, revalidates recovery readiness and the selected pinned artifact, and records a final `BACKUP_VERIFIED` operation journal. It is awaiting SOL review.
+- SOL accepted Phase 06 software commits `91ec91edaadba1e19dba4a15efc4dbe040680377` and `b06293ebba4d57c6809eb06e7ac636e96e2902d4`. The standalone regular-X200 Libreboot staging service at `autoloader/workflow/x200_libreboot.py` validates evidence supplied by the caller, calls the read-only two-read backup service, revalidates recovery readiness and the selected pinned artifact, requires exactly one non-empty `fallback/payload` entry of type `payload`, and records a final `BACKUP_VERIFIED` operation journal.
 - The positive tests use a fake SPI transport and a hand-built synthetic COMPLETE artifact manifest; this proves software binding and failure behavior only. No upstream `lbmk` build or verified release image was produced. The Windows host returns `LINUX_BUILD_ENV_REQUIRED` before a build command can run.
 - The service is not integrated into CLI/TUI. It does not provide model-specific physical disassembly/programmer setup instructions and does not perform a physical probe, measured voltage, backup, write, restoration, read-back, cold boot or hardware recovery test. Its flash and restore requests always fail closed; the proposal remains `STAGED/HARDWARE_PENDING`.
 
