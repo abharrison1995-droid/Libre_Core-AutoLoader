@@ -357,6 +357,27 @@ def test_x220_manifest_log_path_traversal_is_rejected(tmp_path, monkeypatch):
     assert "log path" in staged.reasons[0].lower()
 
 
+def test_x220_manifest_symlinked_log_component_is_rejected(tmp_path, monkeypatch):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    operation_root = result.manifest_path.parent
+    logs_path = operation_root / "logs"
+    path_type = type(logs_path)
+    real_is_symlink = path_type.is_symlink
+
+    def report_log_directory_as_symlink(path):
+        if path == logs_path:
+            return True
+        return real_is_symlink(path)
+
+    # Simulate the filesystem reporting a symlink so this safety boundary is
+    # covered on Windows hosts where creating directory symlinks may be denied.
+    monkeypatch.setattr(path_type, "is_symlink", report_log_directory_as_symlink)
+    staged = workflow.accept_artifact_result(result)
+    assert staged.stage is X220WorkflowStage.BLOCKED
+    assert "log" in staged.reasons[0].lower() or "unsafe" in staged.reasons[0].lower()
+
+
 def test_x220_pinned_source_files_are_rehashed_at_acceptance(tmp_path, monkeypatch):
     workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
     result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
