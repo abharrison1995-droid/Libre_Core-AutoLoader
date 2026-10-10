@@ -515,9 +515,17 @@ class X200LibrebootWorkflow:
             or cbfs.source_revision != _LBMK_COREBOOT_REVISION
             or cbfs.source_tree_id != _LBMK_COREBOOT_TREE
             or cbfs.source_file_hashes != tuple((item.path, item.sha256) for item in _LBMK_COREBOOT_CBFSTOOL_SOURCES)
-            or sum(entry.name == "fallback/payload" for entry in cbfs.inventory) != 1
         ):
             raise ValueError("Selected X200 artifact lacks the exact pinned whole-chip CBFS payload evidence")
+        payload_entries = tuple(entry for entry in cbfs.inventory if entry.name == "fallback/payload")
+        if (
+            len(payload_entries) != 1
+            or payload_entries[0].entry_type != "payload"
+            or payload_entries[0].data_size_bytes <= 0
+        ):
+            raise ValueError(
+                "Selected X200 artifact must contain exactly one non-empty fallback/payload CBFS payload entry"
+            )
         self._validate_manifest_file(result)
         manifest_time = _parse_utc(manifest.created_at_utc, "artifact manifest")
         if self.backup_set is None:

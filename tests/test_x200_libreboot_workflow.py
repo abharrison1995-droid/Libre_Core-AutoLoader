@@ -136,6 +136,7 @@ def _fake_complete_result(
     prebuild_digest: str | None = None,
     operation_id: str | None = None,
     created_at_utc: str | None = None,
+    cbfs_inventory: tuple[CBFSEntry, ...] | None = None,
 ) -> ArtifactBuildResult:
     recipe = X200_4MB if intent.expected_size_bytes == 4 * MIB else X200_8MB
     operation_id = operation_id or str(uuid.uuid4())
@@ -158,7 +159,11 @@ def _fake_complete_result(
         source_tree_id=_LBMK_COREBOOT_TREE,
         region="whole_flash",
         required_payload="fallback/payload",
-        inventory=(CBFSEntry("fallback/payload", 0, "payload", 0, 4096, 4096),),
+        inventory=(
+            cbfs_inventory
+            if cbfs_inventory is not None
+            else (CBFSEntry("fallback/payload", 0, "payload", 0, 4096, 4096),)
+        ),
         source_file_hashes=tuple((item.path, item.sha256) for item in _LBMK_COREBOOT_CBFSTOOL_SOURCES),
     )
     records = []
@@ -355,10 +360,31 @@ def test_x200_prebuild_policy_blocks_chip_voltage_and_topology_mismatches():
 
 @pytest.mark.parametrize(
     "failure",
-    ["blocked-result", "changed-bytes", "missing-file", "intent-mismatch", "operation-mismatch", "stale-manifest", "manifest-checksum"],
+    [
+        "blocked-result",
+        "changed-bytes",
+        "missing-file",
+        "intent-mismatch",
+        "operation-mismatch",
+        "stale-manifest",
+        "manifest-checksum",
+        "cbfs-null-type",
+        "cbfs-other-type",
+        "cbfs-zero-size",
+        "cbfs-duplicate",
+    ],
 )
 def test_x200_artifact_failures_never_reach_staged(captured_backup, tmp_path, failure):
     intent, backup = captured_backup
+    bad_cbfs_inventories = {
+        "cbfs-null-type": (CBFSEntry("fallback/payload", 0, None, 0, 4096, 4096),),
+        "cbfs-other-type": (CBFSEntry("fallback/payload", 0, "raw", 0, 4096, 4096),),
+        "cbfs-zero-size": (CBFSEntry("fallback/payload", 0, "payload", 0, 0, 0),),
+        "cbfs-duplicate": (
+            CBFSEntry("fallback/payload", 0, "payload", 0, 4096, 4096),
+            CBFSEntry("fallback/payload", 4096, "payload", 0, 1024, 1024),
+        ),
+    }
     workflow = _workflow(intent, backup, tmp_path / "operation.json")
     result = _fake_complete_result(
         tmp_path,
@@ -366,6 +392,7 @@ def test_x200_artifact_failures_never_reach_staged(captured_backup, tmp_path, fa
         prebuild_digest=("0" * 64 if failure == "intent-mismatch" else None),
         operation_id=(str(uuid.uuid4()) if failure == "operation-mismatch" else None),
         created_at_utc=("2020-01-01T00:00:00+00:00" if failure == "stale-manifest" else None),
+        cbfs_inventory=bad_cbfs_inventories.get(failure),
     )
     if failure == "blocked-result":
         from autoloader.rom_builder.artifact_engine import ArtifactBuildResult
