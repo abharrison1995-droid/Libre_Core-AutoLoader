@@ -20,13 +20,13 @@ flowchart TD
   Builder[ROM builder classes] -. not connected .-> Orch
   Reversion --> IVprep[IVPrepManager / WinFlash]
   Reversion --> BIOSDB[BIOS target version database]
-  Onevy[OnevyRainManager] -. separate pathway .-> Runner
+  Onevy[OnevyRainManager] -. not connected to app workflow .- Reversion
   USB[Archiso build script/profile] --> Start[Live startup script]
   Start --> App
   VM[test_vm QEMU harness] -. practice only .-> Screens
 ```
 
-The CLI's `flash` path bypasses the orchestrator, while TUI build and flash completion are simulated. The current API is therefore not one operational, shared workflow backend. Phase 01 removes false success and makes unavailable operations fail closed; the compatibility and authorized workflow controller belongs to Phase 02.
+At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and flash completion were simulated. Phase 01 quarantines the CLI write path, routes unavailable build/flash results through the orchestrator, and removes false success. The compatibility and authorized workflow controller belongs to Phase 02.
 
 ## Main modules
 
