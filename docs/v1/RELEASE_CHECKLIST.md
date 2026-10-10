@@ -14,6 +14,6 @@
 | Documentation matches implemented and validated support | IN PROGRESS | Phase 00 audit accepted; Phase 01 status/evidence updated; Phase 11 remains. |
 | Phase 00 SOL review accepted | ACCEPTED | SOL accepted Phase 00; four follow-ups were finalized in `2d0e2d1` and the decision wording was aligned in `4c33444`. |
 | Phase 01 SOL review accepted | ACCEPTED | SOL accepted Phase 01; the welcome/version, provisional compatibility and chip-size estimate follow-up was resolved in `207a7df`. |
-| Phase 02 SOL review accepted | PENDING REVIEW | Standalone policy, immutable evidence, journal and digest-bound single-use approval implemented; all writes remain blocked. |
+| Phase 02 SOL review accepted | ACCEPTED — SOFTWARE ONLY | SOL accepted the standalone policy, immutable evidence, durable journal and digest-bound single-use approval. Implementation commits `5ceb6f79d6924f73c073a4631cb65434e2058fbd` and `263d8d5b4625799f504abfb691ba2ba6bed22ec6`; evidence/documentation commits `ae494ebd27a427573a06e60c6c079c2d9ba526ae` and `f04f9d35957ee0e7575a17a023985c11d4c1254e`. Final checks: 101 tests passed, mypy clean on 82 files, editable install and CLI help passed. CLI/TUI integration and Phase 03 remain pending; all physical writes remain blocked. |
 
 V1 cannot be marked complete while any release-blocking software check or any of the three hardware workflows remains pending.
