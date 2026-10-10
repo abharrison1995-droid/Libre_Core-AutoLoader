@@ -16,6 +16,8 @@ from .profiles import V1Profile, V1_PROFILES
 from .types import (
     ArtifactEvidence,
     BackupEvidence,
+    BuildIntentEvidence,
+    ChipTopology,
     ChipEvidence,
     CompatibilityDecision,
     CompatibilityResult,
@@ -24,6 +26,7 @@ from .types import (
     FirmwareFamily,
     OperationPlan,
     ProgrammerKind,
+    ProgrammerEvidence,
     RegionEvidence,
 )
 
@@ -230,8 +233,14 @@ class CompatibilityValidator:
             )
 
     @staticmethod
-    def _validate_programmer(profile: V1Profile, plan: OperationPlan, blocked: list[str], unknown: list[str]) -> None:
-        programmer = plan.programmer
+    def _validate_programmer(
+        profile: V1Profile,
+        device: DeviceEvidence,
+        topology: ChipTopology,
+        programmer: ProgrammerEvidence,
+        blocked: list[str],
+        unknown: list[str],
+    ) -> None:
         if programmer.kind is ProgrammerKind.SIMULATION:
             blocked.append("simulation programmer evidence can never authorize an operation")
             return
@@ -250,10 +259,10 @@ class CompatibilityValidator:
                 unknown.append("external programmer output voltage is unknown")
             elif programmer.voltage_mv != 3300:
                 blocked.append("external programmer must be verified at exactly 3300 mV for this profile")
-            if not plan.topology.observed or not plan.topology.chips:
+            if not topology.observed or not topology.chips:
                 unknown.append("observed chip voltage is required for every external SPI target")
             else:
-                for chip in plan.topology.chips:
+                for chip in topology.chips:
                     if not chip.observed:
                         unknown.append(f"chip {chip.chip_id} is not observed for voltage matching")
                     elif chip.voltage_mv is None:
@@ -264,14 +273,21 @@ class CompatibilityValidator:
                             f"programmer output {programmer.voltage_mv} mV"
                         )
         elif programmer.kind is ProgrammerKind.INTERNAL_ONEVYRAIN:
-            if plan.device.internal_flash_unlock_status is False:
+            if device.internal_flash_unlock_status is False:
                 blocked.append("internal flash unlock was observed as unavailable")
-            elif not plan.device.internal_flash_unlock_observed or plan.device.internal_flash_unlock_status is not True:
+            elif not device.internal_flash_unlock_observed or device.internal_flash_unlock_status is not True:
                 unknown.append("internal flash unlock has not been independently observed")
 
     @staticmethod
-    def _validate_topology(profile: V1Profile, plan: OperationPlan, blocked: list[str], unknown: list[str]) -> dict[str, ChipEvidence]:
-        topology = plan.topology
+    def _validate_topology(
+        profile: V1Profile,
+        topology: ChipTopology,
+        blocked: list[str],
+        unknown: list[str],
+        *,
+        artifact_size_bytes: int | None = None,
+        artifact_regions: tuple[RegionEvidence, ...] | None = None,
+    ) -> dict[str, ChipEvidence]:
         if not topology.observed:
             unknown.append("physical flash chip topology has not been observed")
             return {}
@@ -302,24 +318,27 @@ class CompatibilityValidator:
             elif topology.chips[0].capacity_bytes not in profile.single_chip_capacities:
                 blocked.append("observed flash chip capacity is not allowlisted for this profile")
 
-        if profile.expected_artifact_size_bytes is not None and not profile.artifact_size_matches_chip:
-            if plan.artifact.expected_size_bytes != profile.expected_artifact_size_bytes:
+        if artifact_size_bytes is not None and profile.expected_artifact_size_bytes is not None and not profile.artifact_size_matches_chip:
+            if artifact_size_bytes != profile.expected_artifact_size_bytes:
                 blocked.append("artifact size does not match the V1 profile's expected size")
-        if profile.artifact_size_matches_chip and len(topology.chips) == 1:
-            if plan.artifact.expected_size_bytes != topology.chips[0].capacity_bytes:
+        if artifact_size_bytes is not None and profile.artifact_size_matches_chip and len(topology.chips) == 1:
+            if artifact_size_bytes != topology.chips[0].capacity_bytes:
                 blocked.append("artifact size does not match the exact observed X200 chip capacity")
 
         if profile.required_region_names:
             regions_ok = CompatibilityValidator._validate_regions(
                 profile, topology.regions, blocked, unknown, source="observed topology"
             )
-            artifact_regions_ok = CompatibilityValidator._validate_regions(
-                profile, plan.artifact.regions, blocked, unknown, source="firmware artifact"
-            )
+            if artifact_regions is not None:
+                artifact_regions_ok = CompatibilityValidator._validate_regions(
+                    profile, artifact_regions, blocked, unknown, source="firmware artifact"
+                )
+            else:
+                artifact_regions_ok = False
             if regions_ok and artifact_regions_ok:
                 observed_regions = {r.name.lower(): (r.start_byte, r.end_byte) for r in topology.regions}
-                artifact_regions = {r.name.lower(): (r.start_byte, r.end_byte) for r in plan.artifact.regions}
-                if observed_regions != artifact_regions:
+                artifact_region_map = {r.name.lower(): (r.start_byte, r.end_byte) for r in artifact_regions or ()}
+                if observed_regions != artifact_region_map:
                     blocked.append("X220 artifact region layout differs from the independently observed flash layout")
         return chips
 
@@ -432,12 +451,57 @@ class CompatibilityValidator:
             blocked.append("requested firmware family does not match the selected V1 profile")
         high_identity = self._validate_identity(profile, plan.device, blocked, unknown)
         self._validate_bios(profile, plan.device, blocked, unknown)
-        self._validate_programmer(profile, plan, blocked, unknown)
-        self._validate_topology(profile, plan, blocked, unknown)
+        self._validate_programmer(profile, plan.device, plan.topology, plan.programmer, blocked, unknown)
+        self._validate_topology(
+            profile,
+            plan.topology,
+            blocked,
+            unknown,
+            artifact_size_bytes=plan.artifact.expected_size_bytes,
+            artifact_regions=plan.artifact.regions,
+        )
         self._validate_artifact(profile, plan.artifact, blocked, unknown)
         return self._result(profile.profile_id, blocked, unknown, high_identity=high_identity)
 
-    def validate_backup(self, plan: OperationPlan) -> CompatibilityResult:
+    def validate_build_intent(self, intent: BuildIntentEvidence) -> CompatibilityResult:
+        """Validate pre-build evidence without requiring a not-yet-created artifact."""
+        blocked: list[str] = []
+        unknown: list[str] = []
+        profile = self.profiles.get(intent.profile_id)
+        if profile is None:
+            return CompatibilityResult(
+                CompatibilityDecision.BLOCKED,
+                intent.profile_id,
+                EvidenceConfidence.LOW,
+                ("workflow profile is not in the explicit V1 allowlist",),
+            )
+        if intent.requested_model_id != profile.model_id:
+            blocked.append("requested model does not match the selected V1 profile")
+        if intent.firmware_family is not profile.firmware_family:
+            blocked.append("requested firmware family does not match the selected V1 profile")
+        high_identity = self._validate_identity(profile, intent.device, blocked, unknown)
+        self._validate_bios(profile, intent.device, blocked, unknown)
+        self._validate_programmer(profile, intent.device, intent.topology, intent.programmer, blocked, unknown)
+        self._validate_topology(
+            profile,
+            intent.topology,
+            blocked,
+            unknown,
+            artifact_size_bytes=intent.expected_size_bytes,
+        )
+        if not intent.source_url.startswith("https://"):
+            blocked.append("build intent provenance must use an HTTPS source URL")
+        if not _PINNED_REVISION.fullmatch(intent.source_revision.strip()):
+            blocked.append("build intent provenance must name a full immutable 40-hex source commit")
+        if not _PINNED_REVISION.fullmatch(intent.source_tree_id.strip()):
+            blocked.append("build intent provenance must name a full immutable 40-hex source tree")
+        if not _SHA256.fullmatch(intent.configuration_sha256):
+            blocked.append("build intent configuration SHA-256 is malformed")
+        if intent.expected_size_bytes <= 0:
+            blocked.append("build intent expected size must be positive")
+        return self._result(profile.profile_id, blocked, unknown, high_identity=high_identity)
+
+    def validate_backup(self, plan: OperationPlan | BuildIntentEvidence) -> CompatibilityResult:
         """Verify two stable, matching full-chip reads for every observed chip."""
         blocked: list[str] = []
         unknown: list[str] = []

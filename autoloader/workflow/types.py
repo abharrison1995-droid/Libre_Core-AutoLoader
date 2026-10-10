@@ -1,6 +1,8 @@
 """Immutable evidence, plan, compatibility and workflow value types."""
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -177,6 +179,86 @@ class OperationPlan:
     programmer: ProgrammerEvidence
     artifact: ArtifactEvidence
     backup: BackupEvidence = field(default_factory=BackupEvidence)
+
+
+@dataclass(frozen=True)
+class BuildIntentEvidence:
+    """Pre-build device, topology and pinned-recipe evidence.
+
+    A build intent deliberately has no future artifact path or digest. Its
+    identity is stable across backup capture; the resulting backup evidence is
+    bound separately and the completed artifact is bound later by an
+    :class:`OperationPlan`.
+    """
+
+    profile_id: str
+    requested_model_id: str
+    firmware_family: FirmwareFamily
+    device: DeviceEvidence
+    topology: ChipTopology
+    programmer: ProgrammerEvidence
+    recipe_id: str
+    source_url: str
+    source_revision: str
+    source_tree_id: str
+    configuration_sha256: str
+    expected_size_bytes: int
+    backup: BackupEvidence = field(default_factory=BackupEvidence)
+
+
+def build_intent_record(intent: BuildIntentEvidence) -> dict[str, object]:
+    """Return stable manifest fields for an intent, excluding captured backup pairs."""
+    return {
+        "profile_id": intent.profile_id,
+        "requested_model_id": intent.requested_model_id,
+        "firmware_family": intent.firmware_family.value,
+        "device": {
+            "raw_dmi_product_name": intent.device.raw_dmi_product_name,
+            "raw_dmi_product_version": intent.device.raw_dmi_product_version,
+            "raw_dmi_system_family": intent.device.raw_dmi_system_family,
+            "raw_mtm": intent.device.raw_mtm,
+            "raw_bios_version": intent.device.raw_bios_version,
+            "raw_bios_vendor": intent.device.raw_bios_vendor,
+            "stock_lenovo_bios": intent.device.stock_lenovo_bios,
+        },
+        "topology": {
+            "observed": intent.topology.observed,
+            "chips": [
+                {
+                    "chip_id": chip.chip_id,
+                    "capacity_bytes": chip.capacity_bytes,
+                    "observed": chip.observed,
+                    "physical_label": chip.physical_label,
+                    "voltage_mv": chip.voltage_mv,
+                    "manufacturer": chip.manufacturer,
+                    "model_number": chip.model_number,
+                }
+                for chip in intent.topology.chips
+            ],
+            "regions": [
+                {"name": region.name, "start_byte": region.start_byte, "end_byte": region.end_byte}
+                for region in intent.topology.regions
+            ],
+        },
+        "programmer": {
+            "kind": intent.programmer.kind.value,
+            "observed": intent.programmer.observed,
+            "interface_verified": intent.programmer.interface_verified,
+            "wiring_verified": intent.programmer.wiring_verified,
+            "voltage_mv": intent.programmer.voltage_mv,
+        },
+        "recipe_id": intent.recipe_id,
+        "source_url": intent.source_url,
+        "source_revision": intent.source_revision,
+        "source_tree_id": intent.source_tree_id,
+        "configuration_sha256": intent.configuration_sha256,
+        "expected_size_bytes": intent.expected_size_bytes,
+    }
+
+
+def build_intent_sha256(intent: BuildIntentEvidence) -> str:
+    payload = json.dumps(build_intent_record(intent), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)

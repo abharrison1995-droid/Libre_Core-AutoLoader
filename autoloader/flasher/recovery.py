@@ -10,7 +10,13 @@ from pathlib import Path
 from typing import Any
 
 from autoloader.workflow.compatibility import CompatibilityValidator
-from autoloader.workflow.types import CompatibilityDecision, OperationPlan
+from autoloader.workflow.types import (
+    BuildIntentEvidence,
+    CompatibilityDecision,
+    OperationPlan,
+    build_intent_record,
+    build_intent_sha256,
+)
 
 from .backup_service import BackupManifestError, BackupManifestStore, BackupSetResult
 
@@ -47,9 +53,17 @@ class RecoveryReadinessService:
     def __init__(self, validator: CompatibilityValidator | None = None) -> None:
         self.validator = validator or CompatibilityValidator()
 
-    def evaluate(self, plan: OperationPlan, backup: BackupSetResult) -> RecoveryReadinessRecord:
+    def evaluate(
+        self,
+        plan: OperationPlan | BuildIntentEvidence,
+        backup: BackupSetResult,
+    ) -> RecoveryReadinessRecord:
         reasons: list[str] = []
-        plan_decision = self.validator.validate(plan)
+        plan_decision = (
+            self.validator.validate(plan)
+            if isinstance(plan, OperationPlan)
+            else self.validator.validate_build_intent(plan)
+        )
         if plan_decision.decision is not CompatibilityDecision.ALLOWED:
             reasons.append("operation plan is not currently validated: " + "; ".join(plan_decision.reasons))
         if backup.profile_id != plan.profile_id:
@@ -139,7 +153,7 @@ def _verified_event(
 
 def _validate_manifest_plan(
     event: dict[str, Any],
-    plan: OperationPlan,
+    plan: OperationPlan | BuildIntentEvidence,
     reasons: list[str],
     label: str,
 ) -> None:
@@ -152,13 +166,22 @@ def _validate_manifest_plan(
     }
     if event.get("device_identifiers") != expected_device:
         reasons.append(f"{label} manifest device identifiers differ from the current plan")
-    expected_artifact = {
-        "sha256": plan.artifact.expected_sha256,
-        "size_bytes": plan.artifact.expected_size_bytes,
-        "source_revision": plan.artifact.source_revision,
-    }
-    if event.get("source_artifact") != expected_artifact:
-        reasons.append(f"{label} manifest artifact provenance differs from the current plan")
+    if isinstance(plan, OperationPlan):
+        expected_artifact = {
+            "sha256": plan.artifact.expected_sha256,
+            "size_bytes": plan.artifact.expected_size_bytes,
+            "source_revision": plan.artifact.source_revision,
+        }
+        if event.get("source_artifact") != expected_artifact:
+            reasons.append(f"{label} manifest artifact provenance differs from the current plan")
+    else:
+        if event.get("source_artifact") is not None:
+            reasons.append(f"{label} pre-build manifest unexpectedly names a future artifact")
+        if (
+            event.get("build_intent") != build_intent_record(plan)
+            or event.get("build_intent_sha256") != build_intent_sha256(plan)
+        ):
+            reasons.append(f"{label} manifest build intent differs from the current evidence")
 
     expected_chips = {
         chip.chip_id: (chip.physical_label, chip.capacity_bytes, chip.voltage_mv)

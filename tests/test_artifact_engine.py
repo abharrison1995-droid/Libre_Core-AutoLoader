@@ -28,6 +28,7 @@ from autoloader.rom_builder.artifact_engine import (
     SourcePin,
     compare_region_maps,
     derive_lbmk_output_path,
+    _finalize_x220_operation_plan,
     lbmk_expected_output_paths,
     parse_cbfs_parseable_output,
     parse_ifdtool_regions,
@@ -44,17 +45,18 @@ from autoloader.flasher.backup_service import (
     StorageEvidence,
 )
 from autoloader.workflow.types import (
-    ArtifactEvidence,
     BackupEvidence,
     BackupPairEvidence,
+    BuildIntentEvidence,
     ChipEvidence,
     ChipTopology,
     DeviceEvidence,
     FirmwareFamily,
-    OperationPlan,
     ProgrammerEvidence,
     ProgrammerKind,
     RegionEvidence,
+    build_intent_record,
+    build_intent_sha256,
 )
 
 
@@ -126,10 +128,11 @@ def test_cbfs_parseable_inventory_requires_pinned_header_bounds_and_payload() ->
             )
 
 
-def test_cbfs_parseable_inventory_binds_explicit_fmap_region() -> None:
-    x220_output = "[FMAP REGION]\tCOREBOOT\n" + _CBFS_FIXTURE
+def test_cbfs_parseable_inventory_accepts_pinned_nonverbose_region_output() -> None:
+    # Pinned cbfstool `print -r COREBOOT -k` has the header directly; unlike
+    # verbose output it does not include an FMAP marker.
     inventory = parse_cbfs_parseable_output(
-        x220_output,
+        _CBFS_FIXTURE,
         required_payload="fallback/payload",
         region_size_bytes=0x9000,
         expected_region="COREBOOT",
@@ -137,9 +140,8 @@ def test_cbfs_parseable_inventory_binds_explicit_fmap_region() -> None:
     assert inventory[1].name == "fallback/payload"
 
     for output, expected_region in (
-        (_CBFS_FIXTURE, "COREBOOT"),
         ("[FMAP REGION]\tBIOS\n" + _CBFS_FIXTURE, "COREBOOT"),
-        (x220_output, None),
+        ("[FMAP REGION]\tCOREBOOT\n" + _CBFS_FIXTURE, None),
     ):
         with pytest.raises(ValueError):
             parse_cbfs_parseable_output(
@@ -167,7 +169,7 @@ def test_cbfs_inspection_records_exact_pinned_tool_invocations(tmp_path: Path, m
     def fake_readonly(argv, _cwd, _logs, commands):
         invocations.append(tuple(argv))
         if "-r" in argv:
-            return "[FMAP REGION]\tCOREBOOT\n" + _CBFS_FIXTURE
+            return _CBFS_FIXTURE
         return _CBFS_FIXTURE
 
     monkeypatch.setattr(engine, "_run_readonly", fake_readonly)
@@ -211,16 +213,13 @@ def _make_x220_backup_fixture(tmp_path: Path):
     mib = 1024 * 1024
     size = 8 * mib
     original = (bytes(range(251)) * ((size // 251) + 1))[:size]
-    candidate = (bytes(reversed(range(251))) * ((size // 251) + 1))[:size]
     regions = (
         RegionEvidence("ifd", 0, 0x1000),
         RegionEvidence("gbe", 0x1000, 0x3000),
         RegionEvidence("me", 0x3000, 0x500000),
         RegionEvidence("bios", 0x500000, size),
     )
-    candidate_path = tmp_path / "planned-coreboot.rom"
-    candidate_path.write_bytes(candidate)
-    plan = OperationPlan(
+    intent = BuildIntentEvidence(
         profile_id="x220-coreboot",
         requested_model_id="x220",
         firmware_family=FirmwareFamily.COREBOOT,
@@ -243,16 +242,12 @@ def _make_x220_backup_fixture(tmp_path: Path):
             wiring_verified=True,
             voltage_mv=3300,
         ),
-        artifact=ArtifactEvidence(
-            path=str(candidate_path),
-            model_id="x220",
-            firmware_family=FirmwareFamily.COREBOOT,
-            expected_sha256=hashlib.sha256(candidate).hexdigest(),
-            expected_size_bytes=size,
-            source_url=COREBOOT_2609.repository_url,
-            source_revision=COREBOOT_2609.revision,
-            regions=regions,
-        ),
+        recipe_id=X220_COREBOOT.recipe_id,
+        source_url=COREBOOT_2609.repository_url,
+        source_revision=COREBOOT_2609.revision,
+        source_tree_id=COREBOOT_2609.tree_id,
+        configuration_sha256=X220_COREBOOT.expected_config_sha256,
+        expected_size_bytes=size,
     )
     primary_dir, recovery_dir = tmp_path / "primary", tmp_path / "recovery"
     primary_dir.mkdir()
@@ -282,12 +277,12 @@ def _make_x220_backup_fixture(tmp_path: Path):
         second_capture_id=captured.second_capture_id,
         transient=False,
     )
-    plan = replace(plan, backup=BackupEvidence((pair,)))
+    intent = replace(intent, backup=BackupEvidence((pair,)))
     event = {
         "operation_id": "backup-operation-x220",
         "status": "verified",
-        "profile_id": plan.profile_id,
-        "requested_model_id": plan.requested_model_id,
+        "profile_id": intent.profile_id,
+        "requested_model_id": intent.requested_model_id,
         "programmer": "ch341a_spi",
         "tool": {
             "name": "flashrom",
@@ -295,15 +290,13 @@ def _make_x220_backup_fixture(tmp_path: Path):
             "version": "fixture-tool",
         },
         "device_identifiers": {
-            "raw_dmi_product_name": plan.device.raw_dmi_product_name,
-            "raw_mtm": plan.device.raw_mtm,
-            "raw_bios_version": plan.device.raw_bios_version,
+            "raw_dmi_product_name": intent.device.raw_dmi_product_name,
+            "raw_mtm": intent.device.raw_mtm,
+            "raw_bios_version": intent.device.raw_bios_version,
         },
-        "source_artifact": {
-            "sha256": plan.artifact.expected_sha256,
-            "size_bytes": plan.artifact.expected_size_bytes,
-            "source_revision": plan.artifact.source_revision,
-        },
+        "source_artifact": None,
+        "build_intent": build_intent_record(intent),
+        "build_intent_sha256": build_intent_sha256(intent),
         "topology": [{
             "chip_id": "main",
             "physical_label": "main",
@@ -365,7 +358,7 @@ def _make_x220_backup_fixture(tmp_path: Path):
 
     backup = BackupSetResult(
         operation_id="backup-operation-x220",
-        profile_id=plan.profile_id,
+        profile_id=intent.profile_id,
         created_at_utc="2026-10-10T00:00:00+00:00",
         tool_name="flashrom",
         tool_version="fixture-tool",
@@ -386,44 +379,70 @@ def _make_x220_backup_fixture(tmp_path: Path):
         path = tmp_path / name
         path.write_bytes(data)
         blob_inputs.append(BlobInput(name, path, hashlib.sha256(data).hexdigest()))
-    return plan, backup, regions, tuple(blob_inputs), original
+    return intent, backup, regions, tuple(blob_inputs), original
 
 
 def test_x220_backup_evidence_binds_blobs_to_matching_full_chip_backup(tmp_path: Path) -> None:
-    plan, backup, regions, blob_inputs, original = _make_x220_backup_fixture(tmp_path)
-    observed, provenance = validate_x220_backup_evidence(plan, backup, regions, blob_inputs)
+    intent, backup, regions, blob_inputs, original = _make_x220_backup_fixture(tmp_path)
+    observed, provenance = validate_x220_backup_evidence(intent, backup, regions, blob_inputs)
     assert observed == original
     assert provenance.operation_id == backup.operation_id
     assert provenance.original_chip_sha256 == backup.chips[0].first_sha256
     assert provenance.preserved_regions == ("gbe", "ifd", "me")
 
 
+def test_fresh_x220_output_hash_is_bound_only_after_generation(tmp_path: Path) -> None:
+    from autoloader.workflow.compatibility import CompatibilityValidator
+    from autoloader.workflow.types import CompatibilityDecision
+
+    intent, backup, regions, _blob_inputs, _original = _make_x220_backup_fixture(tmp_path)
+    generated = tmp_path / "newly-generated-coreboot.rom"
+    fresh_bytes = (bytes(range(239)) * ((X220_COREBOOT.expected_size_bytes // 239) + 1))[
+        :X220_COREBOOT.expected_size_bytes
+    ]
+    generated.write_bytes(fresh_bytes)
+    observed_digest = hashlib.sha256(fresh_bytes).hexdigest()
+
+    final_plan = _finalize_x220_operation_plan(intent, backup, generated, regions)
+
+    assert final_plan.artifact.expected_sha256 == observed_digest
+    assert final_plan.artifact.path == str(generated.resolve())
+    assert CompatibilityValidator().validate(final_plan).decision is CompatibilityDecision.ALLOWED
+    with pytest.raises(ValueError, match="hash differs"):
+        _finalize_x220_operation_plan(intent, backup, generated, regions, expected_sha256="0" * 64)
+
+    generated.write_bytes(bytes((fresh_bytes[0] ^ 0xFF,)) + fresh_bytes[1:])
+    result = CompatibilityValidator().validate(final_plan)
+    assert result.decision is CompatibilityDecision.BLOCKED
+    assert any("content does not match" in reason for reason in result.reasons)
+
+
 def test_x220_backup_evidence_blocks_missing_or_unbound_inputs(tmp_path: Path) -> None:
-    plan, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(tmp_path)
+    intent, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(tmp_path)
     with pytest.raises(ValueError, match="complete original backup"):
-        validate_x220_backup_evidence(plan, None, regions, blob_inputs)
+        validate_x220_backup_evidence(intent, None, regions, blob_inputs)
 
     me_input = next(item for item in blob_inputs if item.name == "me.bin")
     me_input.path.write_bytes(b"incorrect ME blob")
     wrong_blob = replace(me_input, sha256=hashlib.sha256(me_input.path.read_bytes()).hexdigest())
     inputs = tuple(wrong_blob if item.name == me_input.name else item for item in blob_inputs)
     with pytest.raises(ValueError, match="exact matching slice"):
-        validate_x220_backup_evidence(plan, backup, regions, inputs)
+        validate_x220_backup_evidence(intent, backup, regions, inputs)
 
 
 def test_x220_backup_evidence_rejects_changed_backup_or_wrong_region_map(tmp_path: Path) -> None:
-    plan, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(tmp_path)
+    intent, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(tmp_path)
     primary = Path(backup.chips[0].first_path)
     primary.write_bytes(b"corrupt")
     with pytest.raises(ValueError, match="exact observed chip capacity"):
-        validate_x220_backup_evidence(plan, backup, regions, blob_inputs)
+        validate_x220_backup_evidence(intent, backup, regions, blob_inputs)
 
     second_root = tmp_path / "second"
     second_root.mkdir()
-    plan, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(second_root)
+    intent, backup, regions, blob_inputs, _original = _make_x220_backup_fixture(second_root)
     changed = regions[:-1] + (RegionEvidence("bios", 0x510000, 8 * 1024 * 1024),)
     with pytest.raises(ValueError, match="differ from the evidence-bound"):
-        validate_x220_backup_evidence(plan, backup, changed, blob_inputs)
+        validate_x220_backup_evidence(intent, backup, changed, blob_inputs)
 
 
 def test_pinned_lbmk_output_name_is_derived_and_allowlisted() -> None:

@@ -38,6 +38,7 @@ from autoloader.workflow.types import (
     BackupEvidence,
     ChipEvidence,
     ChipTopology,
+    BuildIntentEvidence,
     ProgrammerEvidence,
     ProgrammerKind,
     DeviceEvidence,
@@ -347,6 +348,38 @@ def test_backup_service_preserves_x220_ifd_gbe_me_bios_map(tmp_path):
         {"name": "bios", "start_byte": 5 * MIB, "end_byte": 8 * MIB},
     ]
     assert RecoveryReadinessService().evaluate(plan, result).status == "ready"
+
+
+def test_x220_backup_capture_binds_prebuild_intent_without_future_artifact(tmp_path):
+    from autoloader.rom_builder.artifact_engine import COREBOOT_2609, X220_COREBOOT
+
+    plan = _make_x220(tmp_path)
+    intent = BuildIntentEvidence(
+        profile_id=plan.profile_id,
+        requested_model_id=plan.requested_model_id,
+        firmware_family=plan.firmware_family,
+        device=plan.device,
+        topology=plan.topology,
+        programmer=plan.programmer,
+        recipe_id=X220_COREBOOT.recipe_id,
+        source_url=COREBOOT_2609.repository_url,
+        source_revision=COREBOOT_2609.revision,
+        source_tree_id=COREBOOT_2609.tree_id,
+        configuration_sha256=X220_COREBOOT.expected_config_sha256,
+        expected_size_bytes=8 * MIB,
+    )
+    content = _payload(8 * MIB, 43)
+    transport = FakeTransport([_probe_line("W25Q64.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+
+    result = _capture(service, intent, probes, primary, recovery)
+
+    event = BackupManifestStore(primary).read_events()[-1]
+    assert event["source_artifact"] is None
+    assert event["build_intent"]["recipe_id"] == X220_COREBOOT.recipe_id
+    assert event["build_intent_sha256"]
+    assert RecoveryReadinessService().evaluate(intent, result).status == "ready"
 
 
 def test_backup_service_blocks_invalid_x220_region_map_before_reads(tmp_path):

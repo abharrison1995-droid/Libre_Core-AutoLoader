@@ -1,8 +1,9 @@
 """Durable, evidence-bound, multi-chip backup capture service.
 
 The service accepts only raw probe records from :mod:`autoloader.flasher.spi`,
-requires a validated Phase 02 plan, and records two independent full-chip reads
-on separately verified persistent volumes. It has no restore/write operation.
+requires a validated Phase 02 operation plan or artifact-free build intent, and
+records two independent full-chip reads on separately verified persistent
+volumes. It has no restore/write operation.
 """
 from __future__ import annotations
 
@@ -22,10 +23,13 @@ from autoloader.workflow.compatibility import CompatibilityValidator
 from autoloader.workflow.types import (
     BackupEvidence,
     BackupPairEvidence,
+    BuildIntentEvidence,
     CompatibilityDecision,
     OperationPlan,
     ProgrammerKind,
     ProgrammerEvidence,
+    build_intent_record,
+    build_intent_sha256,
 )
 
 from .backup import is_degenerate_dump
@@ -337,7 +341,7 @@ class BackupSetService:
 
     def capture(
         self,
-        plan: OperationPlan,
+        plan: OperationPlan | BuildIntentEvidence,
         probes: Sequence[ChipProbeEvidence],
         *,
         programmer: ProgrammerType,
@@ -347,7 +351,11 @@ class BackupSetService:
         primary_persistent_confirmed: bool,
         recovery_persistent_confirmed: bool,
     ) -> BackupSetResult:
-        decision = self.validator.validate(plan)
+        decision = (
+            self.validator.validate(plan)
+            if isinstance(plan, OperationPlan)
+            else self.validator.validate_build_intent(plan)
+        )
         if decision.decision is not CompatibilityDecision.ALLOWED:
             raise BackupUnavailableError(
                 "backup blocked because the operation plan is not fully compatible: "
@@ -519,7 +527,7 @@ class BackupSetService:
 
 
 def _validate_external_backup_programmer(
-    plan: OperationPlan,
+    plan: OperationPlan | BuildIntentEvidence,
     programmer: ProgrammerType,
     evidence: ProgrammerEvidence,
 ) -> None:
@@ -537,7 +545,7 @@ def _validate_external_backup_programmer(
 
 
 def _match_probes_to_topology(
-    plan: OperationPlan,
+    plan: OperationPlan | BuildIntentEvidence,
     probes: Sequence[ChipProbeEvidence],
     programmer: ProgrammerType,
 ) -> dict[str, ChipProbeEvidence]:
@@ -610,7 +618,7 @@ def _safe_name(value: str) -> str:
 
 
 def _base_manifest_event(
-    plan: OperationPlan,
+    plan: OperationPlan | BuildIntentEvidence,
     operation_id: str,
     created_at: str,
     programmer: ProgrammerType,
@@ -619,7 +627,7 @@ def _base_manifest_event(
 ) -> dict[str, Any]:
     probe_by_capacity = {probe.capacity_bytes: probe for probe in probes}
     tool = probes[0].tool
-    return {
+    event: dict[str, Any] = {
         "operation_id": operation_id,
         "created_at_utc": created_at,
         "profile_id": plan.profile_id,
@@ -662,12 +670,20 @@ def _base_manifest_event(
             for chip in plan.topology.chips
         ],
         "regions": [_region_record(region) for region in plan.topology.regions],
-        "source_artifact": {
+    }
+    if isinstance(plan, OperationPlan):
+        event["source_artifact"] = {
             "sha256": plan.artifact.expected_sha256,
             "size_bytes": plan.artifact.expected_size_bytes,
             "source_revision": plan.artifact.source_revision,
-        },
-    }
+        }
+        event["build_intent"] = None
+        event["build_intent_sha256"] = None
+    else:
+        event["source_artifact"] = None
+        event["build_intent"] = build_intent_record(plan)
+        event["build_intent_sha256"] = build_intent_sha256(plan)
+    return event
 
 
 def _storage_record(evidence: StorageEvidence) -> dict[str, Any]:

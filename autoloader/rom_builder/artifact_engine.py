@@ -27,9 +27,16 @@ from autoloader.exceptions import ROMBuildUnavailableError
 from autoloader.flasher.backup import is_degenerate_dump
 from autoloader.flasher.backup_service import BackupManifestStore, BackupSetResult
 from autoloader.workflow.compatibility import CompatibilityValidator
-from autoloader.workflow.types import CompatibilityDecision
+from autoloader.workflow.types import (
+    ArtifactEvidence,
+    BackupEvidence,
+    BuildIntentEvidence,
+    CompatibilityDecision,
+    FirmwareFamily,
+    OperationPlan,
+)
 from autoloader.workflow.types import RegionEvidence
-from autoloader.workflow.types import OperationPlan
+from autoloader.workflow.types import build_intent_record, build_intent_sha256
 
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -160,7 +167,7 @@ class BuildRequest:
     blob_inputs: tuple[BlobInput, ...] = ()
     expected_regions: tuple[RegionEvidence, ...] = ()
     observed_chip_capacity_bytes: int | None = None
-    backup_plan: OperationPlan | None = None
+    backup_intent: BuildIntentEvidence | None = None
     backup_set: BackupSetResult | None = None
     cpu_count: int = 1
 
@@ -265,8 +272,7 @@ class BackupProvenanceRecord:
     primary_manifest_sha256: str
     recovery_manifest_sha256: str
     original_chip_sha256: str
-    planned_artifact_sha256: str
-    planned_artifact_source_revision: str
+    build_intent_sha256: str
     preserved_regions: tuple[str, ...]
 
     def __post_init__(self) -> None:
@@ -275,12 +281,10 @@ class BackupProvenanceRecord:
             self.primary_manifest_sha256,
             self.recovery_manifest_sha256,
             self.original_chip_sha256,
-            self.planned_artifact_sha256,
+            self.build_intent_sha256,
         ):
             if not _SHA256_RE.fullmatch(digest):
                 raise ValueError("X220 backup provenance contains an invalid SHA-256")
-        if not _GIT_OBJECT_RE.fullmatch(self.planned_artifact_source_revision):
-            raise ValueError("X220 backup provenance requires an immutable planned artifact revision")
 
 
 @dataclass(frozen=True)
@@ -334,6 +338,7 @@ class ArtifactManifest:
     failure_code: str | None
     failure_detail: str | None
     reproducibility: ReproducibilityRecord
+    finalized_operation_plan: OperationPlan | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_files", tuple(self.source_files))
@@ -365,6 +370,31 @@ class ArtifactManifest:
                 raise ValueError("A complete X220 full-chip artifact requires original-backup provenance")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.region_inspection_tool is None:
                 raise ValueError("A complete X220 full-chip artifact requires pinned IFD region inspection")
+            if self.recipe_id.startswith("x220-coreboot-"):
+                plan = self.finalized_operation_plan
+                if plan is None:
+                    raise ValueError("A complete X220 build must bind its generated artifact in a finalized operation plan")
+                artifact = plan.artifact
+                selected_parts = PurePosixPath(self.selected_artifact_relative_path).parts
+                bound_parts = Path(artifact.path).parts
+                if (
+                    plan.profile_id != "x220-coreboot"
+                    or plan.requested_model_id != "x220"
+                    or plan.firmware_family is not FirmwareFamily.COREBOOT
+                    or not plan.topology.observed
+                    or len(plan.topology.chips) != 1
+                    or plan.topology.chips[0].capacity_bytes != self.observed_chip_capacity_bytes
+                    or plan.topology.regions != self.expected_regions
+                    or artifact.model_id != "x220"
+                    or artifact.firmware_family is not FirmwareFamily.COREBOOT
+                    or artifact.expected_sha256 != selected_record.sha256
+                    or artifact.expected_size_bytes != selected_record.size_bytes
+                    or artifact.regions != selected_record.regions
+                    or artifact.source_revision != self.source_revision
+                    or artifact.source_url != self.source_repository_url
+                    or tuple(bound_parts[-len(selected_parts):]) != selected_parts
+                ):
+                    raise ValueError("Finalized X220 operation plan does not bind the selected generated artifact")
         elif self.selected_artifact_relative_path is not None or self.selected_artifact_sha256 is not None:
             raise ValueError("A failed manifest cannot select an artifact")
         if self.status == "failed" and not self.failure_code:
@@ -741,27 +771,28 @@ def parse_cbfs_parseable_output(
     """Parse pinned coreboot cbfstool ``print -k`` output without guessing.
 
     Coreboot's pinned cbfs_image.c defines a six-column tab-separated header
-    and six-column rows for ``-k``. An explicit ``-r`` selection also prefixes
-    the output with its exact ``[FMAP REGION]`` marker. The verbose ``-v``
-    extension is deliberately not requested or accepted here. Any extra or
-    malformed row invalidates the inventory rather than being silently skipped.
+    and six-column rows for ``-k``. Non-verbose ``print -r COREBOOT -k`` output
+    contains no FMAP marker; if a marker is present, it must match the explicit
+    selected region. The verbose ``-v`` extension is deliberately not requested
+    or accepted here. Any extra or malformed row invalidates the inventory
+    rather than being silently skipped.
     """
     if not required_payload or region_size_bytes <= 0:
         raise ValueError("CBFS validation requires a payload name and positive region size")
     lines = output.splitlines()
     expected_header = "Name\tOffset\tType\tMetadata Size\tData Size\tTotal Size"
-    if expected_region is not None:
-        expected_marker = f"[FMAP REGION]\t{expected_region}"
-        if not lines or lines[0] != expected_marker:
-            raise ValueError("Pinned cbfstool output has an unexpected or missing FMAP region marker")
+    marker_offset = 0
+    if lines and lines[0].startswith("[FMAP REGION]\t"):
+        expected_marker = f"[FMAP REGION]\t{expected_region}" if expected_region is not None else None
+        if expected_marker is None or lines[0] != expected_marker:
+            raise ValueError("Pinned cbfstool output selected an unexpected FMAP region")
         lines = lines[1:]
-    elif lines and lines[0].startswith("[FMAP REGION]\t"):
-        raise ValueError("Pinned cbfstool output selected an unexpected FMAP region")
+        marker_offset = 1
     if not lines or lines[0] != expected_header:
         raise ValueError("Pinned cbfstool output has an unexpected or missing parseable header")
     entries: list[CBFSEntry] = []
     names: set[str] = set()
-    for index, line in enumerate(lines[1:], start=2 + (expected_region is not None)):
+    for index, line in enumerate(lines[1:], start=2 + marker_offset):
         fields = line.split("\t")
         if len(fields) != 6:
             raise ValueError(f"Malformed pinned cbfstool inventory row {index}")
@@ -842,7 +873,7 @@ def select_exact_lbmk_artifact(source: Path, recipe: ArtifactRecipe) -> Path:
 
 
 def validate_x220_backup_evidence(
-    plan: OperationPlan | None,
+    intent: BuildIntentEvidence | None,
     backup: BackupSetResult | None,
     expected_regions: Sequence[RegionEvidence],
     blob_inputs: Sequence[BlobInput],
@@ -852,31 +883,36 @@ def validate_x220_backup_evidence(
     This validates software-recorded Phase 03 evidence and file contents. It
     does not attest hardware observations or enable any write operation.
     """
-    if plan is None or backup is None:
-        raise ValueError("X220 full-chip preparation requires a complete original backup set and plan")
+    if intent is None or backup is None:
+        raise ValueError("X220 full-chip preparation requires a pre-build intent and complete original backup set")
     if (
-        plan.profile_id != "x220-coreboot"
-        or plan.requested_model_id != "x220"
-        or plan.firmware_family.value != "coreboot"
+        intent.profile_id != "x220-coreboot"
+        or intent.requested_model_id != "x220"
+        or intent.firmware_family is not FirmwareFamily.COREBOOT
     ):
         raise ValueError("X220 backup evidence belongs to a different workflow profile")
-    if not plan.topology.observed or len(plan.topology.chips) != 1:
-        raise ValueError("X220 backup plan requires one independently observed physical chip")
-    chip = plan.topology.chips[0]
+    if (
+        intent.recipe_id != X220_COREBOOT.recipe_id
+        or intent.source_url != X220_COREBOOT.source.repository_url
+        or intent.source_revision != X220_COREBOOT.source.revision
+        or intent.source_tree_id != X220_COREBOOT.source.tree_id
+        or intent.configuration_sha256 != X220_COREBOOT.expected_config_sha256
+        or intent.expected_size_bytes != X220_COREBOOT.expected_size_bytes
+    ):
+        raise ValueError("X220 build intent differs from the exact pinned recipe and configuration")
+    if not intent.topology.observed or len(intent.topology.chips) != 1:
+        raise ValueError("X220 build intent requires one independently observed physical chip")
+    chip = intent.topology.chips[0]
     if not chip.observed or chip.capacity_bytes != 8 * 1024 * 1024:
-        raise ValueError("X220 backup plan must identify the observed 8 MiB chip")
-    if not plan.artifact.path or plan.artifact.expected_size_bytes != chip.capacity_bytes:
-        raise ValueError("X220 backup plan must name the complete full-chip artifact evidence")
-    if plan.artifact.model_id != "x220" or plan.artifact.firmware_family.value != "coreboot":
-        raise ValueError("X220 backup plan artifact profile does not match the observed device")
-    compare_region_maps(plan.topology.regions, expected_regions)
+        raise ValueError("X220 build intent must identify the observed 8 MiB chip")
+    compare_region_maps(intent.topology.regions, expected_regions)
     _validate_x220_region_map(expected_regions, chip.capacity_bytes)
-    if backup.profile_id != plan.profile_id or not backup.operation_id:
-        raise ValueError("X220 backup set operation/profile identity does not match its plan")
+    if backup.profile_id != intent.profile_id or not backup.operation_id:
+        raise ValueError("X220 backup set operation/profile identity does not match its build intent")
     validator = CompatibilityValidator()
-    plan_decision = validator.validate(plan)
-    if plan_decision.decision is not CompatibilityDecision.ALLOWED:
-        raise ValueError("X220 backup plan is not currently compatible: " + "; ".join(plan_decision.reasons))
+    intent_decision = validator.validate_build_intent(intent)
+    if intent_decision.decision is not CompatibilityDecision.ALLOWED:
+        raise ValueError("X220 build intent is not currently compatible: " + "; ".join(intent_decision.reasons))
     if len(backup.chips) != 1 or backup.chips[0].chip_id != chip.chip_id:
         raise ValueError("X220 backup set must cover exactly the observed 8 MiB chip")
     captured = backup.chips[0]
@@ -897,8 +933,8 @@ def validate_x220_backup_evidence(
         or pair.first_capture_id == pair.second_capture_id
     ):
         raise ValueError("X220 backup pair is incomplete, transient or inconsistent with the captured set")
-    verified_backup_plan = replace(plan, backup=backup.backup)
-    backup_decision = validator.validate_backup(verified_backup_plan)
+    verified_backup_intent = replace(intent, backup=backup.backup)
+    backup_decision = validator.validate_backup(verified_backup_intent)
     if backup_decision.decision is not CompatibilityDecision.ALLOWED:
         raise ValueError("X220 original backup evidence is incomplete: " + "; ".join(backup_decision.reasons))
     if not backup.primary_storage.usable or not backup.recovery_storage.usable:
@@ -912,8 +948,8 @@ def validate_x220_backup_evidence(
         != Path(backup.recovery_storage.path).resolve(strict=False)
     ):
         raise ValueError("X220 backup manifests are not stored at their recorded persistent destinations")
-    if plan.backup.pairs and plan.backup != backup.backup:
-        raise ValueError("X220 operation plan backup evidence differs from the captured original set")
+    if intent.backup.pairs and intent.backup != backup.backup:
+        raise ValueError("X220 build intent backup evidence differs from the captured original set")
     if (
         not _SHA256_RE.fullmatch(backup.primary_manifest_sha256)
         or not _SHA256_RE.fullmatch(backup.recovery_manifest_sha256)
@@ -939,12 +975,6 @@ def validate_x220_backup_evidence(
     if is_degenerate_dump(original):
         raise ValueError("X220 original full-chip backup is blank or degenerate")
 
-    artifact_path = Path(plan.artifact.path)
-    if not artifact_path.is_file() or artifact_path.stat().st_size != plan.artifact.expected_size_bytes:
-        raise ValueError("X220 backup plan artifact is no longer available at its declared size")
-    if sha256_file(artifact_path) != plan.artifact.expected_sha256:
-        raise ValueError("X220 backup plan artifact content no longer matches its declared checksum")
-
     primary_event = _read_verified_backup_event(
         Path(backup.primary_manifest), backup.operation_id, backup.primary_manifest_sha256
     )
@@ -953,7 +983,7 @@ def validate_x220_backup_evidence(
     )
     if _event_content(primary_event) != _event_content(recovery_event):
         raise ValueError("X220 primary and recovery manifests disagree about the captured backup")
-    _validate_x220_manifest_event(primary_event, plan, captured, expected_regions, backup)
+    _validate_x220_manifest_event(primary_event, intent, captured, expected_regions, backup)
 
     expected_blob_region = {
         "descriptor.bin": "ifd",
@@ -981,11 +1011,74 @@ def validate_x220_backup_evidence(
         primary_manifest_sha256=backup.primary_manifest_sha256,
         recovery_manifest_sha256=backup.recovery_manifest_sha256,
         original_chip_sha256=captured.first_sha256,
-        planned_artifact_sha256=plan.artifact.expected_sha256,
-        planned_artifact_source_revision=plan.artifact.source_revision,
+        build_intent_sha256=build_intent_sha256(intent),
         preserved_regions=preserved,
     )
     return original, provenance
+
+
+def _finalize_x220_operation_plan(
+    intent: BuildIntentEvidence,
+    backup: BackupSetResult,
+    generated_artifact: str | Path,
+    artifact_regions: Sequence[RegionEvidence],
+    *,
+    expected_sha256: str | None = None,
+) -> OperationPlan:
+    """Internal final bind step for an artifact already validated by the engine.
+
+    ``expected_sha256`` is supplied only when a prior build-stage measurement
+    must be cross-checked. The plan digest is always taken from the staged file
+    itself, never from a pre-build intent. Callers must already have passed the
+    pinned source/configuration, CBFS inventory, IFD map, and original-region
+    preservation checks. This helper is not a standalone artifact acceptance
+    API and does not perform those structural checks itself.
+    """
+    path = Path(generated_artifact)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("Generated X220 artifact must be a regular staged file")
+    if path.stat().st_size != X220_COREBOOT.expected_size_bytes:
+        raise ValueError("Generated X220 artifact does not have the exact 8 MiB chip size")
+    if (
+        intent.recipe_id != X220_COREBOOT.recipe_id
+        or intent.source_url != X220_COREBOOT.source.repository_url
+        or intent.source_revision != X220_COREBOOT.source.revision
+        or intent.source_tree_id != X220_COREBOOT.source.tree_id
+        or intent.configuration_sha256 != X220_COREBOOT.expected_config_sha256
+        or intent.expected_size_bytes != X220_COREBOOT.expected_size_bytes
+    ):
+        raise ValueError("X220 finalization intent differs from the exact pinned recipe")
+    intent_decision = CompatibilityValidator().validate_build_intent(intent)
+    if intent_decision.decision is not CompatibilityDecision.ALLOWED:
+        raise ValueError("X220 finalization intent is no longer compatible: " + "; ".join(intent_decision.reasons))
+    digest = sha256_file(path)
+    if expected_sha256 is not None and digest != expected_sha256:
+        raise ValueError("Generated X220 artifact hash differs from the validated staged bytes")
+    regions = tuple(artifact_regions)
+    compare_region_maps(intent.topology.regions, regions)
+    plan = OperationPlan(
+        profile_id=intent.profile_id,
+        requested_model_id=intent.requested_model_id,
+        firmware_family=intent.firmware_family,
+        device=intent.device,
+        topology=intent.topology,
+        programmer=intent.programmer,
+        artifact=ArtifactEvidence(
+            path=str(path.resolve(strict=True)),
+            model_id="x220",
+            firmware_family=FirmwareFamily.COREBOOT,
+            expected_sha256=digest,
+            expected_size_bytes=path.stat().st_size,
+            source_url=X220_COREBOOT.source.repository_url,
+            source_revision=X220_COREBOOT.source.revision,
+            regions=regions,
+        ),
+        backup=backup.backup,
+    )
+    decision = CompatibilityValidator().validate(plan)
+    if decision.decision is not CompatibilityDecision.ALLOWED:
+        raise ValueError("Generated X220 artifact failed final evidence binding: " + "; ".join(decision.reasons))
+    return plan
 
 
 def _event_content(event: Mapping[str, object]) -> str:
@@ -1016,13 +1109,13 @@ def _read_verified_backup_event(path: Path, operation_id: str, expected_digest: 
 
 def _validate_x220_manifest_event(
     event: Mapping[str, object],
-    plan: OperationPlan,
+    intent: BuildIntentEvidence,
     captured: object,
     expected_regions: Sequence[RegionEvidence],
     backup: BackupSetResult,
 ) -> None:
-    if event.get("profile_id") != plan.profile_id or event.get("requested_model_id") != plan.requested_model_id:
-        raise ValueError("X220 backup manifest identity differs from its operation plan")
+    if event.get("profile_id") != intent.profile_id or event.get("requested_model_id") != intent.requested_model_id:
+        raise ValueError("X220 backup manifest identity differs from its build intent")
     tool = event.get("tool")
     if (
         not isinstance(tool, Mapping)
@@ -1032,22 +1125,22 @@ def _validate_x220_manifest_event(
     ):
         raise ValueError("X220 backup manifest tool/programmer identity differs from the captured backup set")
     expected_device = {
-        "raw_dmi_product_name": plan.device.raw_dmi_product_name,
-        "raw_mtm": plan.device.raw_mtm,
-        "raw_bios_version": plan.device.raw_bios_version,
+        "raw_dmi_product_name": intent.device.raw_dmi_product_name,
+        "raw_mtm": intent.device.raw_mtm,
+        "raw_bios_version": intent.device.raw_bios_version,
     }
-    expected_artifact = {
-        "sha256": plan.artifact.expected_sha256,
-        "size_bytes": plan.artifact.expected_size_bytes,
-        "source_revision": plan.artifact.source_revision,
-    }
-    if event.get("device_identifiers") != expected_device or event.get("source_artifact") != expected_artifact:
-        raise ValueError("X220 backup manifest device or artifact provenance differs from its plan")
+    if (
+        event.get("device_identifiers") != expected_device
+        or event.get("source_artifact") is not None
+        or event.get("build_intent") != build_intent_record(intent)
+        or event.get("build_intent_sha256") != build_intent_sha256(intent)
+    ):
+        raise ValueError("X220 backup manifest device or build intent differs from the pre-build evidence")
     expected_chips = [{
-        "chip_id": plan.topology.chips[0].chip_id,
-        "physical_label": plan.topology.chips[0].physical_label,
-        "capacity_bytes": plan.topology.chips[0].capacity_bytes,
-        "voltage_mv": plan.topology.chips[0].voltage_mv,
+        "chip_id": intent.topology.chips[0].chip_id,
+        "physical_label": intent.topology.chips[0].physical_label,
+        "capacity_bytes": intent.topology.chips[0].capacity_bytes,
+        "voltage_mv": intent.topology.chips[0].voltage_mv,
     }]
     raw_chips = event.get("topology")
     if not isinstance(raw_chips, list) or len(raw_chips) != 1:
@@ -1207,7 +1300,7 @@ class ArtifactEngine:
                 raise ValueError("X220 build requires an independently observed expected IFD region map")
             _validate_x220_region_map(request.expected_regions, recipe.expected_size_bytes)
             original_x220_backup, backup_provenance = validate_x220_backup_evidence(
-                request.backup_plan,
+                request.backup_intent,
                 request.backup_set,
                 request.expected_regions,
                 request.blob_inputs,
@@ -1216,7 +1309,7 @@ class ArtifactEngine:
             raise ValueError("Blob inputs are only accepted by the pinned X220 coreboot recipe")
         elif request.expected_regions:
             raise ValueError("X200 build does not accept an X220 IFD region map")
-        elif request.backup_plan is not None or request.backup_set is not None:
+        elif request.backup_intent is not None or request.backup_set is not None:
             raise ValueError("Original backup evidence is accepted only by the X220 full-chip recipe")
 
         prepared_blobs: list[tuple[BlobInput, Path]] = []
@@ -1241,6 +1334,7 @@ class ArtifactEngine:
         blob_hashes: list[tuple[str, str]] = []
         artifacts: list[ArtifactRecord] = []
         region_inspection_tool: ToolEvidence | None = None
+        finalized_operation_plan: OperationPlan | None = None
         failure_code: str | None = None
         failure_detail: str | None = None
 
@@ -1351,6 +1445,21 @@ class ArtifactEngine:
                 ))
             if staged_selected is None:
                 raise ValueError("The selected artifact was not staged")
+            if recipe is X220_COREBOOT:
+                intent = request.backup_intent
+                if intent is None or request.backup_set is None or backup_provenance is None:
+                    raise ValueError("X220 finalization requires the pre-build intent and verified original backup")
+                selected_record = next(
+                    item for item in artifacts
+                    if item.relative_path == staged_selected.relative_to(run_dir).as_posix()
+                )
+                finalized_operation_plan = _finalize_x220_operation_plan(
+                    intent,
+                    request.backup_set,
+                    staged_selected,
+                    selected_record.regions,
+                    expected_sha256=selected_record.sha256,
+                )
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
             failure_code = "ARTIFACT_VALIDATION_FAILED"
             failure_detail = str(exc)
@@ -1404,6 +1513,7 @@ class ArtifactEngine:
                 second_artifact_sha256=None,
                 explanation="A second isolated build was not requested; reproducibility remains unproven.",
             ),
+            finalized_operation_plan=finalized_operation_plan,
         )
         manifest_path = run_dir / "manifest.json"
         self._write_manifest_exclusive(manifest_path, manifest)
