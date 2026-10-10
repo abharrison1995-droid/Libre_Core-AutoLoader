@@ -1,6 +1,7 @@
 """Unit and parity tests for the controller-driven CLI and Textual interface."""
 import asyncio
 import json
+import threading
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
@@ -185,6 +186,65 @@ def test_xworkflow_screen_submits_explicit_typed_request_through_shared_controll
             assert calls[0][1]["checkpoint_path"] == str(tmp_path / "new-session.json")
             assert calls[0][1]["request_document"] == '{"version":1,"purpose":"test fixture"}'
             assert "FAKE_BLOCKED" in app.screen.query_one("#x-action-status", Static).render().plain
+
+    asyncio.run(runner())
+
+
+def test_xworkflow_active_worker_blocks_back_key_and_quit_until_result_is_visible(monkeypatch, tmp_path):
+    from autoloader.application_controller import ApplicationActionResult
+
+    app_controller = ApplicationController()
+    app_controller.select_profile("x200-libreboot")
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_request(action, **kwargs):
+        started.set()
+        release.wait(timeout=10)
+        return ApplicationActionResult(
+            action, ApplicationStatus.NOT_PERFORMED, "FAKE_COMPLETE", "fake request result is visible"
+        )
+
+    monkeypatch.setattr(app_controller, "request_action", slow_request)
+
+    async def runner():
+        app = AutoLoaderApp(controller=app_controller)
+        async with app.run_test() as pilot:
+            await app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))
+            await pilot.pause()
+            screen = app.screen
+            screen.query_one("#x-checkpoint", Input).value = str(tmp_path / "new-session.json")
+            screen.query_one("#x-request", TextArea).text = '{"version":1,"purpose":"test fixture"}'
+            await pilot.click("#x-submit")
+            for _ in range(20):
+                await pilot.pause(0.05)
+                if started.is_set():
+                    break
+            assert started.is_set()
+            assert screen.operation_active
+            assert screen.worker is not None
+
+            # Exercise the screen button and both app-level navigation bindings
+            # while the controller request is deliberately held in its worker.
+            await pilot.click("#x-back")
+            assert app.screen is screen
+            assert "still running" in screen.query_one("#x-action-status", Static).render().plain.lower()
+            await pilot.press("b")
+            assert app.screen is screen
+            assert "still running" in screen.query_one("#x-action-status", Static).render().plain.lower()
+            await pilot.press("q")
+            assert app.is_running
+            assert app.screen is screen
+            assert "still running" in screen.query_one("#x-action-status", Static).render().plain.lower()
+
+            release.set()
+            for _ in range(40):
+                await pilot.pause(0.05)
+                if not screen.operation_active:
+                    break
+            assert not screen.operation_active
+            assert screen.worker is None
+            assert "FAKE_COMPLETE" in screen.query_one("#x-action-status", Static).render().plain
 
     asyncio.run(runner())
 

@@ -7,7 +7,12 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import Button, Footer, Header, Input, Static, TextArea
 from textual.worker import Worker, get_current_worker
 
-from autoloader.application_controller import ApplicationAction, ApplicationActionResult, ApplicationController
+from autoloader.application_controller import (
+    ApplicationAction,
+    ApplicationActionResult,
+    ApplicationController,
+    ApplicationStatus,
+)
 from autoloader.ui.screens.controller_screen import ControllerScreen
 
 
@@ -29,6 +34,20 @@ class XWorkflowActionScreen(ControllerScreen):
             raise ValueError("Unsupported X200/X220 screen action")
         self.action = action
         self.worker: Worker | None = None
+        self._operation_active = False
+
+    @property
+    def operation_active(self) -> bool:
+        return self._operation_active
+
+    def guard_navigation(self, destination: str) -> bool:
+        """Keep the result screen mounted until an explicit operation returns."""
+        if not self._operation_active:
+            return False
+        self.query_one("#x-action-status", Static).update(
+            f"This explicit backend action is still running; wait for its actual result before {destination}."
+        )
+        return True
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -55,10 +74,7 @@ class XWorkflowActionScreen(ControllerScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "x-back":
-            if self.worker is not None and not self.worker.is_finished:
-                self.query_one("#x-action-status", Static).update(
-                    "The explicit backend operation is still running; wait for its actual result before leaving this screen."
-                )
+            if self.guard_navigation("leaving this screen"):
                 return
             self.app.pop_screen()
             return
@@ -78,7 +94,10 @@ class XWorkflowActionScreen(ControllerScreen):
             return
         self.query_one("#x-submit", Button).disabled = True
         self.query_one("#x-action-status", Static).update("Submitting explicit controller request…")
-        self.submit_request_worker(self.controller_app.controller, self.action, profile_id, checkpoint, request)
+        self._operation_active = True
+        self.worker = self.submit_request_worker(
+            self.controller_app.controller, self.action, profile_id, checkpoint, request
+        )
 
     @work(thread=True)
     def submit_request_worker(
@@ -91,16 +110,26 @@ class XWorkflowActionScreen(ControllerScreen):
     ) -> None:
         """Do potentially slow backend work off-thread; no widget lookup here."""
         worker = get_current_worker()
-        result = controller.request_action(
-            action,
-            profile_id=profile_id,
-            checkpoint_path=checkpoint,
-            request_document=request_document,
-        )
+        try:
+            result = controller.request_action(
+                action,
+                profile_id=profile_id,
+                checkpoint_path=checkpoint,
+                request_document=request_document,
+            )
+        except Exception as exc:
+            result = ApplicationActionResult(
+                action,
+                ApplicationStatus.UNKNOWN,
+                "WORKFLOW_ACTION_FAILED",
+                f"The controller action ended with an error: {exc}",
+            )
         if self.is_mounted and not worker.is_cancelled:
             self.app.call_from_thread(self._show_result, result)
 
     def _show_result(self, result: ApplicationActionResult) -> None:
+        self._operation_active = False
+        self.worker = None
         self.query_one("#x-submit", Button).disabled = False
         self.query_one("#x-action-status", Static).update(f"{result.code}: {result.message}")
 

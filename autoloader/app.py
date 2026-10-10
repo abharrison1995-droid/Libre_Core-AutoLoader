@@ -85,10 +85,18 @@ class AutoLoaderApp(App[None]):
 
     async def action_back(self) -> None:
         """Go back to previous screen."""
+        if isinstance(self.screen, XWorkflowActionScreen) and self.screen.guard_navigation("going back"):
+            return
         if len(self.screen_stack) > 2:
             self.pop_screen()
         else:
             self.notify("Cannot go back any further.", title="Back")
+
+    async def action_quit(self) -> None:
+        """Keep explicit workflow requests visible until their worker returns."""
+        if isinstance(self.screen, XWorkflowActionScreen) and self.screen.guard_navigation("quitting"):
+            return
+        await super().action_quit()
 
 if __name__ == "__main__":
     app = AutoLoaderApp()
