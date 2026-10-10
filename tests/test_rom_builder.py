@@ -117,6 +117,24 @@ def test_prebuilt_manager_verification(tmp_path):
     
     assert manager.verify_rom(sample_rom, expected_hash) is True
     assert manager.verify_rom(sample_rom, "wronghash123") is False
+    assert manager.verify_rom(sample_rom, "a" * 63) is False
+    assert not (tmp_path / "catalog-created-by-constructor").exists()
+
+
+def test_prebuilt_manager_has_no_catalog_or_mutating_operations(tmp_path):
+    from autoloader.rom_builder.prebuilt import PrebuiltManager
+    from autoloader.exceptions import ROMBuildUnavailableError
+
+    storage = tmp_path / "not-created"
+    manager = PrebuiltManager(storage_dir=storage)
+    assert not storage.exists()
+    with pytest.raises(ROMBuildUnavailableError):
+        manager.list_available("x200", "libreboot")
+    with pytest.raises(ROMBuildUnavailableError):
+        manager.download_rom("https://example.invalid/rom.rom", "0" * 64)
+    with pytest.raises(ROMBuildUnavailableError):
+        manager.inject_blobs(tmp_path, tmp_path / "rom.tar.xz")
+    assert not storage.exists()
 
 
 def test_config_atomic_save(tmp_path):
@@ -132,16 +150,15 @@ def test_config_atomic_save(tmp_path):
     assert loaded["verbose"] is True
 
 
-def test_coreboot_builder_kconfig_sanitization(tmp_path, monkeypatch):
+def test_coreboot_builder_generic_kconfig_is_quarantined(tmp_path):
     from autoloader.rom_builder.coreboot_builder import CorebootBuilder
     from autoloader.rom_builder.blob_extractor import BlobSet
+    from autoloader.exceptions import ROMBuildUnavailableError
 
     builder = CorebootBuilder(workspace_dir=tmp_path)
     src_dir = tmp_path / "coreboot"
     src_dir.mkdir(parents=True, exist_ok=True)
     builder.source_dir = src_dir
-    monkeypatch.setattr(builder, "_run_cmd", lambda cmd, cwd=None: None)
-
     config = ROMConfiguration(
         model_id="x230",
         firmware_base=FirmwareBase.COREBOOT,
@@ -152,12 +169,37 @@ def test_coreboot_builder_kconfig_sanitization(tmp_path, monkeypatch):
     desc_file.write_bytes(b"IFD")
     blob_set = BlobSet(descriptor_path=desc_file)
 
-    builder.generate_config(config, blob_set)
-    config_file = src_dir / ".config"
-    assert config_file.exists()
-    content = config_file.read_text(encoding="utf-8")
-    assert "CONFIG_BOARD_LENOVO_X230=y" in content
-    assert "CONFIG_HAVE_IFD_BIN=y" in content
+    with pytest.raises(ROMBuildUnavailableError):
+        builder.generate_config(config, blob_set)
+    assert not (src_dir / ".config").exists()
+
+
+def test_canoeboot_legacy_build_paths_are_quarantined(tmp_path, monkeypatch):
+    from autoloader.rom_builder.canoeboot_builder import CanoebootBuilder
+    from autoloader.exceptions import ROMBuildUnavailableError
+    import subprocess
+
+    builder = CanoebootBuilder(workspace_dir=tmp_path)
+    config = ROMConfiguration(
+        model_id="t430",
+        firmware_base=FirmwareBase.CANOEBOOT,
+        payload=PayloadType.GRUB,
+    )
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("no subprocess allowed")),
+    )
+    for operation in (
+        lambda: builder.clone_source(),
+        lambda: builder.configure_build(config),
+        lambda: builder.inject_blobs(config),
+        lambda: builder.compile(config),
+        lambda: builder.get_rom_path(config),
+    ):
+        with pytest.raises(ROMBuildUnavailableError):
+            operation()
+    assert not builder.source_dir.exists()
 
 
 def test_blob_extractor_invalid_ifd_rejection(tmp_path):

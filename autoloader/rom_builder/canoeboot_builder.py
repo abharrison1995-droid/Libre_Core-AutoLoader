@@ -1,86 +1,47 @@
-import os
+"""Fail-closed adapter for the former unpinned Canoeboot builder.
+
+V1's T430 route is an official 1vyrain handoff descriptor only. A generic
+Canoeboot build could produce an unreviewed T430 ROM, install dependencies,
+and bypass the pinned artifact recipes, so every legacy operation is disabled.
+"""
+
+from __future__ import annotations
+
 import logging
-import shutil
-import subprocess
 from pathlib import Path
-from typing import Callable, Optional, Dict
+from typing import Callable, NoReturn
+
+from autoloader.exceptions import ROMBuildUnavailableError
 
 from .configurator import ROMConfiguration
-from autoloader.config import BUILD_TIMEOUT, CANOEBOOT_REPO
-from autoloader.exceptions import BuildError, SystemCommandError
 
 logger = logging.getLogger(__name__)
 
-class CanoebootBuilder:
-    """Canoeboot compilation builder."""
 
-    def __init__(self, workspace_dir: Path, progress_callback: Optional[Callable[[str], None]] = None):
-        self.workspace = workspace_dir
+class CanoebootBuilder:
+    """Compatibility adapter with no source, dependency, build, or write path."""
+
+    def __init__(self, workspace_dir: Path, progress_callback: Callable[[str], None] | None = None):
+        self.workspace = Path(workspace_dir)
         self.source_dir = self.workspace / "cbmk"
         self.progress_callback = progress_callback
 
-    def _report_progress(self, message: str) -> None:
-        logger.info(message)
-        if self.progress_callback:
-            self.progress_callback(message)
+    def clone_source(self, repo_url: str | None = None) -> NoReturn:
+        self._unavailable("Unpinned Canoeboot cloning is disabled; V1 T430 uses only the official 1vyrain handoff.")
 
-    def _run_cmd(self, cmd: list, cwd: Path, env: Optional[Dict[str, str]] = None, timeout: int = BUILD_TIMEOUT) -> str:
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=cwd,
-                env=env or os.environ.copy(),
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=timeout
-            )
-            return result.stdout
-        except subprocess.TimeoutExpired as e:
-            logger.error(f"Command timed out after {timeout}s: {' '.join(cmd)}")
-            raise SystemCommandError(f"Command timed out after {timeout}s") from e
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Command failed: {' '.join(cmd)}\nOutput: {e.output}")
-            raise SystemCommandError(f"Command failed with exit code {e.returncode}") from e
+    def configure_build(self, config: ROMConfiguration) -> NoReturn:
+        self._unavailable("Generic Canoeboot configuration is outside the three pinned V1 artifact recipes.")
 
-    def clone_source(self, repo_url: str = CANOEBOOT_REPO) -> None:
-        """Clone canoeboot/cbmk repo."""
-        if self.source_dir.exists():
-            self._report_progress("Canoeboot repository already exists, skipping clone.")
-            return
+    def inject_blobs(self, config: ROMConfiguration, vendor_files_archive: Path | None = None) -> NoReturn:
+        self._unavailable("Generic Canoeboot blob operations are disabled.")
 
-        self._report_progress("Cloning Canoeboot repository...")
-        self._run_cmd(["git", "clone", repo_url, "cbmk"], cwd=self.workspace)
-        
-        if shutil.which("apt-get"):
-            self._report_progress("Running build dependencies script...")
-            try:
-                self._run_cmd(["./build", "dependencies", "ubuntu"], cwd=self.source_dir, timeout=600)
-            except Exception as e:
-                logger.warning(f"Could not auto-install dependencies: {e}")
+    def compile(self, config: ROMConfiguration) -> NoReturn:
+        self._unavailable("Canoeboot compilation is disabled; V1 T430 does not produce a compiled flashable ROM.")
 
-    def configure_build(self, config: ROMConfiguration) -> None:
-        """Configure build for Canoeboot."""
-        self._report_progress(f"Configuring Canoeboot for {config.model_id}...")
-        pass
+    def get_rom_path(self, config: ROMConfiguration) -> NoReturn:
+        self._unavailable("Unverified Canoeboot output discovery is disabled.")
 
-    def inject_blobs(self, config: ROMConfiguration, vendor_files_archive: Optional[Path] = None) -> None:
-        """No blob injection needed (blob-free). Present for interface consistency."""
-        self._report_progress("Canoeboot is blob-free. Skipping blob injection.")
-
-    def compile(self, config: ROMConfiguration) -> None:
-        """Build using cbmk system."""
-        self._report_progress(f"Compiling Canoeboot for {config.model_id}...")
-        try:
-            self._run_cmd(["./build", "boot", "roms", config.model_id.lower()], cwd=self.source_dir)
-        except SystemCommandError as e:
-            logger.error("Canoeboot compilation failed.")
-            raise BuildError("Canoeboot build failed. Check logs for details.") from e
-
-    def get_rom_path(self, config: ROMConfiguration) -> Path:
-        """Get the path to the built ROMs."""
-        rom_dir = self.source_dir / "bin" / config.model_id.lower()
-        if not rom_dir.exists():
-            raise BuildError(f"Built ROM directory not found at {rom_dir}")
-        return rom_dir
+    @staticmethod
+    def _unavailable(message: str) -> NoReturn:
+        logger.warning(message)
+        raise ROMBuildUnavailableError(message)

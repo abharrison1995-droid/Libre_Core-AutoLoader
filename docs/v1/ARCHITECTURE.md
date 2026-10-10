@@ -1,4 +1,4 @@
-# Current architecture and Phases 02–03 safety services
+# Current architecture and Phases 02–04 safety/build services
 
 ## Current call paths
 
@@ -17,6 +17,8 @@ flowchart TD
   Screens -->|manifest inspection only| Backup[BackupManager]
   Screens -->|flash and verification status only| Result
   Builder[ROM builder classes] -. not connected .-> Orch
+  Builder --> ArtifactEngine[ArtifactEngine pinned recipes]
+  ArtifactEngine -. software-only; unsupported Windows host blocks build .-> ArtifactManifest[Immutable artifact manifest]
   Restore[BackupManager restore primitive] -. low-level only, not exposed in app workflow .-> Runner
   Reversion --> IVprep[IVPrepManager / WinFlash]
   Reversion --> BIOSDB[BIOS target version database]
@@ -37,6 +39,8 @@ Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It us
 
 Phase 03 software scope was accepted by SOL at `448766a`. The standalone `autoloader/flasher` services add strict read-only flashrom command validation, SPI probe evidence, observed-topology backup capture, persistent backup verification, region-aware read-back comparison and recovery-readiness records. They are exercised with fake transports and software fixtures only; they are not integrated into the CLI/TUI or the workflow engine. No physical SPI probe/read, voltage measurement, backup, firmware compilation/write, post-write read-back, recovery or boot test occurred. Every application writer and restore entrypoint remains hard-blocked; no writer is enabled.
 
+Phase 04 has a software implementation pending SOL review and has not been accepted. `autoloader/rom_builder/artifact_engine.py` adds immutable recipes and manifests for pinned Coreboot 26.09/X220 and Libreboot 26.01/regular-X200, plus a T430 official-source 1vyrain handoff descriptor only. Legacy builder APIs fail closed, and the fabricated prebuilt catalog/download path was removed. The engine requires clean exact commit/tree/file hashes, strict resolved Kconfig, exact artifact size/hash and parsed CBFS payload inventory. X220 requires complete matching original full-chip backup evidence, exact descriptor/ME/GbE slices from it, original/generated IFD map agreement and byte preservation of all non-BIOS regions. For X200 it validates and records all 31 ROM variants expected from the pinned target/config/keymap inventory, then selects only the recipe's exact SeaBIOS/corebootfb image and checks it with cbfstool from lbmk's exact nested Coreboot commit/tree. Source checkouts and output roots must be outside the application tree. This Windows host lacks Linux build tooling, so builds return `LINUX_BUILD_ENV_REQUIRED` before build subprocesses or output creation. No upstream firmware compilation or artifact production occurred; fake parser/command tests are not compile or hardware evidence. The engine is not wired into CLI/TUI or the workflow state machine.
+
 ## Main modules
 
 | Concern | Current modules |
@@ -45,6 +49,7 @@ Phase 03 software scope was accepted by SOL at `448766a`. The standalone `autolo
 | Shared state/work | `autoloader/orchestrator.py` |
 | Detection and compatibility data | `autoloader/detection/*`, `autoloader/database/*` |
 | ROM preparation | `autoloader/rom_builder/*` |
+| Phase 04 artifact preparation | `autoloader/rom_builder/artifact_engine.py` (pinned recipes/manifests; not integrated; no actual build on this host) |
 | Flash, verification, backup | `autoloader/flasher/*` |
 | Phase 03 SPI evidence, backup/read-back and recovery readiness | `autoloader/flasher/*` (standalone services; fake-transport tested, not wired to app workflow) |
 | 1vyrain unlock | `autoloader/flasher/onevy.py` (`OnevyRainManager`) |
@@ -58,4 +63,4 @@ Phase 03 software scope was accepted by SOL at `448766a`. The standalone `autolo
 
 ## Target direction
 
-Phases 01–02 quarantine physical CLI writes, remove fake completion paths, and implement the model-specific validated operation plan. Phase 02 policy deliberately ignores broad database support flags and fails closed on missing/conflicting evidence. Phase 03 software services were accepted at `4ba1858` and `448766a`, but remain standalone and read-only; they are not integrated into CLI/TUI. No physical probe/read, measured voltage, backup, firmware build/write, read-back, recovery or boot test was performed, and no writer is enabled. Phase 04 is not started. Real-device hardware validation remains pending for all three workflows.
+Phases 01–02 quarantine physical CLI writes, remove fake completion paths, and implement the model-specific validated operation plan. Phase 02 policy deliberately ignores broad database support flags and fails closed on missing/conflicting evidence. Phase 03 software services were accepted at `4ba1858` and `448766a`, but remain standalone and read-only; they are not integrated into CLI/TUI. Phase 04 artifact preparation is implemented in software but pending review and supported-Linux build evidence; it is not accepted or integrated. The CBFS schema and parser code are source-pinned but no generated-ROM parser output has been captured on Linux. No physical probe/read, measured voltage, backup, firmware build/write, read-back, recovery or boot test was performed, and no writer is enabled. Real-device hardware validation remains pending for all three workflows.
