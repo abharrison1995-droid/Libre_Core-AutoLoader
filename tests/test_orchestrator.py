@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from autoloader.orchestrator import Orchestrator, AppState
 from autoloader.flasher.flashrom import ProgrammerType
-from autoloader.flasher.backup import BackupResult
 from autoloader.flasher.verify import VerificationResult
 from autoloader.detection.model import DetectionResult
 
@@ -28,6 +27,47 @@ def test_orchestrator_cancellation():
     assert orch.is_cancelled
 
 
+def test_orchestrator_build_fails_closed_without_fake_completion(tmp_path):
+    errors = []
+    progress = []
+    completed = []
+    logs = []
+    orch = Orchestrator(
+        AppState(output_dir=tmp_path),
+        on_error=errors.append,
+        on_progress=lambda pct, label: progress.append((pct, label)),
+        on_complete=lambda: completed.append(True),
+        on_log=logs.append,
+    )
+
+    assert orch.run_build() is False
+    assert len(errors) == 1
+    assert "ROM_BUILD_UNAVAILABLE" in errors[0]
+    assert "no rom was produced" in errors[0].lower()
+    assert completed == []
+    assert progress == [(0, "Build unavailable; no ROM was produced.")]
+    assert not (tmp_path / "coreboot.rom").exists()
+    assert not any("ROM image ready" in message for message in logs)
+
+
+def test_orchestrator_flash_fails_closed_without_writer(tmp_path, monkeypatch):
+    from autoloader.flasher.flashrom import FlashromRunner
+
+    def unexpected_write(*args, **kwargs):
+        raise AssertionError("the unavailable workflow must not reach flashrom")
+
+    monkeypatch.setattr(FlashromRunner, "write_rom", unexpected_write)
+    errors = []
+    completed = []
+    orch = Orchestrator(AppState(), on_error=errors.append, on_complete=lambda: completed.append(True))
+
+    assert orch.run_flash(tmp_path / "candidate.rom") is False
+    assert len(errors) == 1
+    assert "no write was attempted" in errors[0].lower()
+    assert "PHYSICAL_FLASH_UNAVAILABLE" in errors[0]
+    assert completed == []
+
+
 def test_orchestrator_run_backup_no_model():
     state = AppState(model_id=None)
     error_called = []
@@ -39,64 +79,31 @@ def test_orchestrator_run_backup_no_model():
     assert "No model selected" in error_called[0]
 
 
-def test_orchestrator_run_backup_success(tmp_path):
-    state = AppState(model_id="x230", backup_dir=tmp_path)
-    logs = []
-    progress_records = []
+def test_orchestrator_run_backup_fails_closed_without_topology(tmp_path, monkeypatch):
+    from autoloader.flasher.backup import BackupManager
+
+    def unexpected_backup(*args, **kwargs):
+        raise AssertionError("unobserved topology must not trigger a physical read")
+
+    monkeypatch.setattr(BackupManager, "create_backup", unexpected_backup)
+    errors = []
+    progress = []
     completed = []
-
-    mock_result = BackupResult(
-        path1=str(tmp_path / "b1.rom"),
-        path2=str(tmp_path / "b2.rom"),
-        sha256="abcd1234ef567890" * 4,
-        match=True,
-        chip_info="MX25L6405D (8MB, bottom)"
-    )
-
-    with patch("autoloader.orchestrator.BackupManager") as mock_bm_cls:
-        mock_bm = mock_bm_cls.return_value
-        mock_bm.create_backup.return_value = mock_result
-
-        orch = Orchestrator(
-            state,
-            on_log=lambda msg: logs.append(msg),
-            on_progress=lambda pct, lbl: progress_records.append((pct, lbl)),
-            on_complete=lambda: completed.append(True)
-        )
-
-        res = orch.run_backup()
-        assert res is not None
-        assert res.match is True
-        assert state.last_backup_result == mock_result
-        assert len(completed) == 1
-        assert any("Backup verified" in log for log in logs)
-
-
-def test_orchestrator_run_backup_mismatch(tmp_path):
     state = AppState(model_id="x230", backup_dir=tmp_path)
-    error_called = []
-
-    mock_result = BackupResult(
-        path1=str(tmp_path / "b1.rom"),
-        path2=str(tmp_path / "b2.rom"),
-        sha256="diff",
-        match=False,
-        chip_info="MX25L6405D (8MB, bottom)"
+    orch = Orchestrator(
+        state,
+        on_error=errors.append,
+        on_progress=lambda pct, label: progress.append((pct, label)),
+        on_complete=lambda: completed.append(True),
     )
 
-    with patch("autoloader.orchestrator.BackupManager") as mock_bm_cls:
-        mock_bm = mock_bm_cls.return_value
-        mock_bm.create_backup.return_value = mock_result
-
-        orch = Orchestrator(
-            state,
-            on_error=lambda err: error_called.append(err)
-        )
-
-        res = orch.run_backup()
-        assert res is not None
-        assert len(error_called) == 1
-        assert "mismatch" in error_called[0].lower()
+    assert orch.run_backup() is None
+    assert len(errors) == 1
+    assert "BACKUP_UNAVAILABLE" in errors[0]
+    assert "No hardware was read" in errors[0]
+    assert progress == [(0, "Backup unavailable; no hardware was read.")]
+    assert completed == []
+    assert state.last_backup_result is None
 
 
 def test_orchestrator_run_verify_success(tmp_path):
@@ -138,6 +145,13 @@ def test_orchestrator_run_verify_failure(tmp_path):
         assert ok is False
         assert len(errors) == 1
         assert "FAILED" in errors[0]
+
+
+def test_standalone_verify_flash_helper_is_importable():
+    from autoloader.flasher.verify import FlashVerifier, verify_flash
+
+    assert callable(verify_flash)
+    assert callable(FlashVerifier.verify_flash)
 
 
 def test_autoloader_app_state_and_theme_toggle():

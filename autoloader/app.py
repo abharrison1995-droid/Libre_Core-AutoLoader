@@ -83,11 +83,11 @@ class AutoLoaderApp(App[None]):
         """Show help information and keyboard shortcuts."""
         help_text = (
             "Shortcuts: [q] Quit  [b] Go Back  [d] Toggle Theme  [?] Show Help\n"
-            "Workflow: Detect Model -> Select Pathway -> Configure/Guide -> Verify"
+            "Workflow screens show status only for operations that have a connected backend."
         )
         self.notify(help_text, title="Libre_Core AutoLoader Help", timeout=6.0)
 
-    def action_back(self) -> None:
+    async def action_back(self) -> None:
         """Go back to previous screen."""
         if len(self.screen_stack) > 2:
             self.pop_screen()

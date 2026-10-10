@@ -5,7 +5,6 @@ from textual.screen import Screen
 from textual.widgets import Static, Button, Header, Footer
 from textual.containers import Container, VerticalScroll, Horizontal
 from textual import work
-import time
 
 from textual.worker import get_current_worker, Worker
 from autoloader.ui.widgets.progress_bar import CustomProgressBar
@@ -21,9 +20,14 @@ class BuildProgressScreen(Screen[None]):
         """Compose the build progress screen."""
         yield Header()
         with Container(classes="container"):
-            yield Static("Building ROM Image...", classes="header-text")
+            yield Static("ROM Build Status", classes="header-text")
+            yield Static(
+                "No validated firmware builder is connected. No ROM will be produced by this workflow.",
+                classes="error",
+                id="build-unavailable",
+            )
             
-            self.progress_bar = CustomProgressBar(label="Initializing build...", total=100)
+            self.progress_bar = CustomProgressBar(label="Build unavailable", total=100)
             yield self.progress_bar
             
             self.log_panel = LogPanel()

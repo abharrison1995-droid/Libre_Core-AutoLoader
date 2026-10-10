@@ -2,6 +2,7 @@
 import asyncio
 import pytest
 from textual.screen import Screen
+from textual.widgets import Button, Static
 
 from autoloader.app import AutoLoaderApp
 from autoloader.ui.screens.welcome import WelcomeScreen
@@ -74,6 +75,34 @@ def test_all_screens_mount_and_compose():
     asyncio.run(_runner())
 
 
+def test_hardware_screens_remain_fail_closed_without_operation_results():
+    async def _runner():
+        app = AutoLoaderApp()
+        async with app.run_test() as pilot:
+            await app.push_screen("build_progress")
+            await pilot.pause()
+            assert app.screen.query_one("#btn-next", Button).disabled
+
+            await app.push_screen("backup_screen")
+            await pilot.pause()
+            assert app.screen.query_one("#btn-create", Button).disabled
+
+            await app.push_screen("flash_guide")
+            await pilot.pause()
+            assert app.screen.query_one("#btn-flash", Button).disabled
+            assert app.screen.query_one("#btn-verify", Button).disabled
+            flash_status = str(app.screen.query_one("#flash-unavailable", Static).render())
+            assert "No flash operation has been run" in flash_status
+
+            await app.push_screen("verify_screen")
+            await pilot.pause()
+            report = " ".join(str(widget.render()) for widget in app.screen.query(Static))
+            assert "NOT PERFORMED" in report
+            assert "successfully flashed" not in report.lower()
+
+    asyncio.run(_runner())
+
+
 def test_app_state_initialization():
     app = AutoLoaderApp()
     assert hasattr(app, "selected_model_id")
@@ -91,17 +120,56 @@ def test_cli_detect_command():
     assert "Hardware Detection" in result.output
 
 
+def test_cli_registers_expected_commands():
+    from click.testing import CliRunner
+    from autoloader.__main__ import cli
+
+    result = CliRunner().invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    for command in ("run", "detect", "build-rom", "usb", "backup", "verify", "flash"):
+        assert command in result.output
+
+
+def test_cli_flash_does_not_accept_write_bypass(tmp_path):
+    from click.testing import CliRunner
+    from autoloader.__main__ import cli
+
+    rom = tmp_path / "candidate.rom"
+    rom.write_bytes(b"candidate firmware")
+    result = CliRunner().invoke(cli, ["flash", "--rom", str(rom), "--write", "--yes"])
+    assert result.exit_code != 0
+    assert "No such option" in result.output
+
+
 def test_cli_build_rom_validation():
     from click.testing import CliRunner
     from autoloader.__main__ import cli
     runner = CliRunner()
     # Test valid model config
     result = runner.invoke(cli, ["build-rom", "--model", "x230", "--base", "coreboot", "--payload", "seabios"])
-    assert result.exit_code == 0
-    assert "Configuration Validated" in result.output
+    assert result.exit_code != 0
+    assert "ROM Configuration" in result.output
+    assert "ROM_BUILD_UNAVAILABLE" in result.output
+    assert "no rom was produced" in result.output.lower()
 
     # Test unsupported model config
     bad_result = runner.invoke(cli, ["build-rom", "--model", "x201", "--base", "libreboot"])
     assert bad_result.exit_code != 0
     assert "Configuration Error" in bad_result.output
+
+
+def test_cli_verify_delegates_to_shared_orchestrator(tmp_path, monkeypatch):
+    from click.testing import CliRunner
+    from autoloader.__main__ import cli
+    from autoloader.orchestrator import Orchestrator
+
+    rom = tmp_path / "candidate.rom"
+    rom.write_bytes(b"candidate firmware")
+    calls = []
+    monkeypatch.setattr(Orchestrator, "run_verify", lambda self, rom_path, programmer=None: calls.append(rom_path) or True)
+
+    result = CliRunner().invoke(cli, ["verify", "--rom", str(rom)])
+    assert result.exit_code == 0
+    assert "Read-back comparison passed" in result.output
+    assert calls == [rom]
 

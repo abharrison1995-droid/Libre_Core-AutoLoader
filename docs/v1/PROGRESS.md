@@ -19,7 +19,7 @@
 
 **Status: SOFTWARE COMPLETE — SOL ACCEPT**
 
-SOL's four review follow-ups were finalized in commit `2d0e2d1`: exact phase order, four-category feature matrix, baseline test/package/type/build evidence, expanded architecture inventory, and source-backed provisional reference-machine constraints. The Phase 00 report is accepted; device-specific details remain provisional and hardware validation remains pending.
+SOL accepted Phase 00 after the four review follow-ups were finalized in commit `2d0e2d1`; wording was aligned to the final decision in `4c33444`. The Phase 00 report is accepted; device-specific details remain provisional and hardware validation remains pending.
 
 - Entry point: `autoloader.__main__:main` (Click, also `python -m autoloader`). `run` launches `AutoLoaderApp`; `detect` calls model/BIOS/EC detectors; `build-rom` validates configuration only; `usb` creates a directory only; baseline `flash --write` directly called flashrom. Phase 01 quarantines that route pending the shared safety backend.
 - TUI: `autoloader/app.py` registers screens; the build, flash and verification screens currently own simulated/canned operation outcomes. Backup routes through `Orchestrator` and `BackupManager`.
@@ -33,6 +33,19 @@ SOL's four review follow-ups were finalized in commit `2d0e2d1`: exact phase ord
 - VM harness: `test_vm/launch_vm.py`, `launch_vm.bat` and `mock_chips/` contain a QEMU practice harness; it is not evidence of hardware compatibility.
 - USB: `usb_builder/build_usb.sh` copies the Python package into an Archiso profile; `start.sh` invokes the TUI and suppresses its output.
 - Tests: `tests/` includes unit tests for the database, detection, flash helpers, builders, guides, orchestrator and UI/CLI. Baseline suite passed 70 tests in the isolated venv described above.
+
+## Phase 01 — Stabilization
+
+**Status: IMPLEMENTED — PENDING SOL REVIEW**
+
+- Packaging: constrained setuptools discovery to `autoloader*`; editable `pip install -e '.[dev]'` succeeds in the isolated Python 3.12.14 environment.
+- CLI/TUI startup: `python -m autoloader --help` succeeds; CLI command registration, all nine screen mounts/compositions, fail-closed screen state and command routing are covered by automated smoke tests.
+- False-success paths: the orchestrator no longer fabricates build completion, backup capture or flash completion. Build and flash return structured unavailable errors; backup is unavailable until observed topology and complete recovery coverage can be established. The Textual build/flash/backup screens do not enable downstream or capture actions, and verification reports `NOT PERFORMED` until an actual result exists.
+- Physical writes: the CLI `flash` command now routes through the shared orchestrator and always fails closed; the old `--write` and `--yes` bypass options are removed. The TUI restore control provides an unavailable notice and does not issue a write command. Low-level flash/restore primitives remain for later backend work and unit testing; application paths do not invoke them for physical writes.
+- Build status: `build-rom` validates configuration but returns `ROM_BUILD_UNAVAILABLE` and does not create an artifact. The `usb` command only prepares a directory and clearly says no ISO was built.
+- Latest software checks: `python -m pytest -q` — **77 passed**; `mypy autoloader` — **no issues in 75 source files**; `python -m autoloader --help` — passed; `git diff --check` — passed. The editable install succeeded after the packaging fix. No interactive firmware operation, IVprep execution, or destructive media operation was performed.
+- Remaining environment limit: this Windows 11 host has no WSL Linux distribution or Docker/Podman, bash, make or cmake. Archiso and upstream firmware toolchain builds remain unperformed, not successful.
+- Hardware evidence: none. The T430 1vyrain, X200 Libreboot and X220 Coreboot workflows remain **HARDWARE PENDING**.
 
 ### Defect register (initial)
 

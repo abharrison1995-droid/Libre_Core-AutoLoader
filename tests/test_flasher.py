@@ -266,20 +266,40 @@ def test_internal_flasher_layout_flags(tmp_path, monkeypatch):
     assert recorded_layout == ["bios", "bios"]
 
 
-def test_cli_programmer_buspirate_mapping(tmp_path):
+def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
     from click.testing import CliRunner
     from autoloader.__main__ import cli
-    from autoloader.flasher.verify import IFD_MAGIC
+    from autoloader.flasher.flashrom import FlashromRunner
 
-    valid_rom = tmp_path / "valid.rom"
-    valid_data = (b"\xFF" * 16) + IFD_MAGIC + (b"VALID_PAYLOAD_DESCRIPTOR" * 200) + (bytes(range(256)) * 50)
-    valid_rom.write_bytes(valid_data)
+    rom = tmp_path / "candidate.rom"
+    rom.write_bytes(b"candidate firmware")
+
+    def unexpected_write(*args, **kwargs):
+        raise AssertionError("CLI flash must not call the physical writer")
+
+    monkeypatch.setattr(FlashromRunner, "write_rom", unexpected_write)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["flash", "--programmer", "buspirate_spi", "--rom", str(valid_rom)])
-    assert "ValueError" not in (result.output or "")
-    assert "buspirate_spi:dev=/dev/ttyUSB0" in (result.output or "")
-    assert "Dry-run check complete" in (result.output or "")
+    result = runner.invoke(cli, ["flash", "--rom", str(rom)])
+    assert result.exit_code != 0
+    assert "PHYSICAL_FLASH_UNAVAILABLE" in (result.output or "")
+    assert "no write was attempted" in (result.output or "")
+
+
+def test_cli_backup_command_is_registered_but_unavailable_without_topology(monkeypatch):
+    from click.testing import CliRunner
+    from autoloader.__main__ import cli
+    from autoloader.flasher.backup import BackupManager
+
+    def unexpected_backup(*args, **kwargs):
+        raise AssertionError("CLI backup must not read unobserved hardware")
+
+    monkeypatch.setattr(BackupManager, "create_backup", unexpected_backup)
+
+    result = CliRunner().invoke(cli, ["backup", "--model", "x200"])
+    assert result.exit_code != 0
+    assert "BACKUP_UNAVAILABLE" in (result.output or "")
+    assert "No hardware was read" in (result.output or "")
 
 
 def test_entropy_calculation_accuracy_and_speed():

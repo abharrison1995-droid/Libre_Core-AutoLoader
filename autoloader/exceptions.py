@@ -5,6 +5,30 @@ class AutoLoaderError(Exception):
     """Base exception for AutoLoader."""
 
 
+class OperationUnavailableError(AutoLoaderError):
+    """Raised when a user requests a workflow that is not implemented safely."""
+
+    code = "OPERATION_UNAVAILABLE"
+
+
+class BackupUnavailableError(OperationUnavailableError):
+    """Raised when backup completeness cannot be established safely."""
+
+    code = "BACKUP_UNAVAILABLE"
+
+
+class ROMBuildUnavailableError(OperationUnavailableError):
+    """Raised when no validated ROM builder is connected."""
+
+    code = "ROM_BUILD_UNAVAILABLE"
+
+
+class PhysicalFlashUnavailableError(OperationUnavailableError):
+    """Raised when no validated and authorized physical flash backend exists."""
+
+    code = "PHYSICAL_FLASH_UNAVAILABLE"
+
+
 class DetectionError(AutoLoaderError):
     """Raised when hardware detection fails."""
 

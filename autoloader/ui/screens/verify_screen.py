@@ -17,21 +17,13 @@ class VerifyScreen(Screen[None]):
             yield Static("Post-Flash Verification Report", classes="header-text")
             
             with Vertical(classes="report"):
-                yield Static("Running verification checks...", id="status-text")
-                yield Static("SHA256 match: ✅", classes="success")
-                yield Static("ROM structure valid: ✅", classes="success")
-                yield Static("CBFS header found: ✅", classes="success")
-                yield Static("Payload present: ✅", classes="success")
-                yield Static("ME status: Neutered ✅", classes="success")
+                yield Static("Verification status: NOT PERFORMED", id="status-text", classes="error")
+                yield Static("No flash operation is connected to this screen.")
+                yield Static("A read-back comparison and hardware boot check are required before reporting success.")
                 
                 yield Static(
-                    "\n🎉 Your ThinkPad has been successfully flashed! 🎉\n\n"
-                    "First boot instructions:\n"
-                    "1. Reassemble the laptop.\n"
-                    "2. Plug in AC power.\n"
-                    "3. Power on. It may take up to 30 seconds to show the bootsplash on first boot due to memory training.\n"
-                    "4. Keep your backup ROMs safe in multiple locations!",
-                    classes="success"
+                    "\nNo hardware validation has been recorded. Keep verified backups and "
+                    "use the recovery procedure documented for the exact model and board."
                 )
                 
             with Horizontal(classes="button-container"):

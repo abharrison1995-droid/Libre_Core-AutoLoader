@@ -66,10 +66,12 @@ class ModelSelectScreen(Screen[None]):
                 btn_id = radio_set.pressed_button.id
                 if btn_id and btn_id.startswith("rb-"):
                     model_id = btn_id[3:]
-                    if hasattr(self.app, "set_selected_model"):
-                        self.app.set_selected_model(model_id)
+                    set_selected_model = getattr(self.app, "set_selected_model", None)
+                    if callable(set_selected_model):
+                        set_selected_model(model_id)
                     else:
-                        self.app.selected_model_id = model_id
+                        self.app.notify("Model selection is unavailable in this application state.", severity="error")
+                        return
                 self.app.push_screen("pathway_select")
             else:
                 self.app.notify("Please select a model first.", severity="error")

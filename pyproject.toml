@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "libre-core-autoloader"
 version = "0.1.0"
-description = "USB-bootable ThinkPad firmware modification toolkit"
+description = "In-development ThinkPad firmware workflow toolkit"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -19,8 +19,12 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "mypy"
+    "mypy",
+    "types-psutil"
 ]
 
 [project.scripts]
 autoloader = "autoloader.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["autoloader*"]

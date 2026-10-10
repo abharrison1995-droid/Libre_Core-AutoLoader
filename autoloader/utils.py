@@ -16,7 +16,7 @@ def is_admin() -> bool:
         except Exception as e:
             logger.debug("Failed to check Windows admin privileges: %s", e)
             return False
-    try:
-        return os.geteuid() == 0
-    except AttributeError:
+    get_effective_uid = getattr(os, "geteuid", None)
+    if not callable(get_effective_uid):
         return False
+    return get_effective_uid() == 0

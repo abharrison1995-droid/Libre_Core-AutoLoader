@@ -5,11 +5,7 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Static, Button, Header, Footer
 from textual.containers import Container, Vertical, Horizontal
-from textual import work
-from textual.worker import get_current_worker, Worker
-
 from autoloader.ui.widgets.log_panel import LogPanel
-from autoloader.orchestrator import Orchestrator, AppState
 from autoloader.flasher.backup import BackupManager
 
 logger = logging.getLogger(__name__)
@@ -26,13 +22,18 @@ class BackupScreen(Screen[None]):
             with Vertical():
                 self.backup_list_widget = Static("Existing Backups:\n (Scanning backups directory...)", classes="success", id="backup-list")
                 yield self.backup_list_widget
+                yield Static(
+                    "New backup capture is unavailable until the actual chip topology and "
+                    "complete recovery coverage can be verified.",
+                    classes="error",
+                )
                 
                 self.log_panel = LogPanel()
                 yield self.log_panel
                 
             with Horizontal(classes="button-container"):
                 yield Button("Back", id="btn-back")
-                self.btn_create = Button("Create Backup", variant="primary", id="btn-create")
+                self.btn_create = Button("Backup unavailable", id="btn-create", disabled=True)
                 yield self.btn_create
                 self.btn_restore = Button("Restore Guidance", id="btn-restore")
                 yield self.btn_restore
@@ -68,50 +69,15 @@ class BackupScreen(Screen[None]):
         if event.button.id == "btn-back":
             self.app.pop_screen()
         elif event.button.id == "btn-create":
-            self.execute_backup()
+            self.log_panel.write("[yellow]Backup capture is unavailable; no hardware was read.[/yellow]\n")
         elif event.button.id == "btn-verify":
             self._handle_verify_backups()
         elif event.button.id == "btn-restore":
             self.app.notify(
-                "Restore Guidance:\nTo restore a backup, flash the saved ROM via external programmer:\n"
-                "flashrom -p <programmer> -w <backup.rom>",
+                "Restore is unavailable until a model-specific recovery plan and explicit authorization are implemented. No write was attempted.",
                 title="Restore Backup",
                 timeout=8.0
             )
-
-    @work(thread=True)
-    def execute_backup(self) -> None:
-        """Runs the two-pass verified backup in a background worker thread."""
-        worker = get_current_worker()
-        app_state = getattr(self.app, "state", None) or AppState(
-            model_id=getattr(self.app, "selected_model_id", None)
-        )
-        
-        self.app.call_from_thread(setattr, self.btn_create, "disabled", True)
-        self.app.call_from_thread(self.log_panel.clear)
-        self.app.call_from_thread(self.log_panel.write, "[cyan]Initiating two-pass verified ROM backup...[/cyan]\n")
-
-        def on_log(msg: str) -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(self.log_panel.write, f"{msg}\n")
-
-        def on_complete() -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(setattr, self.btn_create, "disabled", False)
-                self.app.call_from_thread(self._refresh_backup_list)
-
-        def on_error(err_msg: str) -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(self.log_panel.write, f"[bold red]{err_msg}[/bold red]\n")
-                self.app.call_from_thread(setattr, self.btn_create, "disabled", False)
-
-        orchestrator = Orchestrator(
-            app_state,
-            on_log=on_log,
-            on_complete=on_complete,
-            on_error=on_error,
-        )
-        orchestrator.run_backup()
 
     def _handle_verify_backups(self) -> None:
         """Inspects all recorded backup pairs in the manifest."""

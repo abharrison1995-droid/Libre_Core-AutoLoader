@@ -4,8 +4,8 @@ This plan tracks the multiphase V1 scope from `pasted-text-1.txt`. Statuses desc
 
 | Phase | Scope | Status | Exit evidence |
 |---|---|---|---|
-| 00 | Repository audit and baseline | SOFTWARE COMPLETE | SOL accepted with non-blocking follow-ups recorded in `PROGRESS.md`. |
-| 01 | Startup, CLI/TUI stabilization, no false success | IN PROGRESS | Stabilization commit, smoke tests, and passing release-relevant software tests. |
+| 00 | Repository audit and baseline | SOFTWARE COMPLETE | SOL accepted; review follow-ups finalized in `2d0e2d1` and wording cleanup in `4c33444`. |
+| 01 | Startup, CLI/TUI stabilization, no false success | IMPLEMENTED — PENDING SOL REVIEW | Packaging, CLI/TUI smoke coverage, fail-closed operation outcomes, and passing tests/type check; see `PROGRESS.md`. |
 | 02 | Compatibility engine, shared workflow state and authorization | NOT STARTED | Exact model/artifact/topology checks and negative tests. |
 | 03 | SPI probing, complete backup, read-back and recovery | NOT STARTED | Hardware-independent safety tests plus real-device evidence. |
 | 04 | Real firmware build and artifact engine | NOT STARTED | Pinned, validated build and artifact pipeline. |
