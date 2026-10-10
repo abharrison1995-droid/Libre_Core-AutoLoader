@@ -21,7 +21,7 @@ from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path, PurePosixPath
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 from autoloader.flasher.backup_service import BackupSetResult, BackupSetService
 from autoloader.flasher.flashrom import FlashToolIdentity, ProgrammerType
@@ -45,9 +45,13 @@ from autoloader.workflow.types import (
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _APPROVAL_SCHEMA = 1
 _CAPTURE_MAX_AGE = timedelta(minutes=5)
+_CURRENT_EVIDENCE_MAX_AGE = timedelta(minutes=2)
 _APPROVAL_MAX_AGE = timedelta(minutes=5)
 _FRONTEND_CONFIRMATIONS: dict[str, "HumanActionConfirmation"] = {}
 _FRONTEND_CONFIRMATIONS_LOCK = threading.Lock()
+_TUI_RECEIPT_BRIDGES: dict[str, "_MountedTUIConfirmationBridge"] = {}
+_TUI_BRIDGES: dict[str, "_MountedTUIConfirmationBridge"] = {}
+_TUI_BRIDGES_LOCK = threading.Lock()
 _FACTORY_INTENTS: dict[int, "WriteIntent"] = {}
 _FACTORY_INTENTS_LOCK = threading.Lock()
 _CONSUMED_APPROVALS: set[str] = set()
@@ -192,6 +196,195 @@ class WriteApprovalChallenge:
     intent_sha256: str
     exact_phrase: str
     challenge_sha256: str
+    executable: str
+    argv: tuple[str, ...]
+    artifact_path: str
+    artifact_manifest_path: str
+    artifact_manifest_sha256: str
+    primary_manifest_path: str
+    primary_manifest_sha256: str
+    recovery_manifest_path: str
+    recovery_manifest_sha256: str
+    backup_copy_paths: tuple[str, ...]
+    backup_copy_sha256: tuple[str, ...]
+    setup_actor: str
+    setup_instrument_id: str
+    setup_test_point: str
+    programmer_voltage_mv: int
+    chip_voltage_mv: int
+    setup_measured_at_utc: str
+    interface_verified: bool
+    wiring_verified: bool
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "argv", tuple(self.argv))
+        object.__setattr__(self, "backup_copy_paths", tuple(self.backup_copy_paths))
+        object.__setattr__(self, "backup_copy_sha256", tuple(self.backup_copy_sha256))
+
+
+class _MountedTUIConfirmationBridge:
+    """One-shot service-worker bridge bound to one mounted confirmation screen.
+
+    This is deliberately private and cannot be created from a generic event or
+    caller callback. The only factory checks the exact dedicated Textual screen,
+    current app screen identity and mount-session nonce.
+    """
+
+    def __init__(self, *, screen: Any, app: Any, mount_nonce: str, timeout_seconds: int = 300) -> None:
+        self._screen = screen
+        self._app = app
+        self._mount_nonce = mount_nonce
+        self._timeout_seconds = timeout_seconds
+        self._bridge_id = secrets.token_urlsafe(32)
+        self._event = threading.Event()
+        self._lock = threading.Lock()
+        self._challenge: WriteApprovalChallenge | None = None
+        self._actor: str | None = None
+        self._confirmation: HumanActionConfirmation | None = None
+        self._error: str | None = None
+        self._closed = False
+        self._receipt_consumed_flag = False
+
+    def collect(self, challenge: WriteApprovalChallenge, actor: str) -> HumanActionConfirmation:
+        _validate_challenge(challenge)
+        if not actor.strip():
+            raise WriteApprovalError("a named human operator is required for the TUI write challenge")
+        with self._lock:
+            if self._closed or self._challenge is not None:
+                raise WriteApprovalError("mounted TUI challenge bridge is closed or already used")
+            self._challenge = challenge
+            self._actor = actor.strip()
+        try:
+            self._app.call_from_thread(
+                self._screen._present_write_challenge,
+                challenge,
+                self,
+                self._mount_nonce,
+            )
+        except Exception as exc:
+            self.invalidate("The mounted confirmation screen is no longer available.")
+            raise WriteApprovalError("could not present the write challenge on the mounted Textual screen") from exc
+        if not self._event.wait(self._timeout_seconds):
+            self.invalidate("The write challenge expired before confirmation.")
+        with self._lock:
+            if self._error is not None:
+                self._unregister_if_unused()
+                raise WriteApprovalError(self._error)
+            if self._confirmation is None:
+                self._unregister_if_unused()
+                raise WriteApprovalError("TUI challenge ended without a one-use confirmation receipt")
+            return self._confirmation
+
+    def _confirm_from_screen(self, screen: Any, mount_nonce: str, phrase: str) -> None:
+        with self._lock:
+            self._require_current_screen(screen, mount_nonce)
+            if self._event.is_set() or self._confirmation is not None:
+                raise WriteApprovalError("TUI write confirmation was already submitted")
+            challenge = self._challenge
+            actor = self._actor
+            if challenge is None or actor is None:
+                raise WriteApprovalError("no live service-generated write challenge is awaiting confirmation")
+            if not hmac.compare_digest(phrase, challenge.exact_phrase):
+                raise WriteApprovalError("typed phrase does not exactly match the displayed service challenge")
+            confirmation = _mint_mounted_tui_confirmation(
+                self,
+                challenge=challenge,
+                actor=actor,
+                confirmed_at=datetime.now(timezone.utc),
+            )
+            self._confirmation = confirmation
+            self._event.set()
+
+    def _cancel_from_screen(self, screen: Any, mount_nonce: str) -> None:
+        with self._lock:
+            self._require_current_screen(screen, mount_nonce, allow_unmounted=True)
+            if self._receipt_consumed_flag:
+                raise WriteApprovalError("confirmation receipt was consumed; cancellation is no longer available")
+            if self._closed:
+                return
+            self._revoke_confirmation_locked()
+            self._error = "The operator cancelled the write challenge; no approval was issued."
+            self._closed = True
+            self._event.set()
+            self._unregister_if_unused()
+
+    def invalidate(self, reason: str) -> None:
+        with self._lock:
+            if self._receipt_consumed_flag or self._closed:
+                return
+            self._revoke_confirmation_locked()
+            self._closed = True
+            self._error = reason
+            self._event.set()
+            self._unregister_if_unused()
+
+    def _require_current_screen(self, screen: Any, mount_nonce: str, *, allow_unmounted: bool = False) -> None:
+        if screen is not self._screen or mount_nonce != self._mount_nonce:
+            raise WriteApprovalError("confirmation came from a different screen instance or mount session")
+        if getattr(screen, "mount_nonce", None) != self._mount_nonce:
+            raise WriteApprovalError("confirmation screen mount nonce changed")
+        if not allow_unmounted and (
+            not getattr(screen, "is_mounted", False)
+            or getattr(self._app, "screen", None) is not screen
+        ):
+            raise WriteApprovalError("confirmation screen is not the currently mounted app screen")
+
+    def _consume_confirmation(self, confirmation: "HumanActionConfirmation") -> None:
+        """Atomically consume a TUI receipt or reject a cancelled/unmounted one."""
+        with self._lock:
+            if (
+                self._closed
+                or self._error is not None
+                or self._confirmation is not confirmation
+            ):
+                raise WriteApprovalError("mounted TUI confirmation was cancelled, invalidated, or already consumed")
+            with _FRONTEND_CONFIRMATIONS_LOCK:
+                issued = _FRONTEND_CONFIRMATIONS.get(confirmation.evidence_id)
+                bridge = _TUI_RECEIPT_BRIDGES.get(confirmation.evidence_id)
+                if issued is not confirmation or bridge is not self:
+                    raise WriteApprovalError("TUI confirmation is fabricated, revoked, or already used")
+                _FRONTEND_CONFIRMATIONS.pop(confirmation.evidence_id, None)
+                _TUI_RECEIPT_BRIDGES.pop(confirmation.evidence_id, None)
+            self._receipt_consumed_flag = True
+            self._closed = True
+            with _TUI_BRIDGES_LOCK:
+                _TUI_BRIDGES.pop(self._bridge_id, None)
+
+    def _revoke_confirmation_locked(self) -> None:
+        confirmation = self._confirmation
+        if confirmation is None:
+            return
+        with _FRONTEND_CONFIRMATIONS_LOCK:
+            if _FRONTEND_CONFIRMATIONS.get(confirmation.evidence_id) is confirmation:
+                _FRONTEND_CONFIRMATIONS.pop(confirmation.evidence_id, None)
+            if _TUI_RECEIPT_BRIDGES.get(confirmation.evidence_id) is self:
+                _TUI_RECEIPT_BRIDGES.pop(confirmation.evidence_id, None)
+        self._confirmation = None
+
+    def _unregister_if_unused(self) -> None:
+        with _TUI_BRIDGES_LOCK:
+            _TUI_BRIDGES.pop(self._bridge_id, None)
+
+
+def _create_mounted_tui_confirmation_bridge(screen: Any, *, mount_nonce: str) -> _MountedTUIConfirmationBridge:
+    """Create a bridge only for the exact currently mounted confirmation screen."""
+    from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
+
+    if (
+        type(screen) is not WriteConfirmationScreen
+        or not mount_nonce
+        or getattr(screen, "mount_nonce", None) != mount_nonce
+        or not getattr(screen, "is_mounted", False)
+    ):
+        raise WriteApprovalError("TUI write approval requires the exact currently mounted confirmation screen")
+    exact_screen = cast(WriteConfirmationScreen, screen)
+    app = exact_screen.app
+    if app is None or getattr(app, "screen", None) is not exact_screen:
+        raise WriteApprovalError("TUI write approval requires the exact currently mounted confirmation screen")
+    bridge = _MountedTUIConfirmationBridge(screen=exact_screen, app=app, mount_nonce=mount_nonce)
+    with _TUI_BRIDGES_LOCK:
+        _TUI_BRIDGES[bridge._bridge_id] = bridge
+    return bridge
 
 
 @dataclass(frozen=True)
@@ -639,11 +832,17 @@ class WriteApprovalLedger:
             raise WriteApprovalError("approval ledger directory must not contain a symlink or junction")
         self._lock = threading.Lock()
 
-    def issue(self, intent: WriteIntent, confirmation: HumanActionConfirmation) -> WriteApprovalToken:
+    def issue(
+        self,
+        intent: WriteIntent,
+        confirmation: HumanActionConfirmation,
+        *,
+        challenge: WriteApprovalChallenge | None = None,
+    ) -> WriteApprovalToken:
         if type(intent) is not WriteIntent or type(confirmation) is not HumanActionConfirmation:
             raise WriteApprovalError("a typed write intent and frontend human-confirmation record are required")
-        if confirmation.channel is not ConfirmationChannel.CLI_TTY:
-            raise WriteApprovalError("TUI write approval is disabled until its dedicated confirmation screen is integrated")
+        if confirmation.channel not in {ConfirmationChannel.CLI_TTY, ConfirmationChannel.TUI_EXPLICIT_ACTION}:
+            raise WriteApprovalError("write approval requires a reviewed interactive frontend receipt")
         _require_factory_intent(intent)
         _consume_frontend_confirmation(confirmation)
         intent.validate_integrity()
@@ -653,10 +852,11 @@ class WriteApprovalLedger:
         now = datetime.now(timezone.utc)
         if intent_time > now + timedelta(seconds=30) or now - intent_time > _APPROVAL_MAX_AGE:
             raise WriteApprovalError("write intent is future-dated or expired")
-        challenge = create_write_approval_challenge(intent)
+        selected_challenge = challenge or create_write_approval_challenge(intent)
+        _validate_challenge_against_intent(intent, selected_challenge)
         if (
-            confirmation.challenge_sha256 != challenge.challenge_sha256
-            or confirmation.exact_phrase != challenge.exact_phrase
+            confirmation.challenge_sha256 != selected_challenge.challenge_sha256
+            or confirmation.exact_phrase != selected_challenge.exact_phrase
             or not confirmation.actor.strip()
         ):
             raise WriteApprovalError("human confirmation does not match this exact operation challenge")
@@ -675,14 +875,14 @@ class WriteApprovalLedger:
             "actor": confirmation.actor.strip(),
             "issued_at_utc": now.isoformat(),
             "channel": confirmation.channel.value,
-            "challenge_sha256": challenge.challenge_sha256,
+            "challenge_sha256": selected_challenge.challenge_sha256,
         }
         document = {**token_payload, "record_sha256": _sha256(_json_bytes(token_payload))}
         record_bytes = _json_bytes(document)
         record_sha256 = str(document["record_sha256"])
         with self._lock:
-            confirmation_path = self.directory / f"{challenge.challenge_sha256}.confirmed"
-            _write_exclusive(confirmation_path, _json_bytes({"challenge_sha256": challenge.challenge_sha256}))
+            confirmation_path = self.directory / f"{selected_challenge.challenge_sha256}.confirmed"
+            _write_exclusive(confirmation_path, _json_bytes({"challenge_sha256": selected_challenge.challenge_sha256}))
             record_path = self._record_path(approval_id)
             _write_exclusive(record_path, record_bytes)
         return WriteApprovalToken(
@@ -693,7 +893,7 @@ class WriteApprovalLedger:
             actor=confirmation.actor.strip(),
             issued_at_utc=now.isoformat(),
             channel=confirmation.channel,
-            challenge_sha256=challenge.challenge_sha256,
+            challenge_sha256=selected_challenge.challenge_sha256,
             record_sha256=record_sha256,
         )
 
@@ -761,11 +961,64 @@ class WriteApprovalLedger:
         return document
 
 
-def create_write_approval_challenge(intent: WriteIntent) -> WriteApprovalChallenge:
+def create_write_approval_challenge(intent: WriteIntent, *, setup_attestation: Any | None = None) -> WriteApprovalChallenge:
     _require_factory_intent(intent)
     intent.validate_integrity()
     phrase = f"FLASH {intent.model_id.upper()} {intent.operation_id} {intent.intent_sha256[:12].upper()}"
-    challenge_sha = _sha256(phrase.encode("utf-8"))
+    if setup_attestation is None:
+        setup_actor = intent.voltage_attested_by
+        setup_instrument_id = intent.voltage_instrument_id
+        setup_test_point = intent.voltage_test_point
+        programmer_voltage_mv = intent.programmer_voltage_mv
+        chip_voltage_mv = intent.chip_voltage_mv
+        setup_measured_at_utc = intent.voltage_attested_at_utc
+        interface_verified = True
+        wiring_verified = True
+    else:
+        setup_actor = setup_attestation.actor
+        setup_instrument_id = setup_attestation.instrument_id
+        setup_test_point = setup_attestation.test_point
+        programmer_voltage_mv = setup_attestation.programmer_voltage_mv
+        chip_voltage_mv = setup_attestation.chip_voltage_mv
+        setup_measured_at_utc = setup_attestation.measured_at_utc
+        interface_verified = setup_attestation.interface_verified
+        wiring_verified = setup_attestation.wiring_verified
+    backup_copy_paths: tuple[str, ...] = tuple(
+        path for copy in intent.backup_copies for path in (copy.first_path, copy.second_path)
+    )
+    backup_copy_sha256: tuple[str, ...] = tuple(
+        digest for copy in intent.backup_copies for digest in (copy.first_sha256, copy.second_sha256)
+    )
+    challenge_data = {
+        "operation_id": intent.operation_id,
+        "action": intent.action.value,
+        "model_id": intent.model_id,
+        "chip_name": intent.chip_name,
+        "capacity_bytes": intent.chip_capacity_bytes,
+        "artifact_sha256": intent.artifact_sha256,
+        "intent_sha256": intent.intent_sha256,
+        "exact_phrase": phrase,
+        "executable": intent.command.executable,
+        "argv": intent.command.argv,
+        "artifact_path": intent.artifact_path,
+        "artifact_manifest_path": intent.artifact_manifest_path,
+        "artifact_manifest_sha256": intent.artifact_manifest_sha256,
+        "primary_manifest_path": intent.primary_manifest_path,
+        "primary_manifest_sha256": intent.primary_manifest_sha256,
+        "recovery_manifest_path": intent.recovery_manifest_path,
+        "recovery_manifest_sha256": intent.recovery_manifest_sha256,
+        "backup_copy_paths": backup_copy_paths,
+        "backup_copy_sha256": backup_copy_sha256,
+        "setup_actor": setup_actor,
+        "setup_instrument_id": setup_instrument_id,
+        "setup_test_point": setup_test_point,
+        "programmer_voltage_mv": programmer_voltage_mv,
+        "chip_voltage_mv": chip_voltage_mv,
+        "setup_measured_at_utc": setup_measured_at_utc,
+        "interface_verified": interface_verified,
+        "wiring_verified": wiring_verified,
+    }
+    challenge_sha = _sha256(_json_bytes(challenge_data))
     return WriteApprovalChallenge(
         operation_id=intent.operation_id,
         action=intent.action,
@@ -776,6 +1029,25 @@ def create_write_approval_challenge(intent: WriteIntent) -> WriteApprovalChallen
         intent_sha256=intent.intent_sha256,
         exact_phrase=phrase,
         challenge_sha256=challenge_sha,
+        executable=intent.command.executable,
+        argv=intent.command.argv,
+        artifact_path=intent.artifact_path,
+        artifact_manifest_path=intent.artifact_manifest_path,
+        artifact_manifest_sha256=intent.artifact_manifest_sha256,
+        primary_manifest_path=intent.primary_manifest_path,
+        primary_manifest_sha256=intent.primary_manifest_sha256,
+        recovery_manifest_path=intent.recovery_manifest_path,
+        recovery_manifest_sha256=intent.recovery_manifest_sha256,
+        backup_copy_paths=backup_copy_paths,
+        backup_copy_sha256=backup_copy_sha256,
+        setup_actor=setup_actor,
+        setup_instrument_id=setup_instrument_id,
+        setup_test_point=setup_test_point,
+        programmer_voltage_mv=programmer_voltage_mv,
+        chip_voltage_mv=chip_voltage_mv,
+        setup_measured_at_utc=setup_measured_at_utc,
+        interface_verified=interface_verified,
+        wiring_verified=wiring_verified,
     )
 
 
@@ -827,9 +1099,9 @@ def accept_tui_confirmation(
     actor: str,
     event: TUIConfirmationEvent,
 ) -> HumanActionConfirmation:
-    """TUI approval is disabled until a dedicated reviewed screen is wired."""
+    """Reject generic event payloads; only the mounted-screen bridge can mint a receipt."""
     del challenge, actor, event
-    raise WriteApprovalError("TUI write approval is unavailable until the dedicated confirmation screen is integrated")
+    raise WriteApprovalError("TUI approval requires the live dedicated screen bridge; event payloads cannot mint receipts")
 
 
 def _mint_frontend_confirmation(
@@ -858,14 +1130,58 @@ def _mint_frontend_confirmation(
     return confirmation
 
 
+def _mint_mounted_tui_confirmation(
+    bridge: _MountedTUIConfirmationBridge,
+    *,
+    challenge: WriteApprovalChallenge,
+    actor: str,
+    confirmed_at: datetime,
+) -> HumanActionConfirmation:
+    if type(bridge) is not _MountedTUIConfirmationBridge:
+        raise WriteApprovalError("TUI receipt requires the private mounted-screen bridge")
+    with _TUI_BRIDGES_LOCK:
+        if _TUI_BRIDGES.get(bridge._bridge_id) is not bridge:
+            raise WriteApprovalError("TUI screen bridge is not live or was already invalidated")
+    _validate_challenge(challenge)
+    if not actor.strip() or not hmac.compare_digest(challenge.exact_phrase, f"FLASH {challenge.model_id.upper()} {challenge.operation_id} {challenge.intent_sha256[:12].upper()}"):
+        raise WriteApprovalError("mounted TUI challenge is malformed")
+    confirmation = object.__new__(HumanActionConfirmation)
+    evidence_id = secrets.token_urlsafe(32)
+    values = {
+        "evidence_id": evidence_id,
+        "challenge_sha256": challenge.challenge_sha256,
+        "exact_phrase": challenge.exact_phrase,
+        "actor": actor.strip(),
+        "confirmed_at_utc": confirmed_at.astimezone(timezone.utc).isoformat(),
+        "channel": ConfirmationChannel.TUI_EXPLICIT_ACTION,
+    }
+    for name, value in values.items():
+        object.__setattr__(confirmation, name, value)
+    with _FRONTEND_CONFIRMATIONS_LOCK:
+        with _TUI_BRIDGES_LOCK:
+            if _TUI_BRIDGES.get(bridge._bridge_id) is not bridge:
+                raise WriteApprovalError("TUI screen bridge expired before receipt issuance")
+            _FRONTEND_CONFIRMATIONS[evidence_id] = confirmation
+            _TUI_RECEIPT_BRIDGES[evidence_id] = bridge
+    return confirmation
+
+
 def _consume_frontend_confirmation(confirmation: HumanActionConfirmation) -> None:
     evidence_id = getattr(confirmation, "evidence_id", None)
     if not isinstance(evidence_id, str):
         raise WriteApprovalError("confirmation is not a live frontend interaction receipt")
     with _FRONTEND_CONFIRMATIONS_LOCK:
-        issued = _FRONTEND_CONFIRMATIONS.pop(evidence_id, None)
+        issued = _FRONTEND_CONFIRMATIONS.get(evidence_id)
+        bridge = _TUI_RECEIPT_BRIDGES.get(evidence_id)
     if issued is not confirmation:
-        raise WriteApprovalError("confirmation is fabricated, expired, or already used")
+        raise WriteApprovalError("confirmation is fabricated, expired, revoked, or already used")
+    if bridge is not None:
+        bridge._consume_confirmation(confirmation)
+    else:
+        with _FRONTEND_CONFIRMATIONS_LOCK:
+            if _FRONTEND_CONFIRMATIONS.get(evidence_id) is not confirmation:
+                raise WriteApprovalError("confirmation was revoked or already used")
+            _FRONTEND_CONFIRMATIONS.pop(evidence_id, None)
 
 
 def _require_factory_intent(intent: WriteIntent) -> None:
@@ -954,11 +1270,43 @@ def _validate_challenge(challenge: WriteApprovalChallenge) -> None:
     if (
         challenge.action is not WriteAction.FLASH
         or challenge.exact_phrase != expected_phrase
-        or challenge.challenge_sha256 != _sha256(challenge.exact_phrase.encode("utf-8"))
+        or challenge.challenge_sha256 != _challenge_checksum(challenge)
         or not _SHA256.fullmatch(challenge.intent_sha256)
         or not _SHA256.fullmatch(challenge.artifact_sha256)
+        or len(challenge.backup_copy_paths) != len(challenge.backup_copy_sha256)
+        or not all(_SHA256.fullmatch(item) for item in challenge.backup_copy_sha256)
+        or challenge.interface_verified is not True
+        or challenge.wiring_verified is not True
     ):
         raise WriteApprovalError("write challenge is malformed or does not bind an exact flash action")
+    observed = _parse_utc(challenge.setup_measured_at_utc, "challenge hardware setup time")
+    now = datetime.now(timezone.utc)
+    if observed > now + timedelta(seconds=30) or now - observed > _CURRENT_EVIDENCE_MAX_AGE:
+        raise WriteApprovalError("challenge hardware setup attestation is stale or future-dated")
+
+
+def _challenge_checksum(challenge: WriteApprovalChallenge) -> str:
+    payload = {
+        item.name: _canonical(getattr(challenge, item.name))
+        for item in fields(challenge)
+        if item.name != "challenge_sha256"
+    }
+    return _sha256(_json_bytes(payload))
+
+
+def _validate_challenge_against_intent(intent: WriteIntent, challenge: WriteApprovalChallenge) -> None:
+    _validate_challenge(challenge)
+    expected = create_write_approval_challenge(intent)
+    compared = (
+        "operation_id", "action", "model_id", "chip_name", "capacity_bytes", "artifact_sha256",
+        "intent_sha256", "exact_phrase", "executable", "argv", "artifact_path",
+        "artifact_manifest_path", "artifact_manifest_sha256", "primary_manifest_path",
+        "primary_manifest_sha256", "recovery_manifest_path", "recovery_manifest_sha256",
+        "backup_copy_paths", "backup_copy_sha256", "setup_actor", "setup_instrument_id",
+        "setup_test_point", "programmer_voltage_mv", "chip_voltage_mv",
+    )
+    if any(getattr(challenge, name) != getattr(expected, name) for name in compared):
+        raise WriteApprovalError("displayed challenge differs from the immutable staged write intent")
 
 
 def _manifest_cpu_count(manifest: Any) -> int:

@@ -349,13 +349,15 @@ def test_flashrom_writer_and_arbitrary_command_reject_write_flags(tmp_path, monk
     assert "rejected" in result[1].lower()
 
 
-def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
+def test_cli_flash_requires_staged_checkpoint_and_real_tty_before_hardware(tmp_path, monkeypatch):
     from click.testing import CliRunner
     from autoloader.__main__ import cli
     from autoloader.flasher.flashrom import FlashromRunner
 
-    rom = tmp_path / "candidate.rom"
-    rom.write_bytes(b"candidate firmware")
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("{}", encoding="utf-8")
+    request = tmp_path / "request.json"
+    request.write_text("{}", encoding="utf-8")
 
     def unexpected_write(*args, **kwargs):
         raise AssertionError("CLI flash must not call the physical writer")
@@ -363,10 +365,12 @@ def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
     monkeypatch.setattr(FlashromRunner, "write_rom", unexpected_write)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["flash", "--profile", "x200-libreboot", "--rom", str(rom)])
+    result = runner.invoke(cli, [
+        "flash", "--profile", "x200-libreboot", "--checkpoint", str(checkpoint), "--request", str(request),
+    ])
     assert result.exit_code != 0
-    assert "FLASH_UNAVAILABLE" in (result.output or "")
-    assert "no writer or subprocess was invoked" in (result.output or "")
+    assert "TTY_REQUIRED" in (result.output or "")
+    assert "--rom" not in (result.output or "")
 
 
 def test_cli_backup_rejects_invalid_request_before_any_hardware_read(monkeypatch, tmp_path):

@@ -15,6 +15,7 @@ from autoloader.ui.screens.verify_screen import VerifyScreen
 from autoloader.ui.screens.evidence_import import EvidenceImportScreen
 from autoloader.ui.screens.t430_handoff import T430HandoffScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
+from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
 from autoloader.application_controller import ApplicationController
 
 class AutoLoaderApp(App[None]):
@@ -42,6 +43,7 @@ class AutoLoaderApp(App[None]):
         "evidence_import": EvidenceImportScreen,
         "t430_handoff": T430HandoffScreen,
         "x_workflow_action": XWorkflowActionScreen,
+        "write_confirmation": WriteConfirmationScreen,
     }
 
     def __init__(self, *, controller: ApplicationController | None = None, **kwargs):
@@ -87,6 +89,8 @@ class AutoLoaderApp(App[None]):
         """Go back to previous screen."""
         if isinstance(self.screen, XWorkflowActionScreen) and self.screen.guard_navigation("going back"):
             return
+        if isinstance(self.screen, WriteConfirmationScreen) and self.screen.guard_navigation("going back"):
+            return
         if len(self.screen_stack) > 2:
             self.pop_screen()
         else:
@@ -95,6 +99,8 @@ class AutoLoaderApp(App[None]):
     async def action_quit(self) -> None:
         """Keep explicit workflow requests visible until their worker returns."""
         if isinstance(self.screen, XWorkflowActionScreen) and self.screen.guard_navigation("quitting"):
+            return
+        if isinstance(self.screen, WriteConfirmationScreen) and self.screen.guard_navigation("quitting"):
             return
         await super().action_quit()
 

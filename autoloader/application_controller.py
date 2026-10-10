@@ -42,13 +42,28 @@ from autoloader.workflow.types import (
     BuildIntentEvidence,
     CompatibilityDecision,
     DeviceEvidence,
+    OperationState,
     OperationPlan,
 )
 from autoloader.flasher.backup_service import BackupSetResult
+from autoloader.flasher.flashrom import ProgrammerType
+from autoloader.flasher.spi import ReadOnlySPITransport, SPIProbeService
 from autoloader.rom_builder.artifact_engine import ArtifactBuildResult, BlobInput
 from autoloader.workflow.x200_libreboot import X200LibrebootWorkflow
 from autoloader.workflow.x220_coreboot import X220CorebootWorkflow
 from autoloader.workflow.local_application_adapter import LocalWorkflowEvidenceAdapter
+from autoloader.workflow.write_approval import (
+    DeviceCaptureEvidence,
+    WriteApprovalLedger,
+    WriteIntentFactory,
+)
+from autoloader.workflow.write_service import (
+    ExternalSPIWriteService,
+    FreshWriteEvidence,
+    HardwareSetupAttestation,
+    WriteExecutionRequest,
+    WriteExecutionStatus,
+)
 
 
 class ApplicationAction(str, Enum):
@@ -79,6 +94,9 @@ class ApplicationStatus(str, Enum):
     BIOS_PREDICATE_READY = "BIOS_PREDICATE_READY"
     STAGED_HARDWARE_PENDING = "STAGED/HARDWARE_PENDING"
     NOT_PERFORMED = "NOT_PERFORMED"
+    WRITE_VERIFIED = "WRITE_VERIFIED"
+    WRITE_UNCERTAIN = "WRITE_UNCERTAIN"
+    WRITE_FAILED = "WRITE_FAILED"
 
 
 @dataclass(frozen=True)
@@ -711,6 +729,8 @@ class ApplicationController:
                 operation_journal_ref = str(operation_journal) if self._safe_checkpoint_path(operation_journal) else None
                 if operation_journal_ref is not None:
                     actions.append(ApplicationAction.INSPECT_CHECKPOINT)
+                if checkpoint_ref is not None and operation_journal_ref is not None and self.workflow_evidence_adapter is not None:
+                    actions.append(ApplicationAction.FLASH)
                 if checkpoint_ref is not None and self.workflow_evidence_adapter is not None:
                     actions.append(ApplicationAction.RESUME)
                 return ProfileStatus(
@@ -833,6 +853,10 @@ class ApplicationController:
         evidence_ref: str | None = None,
         checkpoint_path: str | Path | None = None,
         request_document: str | None = None,
+        hardware_setup: HardwareSetupAttestation | None = None,
+        frontend: str | None = None,
+        confirmation_screen: object | None = None,
+        screen_mount_nonce: str | None = None,
     ) -> ApplicationActionResult:
         """Route interface requests through a single fail-closed action gate."""
         profile_id = profile_id or self.selected_profile_id
@@ -859,6 +883,16 @@ class ApplicationController:
         if action is ApplicationAction.BUILD:
             return self._accept_profile_artifact(
                 profile_id, checkpoint_path=checkpoint_path, request_document=request_document, build=True
+            )
+        if action is ApplicationAction.FLASH:
+            return self._execute_external_write(
+                profile_id,
+                checkpoint_path=checkpoint_path,
+                request_document=request_document,
+                hardware_setup=hardware_setup,
+                frontend=frontend,
+                confirmation_screen=confirmation_screen,
+                screen_mount_nonce=screen_mount_nonce,
             )
         if action is ApplicationAction.DETECT_DEVICE:
             capture, status = self.detect_device()
@@ -947,13 +981,262 @@ class ApplicationController:
             ApplicationAction.RESUME: ("RESUME_EVIDENCE_REQUIRED", "Resume requires the exact durable workflow plan and fresh evidence."),
             ApplicationAction.BACKUP: ("BACKUP_UNAVAILABLE", "Backup capture is unavailable through the interactive interface; no SPI read was attempted."),
             ApplicationAction.BUILD: ("BUILD_UNAVAILABLE", "No firmware build was invoked; a validated, supported build environment and complete workflow evidence are required."),
-            ApplicationAction.FLASH: ("FLASH_UNAVAILABLE", "Physical firmware writes are disabled; no writer or subprocess was invoked."),
+            ApplicationAction.FLASH: (
+                "LIVE_TTY_WRITE_ROUTE_REQUIRED",
+                "Physical write approval is available through the OS-verified CLI TTY or the dedicated mounted Textual confirmation screen, with a staged X200/X220 checkpoint and fresh live setup measurements. No writer or subprocess was invoked by this fallback.",
+            ),
             ApplicationAction.RESTORE: ("RESTORE_UNAVAILABLE", "Firmware restore is disabled; no writer or subprocess was invoked."),
             ApplicationAction.READBACK: ("READBACK_NOT_PERFORMED", "Hardware read-back is unavailable through this interface; no SPI read was attempted."),
             ApplicationAction.BOOT_CHECK: ("BOOT_CHECK_NOT_PERFORMED", "No hardware boot check has been performed."),
         }
         code, message = unavailable.get(action, ("ACTION_UNAVAILABLE", "This action is unavailable."))
         return self._unavailable(action, code, message, profile_id)
+
+    def _execute_external_write(
+        self,
+        profile_id: str | None,
+        *,
+        checkpoint_path: str | Path | None,
+        request_document: str | None,
+        hardware_setup: HardwareSetupAttestation | None,
+        frontend: str | None,
+        confirmation_screen: object | None = None,
+        screen_mount_nonce: str | None = None,
+    ) -> ApplicationActionResult:
+        """Route CLI and the mounted dedicated Textual challenge through one service."""
+        if profile_id not in ("x200-libreboot", "x220-coreboot"):
+            return self._unavailable(
+                ApplicationAction.FLASH, "PROFILE_WRITE_UNAVAILABLE",
+                "Only the exact X200 Libreboot and X220 Coreboot external SPI profiles can reach the write service. T430 remains a separate human-run 1vyrain handoff.",
+                profile_id,
+            )
+        tui_bridge = None
+        if frontend == "textual":
+            try:
+                from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
+                if (
+                    type(confirmation_screen) is not WriteConfirmationScreen
+                    or not screen_mount_nonce
+                    or confirmation_screen.mount_nonce != screen_mount_nonce
+                    or not confirmation_screen.is_mounted
+                    or confirmation_screen.app.screen is not confirmation_screen
+                ):
+                    raise ValueError("The exact confirmation screen must be mounted and active")
+            except Exception as exc:
+                return self._unavailable(
+                    ApplicationAction.FLASH, "TUI_WRITE_ROUTE_BLOCKED",
+                    f"Only the exact currently mounted WriteConfirmationScreen can request a write challenge; no probe or writer was invoked. {exc}",
+                    profile_id,
+                )
+        elif frontend != "cli-tty":
+            return self._unavailable(
+                ApplicationAction.FLASH, "TUI_WRITE_ROUTE_BLOCKED",
+                "A write challenge is available only through the OS-verified CLI TTY or the mounted dedicated Textual confirmation screen. No probe or writer was invoked.",
+                profile_id,
+            )
+        if type(hardware_setup) is not HardwareSetupAttestation:
+            return self._unavailable(
+                ApplicationAction.FLASH, "LIVE_SETUP_ATTESTATION_REQUIRED",
+                "Enter fresh meter, instrument, test-point, wiring, and operator evidence in the live CLI prompt or dedicated mounted Textual screen; imported request JSON is not accepted as live evidence.",
+                profile_id,
+            )
+        if (
+            checkpoint_path is None
+            or not self._safe_checkpoint_path(checkpoint_path)
+            or request_document is None
+        ):
+            return self._unavailable(
+                ApplicationAction.FLASH, "STAGED_CHECKPOINT_AND_REQUEST_REQUIRED",
+                "A link-free existing workflow checkpoint and current typed operator request are required; arbitrary ROM paths are not accepted.",
+                profile_id,
+            )
+
+        adapter = self.workflow_evidence_adapter
+        if not isinstance(adapter, LocalWorkflowEvidenceAdapter):
+            return self._unavailable(
+                ApplicationAction.FLASH, "TRUSTED_LOCAL_WRITE_ADAPTER_UNAVAILABLE",
+                "The configured local adapter cannot reopen the accepted backup/artifact evidence and read-only SPI transport. No hardware call was made.",
+                profile_id,
+            )
+
+        from autoloader.workflow.write_approval import _directory_fsync_supported
+        if not _directory_fsync_supported():
+            return self._unavailable(
+                ApplicationAction.FLASH, "DURABLE_APPROVAL_UNAVAILABLE",
+                "Physical write approval is unavailable because this platform cannot durably fsync approval directories. No DMI/SPI operation was invoked.",
+                profile_id,
+            )
+
+        # Ledger construction establishes the durable write platform before
+        # workflow reopening can perform any local detection/probe work.
+        operation_journal_path: str | None = None
+        try:
+            ledger = WriteApprovalLedger(self._write_approval_directory())
+            path = Path(checkpoint_path).expanduser()
+            workflow = self._reconstruct_x_workflow(profile_id, path, request_document)
+            plan = workflow.operation_plan
+            backup = workflow.backup_set
+            recovery = workflow.recovery_readiness
+            proposal = workflow.proposed_external_spi_plan
+            if (
+                workflow.result.status != "STAGED/HARDWARE_PENDING"
+                or plan is None
+                or backup is None
+                or recovery is None
+                or proposal is None
+                or proposal.flash_write_enabled
+                or proposal.restore_write_enabled
+            ):
+                raise ValueError("Only a freshly reopened exact staged software workflow can request a separately approved hardware write")
+            if backup.programmer != ProgrammerType.CH341A.value:
+                raise ValueError("Only the reviewed external ch341a_spi command is supported by this write frontend")
+            operation_journal_path = str(workflow.operation_journal_path or "")
+            artifact_manifest_path = proposal.artifact_manifest_path
+            if (
+                proposal.operation_id != workflow.operation_id
+                or proposal.artifact_path != plan.artifact.path
+                or proposal.artifact_sha256 != plan.artifact.expected_sha256
+                or not operation_journal_path
+                or proposal.operation_journal_path != operation_journal_path
+            ):
+                raise ValueError("The proposed whole-chip plan differs from the reopened operation/artifact evidence")
+
+            request = WriteExecutionRequest(
+                plan=plan,
+                operation_id=workflow.operation_id,
+                backup_set=backup,
+                recovery_readiness=recovery,
+                operation_journal_path=operation_journal_path,
+                artifact_manifest_path=artifact_manifest_path,
+            )
+            provider = _ControllerFreshWriteEvidenceProvider(
+                model_detector=self.model_detector,
+                bios_detector=self.bios_detector,
+                transport=adapter.transport,
+                programmer=ProgrammerType.CH341A,
+                setup=hardware_setup,
+            )
+            service = ExternalSPIWriteService(
+                intent_factory=WriteIntentFactory(
+                    adapter.backup_service,
+                    validator=self.validator,
+                    artifact_engine=adapter.artifact_engine,
+                ),
+                approval_ledger=ledger,
+                evidence_provider=provider,
+                read_transport=adapter.transport,
+            )
+            if frontend == "textual":
+                from autoloader.workflow.write_approval import _create_mounted_tui_confirmation_bridge
+                tui_bridge = _create_mounted_tui_confirmation_bridge(
+                    confirmation_screen,
+                    mount_nonce=screen_mount_nonce or "",
+                )
+            if tui_bridge is None:
+                result = service.execute(request)
+            else:
+                result = service.execute(request, _tui_bridge=tui_bridge)
+            status_by_result = {
+                WriteExecutionStatus.WRITE_VERIFIED: ApplicationStatus.WRITE_VERIFIED,
+                WriteExecutionStatus.UNCERTAIN: ApplicationStatus.WRITE_UNCERTAIN,
+                WriteExecutionStatus.FAILED: ApplicationStatus.WRITE_FAILED,
+                WriteExecutionStatus.BLOCKED: ApplicationStatus.NOT_PERFORMED,
+            }
+            return ApplicationActionResult(
+                ApplicationAction.FLASH,
+                status_by_result[result.status],
+                result.code,
+                result.message,
+                (f"operation={result.operation_id}", f"artifact_sha256={result.artifact_sha256 or proposal.artifact_sha256}", f"readback_sha256={result.readback_sha256 or 'not-verified'}", f"boot={result.boot_status.value}"),
+                (str(path), operation_journal_path, artifact_manifest_path),
+            )
+        except Exception as exc:
+            if tui_bridge is not None:
+                tui_bridge.invalidate("The controller ended before the TUI challenge was consumed.")
+            # Preserve every durable post-start outcome even if an exception
+            # escapes after the service recorded it. Never relabel a terminal
+            # WRITE_FAILED or WRITE_VERIFIED journal as a preflight failure.
+            try:
+                journal_path = Path(operation_journal_path).expanduser() if operation_journal_path else None
+                if journal_path is not None:
+                    checkpoint = OperationJournal.inspect_checkpoint(journal_path)
+                else:
+                    checkpoint = None
+                if checkpoint is not None and checkpoint.state in {
+                    OperationState.WRITE_STARTED,
+                    OperationState.WRITE_FAILED,
+                    OperationState.WRITE_UNCERTAIN,
+                    OperationState.WRITE_VERIFIED,
+                }:
+                    last_entry = checkpoint.entries[-1] if checkpoint.entries else None
+                    journal_state = checkpoint.state
+                    status_by_state = {
+                        OperationState.WRITE_FAILED: ApplicationStatus.WRITE_FAILED,
+                        OperationState.WRITE_UNCERTAIN: ApplicationStatus.WRITE_UNCERTAIN,
+                        OperationState.WRITE_VERIFIED: ApplicationStatus.WRITE_VERIFIED,
+                        OperationState.WRITE_STARTED: ApplicationStatus.WRITE_UNCERTAIN,
+                    }
+                    code = (
+                        last_entry.code if last_entry is not None
+                        else "WRITE_STARTED_STATE_UNCERTAIN"
+                    )
+                    details: dict[str, Any] = {}
+                    if last_entry is not None:
+                        try:
+                            parsed = json.loads(last_entry.message)
+                            if isinstance(parsed, dict):
+                                details = parsed
+                        except (TypeError, json.JSONDecodeError):
+                            pass
+                    detail_message = details.get("message")
+                    if not isinstance(detail_message, str):
+                        detail_message = last_entry.message if last_entry is not None else "No terminal journal event was available."
+                    if journal_state is OperationState.WRITE_VERIFIED:
+                        message = (
+                            "The durable operation journal records WRITE_VERIFIED after the read-back comparison. "
+                            "A later controller error occurred; inspect this journal before continuing. Boot remains NOT_PERFORMED."
+                        )
+                    elif journal_state is OperationState.WRITE_FAILED:
+                        message = (
+                            "The durable operation journal records WRITE_FAILED. Preserve the device and evidence; "
+                            "do not retry automatically. " + detail_message
+                        )
+                    elif journal_state is OperationState.WRITE_UNCERTAIN:
+                        message = (
+                            "The durable operation journal records WRITE_UNCERTAIN. Preserve the device and evidence; "
+                            "do not retry or restore automatically. " + detail_message
+                        )
+                    else:
+                        message = (
+                            "The durable journal remains at WRITE_STARTED, so physical state is uncertain. "
+                            "Preserve the device and evidence; do not retry or restore."
+                        )
+                    evidence_refs = [str(journal_path), f"journal_state={journal_state.value}"]
+                    for key in ("artifact_sha256", "readback_sha256"):
+                        value = details.get(key)
+                        if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+                            evidence_refs.append(f"{key}={value}")
+                    return ApplicationActionResult(
+                        ApplicationAction.FLASH,
+                        status_by_state[journal_state],
+                        code,
+                        f"{message} Controller exception: {exc}",
+                        (f"durable_state={journal_state.value}",),
+                        tuple(evidence_refs),
+                    )
+            except Exception:
+                pass
+            return self._unavailable(ApplicationAction.FLASH, "WRITE_PREFLIGHT_BLOCKED", str(exc), profile_id)
+
+    @staticmethod
+    def _write_approval_directory() -> Path:
+        if os.environ.get("LOCALAPPDATA"):
+            root = Path(os.environ["LOCALAPPDATA"]) / "LibreCoreAutoLoader" / "state"
+        elif os.environ.get("XDG_STATE_HOME"):
+            root = Path(os.environ["XDG_STATE_HOME"]) / "libre-core-autoloader"
+        else:
+            root = Path.home() / ".local" / "state" / "libre-core-autoloader"
+        return root / "write-approvals"
 
     @staticmethod
     def evidence_document_reference(document: str) -> str:
@@ -1411,3 +1694,39 @@ class ApplicationController:
         }
         found.update(by_mtm[prefix] for prefix in prefixes if prefix in by_mtm)
         return next(iter(found)) if len(found) == 1 else None
+
+
+class _ControllerFreshWriteEvidenceProvider:
+    """Collect fresh local identity/probe plus one live CLI setup attestation."""
+
+    def __init__(
+        self,
+        *,
+        model_detector: ModelDetector,
+        bios_detector: BIOSDetector,
+        transport: ReadOnlySPITransport,
+        programmer: ProgrammerType,
+        setup: HardwareSetupAttestation,
+    ) -> None:
+        self.model_detector = model_detector
+        self.bios_detector = bios_detector
+        self.transport = transport
+        self.programmer = programmer
+        self.setup = setup
+
+    def collect(self, _plan: OperationPlan) -> FreshWriteEvidence:
+        capture = T430DetectionCapture.detect_now(
+            model_detector=self.model_detector,
+            bios_detector=self.bios_detector,
+        )
+        probe = SPIProbeService(self.transport).probe(self.programmer)
+        return FreshWriteEvidence(
+            capture=DeviceCaptureEvidence(
+                capture_id=capture.capture_id,
+                observed_at_utc=capture.observed_at.isoformat(),
+                device=capture.device,
+                source="local-dmi",
+            ),
+            probe=probe,
+            setup=self.setup,
+        )

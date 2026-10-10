@@ -5,9 +5,10 @@ import threading
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
+import pytest
 from click.testing import CliRunner
 from textual.screen import Screen
-from textual.widgets import Button, Input, RadioButton, Static, TextArea
+from textual.widgets import Button, Checkbox, Input, RadioButton, Static, TextArea
 
 from autoloader.app import AutoLoaderApp
 from autoloader.application_controller import ApplicationAction, ApplicationController, ApplicationStatus
@@ -21,6 +22,7 @@ from autoloader.ui.screens.pathway_select import PathwaySelectScreen
 from autoloader.ui.screens.rom_config import RomConfigScreen
 from autoloader.ui.screens.verify_screen import VerifyScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
+from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
 from autoloader.__main__ import cli
 
 
@@ -29,6 +31,7 @@ def test_app_registers_only_v1_workflow_screens():
     expected = {
         "welcome", "model_select", "pathway_select", "rom_config", "build_progress",
         "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "x_workflow_action",
+        "write_confirmation",
     }
     assert set(app.SCREENS) == expected
     for screen in app.SCREENS.values():
@@ -46,7 +49,7 @@ def test_screens_mount_without_hardware_input_or_false_success():
             assert "not run" in str(app.screen.query_one("#detection-status", Static).render()).lower()
 
             app.set_selected_profile("x200-libreboot")
-            for name in ("model_select", "pathway_select", "rom_config", "build_progress", "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff"):
+            for name in ("model_select", "pathway_select", "rom_config", "build_progress", "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "write_confirmation"):
                 await app.push_screen(name)
                 await pilot.pause()
                 assert isinstance(app.screen, app.SCREENS[name])
@@ -56,6 +59,10 @@ def test_screens_mount_without_hardware_input_or_false_success():
                 if name == "flash_guide":
                     assert app.screen.query_one("#btn-flash", Button).disabled
                     assert app.screen.query_one("#btn-verify", Button).disabled
+                    flash_status = app.screen.query_one("#flash-status", Static).render().plain.lower()
+                    assert "this screen does not perform" in flash_status
+                    assert "inspect an operation journal" in flash_status
+                    assert "has been performed" not in flash_status
                 if name == "backup_screen":
                     assert app.screen.query_one("#btn-create", Button).disabled
                     assert app.screen.query_one("#btn-restore", Button).disabled
@@ -63,6 +70,9 @@ def test_screens_mount_without_hardware_input_or_false_success():
                     report = " ".join(widget.render().plain for widget in app.screen.query(Static))
                     assert "NOT_PERFORMED" in report
                     assert "unavailable" in report.lower()
+                if name == "write_confirmation":
+                    assert app.screen.query_one("#write-submit", Button).disabled
+                    assert "no validated staged" in app.screen.query_one("#write-screen-status", Static).render().plain.lower()
                 app.pop_screen()
                 await pilot.pause()
 
@@ -465,8 +475,14 @@ def test_cli_readback_and_hardware_commands_fail_closed_with_shared_codes(monkey
 
     verify = CliRunner().invoke(cli, ["verify", "--profile", "x200-libreboot"])
     assert verify.exit_code != 0 and "READBACK_NOT_PERFORMED" in verify.output
-    flash = CliRunner().invoke(cli, ["flash", "--profile", "x200-libreboot", "--rom", str(rom)])
-    assert flash.exit_code != 0 and "FLASH_UNAVAILABLE" in flash.output
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("{}", encoding="utf-8")
+    request_file = tmp_path / "request.json"
+    request_file.write_text("{}", encoding="utf-8")
+    flash = CliRunner().invoke(cli, [
+        "flash", "--profile", "x200-libreboot", "--checkpoint", str(checkpoint), "--request", str(request_file),
+    ])
+    assert flash.exit_code != 0 and "TTY_REQUIRED" in flash.output
     checkpoint = tmp_path / "workflow.json"
     checkpoint.write_text("{}", encoding="utf-8")
     malformed_request = tmp_path / "request.json"
@@ -497,6 +513,61 @@ def test_cli_and_tui_share_action_codes_and_authoritative_profile_status(monkeyp
     assert observed == [ApplicationAction.READBACK]
     cli_status = real_controller.select_profile("x220-coreboot")
     assert cli_status.allowed_next_actions == real_controller.profile_status().allowed_next_actions
+
+
+def test_cli_flash_collects_live_tty_fields_and_routes_through_controller(tmp_path, monkeypatch):
+    from autoloader import __main__ as entrypoint
+    from autoloader.application_controller import ApplicationActionResult
+
+    checkpoint = tmp_path / "staged.json"
+    checkpoint.write_text("synthetic test checkpoint", encoding="utf-8")
+    request_path = tmp_path / "request.json"
+    request_path.write_text('{"version":1}', encoding="utf-8")
+    calls = []
+
+    class FakeController:
+        def select_profile(self, profile):
+            self.profile = profile
+
+        def request_action(self, action, **kwargs):
+            calls.append((action, kwargs))
+            return ApplicationActionResult(
+                action, ApplicationStatus.WRITE_VERIFIED, "WRITE_VERIFIED",
+                "synthetic fake-controller result", evidence_refs=("synthetic-journal",),
+            )
+
+    monkeypatch.setattr(entrypoint, "_require_live_write_tty", lambda: None)
+    monkeypatch.setattr(entrypoint, "ApplicationController", FakeController)
+    result = CliRunner().invoke(cli, [
+        "flash", "--profile", "x200-libreboot", "--checkpoint", str(checkpoint), "--request", str(request_path),
+    ], input="Test Operator\nDMM-1\nboard VCC test point\n3300\n3300\ny\ny\n")
+
+    assert result.exit_code == 0, result.output
+    assert "synthetic-journal" in result.output
+    assert "Boot validation: NOT_PERFORMED" in result.output
+    assert len(calls) == 1
+    action, kwargs = calls[0]
+    assert action is ApplicationAction.FLASH
+    assert kwargs["profile_id"] == "x200-libreboot"
+    assert kwargs["checkpoint_path"] == checkpoint
+    assert kwargs["request_document"] == '{"version":1}'
+    assert kwargs["frontend"] == "cli-tty"
+    assert kwargs["hardware_setup"].actor == "Test Operator"
+    assert kwargs["hardware_setup"].programmer_voltage_mv == 3300
+    assert kwargs["hardware_setup"].chip_voltage_mv == 3300
+
+
+def test_cli_t430_flash_rejected_before_external_spi_prompts(tmp_path, monkeypatch):
+    from autoloader import __main__ as entrypoint
+
+    checkpoint = tmp_path / "staged.json"
+    request = tmp_path / "request.json"
+    checkpoint.write_text("{}", encoding="utf-8")
+    request.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(entrypoint, "_collect_live_write_setup", lambda: (_ for _ in ()).throw(AssertionError("T430 must not get SPI setup prompts")))
+    result = CliRunner().invoke(cli, ["flash", "--profile", "t430-1vyrain", "--checkpoint", str(checkpoint), "--request", str(request)])
+    assert result.exit_code != 0
+    assert "PROFILE_WRITE_UNAVAILABLE" in result.output
 
 
 def test_cli_candidate_evidence_import_remains_unknown_and_strict(tmp_path):
@@ -581,3 +652,369 @@ def test_app_profile_selection_routes_through_controller_and_rejects_non_v1():
         pass
     else:
         raise AssertionError("non-V1 model selection should fail")
+
+
+def test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared_controller(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    import autoloader.application_controller as controller_module
+    import autoloader.workflow.write_approval as approval_module
+    from autoloader.application_controller import ProfileStatus
+    from autoloader.workflow.write_approval import ConfirmationChannel, create_write_approval_challenge
+    from autoloader.workflow.write_service import WriteExecutionResult, WriteExecutionStatus
+    from autoloader.workflow.x200_libreboot import X200ExternalSPIPlan
+    from autoloader.workflow.types import CompatibilityDecision, OperationState, ProgrammerKind, VerificationStatus
+    from tests.test_phase10a_write_approval import _prepared_write
+
+    plan, intent, _backup_service, _probe, backup, recovery, _transport, paths, operation_id = _prepared_write(tmp_path / "prepared")
+    challenge = create_write_approval_challenge(intent)
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("synthetic test workflow checkpoint", encoding="utf-8")
+    proposal = X200ExternalSPIPlan(
+        operation_id=operation_id,
+        profile_id="x200-libreboot",
+        chip_id=plan.topology.chips[0].chip_id,
+        chip_name=backup.chips[0].observed_chip_name,
+        capacity_bytes=plan.topology.chips[0].capacity_bytes,
+        voltage_mv=3300,
+        programmer_kind=ProgrammerKind.EXTERNAL_SPI,
+        artifact_path=plan.artifact.path,
+        artifact_sha256=plan.artifact.expected_sha256,
+        artifact_manifest_path=paths["artifact_manifest_path"],
+        artifact_manifest_sha256="a" * 64,
+        backup_operation_id=backup.operation_id,
+        recovery_record_id=recovery.record_id,
+        operation_journal_path=paths["operation_journal_path"],
+    )
+    workflow = SimpleNamespace(
+        result=SimpleNamespace(status="STAGED/HARDWARE_PENDING"),
+        operation_plan=plan,
+        backup_set=backup,
+        recovery_readiness=recovery,
+        proposed_external_spi_plan=proposal,
+        operation_journal_path=paths["operation_journal_path"],
+        operation_id=operation_id,
+    )
+    controller = ApplicationController()
+    controller.select_profile("x200-libreboot")
+    staged_status = ProfileStatus(
+        profile_id="x200-libreboot",
+        model_id="x200",
+        firmware_family="libreboot",
+        status=ApplicationStatus.STAGED_HARDWARE_PENDING,
+        decision=CompatibilityDecision.ALLOWED,
+        stage="STAGED",
+        reasons=("synthetic staged fixture",),
+        evidence_refs=("synthetic-only",),
+        allowed_next_actions=(ApplicationAction.VIEW_EVIDENCE, ApplicationAction.FLASH),
+        operation_id=operation_id,
+        checkpoint_ref=str(checkpoint),
+        operation_journal_ref=paths["operation_journal_path"],
+    )
+    monkeypatch.setattr(controller, "profile_status", lambda _profile_id=None: staged_status)
+    monkeypatch.setattr(controller, "_reconstruct_x_workflow", lambda *_args, **_kwargs: workflow)
+    monkeypatch.setattr(controller, "_write_approval_directory", lambda: tmp_path / "approvals")
+    monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+
+    class FakeLedger:
+        def __init__(self, _directory):
+            pass
+
+    receipts = []
+    bridges = []
+    write_started = threading.Event()
+    release_service = threading.Event()
+
+    class FakeWriteService:
+        def __init__(self, **_kwargs):
+            pass
+
+        def execute(self, request, *, _tui_bridge=None):
+            assert request.operation_id == operation_id
+            assert _tui_bridge is not None
+            bridges.append(_tui_bridge)
+            confirmation = _tui_bridge.collect(challenge, plan.programmer.attested_by or "")
+            receipts.append(confirmation)
+            approval_module._consume_frontend_confirmation(confirmation)
+            # Synthetic state-machine event only: no writer object or process
+            # is called by this test. Hold the worker after WRITE_STARTED to
+            # exercise app navigation while the receipt is already consumed.
+            from autoloader.workflow.journal import OperationJournal
+            journal = OperationJournal.load_checkpoint(request.operation_journal_path, expected_plan=request.plan)
+            journal.append(
+                action="synthetic-test-boundary",
+                from_state=OperationState.BACKUP_VERIFIED,
+                to_state=OperationState.WRITE_STARTED,
+                code="WRITE_STARTED",
+                message="synthetic UI lifecycle fixture; no writer call",
+            )
+            write_started.set()
+            release_service.wait(timeout=8)
+            journal.append(
+                action="synthetic-test-boundary",
+                from_state=OperationState.WRITE_STARTED,
+                to_state=OperationState.WRITE_UNCERTAIN,
+                code="SYNTHETIC_WRITE_UNCERTAIN",
+                message="synthetic UI lifecycle fixture; no writer call",
+            )
+            return WriteExecutionResult(
+                WriteExecutionStatus.UNCERTAIN,
+                "SYNTHETIC_WRITE_UNCERTAIN",
+                request.operation_id,
+                "synthetic fake route; no hardware operation or writer call",
+                OperationState.WRITE_UNCERTAIN,
+                artifact_sha256=request.plan.artifact.expected_sha256,
+                boot_status=VerificationStatus.NOT_PERFORMED,
+            )
+
+    monkeypatch.setattr(controller_module, "WriteApprovalLedger", FakeLedger)
+    monkeypatch.setattr(controller_module, "ExternalSPIWriteService", FakeWriteService)
+    app = AutoLoaderApp(controller=controller)
+
+    async def runner():
+        async with app.run_test(size=(100, 40)) as pilot:
+            await app.push_screen(WriteConfirmationScreen())
+            screen = app.screen
+            screen.query_one("#write-checkpoint", Input).value = str(checkpoint)
+            screen.query_one("#write-request", TextArea).load_text('{"version":1}')
+            screen.query_one("#write-actor", Input).value = plan.programmer.attested_by or ""
+            screen.query_one("#write-instrument", Input).value = plan.programmer.instrument_id or ""
+            screen.query_one("#write-test-point", Input).value = plan.programmer.measurement_test_point or ""
+            screen.query_one("#write-programmer-mv", Input).value = "3300"
+            screen.query_one("#write-chip-mv", Input).value = "3300"
+            screen.query_one("#write-interface-verified", Checkbox).value = True
+            screen.query_one("#write-wiring-verified", Checkbox).value = True
+            await pilot.click("#write-submit")
+            for _ in range(80):
+                await pilot.pause(0.05)
+                if challenge.exact_phrase in screen.query_one("#write-challenge-details", Static).render().plain:
+                    break
+            assert challenge.exact_phrase in screen.query_one("#write-challenge-details", Static).render().plain, (
+                f"screen status={screen.query_one('#write-screen-status', Static).render().plain!r}; "
+                f"challenge status={screen.query_one('#write-challenge-status', Static).render().plain!r}; "
+                f"worker={screen.worker!r}"
+            )
+            preview = screen.query_one("#write-challenge-details", Static).render().plain
+            assert challenge.artifact_sha256 in preview
+            assert challenge.artifact_manifest_sha256 in preview
+            assert challenge.setup_actor in preview
+            assert challenge.setup_instrument_id in preview
+            assert challenge.setup_test_point in preview
+            assert f"programmer {challenge.programmer_voltage_mv} mV" in preview
+            assert f"chip {challenge.chip_voltage_mv} mV" in preview
+            assert f"interface verified {challenge.interface_verified}" in preview
+            assert f"wiring verified {challenge.wiring_verified}" in preview
+            assert screen.query_one("#write-actor", Input).disabled
+            assert screen.query_one("#write-instrument", Input).disabled
+            assert screen.query_one("#write-programmer-mv", Input).disabled
+            bridge = bridges[0]
+            with pytest.raises(approval_module.WriteApprovalError, match="different screen instance"):
+                bridge._confirm_from_screen(object(), screen.mount_nonce, challenge.exact_phrase)
+            await pilot.press("b")
+            await pilot.click("#write-back")
+            await pilot.press("q")
+            await pilot.pause()
+            assert app.screen is screen and screen.operation_active
+            screen.query_one("#write-challenge-phrase", Input).value = "FLASH X200 incorrect"
+            screen._confirm()
+            assert "does not exactly match" in screen.query_one("#write-challenge-status", Static).render().plain
+            screen.query_one("#write-challenge-phrase", Input).value = challenge.exact_phrase
+            assert screen.query_one("#write-challenge-phrase", Input).value == challenge.exact_phrase
+            assert not screen.query_one("#write-confirm", Button).disabled
+            await pilot.pause()
+            await pilot.click("#write-confirm")
+            for _ in range(80):
+                await pilot.pause(0.05)
+                if write_started.is_set():
+                    break
+            assert write_started.is_set(), (
+                f"screen status={screen.query_one('#write-screen-status', Static).render().plain!r}; "
+                f"challenge status={screen.query_one('#write-challenge-status', Static).render().plain!r}; "
+                f"receipts={len(receipts)}; bridge errors={bridges[0]._error!r}; "
+                f"phrase={screen.query_one('#write-challenge-phrase', Input).value!r}; "
+                f"expected={challenge.exact_phrase!r}; confirm disabled={screen.query_one('#write-confirm', Button).disabled}"
+            )
+            assert screen.operation_active
+            await pilot.press("b")
+            await pilot.press("q")
+            await pilot.click("#write-back")
+            assert app.screen is screen and screen.operation_active
+            release_service.set()
+            for _ in range(80):
+                await pilot.pause(0.05)
+                if not screen.operation_active:
+                    break
+            assert "SYNTHETIC_WRITE_UNCERTAIN" in screen.query_one("#write-screen-status", Static).render().plain
+            assert len(receipts) == 1
+            assert receipts[0].channel is ConfirmationChannel.TUI_EXPLICIT_ACTION
+            with pytest.raises(approval_module.WriteApprovalError, match="already submitted"):
+                bridge._confirm_from_screen(screen, screen.mount_nonce, challenge.exact_phrase)
+
+    asyncio.run(runner())
+
+
+def test_tui_cancel_or_unmount_wakes_actual_service_worker_without_writer_call(tmp_path, monkeypatch):
+    import threading
+
+    import autoloader.workflow.journal as journal_module
+    import autoloader.workflow.write_approval as approval_module
+    from tests.test_phase10b_write_service import _service_request
+
+    monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+    monkeypatch.setattr(approval_module, "_sync_directory", lambda _path: None)
+    monkeypatch.setattr(journal_module, "_directory_fsync_supported", lambda: True)
+    monkeypatch.setattr(journal_module, "_sync_directory", lambda _path: None)
+    service, request, writer, _readback = _service_request(tmp_path / "service", monkeypatch)
+
+    async def runner():
+        app = AutoLoaderApp()
+        async with app.run_test() as pilot:
+            for action in ("cancel", "unmount"):
+                await app.push_screen(WriteConfirmationScreen())
+                screen = app.screen
+                bridge = approval_module._create_mounted_tui_confirmation_bridge(
+                    screen, mount_nonce=screen.mount_nonce
+                )
+                errors = []
+
+                def run_service():
+                    try:
+                        service.execute(request, _tui_bridge=bridge)
+                    except Exception as exc:
+                        errors.append(exc)
+
+                thread = threading.Thread(target=run_service, daemon=True)
+                thread.start()
+                for _ in range(100):
+                    await pilot.pause(0.05)
+                    if "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain:
+                        break
+                assert "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain, (
+                    f"screen status={screen.query_one('#write-screen-status', Static).render().plain!r}; "
+                    f"challenge status={screen.query_one('#write-challenge-status', Static).render().plain!r}; "
+                    f"worker alive={thread.is_alive()} errors={errors!r}"
+                )
+                if action == "cancel":
+                    await pilot.click("#write-cancel")
+                else:
+                    app.pop_screen()
+                    await pilot.pause(0.2)
+                thread.join(timeout=4)
+                assert not thread.is_alive()
+                assert len(errors) == 1
+                assert isinstance(errors[0], approval_module.WriteApprovalError)
+                assert writer.calls == []
+
+    asyncio.run(runner())
+
+
+def test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption(tmp_path, monkeypatch):
+    """A phrase click cannot race an unmount into consuming approval later."""
+    import threading
+
+    import autoloader.workflow.journal as journal_module
+    import autoloader.workflow.write_approval as approval_module
+    from tests.test_phase10b_write_service import _service_request
+
+    monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+    monkeypatch.setattr(approval_module, "_sync_directory", lambda _path: None)
+    monkeypatch.setattr(journal_module, "_directory_fsync_supported", lambda: True)
+    monkeypatch.setattr(journal_module, "_sync_directory", lambda _path: None)
+    service, request, writer, _readback = _service_request(tmp_path / "service", monkeypatch)
+    original_consume = approval_module._consume_frontend_confirmation
+    consume_entered = threading.Event()
+    release_consume = threading.Event()
+
+    def gated_consume(confirmation):
+        if confirmation.channel.value == "tui-explicit-action":
+            consume_entered.set()
+            if not release_consume.wait(timeout=5):
+                raise AssertionError("test did not release the receipt-consumption gate")
+        original_consume(confirmation)
+
+    monkeypatch.setattr(approval_module, "_consume_frontend_confirmation", gated_consume)
+
+    async def runner():
+        app = AutoLoaderApp()
+        async with app.run_test(size=(100, 40)) as pilot:
+            for action in ("cancel", "unmount"):
+                await app.push_screen(WriteConfirmationScreen())
+                screen = app.screen
+                bridge = approval_module._create_mounted_tui_confirmation_bridge(
+                    screen, mount_nonce=screen.mount_nonce
+                )
+                errors = []
+
+                def run_service():
+                    try:
+                        service.execute(request, _tui_bridge=bridge)
+                    except Exception as exc:
+                        errors.append(exc)
+
+                thread = threading.Thread(target=run_service, daemon=True)
+                thread.start()
+                for _ in range(100):
+                    await pilot.pause(0.05)
+                    if "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain:
+                        break
+                assert "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain
+                challenge = screen._challenge
+                assert challenge is not None
+                screen.query_one("#write-challenge-phrase", Input).value = challenge.exact_phrase
+                await pilot.click("#write-confirm")
+                for _ in range(100):
+                    await pilot.pause(0.05)
+                    if consume_entered.is_set():
+                        break
+                assert consume_entered.is_set(), "service did not reach receipt consumption"
+                if action == "cancel":
+                    await pilot.click("#write-cancel")
+                else:
+                    app.pop_screen()
+                    await pilot.pause(0.1)
+                release_consume.set()
+                thread.join(timeout=4)
+                assert not thread.is_alive()
+                assert len(errors) == 1
+                assert isinstance(errors[0], approval_module.WriteApprovalError)
+                assert writer.calls == []
+                consume_entered.clear()
+                release_consume.clear()
+
+    asyncio.run(runner())
+
+
+def test_staged_flash_action_opens_dedicated_confirmation_screen(monkeypatch):
+    from autoloader.application_controller import ProfileStatus
+    from autoloader.workflow.types import CompatibilityDecision
+
+    controller = ApplicationController()
+    controller.select_profile("x200-libreboot")
+    status = ProfileStatus(
+        profile_id="x200-libreboot",
+        model_id="x200",
+        firmware_family="libreboot",
+        status=ApplicationStatus.STAGED_HARDWARE_PENDING,
+        decision=CompatibilityDecision.ALLOWED,
+        stage="STAGED",
+        reasons=("synthetic staged test status",),
+        evidence_refs=("synthetic fixture",),
+        allowed_next_actions=(ApplicationAction.VIEW_EVIDENCE, ApplicationAction.FLASH),
+        operation_id="synthetic-operation",
+        checkpoint_ref="C:/synthetic/workflow.json",
+        operation_journal_ref="C:/synthetic/operation.json",
+    )
+    monkeypatch.setattr(controller, "profile_status", lambda _profile_id=None: status)
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen("pathway_select")
+            await pilot.pause()
+            assert app.screen.query_one("#action-flash", Button).disabled is False
+            await pilot.click("#action-flash")
+            await pilot.pause()
+            assert isinstance(app.screen, WriteConfirmationScreen)
+            assert app.screen.query_one("#write-submit", Button).disabled is False
+
+    asyncio.run(runner())

@@ -16,7 +16,7 @@ from autoloader.detection.model import DetectionResult
 from autoloader.flasher.backup_service import BackupSetService
 from autoloader.flasher.flashrom import FlashromRunner
 from autoloader.rom_builder.artifact_engine import ArtifactEngine
-from autoloader.workflow.types import CompatibilityDecision, DeviceEvidence
+from autoloader.workflow.types import CompatibilityDecision, DeviceEvidence, OperationState
 
 
 class _ModelDetector:
@@ -400,7 +400,7 @@ def test_mutating_or_hardware_actions_fail_closed_with_no_writer_build_or_spi_ca
     expected_codes = {
         ApplicationAction.BACKUP: "BACKUP_UNAVAILABLE",
         ApplicationAction.BUILD: "ARTIFACT_REQUEST_REQUIRED",
-        ApplicationAction.FLASH: "FLASH_UNAVAILABLE",
+        ApplicationAction.FLASH: "TUI_WRITE_ROUTE_BLOCKED",
         ApplicationAction.RESTORE: "RESTORE_UNAVAILABLE",
         ApplicationAction.READBACK: "READBACK_NOT_PERFORMED",
         ApplicationAction.BOOT_CHECK: "BOOT_CHECK_NOT_PERFORMED",
@@ -411,6 +411,249 @@ def test_mutating_or_hardware_actions_fail_closed_with_no_writer_build_or_spi_ca
         assert result.status is ApplicationStatus.NOT_PERFORMED
         assert result.progress_percent is None
     assert calls == []
+
+
+def test_tui_flash_request_stays_blocked_even_with_candidate_document(tmp_path, monkeypatch):
+    controller = ApplicationController()
+    checkpoint = tmp_path / "candidate.json"
+    checkpoint.write_text("{}", encoding="utf-8")
+    calls = []
+
+    def unexpected(*_args, **_kwargs):
+        calls.append("called")
+        raise AssertionError("TUI write request must stop before all local hardware services")
+
+    monkeypatch.setattr(FlashromRunner, "run_command", unexpected)
+    monkeypatch.setattr(FlashromRunner, "read_rom", unexpected)
+    result = controller.request_action(
+        ApplicationAction.FLASH,
+        profile_id="x200-libreboot",
+        checkpoint_path=checkpoint,
+        request_document='{"profile_id":"x200-libreboot"}',
+        frontend="textual",
+    )
+    assert result.code == "TUI_WRITE_ROUTE_BLOCKED"
+    assert result.status is ApplicationStatus.NOT_PERFORMED
+    assert calls == []
+
+
+def test_controller_cli_write_route_reopens_staged_plan_and_uses_fake_service(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    import autoloader.application_controller as controller_module
+    import autoloader.workflow.write_approval as approval_module
+    from autoloader.workflow.write_service import HardwareSetupAttestation, WriteExecutionResult, WriteExecutionStatus
+    from autoloader.workflow.x200_libreboot import X200ExternalSPIPlan
+    from autoloader.workflow.types import ProgrammerKind, VerificationStatus
+    from tests.test_phase10a_write_approval import _prepared_write, _iso_now
+
+    plan, _intent, _backup_service, _probe, backup, recovery, _transport, paths, operation_id = _prepared_write(tmp_path / "prepared")
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("fixture only", encoding="utf-8")
+    proposal = X200ExternalSPIPlan(
+        operation_id=operation_id,
+        profile_id="x200-libreboot",
+        chip_id=plan.topology.chips[0].chip_id,
+        chip_name=backup.chips[0].observed_chip_name,
+        capacity_bytes=plan.topology.chips[0].capacity_bytes,
+        voltage_mv=3300,
+        programmer_kind=ProgrammerKind.EXTERNAL_SPI,
+        artifact_path=plan.artifact.path,
+        artifact_sha256=plan.artifact.expected_sha256,
+        artifact_manifest_path=paths["artifact_manifest_path"],
+        artifact_manifest_sha256="a" * 64,
+        backup_operation_id=backup.operation_id,
+        recovery_record_id=recovery.record_id,
+        operation_journal_path=paths["operation_journal_path"],
+    )
+    workflow = SimpleNamespace(
+        result=SimpleNamespace(status="STAGED/HARDWARE_PENDING"),
+        operation_plan=plan,
+        backup_set=backup,
+        recovery_readiness=recovery,
+        proposed_external_spi_plan=proposal,
+        operation_journal_path=paths["operation_journal_path"],
+        operation_id=operation_id,
+    )
+    controller = ApplicationController()
+    monkeypatch.setattr(controller, "_reconstruct_x_workflow", lambda *_args, **_kwargs: workflow)
+    monkeypatch.setattr(controller, "_write_approval_directory", lambda: tmp_path / "approvals")
+    monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+    received = []
+
+    class FakeLedger:
+        def __init__(self, _directory):
+            pass
+
+    class FakeWriteService:
+        def __init__(self, **_kwargs):
+            pass
+
+        def execute(self, request):
+            received.append(request)
+            return WriteExecutionResult(
+                WriteExecutionStatus.WRITE_VERIFIED,
+                "WRITE_VERIFIED",
+                request.operation_id,
+                "synthetic controller route result",
+                OperationState.WRITE_VERIFIED,
+                artifact_sha256=request.plan.artifact.expected_sha256,
+                readback_sha256=request.plan.artifact.expected_sha256,
+                boot_status=VerificationStatus.NOT_PERFORMED,
+            )
+
+    monkeypatch.setattr(controller_module, "WriteApprovalLedger", FakeLedger)
+    monkeypatch.setattr(controller_module, "ExternalSPIWriteService", FakeWriteService)
+    setup = HardwareSetupAttestation(
+        actor=plan.programmer.attested_by or "",
+        instrument_id=plan.programmer.instrument_id or "",
+        test_point=plan.programmer.measurement_test_point or "",
+        measured_at_utc=_iso_now(),
+        programmer_voltage_mv=3300,
+        chip_voltage_mv=3300,
+        interface_verified=True,
+        wiring_verified=True,
+    )
+
+    result = controller.request_action(
+        ApplicationAction.FLASH,
+        profile_id="x200-libreboot",
+        checkpoint_path=checkpoint,
+        request_document="synthetic operator request",
+        hardware_setup=setup,
+        frontend="cli-tty",
+    )
+
+    assert result.code == "WRITE_VERIFIED" and result.status is ApplicationStatus.WRITE_VERIFIED
+    assert len(received) == 1
+    assert received[0].operation_id == operation_id
+    assert received[0].operation_journal_path == paths["operation_journal_path"]
+    assert received[0].artifact_manifest_path == paths["artifact_manifest_path"]
+
+
+@pytest.mark.parametrize(
+    ("terminal_state", "expected_status", "expected_code"),
+    [
+        (OperationState.WRITE_FAILED, ApplicationStatus.WRITE_FAILED, "SYNTHETIC_WRITE_FAILED"),
+        (OperationState.WRITE_UNCERTAIN, ApplicationStatus.WRITE_UNCERTAIN, "SYNTHETIC_WRITE_UNCERTAIN"),
+        (OperationState.WRITE_VERIFIED, ApplicationStatus.WRITE_VERIFIED, "WRITE_VERIFIED"),
+        (OperationState.WRITE_STARTED, ApplicationStatus.WRITE_UNCERTAIN, "WRITE_STARTED"),
+    ],
+)
+def test_controller_preserves_durable_write_outcome_if_service_throws_after_journaling(
+    tmp_path, monkeypatch, terminal_state, expected_status, expected_code
+):
+    from types import SimpleNamespace
+
+    import autoloader.application_controller as controller_module
+    import autoloader.workflow.write_approval as approval_module
+    from autoloader.workflow.x200_libreboot import X200ExternalSPIPlan
+    from autoloader.workflow.types import ProgrammerKind
+    from autoloader.workflow.journal import OperationJournal
+    from autoloader.workflow.write_service import HardwareSetupAttestation
+    from tests.test_phase10a_write_approval import _prepared_write
+
+    plan, _intent, _backup_service, _probe, backup, recovery, _transport, paths, operation_id = _prepared_write(tmp_path / "prepared")
+    checkpoint = tmp_path / "workflow.json"
+    checkpoint.write_text("fixture only", encoding="utf-8")
+    proposal = X200ExternalSPIPlan(
+        operation_id=operation_id,
+        profile_id="x200-libreboot",
+        chip_id=plan.topology.chips[0].chip_id,
+        chip_name=backup.chips[0].observed_chip_name,
+        capacity_bytes=plan.topology.chips[0].capacity_bytes,
+        voltage_mv=3300,
+        programmer_kind=ProgrammerKind.EXTERNAL_SPI,
+        artifact_path=plan.artifact.path,
+        artifact_sha256=plan.artifact.expected_sha256,
+        artifact_manifest_path=paths["artifact_manifest_path"],
+        artifact_manifest_sha256="a" * 64,
+        backup_operation_id=backup.operation_id,
+        recovery_record_id=recovery.record_id,
+        operation_journal_path=paths["operation_journal_path"],
+    )
+    workflow = SimpleNamespace(
+        result=SimpleNamespace(status="STAGED/HARDWARE_PENDING"),
+        operation_plan=plan,
+        backup_set=backup,
+        recovery_readiness=recovery,
+        proposed_external_spi_plan=proposal,
+        operation_journal_path=paths["operation_journal_path"],
+        operation_id=operation_id,
+    )
+    controller = ApplicationController()
+    monkeypatch.setattr(controller, "_reconstruct_x_workflow", lambda *_args, **_kwargs: workflow)
+    monkeypatch.setattr(controller, "_write_approval_directory", lambda: tmp_path / "approvals")
+    monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+
+    class FakeLedger:
+        def __init__(self, _directory):
+            pass
+
+    class ThrowAfterJournalService:
+        def __init__(self, **_kwargs):
+            pass
+
+        def execute(self, request):
+            journal = OperationJournal.load_checkpoint(
+                request.operation_journal_path, expected_plan=request.plan
+            )
+            journal.append(
+                action="external-spi-write",
+                from_state=OperationState.BACKUP_VERIFIED,
+                to_state=OperationState.WRITE_STARTED,
+                code="WRITE_STARTED",
+                message="{}",
+            )
+            if terminal_state is not OperationState.WRITE_STARTED:
+                code = expected_code
+                payload = {"message": "synthetic durable outcome"}
+                if terminal_state is OperationState.WRITE_VERIFIED:
+                    code = "WRITE_VERIFIED"
+                    payload.update({
+                        "artifact_sha256": request.plan.artifact.expected_sha256,
+                        "readback_sha256": request.plan.artifact.expected_sha256,
+                        "boot_status": "NOT_PERFORMED",
+                    })
+                journal.append(
+                    action="external-spi-result",
+                    from_state=OperationState.WRITE_STARTED,
+                    to_state=terminal_state,
+                    code=code,
+                    message=json.dumps(payload, sort_keys=True, separators=(",", ":")),
+                )
+            raise RuntimeError("exception after durable journal append")
+
+    monkeypatch.setattr(controller_module, "WriteApprovalLedger", FakeLedger)
+    monkeypatch.setattr(controller_module, "ExternalSPIWriteService", ThrowAfterJournalService)
+    setup = HardwareSetupAttestation(
+        actor=plan.programmer.attested_by or "",
+        instrument_id=plan.programmer.instrument_id or "",
+        test_point=plan.programmer.measurement_test_point or "",
+        measured_at_utc="2026-10-10T12:00:00+00:00",
+        programmer_voltage_mv=3300,
+        chip_voltage_mv=3300,
+        interface_verified=True,
+        wiring_verified=True,
+    )
+
+    result = controller.request_action(
+        ApplicationAction.FLASH,
+        profile_id="x200-libreboot",
+        checkpoint_path=checkpoint,
+        request_document="synthetic operator request",
+        hardware_setup=setup,
+        frontend="cli-tty",
+    )
+
+    assert result.status is expected_status
+    assert result.code == expected_code
+    assert f"journal_state={terminal_state.value}" in result.evidence_refs
+    assert paths["operation_journal_path"] in result.evidence_refs
+    if terminal_state is OperationState.WRITE_VERIFIED:
+        assert any(ref.startswith("artifact_sha256=") for ref in result.evidence_refs)
+        assert any(ref.startswith("readback_sha256=") for ref in result.evidence_refs)
+        assert "Boot remains NOT_PERFORMED" in result.message
 
 
 def test_backup_manifest_verification_does_not_create_a_default_manifest(tmp_path, monkeypatch):

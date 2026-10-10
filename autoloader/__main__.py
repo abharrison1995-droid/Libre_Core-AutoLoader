@@ -1,5 +1,7 @@
 import logging
+import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -12,6 +14,9 @@ from autoloader.exceptions import AutoLoaderError
 from autoloader.config import Config, PROJECT_NAME, VERSION
 from autoloader.application_controller import ApplicationAction, ApplicationController
 from autoloader.workflow.profiles import V1_PROFILES
+from autoloader.workflow.write_approval import WriteApprovalError, _require_tty_file_descriptor
+from autoloader.workflow.write_approval import _directory_fsync_supported
+from autoloader.workflow.write_service import HardwareSetupAttestation
 from usb_builder import build_usb as live_usb_builder
 
 logger = logging.getLogger(__name__)
@@ -374,14 +379,74 @@ def verify(ctx: click.Context, profile: str) -> None:
 
 @cli.command()
 @click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
-@click.option("--rom", "-r", required=True, type=click.Path(exists=True, path_type=Path), help="Candidate ROM path (no write will be attempted).")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Exact staged X200/X220 workflow checkpoint; arbitrary ROM paths are not accepted.")
+@click.option("--request", "request_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Current versioned operator setup request used to reopen the staged plan.")
 @click.pass_context
-def flash(ctx: click.Context, profile: str, rom: Path) -> None:
-    """Physical flashing is unavailable through the shared controller."""
+def flash(ctx: click.Context, profile: str, checkpoint: Path, request_file: Path) -> None:
+    """Request one exact, interactively approved X200/X220 external SPI write."""
+    if profile not in {"x200-libreboot", "x220-coreboot"}:
+        raise click.ClickException(
+            "[PROFILE_WRITE_UNAVAILABLE] T430 uses its separate human-run IVprep/1vyrain handoff; external SPI write prompts are not offered."
+        )
+    _require_live_write_tty()
+    try:
+        request_document = request_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[WRITE_REQUEST_UNREADABLE] {exc}") from exc
+    setup = _collect_live_write_setup()
     controller = ApplicationController()
     controller.select_profile(profile)
-    result = controller.request_action(ApplicationAction.FLASH, profile_id=profile)
-    raise click.ClickException(f"[{result.code}] {result.message}")
+    result = controller.request_action(
+        ApplicationAction.FLASH,
+        profile_id=profile,
+        checkpoint_path=checkpoint,
+        request_document=request_document,
+        hardware_setup=setup,
+        frontend="cli-tty",
+    )
+    if result.evidence_refs:
+        console.print("Operation evidence: " + " · ".join(result.evidence_refs))
+    if result.status.value != "WRITE_VERIFIED":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[yellow]{result.code}[/yellow] {result.message}")
+    console.print("Independent full-chip read-back: matched")
+    console.print("Boot validation: NOT_PERFORMED")
+
+
+def _require_live_write_tty() -> None:
+    """Reject noninteractive wrappers before the controller can probe hardware."""
+    try:
+        input_fd = _require_tty_file_descriptor(sys.stdin, "input")
+        output_fd = _require_tty_file_descriptor(sys.stdout, "output")
+        if not os.isatty(input_fd) or not os.isatty(output_fd):
+            raise WriteApprovalError("a real interactive OS TTY is required for firmware write approval")
+    except WriteApprovalError as exc:
+        raise click.ClickException(f"[TTY_REQUIRED] {exc}") from exc
+    if not _directory_fsync_supported():
+        raise click.ClickException(
+            "[DURABLE_APPROVAL_UNAVAILABLE] Physical write approval requires durable directory fsync support; no hardware probe was invoked."
+        )
+
+
+def _collect_live_write_setup() -> HardwareSetupAttestation:
+    """Collect fresh human meter/wiring values; never read them from JSON."""
+    actor = click.prompt("Operator name", type=str).strip()
+    instrument = click.prompt("Meter / instrument ID", type=str).strip()
+    test_point = click.prompt("Measured programmer and chip test point", type=str).strip()
+    programmer_mv = click.prompt("Measured programmer output (mV)", type=int)
+    chip_mv = click.prompt("Measured target chip voltage (mV)", type=int)
+    interface = click.confirm("Have you verified the external programmer interface?", default=False)
+    wiring = click.confirm("Have you verified the wiring and chip orientation?", default=False)
+    return HardwareSetupAttestation(
+        actor=actor,
+        instrument_id=instrument,
+        test_point=test_point,
+        measured_at_utc=datetime.now(timezone.utc).isoformat(),
+        programmer_voltage_mv=programmer_mv,
+        chip_voltage_mv=chip_mv,
+        interface_verified=interface,
+        wiring_verified=wiring,
+    )
 
 
 def main() -> None:

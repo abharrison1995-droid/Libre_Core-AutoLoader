@@ -623,10 +623,10 @@ def test_tui_confirmation_requires_the_matching_explicit_action(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     challenge = create_write_approval_challenge(intent)
     bad = TUIConfirmationEvent("pathway", "confirm-write", str(uuid.uuid4()), challenge.challenge_sha256, _iso_now())
-    with pytest.raises(WriteApprovalError, match="TUI write approval is unavailable"):
+    with pytest.raises(WriteApprovalError, match="live dedicated screen bridge"):
         accept_tui_confirmation(challenge, actor="Operator", event=bad)
     good = TUIConfirmationEvent("write-confirmation", "confirm-write", str(uuid.uuid4()), challenge.challenge_sha256, _iso_now())
-    with pytest.raises(WriteApprovalError, match="TUI write approval is unavailable"):
+    with pytest.raises(WriteApprovalError, match="live dedicated screen bridge"):
         confirmation = accept_tui_confirmation(challenge, actor="Operator", event=good)
     forged = object.__new__(HumanActionConfirmation)
     object.__setattr__(forged, "evidence_id", "forged")
@@ -635,7 +635,7 @@ def test_tui_confirmation_requires_the_matching_explicit_action(tmp_path):
     object.__setattr__(forged, "actor", "Operator")
     object.__setattr__(forged, "confirmed_at_utc", _iso_now())
     object.__setattr__(forged, "channel", ConfirmationChannel.TUI_EXPLICIT_ACTION)
-    with pytest.raises(WriteApprovalError, match="TUI write approval is disabled"):
+    with pytest.raises(WriteApprovalError, match="fabricated, expired, revoked, or already used"):
         WriteApprovalLedger(tmp_path / "approvals").issue(intent, forged)
 
 

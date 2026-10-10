@@ -30,12 +30,32 @@ from .types import (
 
 _SCHEMA_VERSION = 1
 _GENESIS_CHECKSUM = "0" * 64
+
+
+def _directory_fsync_supported() -> bool:
+    """Return whether this journal can durably sync a renamed checkpoint."""
+    return os.name == "posix"
+
+
+def _sync_directory(directory: Path) -> None:
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    descriptor = os.open(directory, flags)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 _RESUMABLE_CHECKPOINT_STATES = frozenset({
     OperationState.DRAFT,
     OperationState.VALIDATED,
     OperationState.BACKUP_VERIFIED,
 })
 _TERMINAL_INSPECTION_STATES = frozenset({
+    OperationState.WRITE_STARTED,
+    OperationState.WRITE_FAILED,
+    OperationState.WRITE_UNCERTAIN,
+    OperationState.WRITE_VERIFIED,
     OperationState.BLOCKED,
     OperationState.FAILED,
     OperationState.WRITE_BLOCKED,
@@ -43,8 +63,17 @@ _TERMINAL_INSPECTION_STATES = frozenset({
 _ALLOWED_TRANSITIONS: dict[OperationState, frozenset[OperationState]] = {
     OperationState.DRAFT: frozenset({OperationState.VALIDATED, OperationState.BLOCKED}),
     OperationState.VALIDATED: frozenset({OperationState.BACKUP_VERIFIED, OperationState.BLOCKED}),
-    OperationState.BACKUP_VERIFIED: frozenset({OperationState.AUTHORIZED, OperationState.BLOCKED}),
+    # Phase 10B records the durable write boundary only after the one-use
+    # physical approval has been consumed. Approval itself is not journaled as
+    # AUTHORIZED and is never a resumable checkpoint.
+    OperationState.BACKUP_VERIFIED: frozenset({OperationState.AUTHORIZED, OperationState.WRITE_STARTED, OperationState.BLOCKED}),
     OperationState.AUTHORIZED: frozenset({OperationState.WRITE_BLOCKED, OperationState.BLOCKED}),
+    OperationState.WRITE_STARTED: frozenset({
+        OperationState.WRITE_FAILED, OperationState.WRITE_UNCERTAIN, OperationState.WRITE_VERIFIED,
+    }),
+    OperationState.WRITE_FAILED: frozenset(),
+    OperationState.WRITE_UNCERTAIN: frozenset(),
+    OperationState.WRITE_VERIFIED: frozenset(),
     OperationState.WRITE_BLOCKED: frozenset(),
     OperationState.BLOCKED: frozenset(),
     OperationState.FAILED: frozenset(),
@@ -391,7 +420,12 @@ class OperationJournal:
                 raise UnsafeCheckpointError(f"unsupported journal transition {from_state.value} -> {to_state.value}")
             timestamp = datetime.now(timezone.utc).isoformat()
             previous = self._entries[-1].checksum if self._entries else _GENESIS_CHECKSUM
-            is_failure = to_state in {OperationState.BLOCKED, OperationState.FAILED}
+            is_failure = to_state in {
+                OperationState.BLOCKED,
+                OperationState.FAILED,
+                OperationState.WRITE_FAILED,
+                OperationState.WRITE_UNCERTAIN,
+            }
             entry = JournalEntry(
                 sequence=len(self._entries) + 1,
                 operation_id=self.operation_id,
@@ -488,6 +522,11 @@ class OperationJournal:
                 os.fsync(stream.fileno())
             os.replace(temp_path, self.path)
             temp_path = None
+            # A file fsync alone does not make a rename durable after power
+            # loss. Phase 10B refuses the writer on hosts where this POSIX
+            # directory sync cannot be provided.
+            if _directory_fsync_supported():
+                _sync_directory(self.path.parent)
             self._snapshot_checksum = snapshot_checksum
         except OSError as exc:
             raise JournalError(f"could not persist operation checkpoint: {exc}") from exc
@@ -612,7 +651,12 @@ class OperationJournal:
             })
             if not hmac.compare_digest(entry.checksum, expected_event_checksum):
                 raise JournalCorruptionError(f"journal event {index} checksum is invalid")
-            expected_failure = entry.to_state in {OperationState.BLOCKED, OperationState.FAILED}
+            expected_failure = entry.to_state in {
+                OperationState.BLOCKED,
+                OperationState.FAILED,
+                OperationState.WRITE_FAILED,
+                OperationState.WRITE_UNCERTAIN,
+            }
             if entry.failure != expected_failure:
                 raise JournalCorruptionError(f"journal event {index} has inconsistent failure fields")
             if expected_failure:

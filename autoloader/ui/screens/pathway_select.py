@@ -7,6 +7,7 @@ from textual.widgets import Button, Footer, Header, Static
 from autoloader.application_controller import ApplicationAction, ApplicationController
 from autoloader.ui.screens.controller_screen import ControllerScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
+from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
 
 
 class PathwaySelectScreen(ControllerScreen):
@@ -142,11 +143,17 @@ class PathwaySelectScreen(ControllerScreen):
             if action in status.allowed_next_actions:
                 self.app.push_screen(XWorkflowActionScreen(action))
             return
+        if button_id == "action-flash":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.FLASH in status.allowed_next_actions and status.profile_id in {
+                "x200-libreboot", "x220-coreboot"
+            }:
+                self.app.push_screen(WriteConfirmationScreen())
+            return
         action_by_button = {
             "action-detect": ApplicationAction.DETECT_DEVICE,
             "action-evidence": ApplicationAction.VIEW_EVIDENCE,
             "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
-            "action-flash": ApplicationAction.FLASH,
             "action-restore": ApplicationAction.RESTORE,
             "action-readback": ApplicationAction.READBACK,
             "action-boot": ApplicationAction.BOOT_CHECK,

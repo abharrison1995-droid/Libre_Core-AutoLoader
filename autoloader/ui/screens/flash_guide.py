@@ -14,12 +14,12 @@ class FlashGuideScreen(ControllerScreen):
         yield Header()
         with Container(classes="container"):
             yield Static("Hardware Operation Status", classes="header-text")
-            yield Static("Physical firmware writes are disabled in this release candidate.", classes="error", id="flash-unavailable")
+            yield Static("This status screen does not initiate a write. Use the staged X200/X220 pathway and its dedicated confirmation screen for an explicit controller request.", classes="warning", id="flash-unavailable")
             with VerticalScroll():
                 yield Static("", id="flash-profile")
-                yield Static("No write, restore, SPI probe, read-back, or hardware boot check has been performed.", id="flash-status")
+                yield Static("This screen does not perform writes, restores, SPI probes, read-backs, or boot checks. Inspect an operation journal for historical status.", id="flash-status")
                 yield Static("", id="flash-evidence")
-                yield Static("A checkbox or manual programmer choice cannot authorize a physical firmware operation.", classes="warning")
+                yield Static("The dedicated confirmation screen shows the service-generated command, artifact, backup and recovery digests before it accepts the exact challenge phrase.", classes="warning")
             with Horizontal(classes="button-container"):
                 yield Button("Back", id="btn-back")
                 yield Button("Write", id="btn-flash", disabled=True)
