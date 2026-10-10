@@ -67,6 +67,12 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 - Current software gates: `python -m pytest -q` passed **276 tests in 167.44 seconds**; mypy reported no issues in **97 source files**; CLI help and prepare-workflow help passed; `git diff --check` passed. Phase 08 awaits SOL review.
 - Explicit prepare/backup can issue read-only local SPI probe/read operations when a user runs them on a connected machine. None were invoked during this development/test pass. The Windows host returns `LINUX_BUILD_ENV_REQUIRED` before a firmware build subprocess or output creation. No actual upstream build, generated-ROM parsing, physical voltage/backup, firmware write, restore, post-write read-back, recovery or boot test occurred. All three machines remain **HARDWARE PENDING**; no application writer is enabled.
 
+## Phase 10A approval preparation — review pending
+
+- The current Phase 10A remediation reopens the exact `BACKUP_VERIFIED` X200/X220 journal and pinned COMPLETE ArtifactEngine evidence before issuing a write-intent approval. A TUI approval route is disabled; CLI confirmation requires the real process TTY. The approval ledger is unavailable on Windows until a durable directory-sync implementation is supported there.
+- Ledger, journal and manifest checksums provide corruption detection, not authentication against a malicious process running as the same local account or an administrator; such an actor can edit or roll back local files. Phase 10B must re-detect/re-probe and reopen the exact backup, artifact and journal immediately before consuming approval.
+- Phase 10A makes no writer call, does not journal `WRITE_STARTED` or `WRITE_VERIFIED`, and cannot imply that approval itself performed a physical operation. Restore approval is separate and unavailable. SOL re-review, writer/read-back implementation, Linux build evidence and all real hardware workflows remain open.
+
 ## Hardware state
 
 T430 1vyrain, X200 Libreboot and X220 Coreboot: **HARDWARE PENDING**. No physical probe/read, measured voltage, backup, firmware build/write, post-write read-back, recovery or boot evidence is recorded.
