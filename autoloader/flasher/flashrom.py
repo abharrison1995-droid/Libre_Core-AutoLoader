@@ -4,15 +4,16 @@ Flashrom/Flashprog wrapper.
 import subprocess
 import logging
 import re
+import shutil
 from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional, List, Tuple
 import time
 
 from pathlib import Path
 
 from autoloader.config import FLASH_TIMEOUT
-from autoloader.utils import is_admin
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +30,69 @@ class FlashResult:
     chip_size: Optional[int]
     duration: float
     log_output: str
+    code: str = "OK"
 
     @property
     def output(self) -> str:
         return self.log_output
+
+
+@dataclass(frozen=True)
+class FlashToolIdentity:
+    """Exact executable and version observed from a safe `--version` query."""
+
+    name: str
+    executable: str
+    version: str
+    raw_version: str
+    observed_at_utc: str
+
+
+class ProbeOutputError(ValueError):
+    """A flashrom probe did not identify exactly one unambiguous chip."""
+
+
+_CHIP_LINE = re.compile(
+    r'^\s*Found\s+.+?\s+flash chip\s+["\']([^"\']+)["\']\s+'
+    r'\(\s*([0-9]+)\s+kB\s*,\s*SPI\s*\)\s+on\s+(.+?)\.?\s*$',
+    re.IGNORECASE,
+)
+_TOOL_VERSION = re.compile(
+    r'\b(flashrom|flashprog)\s+v?([0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?)\b',
+    re.IGNORECASE,
+)
+_WRITE_FLAGS = frozenset({
+    "-w", "--write", "-e", "-erase", "--erase", "--chipset-enable",
+    "--wp-disable", "--wp-set", "--wp-clear",
+})
+
+
+def parse_probe_output(output: str) -> tuple[str, int, str]:
+    """Parse exactly one standard flashrom/flashprog SPI chip result.
+
+    Caller-supplied chip selectors are deliberately not part of this parser:
+    the name and capacity must come from the tool's raw observation.
+    """
+    matches = []
+    for line in output.splitlines():
+        if "flash chip" not in line.casefold():
+            continue
+        match = _CHIP_LINE.fullmatch(line)
+        if match is None:
+            raise ProbeOutputError("probe output contains a malformed flash-chip result")
+        matches.append(match)
+    if len(matches) != 1:
+        raise ProbeOutputError(
+            "probe output must contain exactly one recognized flash-chip result; "
+            f"found {len(matches)}"
+        )
+    match = matches[0]
+    name = match.group(1).strip()
+    capacity_bytes = int(match.group(2)) * 1024
+    reported_programmer = match.group(3).strip().rstrip(".").strip()
+    if not name or capacity_bytes <= 0 or not reported_programmer:
+        raise ProbeOutputError("probe result has an empty chip, capacity, or programmer field")
+    return name, capacity_bytes, reported_programmer
 
 class FlashromRunner:
     def __init__(self):
@@ -40,18 +100,47 @@ class FlashromRunner:
     
     def detect_tool(self) -> str:
         # Prefer flashprog, fallback to flashrom
-        try:
-            subprocess.run(["flashprog", "--version"], capture_output=True, check=True, timeout=10)
-            return "flashprog"
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        return shutil.which("flashprog") or shutil.which("flashrom") or "flashrom"
+
+    def inspect_tool(self) -> Optional[FlashToolIdentity]:
+        """Return an exact tool/version record, or None when unavailable/ambiguous."""
+        candidates = ("flashprog", "flashrom")
+        for candidate in candidates:
+            executable = shutil.which(candidate)
+            if executable is None:
+                continue
             try:
-                subprocess.run(["flashrom", "--version"], capture_output=True, check=True, timeout=10)
-                return "flashrom"
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
-                logger.warning("Neither flashprog nor flashrom found in PATH, using 'flashrom' as fallback.")
-                return "flashrom"
+                result = subprocess.run(
+                    [executable, "--version"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=10,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+            raw = f"{result.stdout}\n{result.stderr}".strip()
+            match = _TOOL_VERSION.search(raw)
+            if result.returncode != 0 or match is None or match.group(1).casefold() != candidate:
+                continue
+            return FlashToolIdentity(
+                name=candidate,
+                executable=str(Path(executable).resolve(strict=False)),
+                version=match.group(2),
+                raw_version=raw,
+                observed_at_utc=datetime.now(timezone.utc).isoformat(),
+            )
+        return None
 
     def run_command(self, args: List[str], timeout: int = FLASH_TIMEOUT) -> Tuple[bool, str, float]:
+        normalized_args = [str(arg).strip().casefold() for arg in args]
+        if any(
+            arg in _WRITE_FLAGS
+            or arg.startswith(("--write", "--erase", "--wp-disable", "--wp-set", "--wp-clear"))
+            or arg.startswith(("-w", "-e"))
+            for arg in normalized_args
+        ):
+            return False, "Physical writes and flash-protection changes are disabled in this backend.", 0.0
         start = time.time()
         cmd = [self.tool_path] + args
         logger.info(f"Running command: {' '.join(cmd)}")
@@ -71,27 +160,34 @@ class FlashromRunner:
             return False, str(e), time.time() - start
 
     def parse_chip_info(self, output: str) -> Tuple[Optional[str], Optional[int]]:
-        chip_name = None
-        chip_size = None
-        for line in output.splitlines():
-            if "Found" in line and "flash chip" in line:
-                match = re.search(r'Found.*?flash chip "(.*?)" \((.*?) kB,', line)
-                if match:
-                    chip_name = match.group(1)
-                    try:
-                        chip_size = int(match.group(2)) * 1024
-                    except (ValueError, TypeError):
-                        chip_size = None
-                    break
-        return chip_name, chip_size
+        try:
+            name, capacity, _reported_programmer = parse_probe_output(output)
+            return name, capacity
+        except ProbeOutputError:
+            return None, None
 
     def probe_chip(self, programmer: ProgrammerType, chip_name: Optional[str] = None) -> FlashResult:
+        if chip_name is not None:
+            return FlashResult(
+                False, None, None, 0.0,
+                "User-supplied chip names are not observations; probe without a chip override.",
+                "PROBE_OVERRIDE_REJECTED",
+            )
         args = ["-p", programmer.value]
-        if chip_name:
-            args.extend(["-c", chip_name])
         success, output, duration = self.run_command(args)
-        parsed_name, chip_size = self.parse_chip_info(output)
-        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output)
+        try:
+            parsed_name, chip_size, reported_programmer = parse_probe_output(output)
+        except ProbeOutputError as exc:
+            return FlashResult(False, None, None, duration, f"{output}\nProbe rejected: {exc}", "PROBE_UNKNOWN")
+        expected_programmer = programmer.value.split(":", 1)[0].casefold()
+        reported_base = reported_programmer.split(":", 1)[0].casefold()
+        if expected_programmer != reported_base:
+            return FlashResult(
+                False, None, None, duration,
+                f"{output}\nProbe programmer does not match the requested interface.",
+                "PROBE_PROGRAMMER_MISMATCH",
+            )
+        return FlashResult(success, parsed_name, chip_size, duration, output, "OK" if success else "PROBE_FAILED")
 
     def read_rom(
         self,
@@ -127,25 +223,12 @@ class FlashromRunner:
         if not source_path.is_file():
             err_msg = f"ROM file not found for writing: {rom_path}"
             logger.error(err_msg)
-            return FlashResult(False, None, None, 0.0, err_msg)
+            return FlashResult(False, None, None, 0.0, err_msg, "ROM_NOT_FOUND")
 
-        if programmer == ProgrammerType.INTERNAL and not is_admin():
-            err_msg = "Root / Administrator privileges required for internal flashing."
-            logger.error(err_msg)
-            return FlashResult(False, None, None, 0.0, err_msg)
-        
-        logger.warning(f"DANGER: Writing {rom_path} to {programmer.value}")
-        args = ["-p", programmer.value]
-        if chip_name:
-            args.extend(["-c", chip_name])
-        if layout_region:
-            args.extend(["--ifd", "-i", layout_region])
-        if extra_args:
-            args.extend(extra_args)
-        args.extend(["-w", str(source_path)])
-        success, output, duration = self.run_command(args)
-        parsed_name, chip_size = self.parse_chip_info(output)
-        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output)
+        del programmer, chip_name, layout_region, extra_args
+        err_msg = "Physical ROM writes are disabled; no write command was issued."
+        logger.warning(err_msg)
+        return FlashResult(False, None, None, 0.0, err_msg, "PHYSICAL_WRITES_DISABLED")
 
     def verify_rom(
         self,

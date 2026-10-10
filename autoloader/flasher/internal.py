@@ -6,7 +6,6 @@ import logging
 from typing import Optional
 
 from autoloader.utils import is_admin
-from autoloader.exceptions import FlashError, SafetyError
 from .flashrom import FlashromRunner, ProgrammerType, FlashResult
 
 logger = logging.getLogger(__name__)
@@ -35,21 +34,20 @@ class InternalFlasher:
         return True
 
     def is_flash_unlocked(self) -> bool:
-        # Try a quick probe
-        res = self.runner.probe_chip(ProgrammerType.INTERNAL)
-        if not res.success:
-            logger.error("Flash is not unlocked or not accessible via internal programmer.")
-            return False
-        return True
+        logger.warning("A successful chip probe does not prove that firmware writes are unlocked.")
+        return False
 
     def flash_internal(self, rom_path: str, layout_region: Optional[str] = "bios") -> FlashResult:
-        logger.warning("WARNING: Internal flashing carries significant brick risk. Proceed with caution.")
-        if not self.check_prerequisites():
-            raise SafetyError("Prerequisites for internal flashing not met (must run as root/Admin).")
-        if not self.is_flash_unlocked():
-            raise FlashError("Flash is locked. Use external programmer or unlock first (e.g. 1vyrain for xx30).")
-        
-        return self.runner.write_rom(ProgrammerType.INTERNAL, rom_path, layout_region=layout_region)
+        del rom_path, layout_region
+        logger.warning("Internal firmware writes are disabled; no probe or write was attempted.")
+        return FlashResult(
+            False,
+            None,
+            None,
+            0.0,
+            "Internal firmware writes are unavailable until a reviewed, evidence-bound writer exists; no operation was attempted.",
+            "PHYSICAL_WRITES_DISABLED",
+        )
 
     def verify_internal(self, rom_path: str, layout_region: Optional[str] = "bios") -> FlashResult:
         return self.runner.verify_rom(ProgrammerType.INTERNAL, rom_path, layout_region=layout_region)

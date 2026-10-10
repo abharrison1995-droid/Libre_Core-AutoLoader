@@ -49,6 +49,36 @@ def test_backup_verification_degenerate_blank_fails(tmp_path):
     assert is_match is False
 
 
+def test_degenerate_dump_check_does_not_alias_periodic_firmware_data():
+    from autoloader.flasher.backup import is_degenerate_dump
+
+    # The former sampled entropy implementation selected one byte from each
+    # 64-byte period and falsely classified this valid nonblank pattern as blank.
+    periodic_firmware = bytes(range(64)) * 131_072
+    assert is_degenerate_dump(periodic_firmware) is False
+
+
+def test_legacy_backup_manifest_corruption_is_not_reset(tmp_path):
+    from autoloader.exceptions import BackupVerificationError
+    from autoloader.flasher.backup import BackupManager
+
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{broken", encoding="utf-8")
+    manager = BackupManager(backup_dir=tmp_path)
+    with pytest.raises(BackupVerificationError, match="refusing to reset or trust it"):
+        manager.list_backups()
+
+
+def test_flashrom_missing_rom_reports_failure_code_without_command(tmp_path, monkeypatch):
+    from autoloader.flasher.flashrom import FlashromRunner, ProgrammerType
+
+    runner = FlashromRunner()
+    monkeypatch.setattr(runner, "run_command", lambda *args, **kwargs: pytest.fail("must not invoke tool"))
+    result = runner.write_rom(ProgrammerType.CH341A, str(tmp_path / "missing.rom"))
+    assert result.success is False
+    assert result.code == "ROM_NOT_FOUND"
+
+
 def test_flash_verifier_structure(tmp_path):
     from autoloader.flasher.verify import FlashVerifier, IFD_MAGIC
     verifier = FlashVerifier()
@@ -240,59 +270,87 @@ def test_reversion_chain_model_forwarding():
     assert chain.state == ReversionState.DETECTING
 
 
-def test_restore_from_backup_with_chip_name(tmp_path, monkeypatch):
+def test_restore_from_backup_is_quarantined_even_with_legacy_arguments(tmp_path, monkeypatch):
     from autoloader.flasher.backup import BackupManager
-    from autoloader.flasher.flashrom import FlashromRunner, ProgrammerType, FlashResult
+    from autoloader.flasher.flashrom import ProgrammerType
 
     mgr = BackupManager(backup_dir=tmp_path)
     backup_file = tmp_path / "test_backup.rom"
     backup_file.write_bytes(b"\x5a\xa5\xf0\x0f" * 1024 * 1024)
 
-    recorded_chip = []
-    def mock_write(prog, path, chip_name=None, layout_region=None, extra_args=None):
-        recorded_chip.append(chip_name)
-        return FlashResult(True, chip_name, 8 * 1024 * 1024, 1.0, "Write success")
-
-    def mock_verify(prog, path, chip_name=None, layout_region=None, extra_args=None):
-        return FlashResult(True, chip_name, 8 * 1024 * 1024, 1.0, "Verify success")
-
-    monkeypatch.setattr(mgr.runner, "write_rom", mock_write)
-    monkeypatch.setattr(mgr.runner, "verify_rom", mock_verify)
-
-    res = mgr.restore_from_backup(str(backup_file), ProgrammerType.INTERNAL, chip_name="W25Q64FV")
-    assert res is True
-    assert recorded_chip == ["W25Q64FV"]
+    def unexpected_write(*args, **kwargs):
+        raise AssertionError("restore must not call any physical writer")
+    monkeypatch.setattr(mgr.runner, "write_rom", unexpected_write)
+    monkeypatch.setattr(mgr.runner, "run_command", unexpected_write)
+    res = mgr.restore_from_backup(
+        str(backup_file),
+        ProgrammerType.INTERNAL,
+        chip_name="W25Q64FV",
+        extra_args=["-w", str(backup_file), "--write", str(backup_file)],
+    )
+    assert res is False
 
 
-def test_internal_flasher_layout_flags(tmp_path, monkeypatch):
+def test_legacy_single_chip_backup_is_disabled_without_hardware_reads(tmp_path, monkeypatch):
+    from autoloader.exceptions import BackupUnavailableError
+    from autoloader.flasher.backup import BackupManager
+    from autoloader.flasher.flashrom import ProgrammerType
+
+    mgr = BackupManager(backup_dir=tmp_path)
+
+    def unexpected_read(*args, **kwargs):
+        raise AssertionError("legacy backup must not read unobserved hardware")
+
+    monkeypatch.setattr(mgr.runner, "read_rom", unexpected_read)
+    with pytest.raises(BackupUnavailableError, match="no hardware was read"):
+        mgr.create_backup("x200", ProgrammerType.CH341A, "bios", chip_name="W25Q32.V")
+
+
+def test_internal_flasher_write_is_quarantined_before_probe_or_write(tmp_path, monkeypatch):
     from autoloader.flasher.internal import InternalFlasher
-    from autoloader.flasher.flashrom import ProgrammerType, FlashResult
 
     flasher = InternalFlasher()
     test_rom = tmp_path / "test_bios.rom"
     test_rom.write_bytes(b"BIOS_DATA")
 
-    recorded_layout = []
-    def mock_write(prog, path, chip_name=None, layout_region=None, extra_args=None):
-        recorded_layout.append(layout_region)
-        return FlashResult(True, "N25Q128", 16 * 1024 * 1024, 1.0, "Write OK")
-
-    def mock_verify(prog, path, chip_name=None, layout_region=None, extra_args=None):
-        recorded_layout.append(layout_region)
-        return FlashResult(True, "N25Q128", 16 * 1024 * 1024, 1.0, "Verify OK")
-
-    monkeypatch.setattr(flasher, "check_prerequisites", lambda: True)
-    monkeypatch.setattr(flasher, "is_flash_unlocked", lambda: True)
-    monkeypatch.setattr(flasher.runner, "write_rom", mock_write)
-    monkeypatch.setattr(flasher.runner, "verify_rom", mock_verify)
-
+    def unexpected_probe(*args, **kwargs):
+        raise AssertionError("quarantined internal writer must not probe hardware")
+    def unexpected_write(*args, **kwargs):
+        raise AssertionError("quarantined internal writer must not call a writer")
+    monkeypatch.setattr(flasher.runner, "probe_chip", unexpected_probe)
+    monkeypatch.setattr(flasher.runner, "write_rom", unexpected_write)
+    monkeypatch.setattr(flasher.runner, "run_command", unexpected_write)
+    assert flasher.is_flash_unlocked() is False
     res = flasher.flash_internal(str(test_rom), layout_region="bios")
-    assert res.success is True
-    assert recorded_layout == ["bios"]
+    assert res.success is False
+    assert res.code == "PHYSICAL_WRITES_DISABLED"
 
-    v_res = flasher.verify_internal(str(test_rom), layout_region="bios")
-    assert v_res.success is True
-    assert recorded_layout == ["bios", "bios"]
+    # This API intentionally does not expose arbitrary command arguments.
+    with pytest.raises(TypeError):
+        flasher.flash_internal(str(test_rom), extra_args=["-w", str(test_rom)])  # type: ignore[call-arg]
+
+
+def test_flashrom_writer_and_arbitrary_command_reject_write_flags(tmp_path, monkeypatch):
+    from autoloader.flasher.flashrom import FlashromRunner, ProgrammerType
+    runner = FlashromRunner()
+    rom = tmp_path / "candidate.rom"
+    rom.write_bytes(b"firmware")
+    calls = []
+    monkeypatch.setattr(runner, "run_command", lambda args, timeout=600: calls.append(args))
+
+    result = runner.write_rom(
+        ProgrammerType.CH341A,
+        str(rom),
+        extra_args=["--write", str(rom)],
+    )
+    assert result.success is False
+    assert result.code == "PHYSICAL_WRITES_DISABLED"
+    assert calls == []
+
+    monkeypatch.undo()
+    result = runner.run_command(["-p", ProgrammerType.CH341A.value, "-w", str(rom)])
+    assert result[0] is False
+    assert "disabled" in result[1].lower()
 
 
 def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
