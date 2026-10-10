@@ -1,16 +1,20 @@
 [Unit]
-Description=Libre_Core AutoLoader Startup Service
-After=multi-user.target
+Description=Libre_Core AutoLoader Live Workflow Interface
+After=getty@tty1.service
 Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
 ExecStart=/opt/autoloader/start.sh
-StandardInput=tty
-StandardOutput=tty
+User=root
+StandardInput=tty-force
+StandardOutput=journal+console
+StandardError=journal+console
 TTYPath=/dev/tty1
-Restart=on-failure
-RestartSec=3
+TTYReset=yes
+TTYVHangup=yes
+Restart=no
+TimeoutStopSec=15
 
 [Install]
 WantedBy=multi-user.target

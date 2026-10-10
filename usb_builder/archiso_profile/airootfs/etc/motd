@@ -1,14 +1,10 @@
- _      _ _                 _____               
-| |    (_) |               /  __ \              
-| |     _| |__  _ __ ___   | /  \/___  _ __ ___ 
-| |    | | '_ \| '__/ _ \  | |   / _ \| '__/ _ \
-| |____| | |_) | | |  __/  | \__/\ (_) | | |  __/
-\_____/|_|_.__/|_|  \___|   \____/\___/|_|  \___|
-                                                
-           A u t o L o a d e r
+Libre_Core AutoLoader development Live environment
 
-Welcome to the Libre_Core AutoLoader Live USB Environment.
-Your system will automatically launch the flashing utility.
-If you exit the utility, you will be dropped to a root shell.
+The workflow interface runs on tty1. Errors are visible on console and in
+journald; retrieve logs with: journalctl -u autoloader.service
 
-Warning: Firmware modification carries risks. Proceed with caution.
+The live root filesystem is temporary. Before any backup request, attach two
+separate persistent storage volumes and use distinct destinations. Never keep
+the only recovery copy on the Live USB overlay.
+
+Physical firmware writes, restoration and hardware recovery are unavailable.

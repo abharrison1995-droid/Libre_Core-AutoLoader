@@ -427,7 +427,7 @@ def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
 def test_cli_commands_use_v1_profiles_and_remove_generic_build_options(tmp_path):
     help_result = CliRunner().invoke(cli, ["--help"])
     assert help_result.exit_code == 0
-    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "build-rom", "usb", "backup", "verify", "flash"):
+    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "build-rom", "usb", "build-usb", "backup", "verify", "flash"):
         assert command in help_result.output
 
     result = CliRunner().invoke(cli, ["build-rom", "--profile", "x200-libreboot"])

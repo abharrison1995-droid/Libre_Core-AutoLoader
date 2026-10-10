@@ -27,4 +27,4 @@ dev = [
 autoloader = "autoloader.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["autoloader*"]
+include = ["autoloader*", "usb_builder*"]

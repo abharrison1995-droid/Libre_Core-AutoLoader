@@ -12,6 +12,7 @@ from autoloader.exceptions import AutoLoaderError
 from autoloader.config import Config, PROJECT_NAME, VERSION
 from autoloader.application_controller import ApplicationAction, ApplicationController
 from autoloader.workflow.profiles import V1_PROFILES
+from usb_builder import build_usb as live_usb_builder
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -288,12 +289,56 @@ def build_rom(profile: str, checkpoint: Path, request_file: Path) -> None:
 @cli.command()
 @click.option("--output-dir", "-o", default="./iso_build", help="Target output directory for custom ISO.")
 def usb(output_dir: str) -> None:
-    """Prepare an output directory for the separate Archiso build script."""
+    """Prepare an output directory only; this does not build an ISO."""
     logger.info("Preparing USB output directory at %s", output_dir)
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     console.print(f"[bold green]Output directory prepared:[/bold green] {out.resolve()}")
     console.print("[yellow]No ISO was built by this command. The Archiso build script requires a supported Linux build environment.[/yellow]")
+
+
+@cli.command("build-usb")
+@click.option("--source-root", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path), help="Absolute clean Git checkout containing this project.")
+@click.option("--profile-dir", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path), help="Absolute checked-in Archiso profile directory.")
+@click.option("--snapshot-lock", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Absolute checked-in package snapshot lock.")
+@click.option("--output-dir", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path), help="Absolute existing empty output directory; files are never overwritten.")
+@click.option("--work-parent", required=True, type=click.Path(exists=True, file_okay=False, path_type=Path), help="Absolute existing directory for an owned temporary build tree.")
+@click.option("--network-mode", required=True, type=click.Choice(("online", "offline")), help="Use the fixed dated archive or a verified local package repository.")
+@click.option("--offline-repository", type=click.Path(exists=True, file_okay=False, path_type=Path), help="Absolute local repository root; required for offline mode.")
+@click.option("--offline-manifest", type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Absolute file/hash manifest for the offline repository.")
+def build_usb_command(
+    source_root: Path,
+    profile_dir: Path,
+    snapshot_lock: Path,
+    output_dir: Path,
+    work_parent: Path,
+    network_mode: str,
+    offline_repository: Path | None,
+    offline_manifest: Path | None,
+) -> None:
+    """Build a candidate ISO through the pinned Archiso contract (Linux only)."""
+    config = live_usb_builder.BuildConfig(
+        source_root=source_root,
+        profile_dir=profile_dir,
+        output_dir=output_dir,
+        work_parent=work_parent,
+        snapshot_lock=snapshot_lock,
+        network_mode=network_mode,
+        offline_repository=offline_repository,
+        offline_manifest=offline_manifest,
+    )
+    try:
+        result = live_usb_builder.execute_build(config)
+    except live_usb_builder.BuildContractError as exc:
+        raise click.ClickException(f"[BUILD_BLOCKED] {exc}") from exc
+    except OSError as exc:
+        raise click.ClickException(f"[BUILD_FAILED] {exc}") from exc
+    console.print(f"[yellow]Candidate ISO build completed:[/yellow] {result.iso_path}")
+    console.print(f"SHA-256: {result.sha256}")
+    console.print(f"Build provenance: {result.manifest_path}")
+    console.print("BIOS boot: NOT_PERFORMED")
+    console.print("UEFI boot: NOT_PERFORMED")
+    console.print("Release validation: PENDING")
 
 
 @cli.command()
