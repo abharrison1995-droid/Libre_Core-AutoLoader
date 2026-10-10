@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -20,6 +21,7 @@ from autoloader.reversion.t430_handoff import (
     ONEVYRAIN_REV5_MEDIA_URL,
     ONEVYRAIN_START_SHA256,
     T430DetectionCapture,
+    T430HandoffCheckpointStore,
     T430HandoffSession,
     T430HandoffStage,
     T430MediaEvidence,
@@ -284,6 +286,33 @@ def test_t430_checkpoint_corruption_is_rejected(tmp_path):
     )
     checkpoint.write_text(checkpoint.read_text(encoding="utf-8").replace('"stage":"awaiting-ivprep-redetection"', '"stage":"complete"'), encoding="utf-8")
     with pytest.raises(SafetyError, match="checksum mismatch"):
+        T430HandoffSession.resume_from_checkpoint(checkpoint)
+
+
+def test_t430_v1_checkpoint_with_valid_checksum_is_rejected(tmp_path):
+    initial = capture(t430_device("G1ET75WW (2.65 )"), "initial", 0)
+    checkpoint = tmp_path / "ivprep-v1-pending.json"
+    session = T430HandoffSession(initial, checkpoint_path=checkpoint)
+    session.record_preflight(preflight(initial, uefi=None))
+    session.approve_ivprep_handoff(
+        actor="operator", explicit_approval=True, approved_at=BASE + timedelta(minutes=2)
+    )
+
+    payload = json.loads(checkpoint.read_text(encoding="utf-8"))["payload"]
+    payload["version"] = 1
+    payload["preflight"].pop("secure_boot_disabled")
+    payload["preflight"].pop("will_boot_1vyrain_from_direct_onboard_usb_without_dock_or_hub")
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    envelope = {"payload": payload, "sha256": hashlib.sha256(canonical).hexdigest()}
+    checkpoint.write_text(
+        json.dumps(envelope, sort_keys=True, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+
+    assert T430HandoffCheckpointStore._read_verified_payload(checkpoint) == payload
+    with pytest.raises(SafetyError, match="unsupported schema/version"):
         T430HandoffSession.resume_from_checkpoint(checkpoint)
 
 
