@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
+import uuid
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -278,8 +279,9 @@ def _make_x220_backup_fixture(tmp_path: Path):
         transient=False,
     )
     intent = replace(intent, backup=BackupEvidence((pair,)))
+    backup_operation_id = str(uuid.uuid4())
     event = {
-        "operation_id": "backup-operation-x220",
+        "operation_id": backup_operation_id,
         "status": "verified",
         "profile_id": intent.profile_id,
         "requested_model_id": intent.requested_model_id,
@@ -305,6 +307,10 @@ def _make_x220_backup_fixture(tmp_path: Path):
             "observed_chip_name": "W25Q64.V",
         }],
         "region_map": [
+            {"name": region.name, "start_byte": region.start_byte, "end_byte": region.end_byte}
+            for region in regions
+        ],
+        "regions": [
             {"name": region.name, "start_byte": region.start_byte, "end_byte": region.end_byte}
             for region in regions
         ],
@@ -357,7 +363,7 @@ def _make_x220_backup_fixture(tmp_path: Path):
         )
 
     backup = BackupSetResult(
-        operation_id="backup-operation-x220",
+        operation_id=backup_operation_id,
         profile_id=intent.profile_id,
         created_at_utc="2026-10-10T00:00:00+00:00",
         tool_name="flashrom",
