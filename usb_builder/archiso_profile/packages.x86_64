@@ -12,3 +12,4 @@ python-click
 python-psutil
 usbutils
 pciutils
+syslinux

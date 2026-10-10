@@ -7,7 +7,7 @@
   "archiso_package": "archiso",
   "archiso_version": "91-1",
   "archiso_source_commit": "723da192226e1c9d5def9168f13332793c82a85e",
-  "packages_x86_64_sha256": "4fd531281bd659695271de16bdd60283dc36eff5220ae1f07550c72716126262",
+  "packages_x86_64_sha256": "520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329",
   "repository_database_sha256": {
     "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
     "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1"

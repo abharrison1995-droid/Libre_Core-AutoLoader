@@ -251,6 +251,15 @@ def test_preflight_rejects_package_list_drift_from_snapshot_hash(tmp_path):
         build_usb.preflight(config, host_platform="linux")
 
 
+def test_bios_syslinux_mode_requires_syslinux_package(tmp_path):
+    config = _config(tmp_path)
+    package_list = config.profile_dir / "packages.x86_64"
+    names = package_list.read_text(encoding="utf-8").splitlines()
+    package_list.write_text("\n".join(name for name in names if name != "syslinux") + "\n", encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="syslinux"):
+        build_usb.preflight(config, host_platform="linux")
+
+
 def test_package_list_pin_is_stable_across_windows_checkout_line_endings(tmp_path):
     config = _config(tmp_path)
     snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")

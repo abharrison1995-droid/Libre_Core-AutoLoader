@@ -45,6 +45,7 @@ REQUIRED_PACKAGES = frozenset(
         "dmidecode",
         "usbutils",
         "pciutils",
+        "syslinux",
     }
 )
 REQUIRED_MODES = frozenset(("online", "offline"))
@@ -378,7 +379,7 @@ def _read_package_names(path: Path) -> tuple[str, ...]:
         raise BuildContractError("package list contains duplicates")
     missing = REQUIRED_PACKAGES.difference(names)
     if missing:
-        raise BuildContractError(f"package list is missing required closed runtime packages: {sorted(missing)}")
+        raise BuildContractError(f"package list is missing required closed runtime/boot packages: {sorted(missing)}")
     return names
 
 
