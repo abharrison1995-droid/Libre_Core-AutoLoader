@@ -1,4 +1,4 @@
-# Current architecture and Phase 02 safety core
+# Current architecture and Phases 02–03 safety services
 
 ## Current call paths
 
@@ -35,6 +35,8 @@ At baseline, the CLI `flash` path bypassed the orchestrator while TUI build and 
 
 Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It uses three immutable V1 profiles, cross-checked raw DMI/MTM/BIOS evidence, exact chip/programmer/artifact checks, a tri-state validator, and a durable checksummed operation journal. Each record includes an operation ID, UTC timestamps, state transition, device fingerprint, artifact provenance/content metadata, backup capture/content checksums and failure details. Checkpoints are atomically replaced and corruption is rejected. Only DRAFT, VALIDATED and BACKUP_VERIFIED checkpoints can be resumed; resume requires the exact evidence fingerprints, revalidation, and a fresh human approval. BLOCKED, FAILED and WRITE_BLOCKED records are read-only inspection records. AUTHORIZED and later checkpoints are never resumable. The core is not yet connected to the CLI/TUI or any hardware backend; `WorkflowSession.request_write` always returns `WRITES_DISABLED_PHASE_02` and never invokes a writer. CLI/TUI unification and hardware I/O remain later phases.
 
+Phase 03 software scope was accepted by SOL at `448766a`. The standalone `autoloader/flasher` services add strict read-only flashrom command validation, SPI probe evidence, observed-topology backup capture, persistent backup verification, region-aware read-back comparison and recovery-readiness records. They are exercised with fake transports and software fixtures only; they are not integrated into the CLI/TUI or the workflow engine. No physical SPI probe/read, voltage measurement, backup, firmware compilation/write, post-write read-back, recovery or boot test occurred. Every application writer and restore entrypoint remains hard-blocked; no writer is enabled.
+
 ## Main modules
 
 | Concern | Current modules |
@@ -44,6 +46,7 @@ Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It us
 | Detection and compatibility data | `autoloader/detection/*`, `autoloader/database/*` |
 | ROM preparation | `autoloader/rom_builder/*` |
 | Flash, verification, backup | `autoloader/flasher/*` |
+| Phase 03 SPI evidence, backup/read-back and recovery readiness | `autoloader/flasher/*` (standalone services; fake-transport tested, not wired to app workflow) |
 | 1vyrain unlock | `autoloader/flasher/onevy.py` (`OnevyRainManager`) |
 | BIOS targets and downgrade | `autoloader/database/bios_versions.py`, `autoloader/reversion/{chains,ivprep,winflash}.py` |
 | Backup restore | `autoloader/flasher/backup.py` (`restore_from_backup`, physical write surface) |
@@ -55,4 +58,4 @@ Phase 02 adds a standalone workflow safety core in `autoloader/workflow/`. It us
 
 ## Target direction
 
-Phases 01–02 quarantine physical CLI writes, remove fake completion paths, and implement the model-specific validated operation plan. Phase 02 policy deliberately ignores broad database support flags and fails closed on missing/conflicting evidence. Phase 03 must add a separate write/read/backup backend only after probing and backup/recovery checks are designed and reviewed. Later CLI/TUI integration should use this service; no simulation may invoke physical writes. Real-device hardware validation remains a separate acceptance layer.
+Phases 01–02 quarantine physical CLI writes, remove fake completion paths, and implement the model-specific validated operation plan. Phase 02 policy deliberately ignores broad database support flags and fails closed on missing/conflicting evidence. Phase 03 software services were accepted at `4ba1858` and `448766a`, but remain standalone and read-only; they are not integrated into CLI/TUI. No physical probe/read, measured voltage, backup, firmware build/write, read-back, recovery or boot test was performed, and no writer is enabled. Phase 04 is not started. Real-device hardware validation remains pending for all three workflows.
