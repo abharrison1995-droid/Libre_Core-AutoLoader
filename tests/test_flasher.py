@@ -209,7 +209,7 @@ def test_flashrom_runner_timeout_handling(monkeypatch):
         raise subprocess.TimeoutExpired(cmd=args[0], timeout=600)
 
     monkeypatch.setattr(subprocess, "run", mock_run_timeout)
-    success, log, duration = runner.run_command(["flashrom", "-p", "internal"])
+    success, log, duration = runner.run_command(["-p", "internal"])
     assert success is False
     assert "timed out" in log.lower()
 
@@ -350,7 +350,7 @@ def test_flashrom_writer_and_arbitrary_command_reject_write_flags(tmp_path, monk
     monkeypatch.undo()
     result = runner.run_command(["-p", ProgrammerType.CH341A.value, "-w", str(rom)])
     assert result[0] is False
-    assert "disabled" in result[1].lower()
+    assert "rejected" in result[1].lower()
 
 
 def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):

@@ -61,10 +61,52 @@ _TOOL_VERSION = re.compile(
     r'\b(flashrom|flashprog)\s+v?([0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?)\b',
     re.IGNORECASE,
 )
-_WRITE_FLAGS = frozenset({
-    "-w", "--write", "-e", "-erase", "--erase", "--chipset-enable",
-    "--wp-disable", "--wp-set", "--wp-clear",
-})
+_PROGRAMMER_VALUES = frozenset(programmer.value for programmer in ProgrammerType)
+_CHIP_SELECTOR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
+_REGION_SELECTOR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
+_READ_ONLY_REJECTION = (
+    "Rejected: only exact flashrom version, probe, read, and verify command forms are permitted."
+)
+
+
+def _safe_path_argument(value: str) -> bool:
+    return (
+        bool(value)
+        and not value.startswith("-")
+        and all(ord(character) >= 32 and ord(character) != 127 for character in value)
+    )
+
+
+def _is_allowed_read_only_command(args: object) -> bool:
+    """Accept only the exact argument shapes built by this module's read APIs."""
+    if not isinstance(args, list) or not args or not all(isinstance(arg, str) for arg in args):
+        return False
+    values = list(args)
+    if values == ["--version"]:
+        return True
+    if len(values) < 2 or values[0] != "-p" or values[1] not in _PROGRAMMER_VALUES:
+        return False
+    if len(values) == 2:
+        return True
+
+    index = 2
+    if values[index] == "-c":
+        if index + 1 >= len(values) or not _CHIP_SELECTOR.fullmatch(values[index + 1]):
+            return False
+        index += 2
+    if index < len(values) and values[index] == "--ifd":
+        if (
+            index + 2 >= len(values)
+            or values[index + 1] != "-i"
+            or not _REGION_SELECTOR.fullmatch(values[index + 2])
+        ):
+            return False
+        index += 3
+    return (
+        index + 2 == len(values)
+        and values[index] in {"-r", "-v"}
+        and _safe_path_argument(values[index + 1])
+    )
 
 
 def parse_probe_output(output: str) -> tuple[str, int, str]:
@@ -133,16 +175,10 @@ class FlashromRunner:
         return None
 
     def run_command(self, args: List[str], timeout: int = FLASH_TIMEOUT) -> Tuple[bool, str, float]:
-        normalized_args = [str(arg).strip().casefold() for arg in args]
-        if any(
-            arg in _WRITE_FLAGS
-            or arg.startswith(("--write", "--erase", "--wp-disable", "--wp-set", "--wp-clear"))
-            or arg.startswith(("-w", "-e"))
-            for arg in normalized_args
-        ):
-            return False, "Physical writes and flash-protection changes are disabled in this backend.", 0.0
+        if not _is_allowed_read_only_command(args):
+            return False, _READ_ONLY_REJECTION, 0.0
         start = time.time()
-        cmd = [self.tool_path] + args
+        cmd = [self.tool_path, *args]
         logger.info(f"Running command: {' '.join(cmd)}")
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout)
@@ -197,6 +233,12 @@ class FlashromRunner:
         layout_region: Optional[str] = None,
         extra_args: Optional[List[str]] = None
     ) -> FlashResult:
+        if extra_args:
+            return FlashResult(
+                False, None, None, 0.0,
+                "Caller-supplied flashrom options are disabled for read operations.",
+                "UNSUPPORTED_ARGUMENTS",
+            )
         target_path = Path(output_path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         args = ["-p", programmer.value]
@@ -204,12 +246,11 @@ class FlashromRunner:
             args.extend(["-c", chip_name])
         if layout_region:
             args.extend(["--ifd", "-i", layout_region])
-        if extra_args:
-            args.extend(extra_args)
         args.extend(["-r", str(target_path)])
         success, output, duration = self.run_command(args)
         parsed_name, chip_size = self.parse_chip_info(output)
-        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output)
+        code = "OK" if success else "READ_ONLY_COMMAND_REJECTED" if output.startswith("Rejected:") else "READ_FAILED"
+        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output, code)
 
     def write_rom(
         self,
@@ -238,6 +279,12 @@ class FlashromRunner:
         layout_region: Optional[str] = None,
         extra_args: Optional[List[str]] = None
     ) -> FlashResult:
+        if extra_args:
+            return FlashResult(
+                False, None, None, 0.0,
+                "Caller-supplied flashrom options are disabled for verify operations.",
+                "UNSUPPORTED_ARGUMENTS",
+            )
         source_path = Path(rom_path)
         if not source_path.is_file():
             err_msg = f"ROM file not found for verification: {rom_path}"
@@ -249,12 +296,11 @@ class FlashromRunner:
             args.extend(["-c", chip_name])
         if layout_region:
             args.extend(["--ifd", "-i", layout_region])
-        if extra_args:
-            args.extend(extra_args)
         args.extend(["-v", str(source_path)])
         success, output, duration = self.run_command(args)
         parsed_name, chip_size = self.parse_chip_info(output)
-        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output)
+        code = "OK" if success else "READ_ONLY_COMMAND_REJECTED" if output.startswith("Rejected:") else "VERIFY_FAILED"
+        return FlashResult(success, chip_name or parsed_name, chip_size, duration, output, code)
     
     def get_chip_info(self, programmer: ProgrammerType) -> Tuple[Optional[str], Optional[int]]:
         res = self.probe_chip(programmer)

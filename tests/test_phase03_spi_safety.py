@@ -476,13 +476,72 @@ def test_readback_rejects_invalid_or_incomplete_region_map(tmp_path):
     assert "different byte lengths" in result.details[0]
 
 
-def test_flashrom_runner_rejects_write_flags_from_any_call_path(monkeypatch):
+def test_flashrom_runner_allows_only_exact_read_only_command_forms(monkeypatch):
+    from types import SimpleNamespace
+
+    runner = FlashromRunner()
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        return SimpleNamespace(returncode=0, stdout="read-only fake", stderr="")
+
+    monkeypatch.setattr("autoloader.flasher.flashrom.subprocess.run", fake_run)
+    for args in (
+        ["--version"],
+        ["-p", "internal"],
+        ["-p", ProgrammerType.CH341A.value, "-r", "dump.rom"],
+        ["-p", ProgrammerType.CH341A.value, "-c", "W25Q64.V", "--ifd", "-i", "bios", "-v", "image.rom"],
+    ):
+        success, _output, _duration = runner.run_command(args)
+        assert success is True
+    assert len(calls) == 4
+
+
+def test_flashrom_runner_rejects_mutating_aliases_and_injected_options_without_subprocess(monkeypatch, tmp_path):
     runner = FlashromRunner()
     monkeypatch.setattr("autoloader.flasher.flashrom.subprocess.run", lambda *args, **kwargs: pytest.fail("must not execute"))
-    for args in (["-w", "image.rom"], ["--erase"], ["--wp-disable"], ["-E"]):
+    dangerous = (
+        ["-w", "image.rom"],
+        ["--write", "image.rom"],
+        ["--write=image.rom"],
+        ["-e"],
+        ["-E"],
+        ["--erase"],
+        ["--wp-enable"],
+        ["--WP-ENABLE"],
+        ["--wp-enable=0x0-0xff"],
+        ["--wp-disable"],
+        ["--wp-set", "0x0"],
+        ["--wp-clear"],
+        ["--chipset-enable"],
+        ["-P", ProgrammerType.CH341A.value],
+        ["-p", ProgrammerType.CH341A.value, "--wp-enable"],
+        ["-p", ProgrammerType.CH341A.value, "-r", "dump.rom", "--wp-enable"],
+        ["-p", ProgrammerType.CH341A.value, "-v", "image.rom", "--wp-enable"],
+        ["-p", ProgrammerType.CH341A.value, "--unknown-option"],
+    )
+    for args in dangerous:
         success, output, _duration = runner.run_command(list(args))
         assert success is False
-        assert "disabled" in output.lower()
+        assert "rejected" in output.lower()
+
+    image = tmp_path / "candidate.rom"
+    image.write_bytes(b"test image")
+    probe = runner.probe_chip(ProgrammerType.CH341A, chip_name="--wp-enable")
+    read = runner.read_rom(
+        ProgrammerType.CH341A,
+        str(tmp_path / "dump.rom"),
+        extra_args=["--wp-enable"],
+    )
+    verify = runner.verify_rom(
+        ProgrammerType.CH341A,
+        str(image),
+        extra_args=["--wp-enable"],
+    )
+    assert probe.code == "PROBE_OVERRIDE_REJECTED"
+    assert read.code == "UNSUPPORTED_ARGUMENTS"
+    assert verify.code == "UNSUPPORTED_ARGUMENTS"
 
 
 def test_filesystem_storage_preflight_rejects_unknown_or_transient_storage(tmp_path):
