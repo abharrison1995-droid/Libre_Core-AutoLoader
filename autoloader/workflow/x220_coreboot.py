@@ -259,13 +259,15 @@ class X220CorebootWorkflow:
             if not backup.operation_id or backup.profile_id != self.intent.profile_id:
                 raise ValueError("Backup operation belongs to another workflow")
             bound_intent = replace(self.intent, backup=backup.backup)
+            # Inspect path ancestry before RecoveryReadinessService opens or
+            # hashes any persisted backup artifacts.
+            self.intent = bound_intent
+            self.backup_set = backup
+            self._derive_and_validate_backup_inputs()
             readiness = self.recovery_service.evaluate(bound_intent, backup)
             if readiness.status != "ready" or readiness.operation_id != backup.operation_id:
                 raise ValueError("X220 recovery readiness is not current: " + "; ".join(readiness.reasons))
-            self.intent = bound_intent
-            self.backup_set = backup
             self.recovery_readiness = readiness
-            self._derive_and_validate_backup_inputs()
             self.stage, self.reasons = X220WorkflowStage.RECOVERY_READY, ()
             return readiness
         except (OSError, ValueError, TypeError) as exc:
@@ -402,7 +404,10 @@ class X220CorebootWorkflow:
         if len(captured) != 1:
             raise ValueError("X220 requires a complete backup of its single observed chip")
         original_path, recovery_path = Path(captured[0].first_path), Path(captured[0].second_path)
-        if any(path.is_symlink() or not path.is_file() or path.stat().st_size != 8 * MIB for path in (original_path, recovery_path)):
+        manifest_paths = (Path(self.backup_set.primary_manifest), Path(self.backup_set.recovery_manifest))
+        if any(_path_has_link_component(path) or not path.is_file() for path in manifest_paths):
+            raise ValueError("X220 primary/recovery backup manifests are missing or have symlinked path components")
+        if any(_path_has_link_component(path) or not path.is_file() or path.stat().st_size != 8 * MIB for path in (original_path, recovery_path)):
             raise ValueError("X220 original full-chip backup copies are missing, unsafe, or wrong-sized")
         original, recovery = original_path.read_bytes(), recovery_path.read_bytes()
         if original != recovery or sha256_file(original_path) != captured[0].first_sha256 or sha256_file(recovery_path) != captured[0].second_sha256:

@@ -70,7 +70,7 @@ _CBFS_TEXT = "\n".join((
 ))
 
 
-def _prepare(tmp_path: Path, monkeypatch):
+def _prepare(tmp_path: Path, monkeypatch, *, accept_backup=True):
     import autoloader.workflow.x220_coreboot as module
     from tests.test_artifact_engine import _make_x220_backup_fixture
 
@@ -91,8 +91,9 @@ def _prepare(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(module, "X220_COREBOOT", fake_recipe)
     workflow = X220CorebootWorkflow(intent, journal_path=tmp_path / "operation.json")
     assert workflow.validate_build_intent().decision is CompatibilityDecision.ALLOWED
-    workflow.accept_backup(backup)
-    assert workflow.stage is X220WorkflowStage.RECOVERY_READY
+    if accept_backup:
+        workflow.accept_backup(backup)
+        assert workflow.stage is X220WorkflowStage.RECOVERY_READY
     return workflow, backup, original, fake_pin, source_bytes, module
 
 
@@ -435,6 +436,30 @@ def test_x220_backup_copy_change_blocks_and_journal_plan_mismatch(tmp_path, monk
     changed_plan = replace(staged.operation_plan, requested_model_id="x220i")
     with pytest.raises(Exception):
         workflow.resume_from_checkpoint(changed_plan)
+
+
+def test_x220_backup_ancestor_symlink_blocks_before_recovery_manifest_access(tmp_path, monkeypatch):
+    workflow, backup, _original, _fake_pin, _source_bytes, _module = _prepare(tmp_path, monkeypatch, accept_backup=False)
+    backup_path = Path(backup.chips[0].first_path)
+    linked_ancestor = backup_path.parent
+    path_type = type(backup_path)
+    real_is_symlink = path_type.is_symlink
+
+    def report_backup_directory_as_symlink(path):
+        if path == linked_ancestor:
+            return True
+        return real_is_symlink(path)
+
+    monkeypatch.setattr(path_type, "is_symlink", report_backup_directory_as_symlink)
+
+    class RecoveryMustNotReadPaths:
+        def evaluate(self, *_args, **_kwargs):
+            pytest.fail("Recovery readiness must not follow symlinked backup paths")
+
+    workflow.recovery_service = RecoveryMustNotReadPaths()
+    with pytest.raises(SafetyError, match="verified complete original backup"):
+        workflow.accept_backup(backup)
+    assert workflow.stage is X220WorkflowStage.BLOCKED
 
 
 def test_x220_write_and_restore_entrypoints_are_unconditionally_blocked(tmp_path, monkeypatch):
