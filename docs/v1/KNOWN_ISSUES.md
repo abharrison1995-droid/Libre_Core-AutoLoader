@@ -47,6 +47,12 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 - The pinned 1vyrain README publishes the Rev 5 image at its Google Drive URL with MD5 `dd30313a8665e870360920b00cec55c4` only. A matching user-reported MD5 is a weak legacy checksum comparison, not authentication; the local SHA-256 and USB/media identity are user-reported fingerprints only. No 1vyrain image or IVprep binary is bundled. IVprep/WinFlash/reversion download and execution APIs are fail-closed. Descriptors carry the pinned IVprep settings/power/reboot warnings and 1vyrain boot/media instructions.
 - The handoff service is not wired into CLI/TUI. No physical T430 detection, BIOS downgrade, 1vyrain run, firmware/media write, boot test or post-install hardware validation occurred. T430 remains **HARDWARE PENDING**; Phase 05 software status is **SOL ACCEPTED**.
 
+## Phase 06 implementation and remaining limitations
+
+- Phase 06 adds a standalone regular-X200 Libreboot staging service at `autoloader/workflow/x200_libreboot.py`, commit `91ec91edaadba1e19dba4a15efc4dbe040680377`. It validates evidence supplied by the caller, calls the read-only two-read backup service, revalidates recovery readiness and the selected pinned artifact, and records a final `BACKUP_VERIFIED` operation journal. It is awaiting SOL review.
+- The positive tests use a fake SPI transport and a hand-built synthetic COMPLETE artifact manifest; this proves software binding and failure behavior only. No upstream `lbmk` build or verified release image was produced. The Windows host returns `LINUX_BUILD_ENV_REQUIRED` before a build command can run.
+- The service is not integrated into CLI/TUI. It does not provide model-specific physical disassembly/programmer setup instructions and does not perform a physical probe, measured voltage, backup, write, restoration, read-back, cold boot or hardware recovery test. Its flash and restore requests always fail closed; the proposal remains `STAGED/HARDWARE_PENDING`.
+
 ## Hardware state
 
 T430 1vyrain, X200 Libreboot and X220 Coreboot: **HARDWARE PENDING**. No physical probe/read, measured voltage, backup, firmware build/write, post-write read-back, recovery or boot evidence is recorded.
