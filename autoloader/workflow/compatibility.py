@@ -201,6 +201,45 @@ class CompatibilityValidator:
             and pinned_family == profile.model_id
         )
 
+    def validate_t430_handoff_identity(self, device: DeviceEvidence) -> CompatibilityResult:
+        """Validate only the independent T430 identity evidence for handoff planning.
+
+        This is deliberately not a firmware-write authorization. BIOS version,
+        stock vendor state, external approval, and post-reboot evidence are
+        assessed by the T430 handoff session separately.
+        """
+        profile = self.profiles.get("t430-1vyrain")
+        if profile is None:
+            return CompatibilityResult(
+                CompatibilityDecision.UNKNOWN,
+                "t430-1vyrain",
+                EvidenceConfidence.LOW,
+                ("T430 V1 profile is unavailable",),
+            )
+        blocked: list[str] = []
+        unknown: list[str] = []
+        high_identity = self._validate_identity(profile, device, blocked, unknown)
+        return self._result(profile.profile_id, blocked, unknown, high_identity=high_identity)
+
+    @staticmethod
+    def parse_t430_upstream_bios_numeric(raw_bios_version: str | None) -> int | None:
+        """Parse the exact numeric shape consumed by pinned 1vyrain ``start.sh``.
+
+        The upstream script reads token three from the dmidecode ``Version:``
+        line, removes ``(`` and the decimal point, and requires an integer
+        below 265. A bare version such as ``2.64`` is not equivalent evidence.
+        The space before ``)`` is required because without it token three
+        contains a closing parenthesis and the upstream integer comparison is
+        malformed.
+        """
+        raw = (raw_bios_version or "").strip()
+        raw = re.sub(r"^Version:\s*", "", raw, flags=re.IGNORECASE)
+        parenthesized = _T430_BIOS_TOKEN.findall(raw)
+        expected_format = re.fullmatch(r"\S+\s+\(\s*\d{1,2}\.\d{2}\s+\)", raw)
+        if len(parenthesized) != 1 or raw.count("(") != 1 or raw.count(")") != 1 or not expected_format:
+            return None
+        return int(parenthesized[0].replace(".", ""))
+
     @staticmethod
     def _validate_bios(profile: V1Profile, device: DeviceEvidence, blocked: list[str], unknown: list[str]) -> None:
         if profile.bios_numeric_threshold_exclusive is None:
@@ -216,16 +255,10 @@ class CompatibilityValidator:
             raw_vendor_is_lenovo = "lenovo" in vendor or "ibm" in vendor
             if raw_vendor_is_lenovo is not device.stock_lenovo_bios:
                 blocked.append("raw BIOS vendor contradicts the stock Lenovo BIOS classification")
-        raw = (device.raw_bios_version or "").strip()
-        parenthesized = _T430_BIOS_TOKEN.findall(raw)
-        expected_format = re.fullmatch(r"\S+\s+\(\s*\d{1,2}\.\d{2}\s+\)", raw)
-        if len(parenthesized) == 1 and raw.count("(") == 1 and raw.count(")") == 1 and expected_format:
-            token = parenthesized[0]
-        else:
+        numeric_version = CompatibilityValidator.parse_t430_upstream_bios_numeric(device.raw_bios_version)
+        if numeric_version is None:
             unknown.append("T430 BIOS version is missing, ambiguous, or not in the pinned upstream DMI format")
             return
-        # Upstream start.sh removes the decimal point and compares the numeric token.
-        numeric_version = int(token.replace(".", ""))
         if numeric_version >= profile.bios_numeric_threshold_exclusive:
             blocked.append(
                 f"T430 BIOS numeric version {numeric_version} is not below the upstream threshold "

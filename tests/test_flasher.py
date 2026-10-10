@@ -214,47 +214,43 @@ def test_flashrom_runner_timeout_handling(monkeypatch):
     assert "timed out" in log.lower()
 
 
-def test_ivprep_sha256_verification(tmp_path, monkeypatch):
-    import hashlib
-    import zipfile
+def test_ivprep_download_and_execution_are_disabled(monkeypatch):
+    import subprocess
     from autoloader.reversion.ivprep import IVPrepManager
     from autoloader.exceptions import BIOSReversionError
-
-    # Create mock zip
-    zip_file = tmp_path / "mock_ivprep.zip"
-    with zipfile.ZipFile(zip_file, "w") as zf:
-        zf.writestr("IVprep-master/downgrade.bat", "echo Downgrade")
-
-    zip_bytes = zip_file.read_bytes()
-    real_hash = hashlib.sha256(zip_bytes).hexdigest()
-
-    class MockResponse:
-        def __init__(self, data):
-            self.data = data
-            self.offset = 0
-        def read(self, n=8192):
-            chunk = self.data[self.offset:self.offset+n]
-            self.offset += len(chunk)
-            return chunk
-        def __enter__(self):
-            return self
-        def __exit__(self, *args):
-            pass
+    from autoloader.reversion.chains import ReversionChain, ReversionState
+    from autoloader.reversion.winflash import WinFlashRunner
 
     import urllib.request
-    monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: MockResponse(zip_bytes))
+    calls = []
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: calls.append("download"))
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: calls.append("process"))
 
-    # Correct hash passes
-    mgr_valid = IVPrepManager(model="x230", target_version="2.60", expected_sha256=real_hash)
-    mgr_valid.config.working_dir = tmp_path / "work_valid"
-    extracted = mgr_valid.download()
-    assert extracted.exists()
+    manager = IVPrepManager(model="t430", target_version="2.64")
+    for operation in (manager.download, manager.verify_prerequisites, manager.execute_downgrade, manager.verify_downgrade_success):
+        with pytest.raises(BIOSReversionError):
+            operation()
 
-    # Mismatched hash raises error
-    mgr_invalid = IVPrepManager(model="x230", target_version="2.60", expected_sha256="0000000000000000000000000000000000000000000000000000000000000000")
-    mgr_invalid.config.working_dir = tmp_path / "work_invalid"
-    with pytest.raises(BIOSReversionError, match="SHA256 mismatch"):
-        mgr_invalid.download()
+    with pytest.raises(BIOSReversionError):
+        WinFlashRunner().execute_flash(Path("T430.FL1"))
+    for operation in (
+        WinFlashRunner().locate_winflash,
+        lambda: WinFlashRunner().prepare_flash(Path("T430.FL1")),
+    ):
+        with pytest.raises(BIOSReversionError):
+            operation()
+    result = WinFlashRunner().check_result(0, "fabricated success", "")
+    assert result.success is False
+
+    events = []
+    chain = ReversionChain(events.append)
+    chain.run()
+    for operation in (chain._step_4_execute_reversion, chain._step_5_verify):
+        with pytest.raises(BIOSReversionError):
+            operation()
+    assert chain.state is ReversionState.FAILED
+    assert events[-1].state is ReversionState.FAILED
+    assert calls == []
 
 
 def test_reversion_chain_model_forwarding():
