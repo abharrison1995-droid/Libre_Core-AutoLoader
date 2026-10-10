@@ -41,6 +41,7 @@ autoloader resume-checkpoint --profile x220-coreboot --checkpoint C:\firmware-wo
 autoloader t430-stage --request handoff-stage.json --checkpoint C:\firmware-work\t430.json
 autoloader resume-checkpoint --profile t430-1vyrain --checkpoint C:\firmware-work\t430.json
 autoloader usb --output-dir ./iso_build
+autoloader build-usb --source-root /work/Libre_Core-AutoLoader --profile-dir /work/Libre_Core-AutoLoader/usb_builder/archiso_profile --snapshot-lock /work/Libre_Core-AutoLoader/usb_builder/snapshot.lock.json --output-dir /work/iso-output --work-parent /work/iso-work --network-mode online
 ```
 
 - `run` opens the Textual interface. Workflow choices and displayed next actions come from the shared controller. Explicit preparation, backup, and build actions use their reviewed backend services; flash, restore, physical read-back, and boot actions remain unavailable.
@@ -55,11 +56,13 @@ autoloader usb --output-dir ./iso_build
 - `flash` is unavailable and cannot invoke a physical writer, regardless of the candidate ROM path.
 - `inspect-checkpoint` validates and summarizes an operation journal read-only. X200/X220 `resume-checkpoint` requires a fresh versioned request, locally re-detects/re-probes the device, reopens the exact backup/artifact evidence, and resumes only the safe staged software state. T430 `t430-stage` and `resume-checkpoint` present human-run IVprep/1vyrain instructions and accept fresh return attestations; neither downloads nor executes upstream code.
 - The Textual interface uses the same controller and presents the same explicit preparation, backup, build, artifact, resume, and T430 stage actions. It does not automatically probe hardware at startup. Workflow status refreshes from the controller when returning from an action screen.
-- `usb` creates an output directory only; it does not build or write an ISO.
+- `usb` creates an output directory only; it does not build or write an ISO. `build-usb` invokes the shared Archiso build contract and requires explicit absolute source/profile/lock/output/work paths and `--network-mode online|offline`. Offline mode also requires `--offline-repository` and `--offline-manifest`. It refuses non-Linux hosts and never writes removable media.
 
 ## Live USB development
 
-The Archiso profile and build script are experimental. They require a supported Linux environment with Archiso tooling. The Windows development host used for this release-candidate work has no WSL Linux distribution or container runtime, so the ISO build and boot path have not been validated.
+The Archiso profile and build contract are experimental. A successful invocation produces only a candidate ISO: build provenance records exact source/profile hashes, the pinned dated package source, host package inventory, Archiso executable owner/hash, pip/setuptools/wheel versions, installed image package inventory and log hashes. Pacman is configured to require signed repository databases and packages; offline repositories must also match an explicit complete local hash manifest and signatures are still checked by pacman. The invoking Python environment must already contain pip, setuptools 61.0 or newer, and wheel; the builder does not install host build tools. Wheel creation uses a package-only temporary source copy, leaving the checkout unchanged and omitting host-absolute paths from metadata embedded in the ISO. Candidate status does not mean the image boots or is release validated. BIOS and UEFI QEMU boot evidence remains a separate release gate, and the build tool reports both as `NOT_PERFORMED`.
+
+The package source is fixed to the official 2026-09-29 archive, Archiso 91-1 and a SHA-256-pinned package list. The builder records the complete host package inventory, but versions other than Archiso and the `mkarchiso` executable are not pinned; exact host-environment reproducibility remains a release gate. The Windows development host used for this release-candidate work has no WSL Linux distribution or container runtime, so no real ISO build or boot test has been run here. `build-usb` fails with `LINUX_BUILD_ENV_REQUIRED` before launching subprocesses on Windows. `usb` remains output-directory preparation only.
 
 ## Safety and validation status
 
