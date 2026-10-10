@@ -63,7 +63,7 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 - Tests: added `tests/test_workflow_safety.py` with **12 focused tests** covering DMI conflict/aliases/manual candidates, T430 threshold and unknown strings, X200 capacity and artifact corruption, X220 topology/region/layout, external chip voltage, partial/transient/blank backup evidence, illegal transitions, changed/reused approvals, and zero writer calls for blocked/simulation/Phase02 paths.
 - Current checks: `python -m pytest -q` — **92 passed**; `mypy autoloader` — **no issues in 81 source files**; `pip install -e '.[dev]'` — passed in isolated Python 3.12.14 venv; `python -m autoloader --help` — passed; `git diff --check` — passed.
 - Limits: this core is standalone and is not wired to CLI/TUI; Phase 03/08 work remains. Input observations and capture IDs are not hardware-attested, artifact source-commit ownership is not independently fetched/verified, and the journal is in-memory only. No physical hardware, SPI gear, flash writes, IVprep, recovery operation or destructive media operation was used. No firmware or Live USB build was performed; the host lacks WSL/Linux/container tooling.
-- Review/commit: SOL review pending. Implementation commit SHA will be recorded here after commit. Hardware workflows remain **HARDWARE PENDING**.
+- Review/commit: Phase 02 implementation is commit `1b088683f152f904d3b1801f756abc59231dee9c`; SOL review pending. Hardware workflows remain **HARDWARE PENDING**.
 
 ### Defect register (initial)
 
