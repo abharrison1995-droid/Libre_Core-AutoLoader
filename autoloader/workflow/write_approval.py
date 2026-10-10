@@ -14,12 +14,13 @@ import json
 import os
 import re
 import secrets
+import sys
 import threading
 import uuid
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, TextIO
 
 from autoloader.flasher.backup_service import BackupSetResult, BackupSetService
@@ -28,10 +29,13 @@ from autoloader.flasher.recovery import RecoveryReadinessRecord, RecoveryReadine
 from autoloader.flasher.spi import ChipProbeEvidence
 from autoloader.workflow.authorization import AuthorizationError, AuthorizationStaleError, AuthorizationReusedError, compute_plan_digests
 from autoloader.workflow.compatibility import CompatibilityValidator
+from autoloader.workflow.engine import WorkflowSession
 from autoloader.workflow.types import (
+    BuildIntentEvidence,
     CompatibilityDecision,
     DeviceEvidence,
     OperationPlan,
+    OperationState,
     PlanDigests,
     ProgrammerKind,
     RegionEvidence,
@@ -128,6 +132,21 @@ class WriteIntent:
     artifact_sha256: str
     artifact_size_bytes: int
     artifact_regions: tuple[RegionEvidence, ...]
+    artifact_manifest_path: str
+    artifact_manifest_sha256: str
+    artifact_operation_id: str
+    artifact_recipe_id: str
+    artifact_source_repository_url: str
+    artifact_source_revision: str
+    artifact_source_tree_id: str
+    artifact_selected_relative_path: str
+    artifact_source_files: tuple[tuple[str, str], ...]
+    artifact_toolchain: tuple[tuple[str, str], ...]
+    artifact_command_argv: tuple[tuple[str, ...], ...]
+    artifact_tool_fingerprints: tuple[tuple[str, str], ...]
+    operation_journal_path: str
+    operation_journal_state: str
+    operation_journal_checksum: str
     backup_operation_id: str
     backup_copies: tuple[BackupCopyBinding, ...]
     primary_manifest_path: str
@@ -146,6 +165,10 @@ class WriteIntent:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "artifact_regions", tuple(self.artifact_regions))
+        object.__setattr__(self, "artifact_source_files", tuple(tuple(item) for item in self.artifact_source_files))
+        object.__setattr__(self, "artifact_toolchain", tuple(tuple(item) for item in self.artifact_toolchain))
+        object.__setattr__(self, "artifact_command_argv", tuple(tuple(item) for item in self.artifact_command_argv))
+        object.__setattr__(self, "artifact_tool_fingerprints", tuple(tuple(item) for item in self.artifact_tool_fingerprints))
         object.__setattr__(self, "backup_copies", tuple(self.backup_copies))
 
     def validate_integrity(self) -> None:
@@ -235,10 +258,15 @@ class WriteIntentFactory:
         *,
         validator: CompatibilityValidator | None = None,
         recovery_service: RecoveryReadinessService | None = None,
+        artifact_engine: Any | None = None,
     ) -> None:
         self.backup_service = backup_service
         self.validator = validator or CompatibilityValidator()
         self.recovery_service = recovery_service or RecoveryReadinessService(self.validator)
+        if artifact_engine is None:
+            from autoloader.rom_builder.artifact_engine import ArtifactEngine
+            artifact_engine = ArtifactEngine()
+        self.artifact_engine = artifact_engine
 
     def create(
         self,
@@ -249,6 +277,8 @@ class WriteIntentFactory:
         probe: ChipProbeEvidence,
         backup_set: BackupSetResult,
         recovery_readiness: RecoveryReadinessRecord,
+        operation_journal_path: str | Path,
+        artifact_manifest_path: str | Path,
         action: WriteAction = WriteAction.FLASH,
         now_utc: datetime | None = None,
     ) -> WriteIntent:
@@ -314,8 +344,25 @@ class WriteIntentFactory:
             raise WriteApprovalError("verified backup result differs from the exact operation plan")
 
         try:
+            # Original backups are captured against the immutable pre-build
+            # intent (there was no firmware artifact yet). Re-open that exact
+            # intent here; the final plan's backup binding is checked above
+            # and again by the model workflow after the COMPLETE artifact is
+            # reopened.
+            from autoloader.workflow.x200_libreboot import create_x200_build_intent
+            from autoloader.workflow.x220_coreboot import create_x220_build_intent
+            if plan.profile_id == "x200-libreboot":
+                backup_intent = create_x200_build_intent(
+                    device=plan.device, topology=plan.topology, programmer=plan.programmer
+                )
+            elif plan.profile_id == "x220-coreboot":
+                backup_intent = create_x220_build_intent(
+                    device=plan.device, topology=plan.topology, programmer=plan.programmer
+                )
+            else:
+                raise WriteApprovalError("backup belongs to an unsupported V1 profile")
             reopened = self.backup_service.load_verified_result(
-                plan,
+                backup_intent,
                 operation_id=backup_set.operation_id,
                 primary_manifest=backup_set.primary_manifest,
                 recovery_manifest=backup_set.recovery_manifest,
@@ -325,9 +372,42 @@ class WriteIntentFactory:
             )
         except Exception as exc:
             raise WriteApprovalError(f"persistent backup manifests/copies failed revalidation: {exc}") from exc
-        if reopened != backup_set:
-            raise WriteApprovalError("reopened backup result differs from the supplied verified backup set")
-        _validate_recovery_record(self.recovery_service, plan, reopened, recovery_readiness)
+        differences = tuple(
+            item.name for item in fields(BackupSetResult)
+            if item.name != "created_at_utc"
+            and getattr(reopened, item.name) != getattr(backup_set, item.name)
+        )
+        if differences:
+            raise WriteApprovalError(
+                "reopened backup result differs from the supplied verified backup set: "
+                + ", ".join(differences)
+            )
+        _validate_recovery_record(self.recovery_service, backup_intent, reopened, recovery_readiness)
+
+        accepted = self._reopen_accepted_workflow(
+            plan,
+            operation_id=operation_id,
+            backup_set=reopened,
+            journal_path=operation_journal_path,
+            artifact_manifest_path=artifact_manifest_path,
+        )
+        artifact_result = accepted["artifact_result"]
+        workflow_journal = accepted["journal"]
+        manifest = artifact_result.manifest
+        assert manifest is not None and artifact_result.manifest_path is not None
+        selected_matches = [
+            item for item in manifest.artifacts
+            if item.relative_path == manifest.selected_artifact_relative_path
+            and item.sha256 == manifest.selected_artifact_sha256
+        ]
+        if len(selected_matches) != 1:
+            raise WriteApprovalError("reopened COMPLETE manifest does not identify exactly one selected artifact")
+        selected_record = selected_matches[0]
+        tool_fingerprints: list[tuple[str, str]] = []
+        if selected_record.cbfs_inspection is not None:
+            tool_fingerprints.append((selected_record.cbfs_inspection.tool_relative_path, selected_record.cbfs_inspection.tool_sha256))
+        if selected_record.region_inspection_tool is not None:
+            tool_fingerprints.append((selected_record.region_inspection_tool.relative_path, selected_record.region_inspection_tool.executable_sha256))
 
         digests = compute_plan_digests(plan)
         artifact_path = Path(plan.artifact.path)
@@ -392,6 +472,21 @@ class WriteIntentFactory:
             artifact_sha256=artifact_sha,
             artifact_size_bytes=artifact_path.stat().st_size,
             artifact_regions=plan.artifact.regions,
+            artifact_manifest_path=normalized_path(str(artifact_result.manifest_path.resolve(strict=True))),
+            artifact_manifest_sha256=_hash_file(artifact_result.manifest_path),
+            artifact_operation_id=manifest.operation_id,
+            artifact_recipe_id=manifest.recipe_id,
+            artifact_source_repository_url=manifest.source_repository_url,
+            artifact_source_revision=manifest.source_revision,
+            artifact_source_tree_id=manifest.source_tree_id,
+            artifact_selected_relative_path=manifest.selected_artifact_relative_path or "",
+            artifact_source_files=manifest.source_files,
+            artifact_toolchain=manifest.toolchain,
+            artifact_command_argv=tuple(command.argv for command in manifest.commands),
+            artifact_tool_fingerprints=tuple(tool_fingerprints),
+            operation_journal_path=normalized_path(str(workflow_journal.path)),
+            operation_journal_state=workflow_journal.state.value,
+            operation_journal_checksum=_hash_file(workflow_journal.path),
             backup_operation_id=reopened.operation_id,
             backup_copies=backup_pairs,
             primary_manifest_path=normalized_path(reopened.primary_manifest),
@@ -414,6 +509,109 @@ class WriteIntentFactory:
             _FACTORY_INTENTS[id(intent)] = intent
         return intent
 
+    def _reopen_accepted_workflow(
+        self,
+        plan: OperationPlan,
+        *,
+        operation_id: str,
+        backup_set: BackupSetResult,
+        journal_path: str | Path,
+        artifact_manifest_path: str | Path,
+    ) -> dict[str, Any]:
+        """Reconstruct the accepted model workflow from durable evidence.
+
+        A caller-supplied plan, DMI record and probe are not sufficient. The
+        exact pre-write journal and ArtifactEngine manifest are reread, then
+        passed through the corresponding model workflow's COMPLETE-result
+        validator before an intent is created.
+        """
+        from autoloader.workflow.x200_libreboot import X200LibrebootWorkflow, create_x200_build_intent
+        from autoloader.workflow.x220_coreboot import X220CorebootWorkflow, create_x220_build_intent
+
+        checkpoint = Path(journal_path).expanduser()
+        manifest_path = Path(artifact_manifest_path).expanduser()
+        if (
+            _has_link_component(checkpoint) or not checkpoint.is_file()
+            or _has_link_component(manifest_path) or not manifest_path.is_file()
+        ):
+            raise WriteApprovalError("accepted operation journal and ArtifactEngine manifest must be existing, link-free files")
+        try:
+            checkpoint = checkpoint.resolve(strict=True)
+            manifest_path = manifest_path.resolve(strict=True)
+            session = WorkflowSession.resume(plan, checkpoint, validator=self.validator)
+            journal = session.journal
+        except Exception as exc:
+            raise WriteApprovalError(f"accepted pre-write workflow checkpoint failed revalidation: {exc}") from exc
+        if journal.state is not OperationState.BACKUP_VERIFIED:
+            raise WriteApprovalError("accepted workflow checkpoint must be exactly BACKUP_VERIFIED before write approval")
+        initial_checkpoint_sha256 = _hash_file(checkpoint)
+        if journal.operation_id != operation_id or journal.path != checkpoint:
+            raise WriteApprovalError("operation ID/path does not match the accepted workflow checkpoint")
+        if (
+            not journal.entries
+            or journal.entries[-1].to_state is not OperationState.BACKUP_VERIFIED
+            or journal.entries[-1].action != "verify-backup"
+            or journal.entries[-1].code != "BACKUP_VERIFIED"
+            or journal.entries[-1].failure
+        ):
+            raise WriteApprovalError("accepted workflow checkpoint lacks the final successful backup-verification event")
+        try:
+            artifact_result = self.artifact_engine.load_completed_result(manifest_path)
+        except Exception as exc:
+            raise WriteApprovalError(f"persisted ArtifactEngine COMPLETE manifest failed to reopen: {exc}") from exc
+
+        try:
+            if plan.profile_id == "x200-libreboot":
+                from autoloader.workflow.x200_libreboot import X200WorkflowStage
+                build_intent = create_x200_build_intent(
+                    device=plan.device, topology=plan.topology, programmer=plan.programmer
+                )
+                workflow: Any = X200LibrebootWorkflow(
+                    build_intent, validator=self.validator, journal_path=checkpoint
+                )
+                validation = workflow.validate_build_intent()
+                if validation.decision is not CompatibilityDecision.ALLOWED:
+                    raise ValueError("X200 recipe intent is no longer allowed")
+                workflow.accept_backup(backup_set)
+                accepted_result = workflow.accept_artifact_result(artifact_result)
+                if accepted_result.stage is not X200WorkflowStage.STAGED:
+                    raise ValueError("X200 durable workflow did not reopen to STAGED")
+            elif plan.profile_id == "x220-coreboot":
+                from autoloader.workflow.x220_coreboot import X220WorkflowStage
+                build_intent = create_x220_build_intent(
+                    device=plan.device, topology=plan.topology, programmer=plan.programmer
+                )
+                workflow = X220CorebootWorkflow(
+                    build_intent, validator=self.validator, journal_path=checkpoint
+                )
+                validation = workflow.validate_build_intent()
+                if validation.decision is not CompatibilityDecision.ALLOWED:
+                    raise ValueError("X220 recipe intent is no longer allowed")
+                workflow.accept_backup(backup_set)
+                workflow._cpu_count = _manifest_cpu_count(artifact_result.manifest)
+                accepted_result = workflow.accept_artifact_result(artifact_result)
+                if accepted_result.stage is not X220WorkflowStage.STAGED:
+                    raise ValueError("X220 durable workflow did not reopen to STAGED")
+            else:
+                raise ValueError("profile is not an accepted external-SPI V1 profile")
+        except Exception as exc:
+            raise WriteApprovalError(f"accepted model workflow/artifact evidence failed revalidation: {exc}") from exc
+
+        if (
+            accepted_result.operation_plan != plan
+            or accepted_result.operation_id != operation_id
+            or workflow.operation_journal_path is None
+            or Path(workflow.operation_journal_path).resolve(strict=True) != checkpoint
+            or artifact_result.manifest_path is None
+            or artifact_result.manifest_path.resolve(strict=True) != manifest_path
+        ):
+            raise WriteApprovalError("reopened accepted workflow does not bind the exact plan, journal and manifest paths")
+        final_session = WorkflowSession.resume(plan, checkpoint, validator=self.validator)
+        final_journal = final_session.journal
+        if final_journal.state is not OperationState.BACKUP_VERIFIED or _hash_file(checkpoint) != initial_checkpoint_sha256:
+            raise WriteApprovalError("workflow checkpoint changed during artifact acceptance")
+        return {"artifact_result": artifact_result, "journal": final_journal}
+
 
 class WriteApprovalLedger:
     """Durable single-use approval ledger using exclusive filesystem claims.
@@ -422,9 +620,19 @@ class WriteApprovalLedger:
     by a JSON loader. An exclusive marker created with ``O_EXCL`` provides
     cross-process single consumption. A crash after the marker is written is
     fail-closed: the approval is consumed and cannot be resumed or replayed.
+
+    Checksums detect accidental corruption; they do not authenticate records
+    against a malicious process running as the same local account. A local
+    administrator/account owner can alter code or roll back local files. Phase
+    10B must re-open all workflow, artifact and backup evidence immediately
+    before consuming an approval. Approval issuance is unavailable on
+    platforms without durable directory fsync; this implementation currently
+    marks Windows unavailable rather than assuming file fsync is enough.
     """
 
     def __init__(self, directory: str | Path) -> None:
+        if not _directory_fsync_supported():
+            raise WriteApprovalError("durable write approvals are unavailable: platform directory fsync is unsupported")
         self.directory = Path(directory).expanduser().absolute()
         self.directory.mkdir(parents=True, exist_ok=True)
         if _has_link_component(self.directory):
@@ -434,6 +642,8 @@ class WriteApprovalLedger:
     def issue(self, intent: WriteIntent, confirmation: HumanActionConfirmation) -> WriteApprovalToken:
         if type(intent) is not WriteIntent or type(confirmation) is not HumanActionConfirmation:
             raise WriteApprovalError("a typed write intent and frontend human-confirmation record are required")
+        if confirmation.channel is not ConfirmationChannel.CLI_TTY:
+            raise WriteApprovalError("TUI write approval is disabled until its dedicated confirmation screen is integrated")
         _require_factory_intent(intent)
         _consume_frontend_confirmation(confirmation)
         intent.validate_integrity()
@@ -573,23 +783,34 @@ def collect_cli_confirmation(
     challenge: WriteApprovalChallenge,
     *,
     actor: str,
-    input_stream: TextIO,
-    output_stream: TextIO,
+    input_stream: TextIO | None = None,
+    output_stream: TextIO | None = None,
 ) -> HumanActionConfirmation:
-    """Collect exact confirmation only from an interactive TTY pair."""
-    if not callable(getattr(input_stream, "isatty", None)) or not input_stream.isatty():
-        raise WriteApprovalError("interactive TTY input is required; non-TTY approval is disabled")
-    if not callable(getattr(output_stream, "isatty", None)) or not output_stream.isatty():
-        raise WriteApprovalError("interactive TTY output is required to display the irreversible action")
+    """Collect exact confirmation only from real process stdin/stdout TTYs.
+
+    The optional stream arguments exist only to reject compatibility callers
+    explicitly; production approval can never be redirected to an arbitrary
+    object whose Python ``isatty`` method claims to be a terminal.
+    """
+    selected_input = sys.stdin if input_stream is None else input_stream
+    selected_output = sys.stdout if output_stream is None else output_stream
+    if selected_input is not sys.stdin or selected_output is not sys.stdout:
+        raise WriteApprovalError("approval requires the real process stdin/stdout file descriptors")
+    input_fd = _require_tty_file_descriptor(selected_input, "input")
+    output_fd = _require_tty_file_descriptor(selected_output, "output")
+    if not os.isatty(input_fd):
+        raise WriteApprovalError("interactive OS TTY input is required; non-TTY approval is disabled")
+    if not os.isatty(output_fd):
+        raise WriteApprovalError("interactive OS TTY output is required to display the irreversible action")
     _validate_challenge(challenge)
-    output_stream.write(
+    selected_output.write(
         "PHYSICAL FIRMWARE WRITE: "
         f"{challenge.model_id.upper()} chip {challenge.chip_name} ({challenge.capacity_bytes} bytes), "
         f"operation {challenge.operation_id}, artifact SHA-256 {challenge.artifact_sha256}.\n"
         f"Type exactly: {challenge.exact_phrase}\n> "
     )
-    output_stream.flush()
-    typed = input_stream.readline().rstrip("\r\n")
+    selected_output.flush()
+    typed = selected_input.readline().rstrip("\r\n")
     if not hmac.compare_digest(typed, challenge.exact_phrase):
         raise WriteApprovalError("exact write challenge was not entered; no approval was issued")
     return _mint_frontend_confirmation(
@@ -606,23 +827,9 @@ def accept_tui_confirmation(
     actor: str,
     event: TUIConfirmationEvent,
 ) -> HumanActionConfirmation:
-    """Convert the dedicated screen's explicit confirm button event."""
-    _validate_challenge(challenge)
-    if type(event) is not TUIConfirmationEvent:
-        raise WriteApprovalError("a typed confirmation-screen event is required")
-    if (
-        event.screen_id != "write-confirmation"
-        or event.button_id != "confirm-write"
-        or event.challenge_sha256 != challenge.challenge_sha256
-    ):
-        raise WriteApprovalError("TUI event does not confirm the displayed exact write operation")
-    _require_uuid(event.event_id, "TUI event")
-    return _mint_frontend_confirmation(
-        challenge=challenge,
-        actor=actor,
-        confirmed_at=_parse_utc(event.occurred_at_utc, "TUI event time"),
-        channel=ConfirmationChannel.TUI_EXPLICIT_ACTION,
-    )
+    """TUI approval is disabled until a dedicated reviewed screen is wired."""
+    del challenge, actor, event
+    raise WriteApprovalError("TUI write approval is unavailable until the dedicated confirmation screen is integrated")
 
 
 def _mint_frontend_confirmation(
@@ -630,6 +837,8 @@ def _mint_frontend_confirmation(
     confirmed_at: datetime, channel: ConfirmationChannel,
 ) -> HumanActionConfirmation:
     """Create a one-use in-process receipt for a checked frontend interaction."""
+    if channel is not ConfirmationChannel.CLI_TTY:
+        raise WriteApprovalError("only the OS-verified CLI TTY frontend can mint approval evidence")
     if not actor.strip():
         raise WriteApprovalError("human approval actor must be recorded")
     confirmation = object.__new__(HumanActionConfirmation)
@@ -719,7 +928,7 @@ def _validate_voltage_attestations(plan: OperationPlan, now: datetime) -> None:
 
 def _validate_recovery_record(
     service: RecoveryReadinessService,
-    plan: OperationPlan,
+    plan: OperationPlan | BuildIntentEvidence,
     backup: BackupSetResult,
     supplied: RecoveryReadinessRecord,
 ) -> None:
@@ -752,6 +961,25 @@ def _validate_challenge(challenge: WriteApprovalChallenge) -> None:
         raise WriteApprovalError("write challenge is malformed or does not bind an exact flash action")
 
 
+def _manifest_cpu_count(manifest: Any) -> int:
+    """Read the exact CPU count from the pinned X220 build command records."""
+    if manifest is None:
+        raise WriteApprovalError("X220 artifact manifest is missing")
+    crossgcc_counts: set[int] = set()
+    make_counts: set[int] = set()
+    for command in manifest.commands:
+        argv = command.argv
+        if len(argv) == 3 and argv[:2] == ("make", "crossgcc-i386") and argv[2].startswith("CPUS="):
+            value = argv[2][len("CPUS="):]
+            if value.isdecimal() and int(value) > 0:
+                crossgcc_counts.add(int(value))
+        if len(argv) == 2 and argv[0] == "make" and re.fullmatch(r"-j[1-9][0-9]*", argv[1]):
+            make_counts.add(int(argv[1][2:]))
+    if len(crossgcc_counts) != 1 or crossgcc_counts != make_counts:
+        raise WriteApprovalError("X220 artifact manifest has ambiguous/mismatched pinned build CPU commands")
+    return next(iter(crossgcc_counts))
+
+
 def _with_intent_checksum(intent: WriteIntent) -> WriteIntent:
     from dataclasses import replace
     return replace(intent, intent_sha256=_intent_checksum(intent))
@@ -781,6 +1009,8 @@ def _validate_intent_policy(intent: WriteIntent) -> None:
         ("device evidence", intent.device_evidence_sha256),
         ("probe output", intent.probe_output_sha256),
         ("artifact", intent.artifact_sha256),
+        ("artifact manifest", intent.artifact_manifest_sha256),
+        ("operation journal", intent.operation_journal_checksum),
         ("primary manifest", intent.primary_manifest_sha256),
         ("recovery manifest", intent.recovery_manifest_sha256),
         ("command executable", intent.command.executable_sha256),
@@ -820,14 +1050,36 @@ def _validate_intent_policy(intent: WriteIntent) -> None:
         raise WriteApprovalError("write intent backup paths/hashes are incomplete or inconsistent")
     if (
         not Path(intent.artifact_path).is_absolute()
+        or not Path(intent.artifact_manifest_path).is_absolute()
+        or not Path(intent.operation_journal_path).is_absolute()
         or not Path(intent.primary_manifest_path).is_absolute()
         or not Path(intent.recovery_manifest_path).is_absolute()
+        or intent.operation_journal_state != OperationState.BACKUP_VERIFIED.value
         or intent.primary_volume_id == intent.recovery_volume_id
         or intent.recovery_ready_status != "ready"
         or intent.recovery_write_enabled
         or intent.recovery_hardware_tested
     ):
         raise WriteApprovalError("write intent recovery evidence is not separately persistent and ready")
+    _require_uuid(intent.artifact_operation_id, "artifact operation")
+    if (
+        not intent.artifact_recipe_id
+        or not intent.artifact_source_repository_url.startswith("https://")
+        or not re.fullmatch(r"[0-9a-f]{40}", intent.artifact_source_revision)
+        or not re.fullmatch(r"[0-9a-f]{40}", intent.artifact_source_tree_id)
+        or not intent.artifact_selected_relative_path
+        or PurePosixPath(intent.artifact_selected_relative_path).is_absolute()
+        or ".." in PurePosixPath(intent.artifact_selected_relative_path).parts
+        or not intent.artifact_source_files
+        or not intent.artifact_toolchain
+        or not intent.artifact_command_argv
+        or not intent.artifact_tool_fingerprints
+        or any(not path or not _SHA256.fullmatch(digest) for path, digest in intent.artifact_source_files)
+        or any(not name or not version for name, version in intent.artifact_toolchain)
+        or any(not path or not _SHA256.fullmatch(digest) for path, digest in intent.artifact_tool_fingerprints)
+        or any(not command or any("\x00" in argument for argument in command) for command in intent.artifact_command_argv)
+    ):
+        raise WriteApprovalError("write intent lacks exact persisted artifact recipe/source/tool evidence")
     try:
         _parse_utc(intent.created_at_utc, "write intent time")
         _parse_utc(intent.device_capture_at_utc, "device capture time")
@@ -863,6 +1115,32 @@ def _canonical(value: object) -> object:
     return value
 
 
+def _require_tty_file_descriptor(stream: TextIO, label: str) -> int:
+    try:
+        descriptor = stream.fileno()
+        if isinstance(descriptor, bool) or not isinstance(descriptor, int) or descriptor < 0:
+            raise ValueError("invalid descriptor")
+        os.fstat(descriptor)
+    except (AttributeError, OSError, ValueError) as exc:
+        raise WriteApprovalError(f"real OS TTY {label} file descriptor is unavailable") from exc
+    return descriptor
+
+
+def _directory_fsync_supported() -> bool:
+    """Windows directory handles are not assumed durable by this V1 ledger."""
+    return os.name == "posix"
+
+
+def _sync_directory(directory: Path) -> None:
+    """Durably sync a parent directory or raise; never silently degrade."""
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    descriptor = os.open(directory, flags)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
@@ -881,18 +1159,14 @@ def _write_exclusive(path: Path, data: bytes) -> None:
             stream.write(data)
             stream.flush()
             os.fsync(descriptor)
+    except OSError as exc:
+        raise WriteApprovalError(f"approval file could not be durably synced: {exc}") from exc
     finally:
         os.close(descriptor)
     try:
-        directory_fd = os.open(path.parent, os.O_RDONLY)
-    except OSError:
-        return
-    try:
-        os.fsync(directory_fd)
-    except OSError:
-        pass
-    finally:
-        os.close(directory_fd)
+        _sync_directory(path.parent)
+    except OSError as exc:
+        raise WriteApprovalError(f"approval parent directory could not be durably synced: {exc}") from exc
 
 
 def _token_matches_record(token: WriteApprovalToken, record: dict[str, object]) -> bool:
