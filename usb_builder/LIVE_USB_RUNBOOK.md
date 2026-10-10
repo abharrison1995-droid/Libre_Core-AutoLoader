@@ -123,13 +123,24 @@ The offline network-namespace probe, real `mkarchiso` build, post-build
 `chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
 **NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 60
-passed, 2 skipped; Windows — 57 passed, 5 skipped; `mypy usb_builder` and
+Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 62
+passed, 2 skipped; Windows — 59 passed, 5 skipped; `mypy usb_builder` and
 `git diff --check` passed. The real Arch WSL namespace probe is
 **UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
 closed, and these focused software tests do not constitute offline builder
 validation. Online candidate build and BIOS/UEFI QEMU validation remain
 pending.
+
+The first real online candidate attempt stopped at preflight, before
+`mkarchiso`, because the package-list pin did not match the checked-in profile.
+The checked-in package list's canonical LF hash is
+`4fd531281bd659695271de16bdd60283dc36eff5220ae1f07550c72716126262`, now
+recorded in the snapshot lock. Windows/WSL CRLF working-tree bytes hashed to
+`70032fecf478ee2b0d9c65837837206596592db671cdf00a61bbdfbf27827595`. The
+validator now normalizes CRLF to LF before comparing the canonical pin and
+still rejects content drift. This fix awaits SOL review; no build retry has
+occurred, the output directory was empty after the blocked attempt, and no ISO
+was produced.
 
 ## Runtime storage and logs
 

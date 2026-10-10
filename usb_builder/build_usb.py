@@ -386,7 +386,17 @@ def _validate_package_list_pin(path: Path, snapshot: Mapping[str, Any]) -> None:
     expected = snapshot.get("packages_x86_64_sha256")
     if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
         raise BuildContractError("snapshot lock has no exact package-list SHA-256")
-    if _sha256_file(path) != expected:
+    try:
+        package_bytes = path.read_bytes()
+    except OSError as exc:
+        raise BuildContractError(f"package list is unreadable: {path}") from exc
+    # Git's Windows checkout may translate the checked-in LF file to CRLF.
+    # Pin the canonical LF representation so identical package names remain
+    # valid across hosts while any content/order change still fails closed.
+    canonical_bytes = package_bytes.replace(b"\r\n", b"\n")
+    if b"\r" in canonical_bytes:
+        raise BuildContractError("profile package list has unsupported bare-CR line endings")
+    if hashlib.sha256(canonical_bytes).hexdigest() != expected:
         raise BuildContractError("profile package list does not match the package list pinned by the snapshot")
 
 

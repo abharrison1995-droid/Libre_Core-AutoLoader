@@ -251,6 +251,33 @@ def test_preflight_rejects_package_list_drift_from_snapshot_hash(tmp_path):
         build_usb.preflight(config, host_platform="linux")
 
 
+def test_package_list_pin_is_stable_across_windows_checkout_line_endings(tmp_path):
+    config = _config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    package_path = config.profile_dir / "packages.x86_64"
+    canonical_bytes = package_path.read_bytes()
+    assert hashlib.sha256(canonical_bytes).hexdigest() == snapshot["packages_x86_64_sha256"]
+    crlf_bytes = canonical_bytes.replace(b"\n", b"\r\n")
+    package_path.write_bytes(crlf_bytes)
+    assert hashlib.sha256(crlf_bytes).hexdigest() != snapshot["packages_x86_64_sha256"]
+    build_usb.preflight(config, host_platform="linux")
+
+
+def test_checked_in_package_list_and_lock_bind_canonical_lf_and_accept_crlf(tmp_path):
+    repository_root = Path(__file__).resolve().parents[1]
+    package_path = repository_root / "usb_builder" / "archiso_profile" / "packages.x86_64"
+    lock_path = repository_root / "usb_builder" / "snapshot.lock.json"
+    snapshot, _ = build_usb._load_json(lock_path, "snapshot lock")
+    checked_in_bytes = package_path.read_bytes()
+    canonical_bytes = checked_in_bytes.replace(b"\r\n", b"\n")
+    assert hashlib.sha256(canonical_bytes).hexdigest() == snapshot["packages_x86_64_sha256"]
+    build_usb._validate_package_list_pin(package_path, snapshot)
+
+    crlf_copy = tmp_path / "packages.x86_64"
+    crlf_copy.write_bytes(canonical_bytes.replace(b"\n", b"\r\n"))
+    build_usb._validate_package_list_pin(crlf_copy, snapshot)
+
+
 def test_windows_host_blocks_before_any_build_tool_or_output_creation(tmp_path):
     config = _config(tmp_path, pinned=True)
     with pytest.raises(build_usb.BuildContractError, match="LINUX_BUILD_ENV_REQUIRED"):
