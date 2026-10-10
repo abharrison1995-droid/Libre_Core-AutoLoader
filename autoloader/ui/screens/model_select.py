@@ -22,15 +22,22 @@ class ModelSelectScreen(Screen[None]):
             with VerticalScroll():
                 with RadioSet(id="model-select"):
                     for model in get_all_models():
-                        desc = f"{model.name} ({model.generation.value}) — {model.flash_chips[0].size_mb}MB SPI"
+                        chip_sizes = ", ".join(
+                            f"{size} MB" for size in sorted({chip.size_mb for chip in model.flash_chips})
+                        )
+                        desc = (
+                            f"{model.name} ({model.generation.value}) — SPI chip-size database estimate: "
+                            f"{chip_sizes}; verify each observed chip"
+                        )
                         if model.supports_1vyrain:
-                            desc += " [1vyrain]"
+                            desc += " [1vyrain listed, provisional]"
                         if not model.libreboot_support:
-                            desc += " [No Libreboot]"
+                            desc += " [Libreboot not listed in local database]"
                         yield RadioButton(desc, id=f"rb-{model.model_id}")
                 
                 yield Static(
-                    "Warning: T480 is experimental. X201 lacks Libreboot support.",
+                    "Local database indicators are provisional, not validated support. "
+                    "Exact model, BIOS, board, and chip checks remain required.",
                     classes="warning",
                     id="model-warning"
                 )

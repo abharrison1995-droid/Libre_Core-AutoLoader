@@ -14,6 +14,7 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 | P1 | Live USB builder and boot behavior are not tested; startup discards TUI output. | Failures may be opaque and image bootability is unknown. | OPEN: CLI says no ISO was built; Archiso is not exercised on this host. | Phase 09. |
 | P1 | IVprep automation includes a downgrade execution path with no workflow-level human authorization gate. | A workflow invocation can cause a firmware update/downgrade. | OPEN: no application CLI/TUI invocation is exposed in Phase 01; implementation still needs workflow-level gating. | Phases 02 and 05. |
 | P1 | README installation repository URL and `generate-usb` example do not match current project/CLI. | Users receive incorrect setup instructions. | FIXED: install URL and current command names documented. | Maintain during Phase 11. |
+| P1 | Welcome screen claimed version 1.0.0 and advertised building/flashing; CLI and model-selection labels presented database flags and chip sizes as validated support/evidence. | Users could mistake an in-development release candidate or provisional database entries for implemented capabilities or observed chip topology. | FIXED: welcome uses the package version and states unavailable capabilities; CLI/TUI labels are provisional, and listed chip sizes are marked as estimates to verify. | Keep user-facing claims aligned as workflows are implemented. |
 
 ## Hardware state
 

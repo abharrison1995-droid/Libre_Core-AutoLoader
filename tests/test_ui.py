@@ -2,9 +2,10 @@
 import asyncio
 import pytest
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Button, RadioButton, Static
 
 from autoloader.app import AutoLoaderApp
+from autoloader.config import VERSION
 from autoloader.ui.screens.welcome import WelcomeScreen
 from autoloader.ui.screens.model_select import ModelSelectScreen
 from autoloader.ui.screens.pathway_select import PathwaySelectScreen
@@ -75,6 +76,33 @@ def test_all_screens_mount_and_compose():
     asyncio.run(_runner())
 
 
+def test_welcome_and_model_selection_describe_release_candidate_and_database_limits():
+    async def _runner():
+        app = AutoLoaderApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            version_text = str(app.screen.query_one("#version", Static).render())
+            description = str(app.screen.query_one("#description", Static).render()).lower()
+            assert "in development" in version_text.lower()
+            assert VERSION in version_text
+            assert "unavailable" in description
+            assert "supports backing up" not in description
+
+            await app.push_screen("model_select")
+            await pilot.pause()
+            warning = str(app.screen.query_one("#model-warning", Static).render()).lower()
+            assert "provisional" in warning
+            assert "not validated support" in warning
+            x200_option = app.screen.query_one("#rb-x200", RadioButton)
+            x200_label = str(x200_option.label).lower()
+            assert "chip-size database estimate" in x200_label
+            assert "verify each observed chip" in x200_label
+            t430_label = str(app.screen.query_one("#rb-t430", RadioButton).label).lower()
+            assert "1vyrain listed, provisional" in t430_label
+
+    asyncio.run(_runner())
+
+
 def test_hardware_screens_remain_fail_closed_without_operation_results():
     async def _runner():
         app = AutoLoaderApp()
@@ -121,6 +149,29 @@ def test_cli_detect_command():
     result = runner.invoke(cli, ["detect"])
     assert result.exit_code == 0
     assert "Hardware Detection" in result.output
+
+
+def test_cli_detect_labels_database_firmware_values_as_provisional(monkeypatch):
+    from click.testing import CliRunner
+    from autoloader.__main__ import cli
+    from autoloader.detection.model import DetectionResult, ModelDetector
+    from autoloader.detection.bios import BIOSDetector, BIOSInfo
+    from autoloader.detection.ec import ECDetector, ECInfo
+
+    monkeypatch.setattr(
+        ModelDetector,
+        "detect",
+        lambda self: DetectionResult("x200", "ThinkPad X200", "7455", "TEST", "high"),
+    )
+    monkeypatch.setattr(BIOSDetector, "detect", lambda self: BIOSInfo("3.00", None, "LENOVO", True))
+    monkeypatch.setattr(ECDetector, "detect", lambda self: ECInfo(None, False))
+
+    result = CliRunner().invoke(cli, ["detect"])
+    assert result.exit_code == 0
+    assert "Provisional Firmware Database Indicators" in result.output
+    assert "Local database indicator (unvalidated)" in result.output
+    assert "not validated model support" in result.output.lower()
+    assert "✅ Supported" not in result.output
 
 
 def test_cli_registers_expected_commands():

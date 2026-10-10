@@ -4,6 +4,7 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Static, Button, Header, Footer
 from textual.containers import Container, Center, Horizontal
+from autoloader.config import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +27,12 @@ class WelcomeScreen(Screen[None]):
         with Container(classes="container"):
             with Center():
                 yield Static(ASCII_LOGO, classes="header-text")
-                yield Static("Version 1.0.0", id="version")
+                yield Static(f"In development · Version {VERSION}", id="version")
                 yield Static(
-                    "This tool guides you through the process of modifying your ThinkPad firmware.\n"
-                    "It supports backing up, building, and flashing Libreboot, Coreboot, and more.",
+                    "This in-development tool provides ThinkPad detection and firmware workflow guidance.\n"
+                    "ROM building, backup capture, and physical writes are unavailable in this release candidate.",
                     id="description",
-                    classes="success"
+                    classes="warning"
                 )
                 yield Static("Auto-detection: No ThinkPad detected.", id="detection-status", classes="warning")
             
@@ -70,4 +71,7 @@ class WelcomeScreen(Screen[None]):
         elif event.button.id == "btn-advanced":
             self.app.notify("Advanced Options not yet implemented.")
         elif event.button.id == "btn-about":
-            self.app.notify("Libre_Core AutoLoader v1.0.0\nCreated for ThinkPad firmware modifications.")
+            self.app.notify(
+                f"Libre_Core AutoLoader v{VERSION} (in development). Firmware writes are unavailable.\n"
+                "Created for ThinkPad firmware workflow development."
+            )

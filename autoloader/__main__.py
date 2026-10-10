@@ -108,19 +108,32 @@ def detect(ctx: click.Context) -> None:
             db_model = None
 
         if db_model:
-            compat_table = Table(title=f"Firmware Compatibility for {db_model.name}", border_style="green")
-            compat_table.add_column("Feature", style="bold green")
-            compat_table.add_column("Support Status", style="white")
+            compat_table = Table(
+                title=f"Provisional Firmware Database Indicators for {db_model.name}",
+                border_style="yellow",
+            )
+            compat_table.add_column("Feature", style="bold yellow")
+            compat_table.add_column("Local database indicator (unvalidated)", style="white")
 
-            compat_table.add_row("Coreboot", "✅ Supported" if db_model.coreboot_support else "❌ Unsupported")
-            compat_table.add_row("Libreboot", "✅ Supported" if db_model.libreboot_support else "❌ Unsupported")
-            compat_table.add_row("Canoeboot", "✅ Supported" if db_model.canoeboot_support else "❌ Unsupported")
-            compat_table.add_row("1vyrain (Software Jailbreak)", "✅ Supported" if db_model.supports_1vyrain else "❌ Unsupported (Hardware Flash Required)")
-            internal_str = f"✅ Yes ({db_model.internal_flash_condition})" if db_model.internal_flash_possible else "❌ External Programmer First"
-            compat_table.add_row("Internal Flashing", internal_str)
-            compat_table.add_row("EC Modifications", "✅ Available" if db_model.ec_moddable else "❌ Not available for this model")
+            def indicator(is_listed: bool) -> str:
+                return "Listed (provisional)" if is_listed else "Not listed"
+
+            compat_table.add_row("Coreboot", indicator(db_model.coreboot_support))
+            compat_table.add_row("Libreboot", indicator(db_model.libreboot_support))
+            compat_table.add_row("Canoeboot", indicator(db_model.canoeboot_support))
+            compat_table.add_row("1vyrain", indicator(db_model.supports_1vyrain))
+            if db_model.internal_flash_possible:
+                internal_str = f"Listed ({db_model.internal_flash_condition}; unvalidated)"
+            else:
+                internal_str = "Not listed; external programmer may be required"
+            compat_table.add_row("Internal flashing", internal_str)
+            compat_table.add_row("EC modifications", indicator(db_model.ec_moddable))
             
             console.print(compat_table)
+            console.print(
+                "[yellow]These are provisional database indicators, not validated model support "
+                "or permission to write firmware.[/yellow]"
+            )
 
 
 @cli.command("build-rom")
