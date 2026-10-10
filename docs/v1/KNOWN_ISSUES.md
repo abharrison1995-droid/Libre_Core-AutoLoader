@@ -53,6 +53,12 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 - The positive tests use a fake SPI transport and a hand-built synthetic COMPLETE artifact manifest; this proves software binding and failure behavior only. No upstream `lbmk` build or verified release image was produced. The Windows host returns `LINUX_BUILD_ENV_REQUIRED` before a build command can run.
 - The service is not integrated into CLI/TUI. It does not provide model-specific physical disassembly/programmer setup instructions and does not perform a physical probe, measured voltage, backup, write, restoration, read-back, cold boot or hardware recovery test. Its flash and restore requests always fail closed; the proposal remains `STAGED/HARDWARE_PENDING`.
 
+## Phase 07 implementation and remaining limitations
+
+- Phase 07 software is implemented in `autoloader/workflow/x220_coreboot.py` and awaits SOL review. It requires exact X220 evidence, one observed 8 MiB chip and matching external 3300 mV programmer evidence, a complete nonoverlapping region map with the 3 MiB BIOS area, persistent two-copy full-chip backup/recovery evidence, and backup-derived descriptor/ME/GbE slices.
+- Artifact acceptance rechecks the persisted pinned manifest/sidecar, exact `artifacts/coreboot.rom` path (including Windows drive/UNC rejection and containment), operation logs, source/tool hashes, CBFS payload, generated/original IFD maps, non-BIOS byte preservation, finalized plan and backup provenance. Linked backup and log paths fail closed. A durable journal checkpoints only at safe `BACKUP_VERIFIED`; the proposed whole-chip plan remains `STAGED/HARDWARE_PENDING`, and write/restore are disabled.
+- Tests use synthetic artifact/backup fixtures. No pinned Linux Coreboot build ran on this Windows host; no actual SPI probe, voltage measurement, physical backup, firmware write/read-back, recovery operation or boot test occurred. The adapter is not integrated with CLI/TUI. X220 remains **HARDWARE PENDING**.
+
 ## Hardware state
 
 T430 1vyrain, X200 Libreboot and X220 Coreboot: **HARDWARE PENDING**. No physical probe/read, measured voltage, backup, firmware build/write, post-write read-back, recovery or boot evidence is recorded.
