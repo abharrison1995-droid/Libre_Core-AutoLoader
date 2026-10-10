@@ -34,7 +34,7 @@ class WelcomeScreen(Screen[None]):
                     id="description",
                     classes="warning"
                 )
-                yield Static("Auto-detection: No ThinkPad detected.", id="detection-status", classes="warning")
+                yield Static("Not run; choose a profile or use Detect Device.", id="detection-status", classes="warning")
             
             with Horizontal(classes="button-container"):
                 yield Button("Start Guided Setup", variant="primary", id="btn-start")
@@ -56,7 +56,7 @@ class WelcomeScreen(Screen[None]):
                 status_widget.remove_class("warning")
                 status_widget.add_class("success")
             else:
-                status_widget.update("Auto-detection: No ThinkPad detected (Manual Selection Available).")
+                status_widget.update("Not run; choose a profile or use Detect Device.")
         except Exception as e:
             logger.debug(f"Could not update welcome detection status: {e}")
 

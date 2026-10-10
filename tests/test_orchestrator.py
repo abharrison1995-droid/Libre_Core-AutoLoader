@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from autoloader.orchestrator import Orchestrator, AppState
 from autoloader.flasher.flashrom import ProgrammerType
-from autoloader.flasher.verify import VerificationResult
 from autoloader.detection.model import DetectionResult
 
 
@@ -106,45 +105,34 @@ def test_orchestrator_run_backup_fails_closed_without_topology(tmp_path, monkeyp
     assert state.last_backup_result is None
 
 
-def test_orchestrator_run_verify_success(tmp_path):
+def test_orchestrator_run_verify_is_quarantined_without_spi_read(tmp_path):
     rom_file = tmp_path / "test.rom"
     rom_file.write_bytes(b"coreboot-image-content" * 100)
     state = AppState(model_id="x230")
-    completed = []
-
-    mock_verify_res = VerificationResult(
-        verified=True,
-        sha256_match=True,
-        structure_valid=True,
-        details="Verification successful"
-    )
-
-    with patch("autoloader.orchestrator.verify_flash", return_value=mock_verify_res):
-        orch = Orchestrator(state, on_complete=lambda: completed.append(True))
-        ok = orch.run_verify(rom_file)
-        assert ok is True
-        assert len(completed) == 1
-
-
-def test_orchestrator_run_verify_failure(tmp_path):
-    rom_file = tmp_path / "test.rom"
-    rom_file.write_bytes(b"bad-rom-content" * 100)
-    state = AppState(model_id="x230")
     errors = []
+    progress = []
+    completed = []
+    with patch("autoloader.flasher.verify.verify_flash", side_effect=AssertionError("direct read attempted")):
+        orch = Orchestrator(
+            state,
+            on_error=errors.append,
+            on_progress=lambda pct, label: progress.append((pct, label)),
+            on_complete=lambda: completed.append(True),
+        )
+        assert orch.run_verify(rom_file) is False
+    assert len(errors) == 1 and "READBACK_NOT_PERFORMED" in errors[0]
+    assert progress == [(0, "Read-back unavailable; not performed.")]
+    assert completed == []
 
-    mock_verify_res = VerificationResult(
-        verified=False,
-        sha256_match=False,
-        structure_valid=False,
-        details="Hash mismatch"
-    )
 
-    with patch("autoloader.orchestrator.verify_flash", return_value=mock_verify_res):
-        orch = Orchestrator(state, on_error=lambda err: errors.append(err))
-        ok = orch.run_verify(rom_file)
-        assert ok is False
-        assert len(errors) == 1
-        assert "FAILED" in errors[0]
+def test_app_controller_replaces_legacy_app_state_and_only_allows_v1_profiles():
+    from autoloader.app import AutoLoaderApp
+
+    app = AutoLoaderApp()
+    app.set_selected_profile("x220-coreboot")
+    assert app.controller.selected_profile_id == "x220-coreboot"
+    with pytest.raises(ValueError):
+        app.set_selected_model("x230")
 
 
 def test_standalone_verify_flash_helper_is_importable():
@@ -158,13 +146,12 @@ def test_autoloader_app_state_and_theme_toggle():
     from autoloader.app import AutoLoaderApp
 
     app = AutoLoaderApp()
-    assert hasattr(app, "state")
-    assert isinstance(app.state, AppState)
+    assert hasattr(app, "controller")
 
     # Test model synchronization
-    app.set_selected_model("t430s")
-    assert app.selected_model_id == "t430s"
-    assert app.state.model_id == "t430s"
+    app.set_selected_model("t430")
+    assert app.selected_profile_id == "t430-1vyrain"
+    assert app.selected_model_id == "t430"
 
     # Test toggle dark
     initial_theme = app.theme

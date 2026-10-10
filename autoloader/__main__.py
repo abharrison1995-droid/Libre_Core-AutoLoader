@@ -10,22 +10,12 @@ from rich.panel import Panel
 
 from autoloader.exceptions import AutoLoaderError
 from autoloader.config import Config, PROJECT_NAME, VERSION
-from autoloader.detection.model import ModelDetector
-from autoloader.detection.bios import BIOSDetector
-from autoloader.detection.ec import ECDetector
-from autoloader.database.models import get_model, FirmwareBase, PayloadType
-from autoloader.rom_builder.configurator import ROMConfiguration, ROMConfigurator
-from autoloader.flasher.flashrom import ProgrammerType
-from autoloader.orchestrator import AppState, Orchestrator
+from autoloader.application_controller import ApplicationAction, ApplicationController
+from autoloader.workflow.profiles import V1_PROFILES
 
 logger = logging.getLogger(__name__)
 console = Console()
-PROGRAMMER_ALIASES = {
-    "internal": ProgrammerType.INTERNAL,
-    "ch341a": ProgrammerType.CH341A,
-    "raspberry-pi": ProgrammerType.RASPBERRY_PI,
-    "bus-pirate": ProgrammerType.BUS_PIRATE,
-}
+V1_PROFILE_CHOICES = tuple(V1_PROFILES)
 
 
 def setup_logging(verbose: bool, log_file: Path) -> None:
@@ -72,111 +62,123 @@ def run(ctx: click.Context) -> None:
 @cli.command()
 @click.pass_context
 def detect(ctx: click.Context) -> None:
-    """Run hardware detection and print results."""
+    """Capture read-only DMI/BIOS evidence through the shared controller."""
     logger.info("Running hardware detection...")
     console.print(Panel(f"[bold red]{PROJECT_NAME}[/bold red] v{VERSION} - Hardware Detection", border_style="red"))
-    
-    model_detector = ModelDetector()
-    bios_detector = BIOSDetector()
-    ec_detector = ECDetector()
-
-    model_res = model_detector.detect()
-    bios_info = bios_detector.detect()
-    ec_info = ec_detector.detect()
+    controller = ApplicationController()
+    outcome = controller.request_action(ApplicationAction.DETECT_DEVICE)
+    capture = controller.capture
+    if capture is None:
+        raise click.ClickException(f"[{outcome.code}] {outcome.message}")
+    device = capture.device
 
     table = Table(title="Detected ThinkPad Hardware", border_style="cyan")
     table.add_column("Property", style="bold cyan")
     table.add_column("Detected Value", style="white")
-
-    table.add_row("Model Name", model_res.model_name or "Unknown")
-    table.add_row("Model ID", model_res.model_id or "Not detected")
-    table.add_row("Machine Type", model_res.machine_type or "Unknown")
-    table.add_row("Serial Number", model_res.serial_number or "Unknown")
-    table.add_row("Detection Confidence", model_res.confidence.upper())
-    table.add_row("Current BIOS Version", bios_info.version or "Unknown")
-    table.add_row("BIOS Vendor", bios_info.vendor or "Unknown")
-    table.add_row("Is Stock Lenovo BIOS", "Yes" if bios_info.is_stock_lenovo else "No (Custom/Coreboot)")
-    table.add_row("EC Firmware Version", ec_info.version or "Unknown")
-    table.add_row("EC Modified", "Yes" if ec_info.is_modified else "No")
+    table.add_row("DMI Product Name", device.raw_dmi_product_name or "Unknown")
+    table.add_row("DMI Product Version", device.raw_dmi_product_version or "Unknown")
+    table.add_row("DMI System Family", device.raw_dmi_system_family or "Unknown")
+    table.add_row("Machine Type/MTM", device.raw_mtm or "Unknown")
+    table.add_row("BIOS Version (raw)", device.raw_bios_version or "Unknown")
+    table.add_row("BIOS Vendor", device.raw_bios_vendor or "Unknown")
+    table.add_row("Evidence reference", outcome.evidence_refs[0] if outcome.evidence_refs else "Unknown")
 
     console.print(table)
 
-    if model_res.model_id:
+    console.print(f"[yellow]{outcome.message}[/yellow]")
+    console.print("[yellow]Device detection is a candidate only; workflow compatibility requires model-specific evidence.[/yellow]")
+
+
+@cli.command("import-evidence")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--file", "evidence_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="JSON object with raw DeviceEvidence fields.")
+@click.option("--save-to", required=True, type=click.Path(dir_okay=False, path_type=Path), help="New path for a persistent candidate record; existing files are never overwritten.")
+def import_evidence(profile: str, evidence_file: Path, save_to: Path) -> None:
+    """Import raw fields and persist them as an unauthenticated candidate."""
+    controller = ApplicationController()
+    document = evidence_file.read_text(encoding="utf-8")
+    evidence_ref = controller.evidence_document_reference(document)
+    try:
+        status = controller.import_device_evidence_document(
+            profile, document, evidence_ref=evidence_ref, store_path=save_to
+        )
+    except ValueError as exc:
+        raise click.ClickException(f"[DEVICE_EVIDENCE_INVALID] {exc}") from exc
+    console.print(f"[yellow]Imported unauthenticated candidate evidence for {profile}: {evidence_ref}[/yellow]")
+    console.print(f"Saved candidate record: {save_to}")
+    console.print("The record checksum detects accidental corruption only; it does not authenticate the evidence.")
+    console.print(f"Status: {status.status.value} · {status.stage}")
+    console.print("[yellow]Import does not authenticate evidence or approve a firmware operation.[/yellow]")
+
+
+@cli.command("status")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--evidence-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Reload a candidate record saved by import-evidence.")
+def workflow_status(profile: str, evidence_file: Path | None) -> None:
+    """Show the controller's status, evidence references, and next actions."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    if evidence_file is not None:
         try:
-            db_model = get_model(model_res.model_id)
-        except Exception:
-            db_model = None
+            controller.load_candidate_evidence(evidence_file, expected_profile=profile)
+        except (OSError, ValueError) as exc:
+            raise click.ClickException(f"[CANDIDATE_EVIDENCE_REJECTED] {exc}") from exc
+    status = controller.profile_status(profile)
+    table = Table(title=f"{status.profile_id} workflow status", border_style="cyan")
+    table.add_column("Field", style="bold cyan")
+    table.add_column("Controller result", style="white")
+    table.add_row("Status", status.status.value)
+    table.add_row("Compatibility decision", status.decision.value)
+    table.add_row("Stage", status.stage)
+    table.add_row("Reasons", "; ".join(status.reasons) or "None")
+    table.add_row("Evidence references", ", ".join(status.evidence_refs) or "None")
+    table.add_row("Allowed next actions", ", ".join(action.value for action in status.allowed_next_actions) or "None")
+    table.add_row("Operation ID", status.operation_id or "None")
+    table.add_row("Checkpoint", status.checkpoint_ref or "None")
+    table.add_row("Operation evidence", "\n".join(status.evidence_summary) or "None")
+    console.print(table)
 
-        if db_model:
-            compat_table = Table(
-                title=f"Provisional Firmware Database Indicators for {db_model.name}",
-                border_style="yellow",
-            )
-            compat_table.add_column("Feature", style="bold yellow")
-            compat_table.add_column("Local database indicator (unvalidated)", style="white")
 
-            def indicator(is_listed: bool) -> str:
-                return "Listed (provisional)" if is_listed else "Not listed"
+@cli.command("resume-checkpoint")
+@click.option("--profile", required=True, type=click.Choice(("t430-1vyrain",)), help="T430 human-handoff profile only.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Checksummed pending T430 handoff checkpoint.")
+def resume_checkpoint(profile: str, checkpoint: Path) -> None:
+    """Resume a validated pending T430 human-handoff record; no hardware action occurs."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    result = controller.request_action(ApplicationAction.RESUME, profile_id=profile, checkpoint_path=checkpoint)
+    if result.code != "T430_CHECKPOINT_RESUMED":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    status = controller.profile_status(profile)
+    console.print(f"[yellow]{result.code}: {result.message}[/yellow]")
+    console.print(f"Stage: {status.stage} · operation {status.operation_id}")
+    console.print("No hardware read, write, IVprep execution, or 1vyrain execution was performed.")
 
-            compat_table.add_row("Coreboot", indicator(db_model.coreboot_support))
-            compat_table.add_row("Libreboot", indicator(db_model.libreboot_support))
-            compat_table.add_row("Canoeboot", indicator(db_model.canoeboot_support))
-            compat_table.add_row("1vyrain", indicator(db_model.supports_1vyrain))
-            if db_model.internal_flash_possible:
-                internal_str = f"Listed ({db_model.internal_flash_condition}; unvalidated)"
-            else:
-                internal_str = "Not listed; external programmer may be required"
-            compat_table.add_row("Internal flashing", internal_str)
-            compat_table.add_row("EC modifications", indicator(db_model.ec_moddable))
-            
-            console.print(compat_table)
-            console.print(
-                "[yellow]These are provisional database indicators, not validated model support "
-                "or permission to write firmware.[/yellow]"
-            )
+
+@cli.command("inspect-checkpoint")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Checksummed X200/X220 workflow journal to inspect read-only.")
+def inspect_checkpoint(checkpoint: Path) -> None:
+    """Validate and summarize an operation journal without resuming it."""
+    controller = ApplicationController()
+    result = controller.request_action(ApplicationAction.INSPECT_CHECKPOINT, checkpoint_path=checkpoint)
+    if result.code != "CHECKPOINT_INSPECTED_READ_ONLY":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[yellow]{result.code} · verified read-only journal[/yellow]")
+    console.print(result.message)
+    if result.reasons:
+        console.print("Transitions: " + "; ".join(result.reasons))
+    console.print("Evidence references: " + ", ".join(result.evidence_refs))
 
 
 @cli.command("build-rom")
-@click.option("--model", "-m", required=True, help="Target model ID (e.g. x200, x220, t430).")
-@click.option("--base", "-b", type=click.Choice(["coreboot", "libreboot", "canoeboot"]), default="coreboot", help="Firmware base.")
-@click.option("--payload", "-p", type=click.Choice(["seabios", "grub", "tianocore"]), default="seabios", help="Boot payload.")
-@click.option("--neuter-me/--keep-me", default=True, help="Neuter Intel ME via me_cleaner.")
-@click.option("--output", "-o", type=click.Path(), help="Output path for compiled ROM.")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted model-specific V1 workflow profile.")
 @click.pass_context
-def build_rom(ctx: click.Context, model: str, base: str, payload: str, neuter_me: bool, output: Optional[str]) -> None:
-    """Validate ROM options; ROM compilation is currently unavailable."""
-    logger.info("Configuring ROM...")
-    try:
-        firmware_base = FirmwareBase(base)
-        payload_type = PayloadType(payload)
-
-        config = ROMConfiguration(
-            model_id=model.lower(),
-            firmware_base=firmware_base,
-            payload=payload_type,
-            remove_wifi_whitelist=True,
-            neuter_intel_me=neuter_me,
-            output_path=Path(output) if output else None,
-        )
-
-        configurator = ROMConfigurator()
-        configurator.validate(config)
-        console.print(Panel(configurator.generate_summary(config), title="ROM Configuration", border_style="cyan"))
-        errors: list[str] = []
-        orchestrator = Orchestrator(
-            AppState(model_id=model.lower()),
-            on_error=errors.append,
-        )
-        if not orchestrator.run_build():
-            raise click.ClickException(errors[-1] if errors else "ROM build is unavailable; no ROM was produced.")
-    except click.ClickException:
-        raise
-    except AutoLoaderError as e:
-        console.print(f"[bold red]Configuration Error:[/bold red] {e}")
-        sys.exit(1)
-    except Exception as e:
-        console.print(f"[bold red]Unexpected Error:[/bold red] {e}")
-        sys.exit(1)
+def build_rom(ctx: click.Context, profile: str) -> None:
+    """Request model-specific preparation through the shared controller."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    result = controller.request_action(ApplicationAction.BUILD, profile_id=profile)
+    raise click.ClickException(f"[{result.code}] {result.message}")
 
 
 @cli.command()
@@ -191,45 +193,37 @@ def usb(output_dir: str) -> None:
 
 
 @cli.command()
-@click.option("--model", "-m", required=True, help="Detected model ID for the two-pass backup.")
-@click.option("--programmer", type=click.Choice(tuple(PROGRAMMER_ALIASES)), default="ch341a")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
 @click.pass_context
-def backup(ctx: click.Context, model: str, programmer: str) -> None:
-    """Request a backup (unavailable until observed topology is validated)."""
-    config: Config = ctx.obj
-    errors: list[str] = []
-    state = AppState(
-        model_id=model.lower(),
-        programmer=PROGRAMMER_ALIASES[programmer],
-        backup_dir=config.backup_dir,
-    )
-    result = Orchestrator(state, on_error=errors.append).run_backup()
-    if result is None:
-        raise click.ClickException(errors[-1] if errors else "Backup capture is unavailable; no hardware was read.")
+def backup(ctx: click.Context, profile: str) -> None:
+    """Request a model-specific backup through the shared controller."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    result = controller.request_action(ApplicationAction.BACKUP, profile_id=profile)
+    raise click.ClickException(f"[{result.code}] {result.message}")
 
 
 @cli.command()
-@click.option("--rom", "-r", required=True, type=click.Path(exists=True, path_type=Path), help="Prepared ROM image to compare with a read-back.")
-@click.option("--programmer", type=click.Choice(tuple(PROGRAMMER_ALIASES)), default="ch341a")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
 @click.pass_context
-def verify(ctx: click.Context, rom: Path, programmer: str) -> None:
-    """Read flash and compare it with a ROM through the shared orchestrator."""
-    errors: list[str] = []
-    state = AppState(programmer=PROGRAMMER_ALIASES[programmer])
-    if not Orchestrator(state, on_error=errors.append).run_verify(rom):
-        raise click.ClickException(errors[-1] if errors else "Read-back verification failed.")
-    console.print("[green]Read-back comparison passed.[/green]")
+def verify(ctx: click.Context, profile: str) -> None:
+    """Report read-back status without probing or reading physical flash."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    result = controller.request_action(ApplicationAction.READBACK, profile_id=profile)
+    raise click.ClickException(f"[{result.code}] {result.message}")
 
 
 @cli.command()
-@click.option("--rom", "-r", required=True, type=click.Path(exists=True, path_type=Path), help="ROM image file (no write will be attempted).")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--rom", "-r", required=True, type=click.Path(exists=True, path_type=Path), help="Candidate ROM path (no write will be attempted).")
 @click.pass_context
-def flash(ctx: click.Context, rom: Path) -> None:
-    """Physical flashing is quarantined until the shared safety backend exists."""
-    errors: list[str] = []
-    state = AppState()
-    Orchestrator(state, on_error=errors.append).run_flash(rom)
-    raise click.ClickException(errors[-1] if errors else "Physical flashing is unavailable; no write was attempted.")
+def flash(ctx: click.Context, profile: str, rom: Path) -> None:
+    """Physical flashing is unavailable through the shared controller."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    result = controller.request_action(ApplicationAction.FLASH, profile_id=profile)
+    raise click.ClickException(f"[{result.code}] {result.message}")
 
 
 def main() -> None:

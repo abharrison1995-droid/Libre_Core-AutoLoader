@@ -1,90 +1,56 @@
-"""Build Progress Screen module."""
+"""Build request status screen; unavailable work never reports fake progress."""
 import logging
-from textual.app import ComposeResult
-from textual.screen import Screen
-from textual.widgets import Static, Button, Header, Footer
-from textual.containers import Container, VerticalScroll, Horizontal
-from textual import work
 
-from textual.worker import get_current_worker, Worker
-from autoloader.ui.widgets.progress_bar import CustomProgressBar
+from textual import work
+from textual.app import ComposeResult
+from textual.containers import Container, Horizontal
+from textual.widgets import Button, Footer, Header, Static
+from textual.worker import Worker, get_current_worker
+
+from autoloader.application_controller import ApplicationAction, ApplicationStatus
 from autoloader.ui.widgets.log_panel import LogPanel
-from autoloader.orchestrator import Orchestrator, AppState
+from autoloader.ui.widgets.progress_bar import CustomProgressBar
+from autoloader.ui.screens.controller_screen import ControllerScreen
 
 logger = logging.getLogger(__name__)
 
-class BuildProgressScreen(Screen[None]):
-    """Screen displaying real-time ROM build progress."""
-    
+
+class BuildProgressScreen(ControllerScreen):
+    """Submit build requests only through the shared controller facade."""
+
     def compose(self) -> ComposeResult:
-        """Compose the build progress screen."""
         yield Header()
         with Container(classes="container"):
-            yield Static("ROM Build Status", classes="header-text")
-            yield Static(
-                "No validated firmware builder is connected. No ROM will be produced by this workflow.",
-                classes="error",
-                id="build-unavailable",
-            )
-            
-            self.progress_bar = CustomProgressBar(label="Build unavailable", total=100)
+            yield Static("Firmware Preparation Status", classes="header-text")
+            yield Static("Build not started", id="build-status", classes="warning")
+            self.progress_bar = CustomProgressBar(label="No build progress reported", total=100)
             yield self.progress_bar
-            
             self.log_panel = LogPanel()
             yield self.log_panel
-            
             with Horizontal(classes="button-container"):
                 yield Button("Cancel", id="btn-cancel")
-                self.btn_next = Button("Continue to Flashing", variant="primary", id="btn-next", disabled=True)
-                yield self.btn_next
+                yield Button("Hardware steps unavailable", id="btn-next", disabled=True)
         yield Footer()
 
     def on_mount(self) -> None:
-        """Start the build process worker on mount."""
-        self.orchestrator: Orchestrator | None = None
-        self.worker: Worker = self.execute_build()
+        self.worker: Worker = self.request_build()
 
     @work(thread=True)
-    def execute_build(self) -> None:
-        """Execute the build pipeline in a background thread."""
+    def request_build(self) -> None:
         worker = get_current_worker()
-        app_state = getattr(self.app, "state", None) or AppState(
-            model_id=getattr(self.app, "selected_model_id", None)
-        )
-        
-        def on_log(msg: str) -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(self.log_panel.write, f"{msg}\n")
-                
-        def on_progress(pct: int, label: str) -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(self.progress_bar.set_progress, pct)
-                self.app.call_from_thread(self.progress_bar.update_label, label)
-                
-        def on_complete() -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(setattr, self.btn_next, "disabled", False)
-                
-        def on_error(err_msg: str) -> None:
-            if self.is_mounted and not worker.is_cancelled:
-                self.app.call_from_thread(self.log_panel.write, f"{err_msg}\n")
+        result = self.controller_app.controller.request_action(ApplicationAction.BUILD)
+        if self.is_mounted and not worker.is_cancelled:
+            self.app.call_from_thread(self._show_result, result)
+        if result.status is ApplicationStatus.STAGED_HARDWARE_PENDING:
+            logger.error("Build request cannot make an artifact staged through the UI action gate")
 
-        self.orchestrator = Orchestrator(
-            app_state,
-            on_log=on_log,
-            on_progress=on_progress,
-            on_complete=on_complete,
-            on_error=on_error,
-        )
-        self.orchestrator.run_build()
+    def _show_result(self, result) -> None:
+        """Render the controller's actual outcome on the UI thread."""
+        self.query_one("#build-status", Static).update(f"{result.status.value} · {result.code}: {result.message}")
+        self.log_panel.write(f"{result.message}\n")
+        self.progress_bar.update_label("Unavailable; no build progress reported")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button press events."""
         if event.button.id == "btn-cancel":
-            if hasattr(self, "orchestrator") and self.orchestrator:
-                self.orchestrator.cancel()
-            if hasattr(self, "worker") and self.worker:
-                self.worker.cancel()
+            self.worker.cancel()
             self.app.pop_screen()
-        elif event.button.id == "btn-next":
-            self.app.push_screen("flash_guide")

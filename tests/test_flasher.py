@@ -363,10 +363,10 @@ def test_cli_flash_command_is_quarantined(tmp_path, monkeypatch):
     monkeypatch.setattr(FlashromRunner, "write_rom", unexpected_write)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["flash", "--rom", str(rom)])
+    result = runner.invoke(cli, ["flash", "--profile", "x200-libreboot", "--rom", str(rom)])
     assert result.exit_code != 0
-    assert "PHYSICAL_FLASH_UNAVAILABLE" in (result.output or "")
-    assert "no write was attempted" in (result.output or "")
+    assert "FLASH_UNAVAILABLE" in (result.output or "")
+    assert "no writer or subprocess was invoked" in (result.output or "")
 
 
 def test_cli_backup_command_is_registered_but_unavailable_without_topology(monkeypatch):
@@ -379,10 +379,10 @@ def test_cli_backup_command_is_registered_but_unavailable_without_topology(monke
 
     monkeypatch.setattr(BackupManager, "create_backup", unexpected_backup)
 
-    result = CliRunner().invoke(cli, ["backup", "--model", "x200"])
+    result = CliRunner().invoke(cli, ["backup", "--profile", "x200-libreboot"])
     assert result.exit_code != 0
     assert "BACKUP_UNAVAILABLE" in (result.output or "")
-    assert "No hardware was read" in (result.output or "")
+    assert "no spi read was attempted" in (result.output or "").lower()
 
 
 def test_entropy_calculation_accuracy_and_speed():

@@ -21,7 +21,6 @@ from autoloader.exceptions import (
 )
 from autoloader.flasher.backup import BackupResult
 from autoloader.flasher.flashrom import ProgrammerType
-from autoloader.flasher.verify import verify_flash
 from autoloader.detection.model import DetectionResult
 
 logger = logging.getLogger(__name__)
@@ -159,36 +158,9 @@ class Orchestrator:
     # Verify workflow
     # ------------------------------------------------------------------
     def run_verify(self, rom_path: Path, programmer: Optional[ProgrammerType] = None) -> bool:
-        """
-        Reads back the current flash and compares against rom_path.
-
-        Returns True if verified successfully.
-        """
-        programmer = programmer or self._state.programmer
-        try:
-            self._log("[cyan]Verifying flashed ROM against source image...[/cyan]")
-            self._progress(20, "Preparing verification...")
-
-            result = verify_flash(
-                programmer=programmer,
-                expected_rom_path=rom_path,
-            )
-
-            if result.verified:
-                self._log("[bold green]✅ Flash verification PASSED[/bold green]")
-                self._progress(100, "Verification complete.")
-                self._on_complete()
-                return True
-            else:
-                self._on_error(
-                    "❌ Flash verification FAILED — flashed content does not match source ROM.\n"
-                    "Verification did not pass. Do not claim the firmware is installed; "
-                    "preserve the operation logs and follow model-specific recovery guidance."
-                )
-        except AutoLoaderError as e:
-            self._on_error(f"[bold red]Verification error:[/bold red] {e}")
-        except Exception as e:
-            logger.exception("Unexpected error in run_verify()")
-            self._on_error(f"[bold red]Unexpected verification error:[/bold red] {e}")
-
+        """Keep the legacy API fail-closed; no direct SPI read is permitted."""
+        message = f"Read-back verification is unavailable for {rom_path}; no SPI read was attempted."
+        self._log(f"[yellow]READBACK_NOT_PERFORMED: {message}[/yellow]")
+        self._progress(0, "Read-back unavailable; not performed.")
+        self._on_error(f"[READBACK_NOT_PERFORMED] {message}")
         return False
