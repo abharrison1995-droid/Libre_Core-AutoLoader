@@ -170,6 +170,7 @@ class BuildRequest:
     backup_intent: BuildIntentEvidence | None = None
     backup_set: BackupSetResult | None = None
     cpu_count: int = 1
+    build_intent: BuildIntentEvidence | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_dir", Path(self.source_dir))
@@ -339,6 +340,7 @@ class ArtifactManifest:
     failure_detail: str | None
     reproducibility: ReproducibilityRecord
     finalized_operation_plan: OperationPlan | None = None
+    prebuild_intent_sha256: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_files", tuple(self.source_files))
@@ -366,6 +368,11 @@ class ArtifactManifest:
             if self.recipe_id.startswith(("x200-libreboot-", "x220-coreboot-")):
                 if selected_record.cbfs_inspection is None:
                     raise ValueError("A complete firmware artifact requires pinned CBFS structure inspection")
+            if self.recipe_id.startswith("x200-libreboot-") and (
+                self.prebuild_intent_sha256 is None
+                or not _SHA256_RE.fullmatch(self.prebuild_intent_sha256)
+            ):
+                raise ValueError("A complete X200 artifact requires its pre-build intent digest")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.backup_provenance is None:
                 raise ValueError("A complete X220 full-chip artifact requires original-backup provenance")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.region_inspection_tool is None:
@@ -537,13 +544,20 @@ def lbmk_expected_output_paths(source: Path, recipe: ArtifactRecipe) -> tuple[st
     if keymaps != tuple(sorted(_PINNED_LBMK_KEYMAPS)) or any(path.is_symlink() or not path.is_file() for path in keymap_paths):
         raise ValueError("Pinned lbmk keymap inventory changed")
 
+    return derive_lbmk_output_inventory(recipe.target)
+
+
+def derive_lbmk_output_inventory(target: str) -> tuple[str, ...]:
+    """Derive the exact pinned X200 26.01 ROM inventory for an allowlisted target."""
+    if not re.fullmatch(r"x200_(?:4|8)mb", target):
+        raise ValueError("Only the two pinned regular-X200 lbmk targets are supported")
     result: list[str] = []
     for config_stem in _PINNED_LBMK_CONFIG_STEMS:
-        result.append(derive_lbmk_output_path(recipe.target, config_stem, "seabios"))
+        result.append(derive_lbmk_output_path(target, config_stem, "seabios"))
         for keymap in _PINNED_LBMK_KEYMAPS:
-            result.append(_derive_lbmk_grub_path(recipe.target, config_stem, keymap))
+            result.append(_derive_lbmk_grub_path(target, config_stem, keymap))
         if config_stem == "libgfxinit_corebootfb":
-            result.append(derive_lbmk_output_path(recipe.target, config_stem, "seauboot"))
+            result.append(derive_lbmk_output_path(target, config_stem, "seauboot"))
     return tuple(sorted(result))
 
 
@@ -1286,6 +1300,29 @@ class ArtifactEngine:
         source = _require_external_path(request.source_dir, "Source checkout", must_exist=True)
         output_root = _require_external_path(request.output_root, "Artifact output root", must_exist=False)
         _require_disjoint_paths(source, output_root)
+        if recipe.workflow_id == "x200-libreboot":
+            intent = request.build_intent
+            if intent is None:
+                raise ValueError("X200 builds require a pre-build BuildIntentEvidence")
+            if (
+                intent.profile_id != "x200-libreboot"
+                or intent.requested_model_id != "x200"
+                or intent.firmware_family is not FirmwareFamily.LIBREBOOT
+                or intent.recipe_id != recipe.recipe_id
+                or intent.source_url != recipe.source.repository_url
+                or intent.source_revision != recipe.source.revision
+                or intent.source_tree_id != recipe.source.tree_id
+                or intent.configuration_sha256 != recipe.expected_config_sha256
+                or intent.expected_size_bytes != recipe.expected_size_bytes
+            ):
+                raise ValueError("X200 pre-build intent differs from the exact pinned Libreboot recipe")
+            intent_result = CompatibilityValidator().validate_build_intent(intent)
+            if intent_result.decision is not CompatibilityDecision.ALLOWED:
+                raise ValueError("X200 pre-build intent is not compatible: " + "; ".join(intent_result.reasons))
+            if request.observed_chip_capacity_bytes != intent.expected_size_bytes:
+                raise ValueError("X200 observed chip capacity differs from its validated pre-build intent")
+        elif request.build_intent is not None:
+            raise ValueError("BuildIntentEvidence is only accepted by the X200 Libreboot recipes")
         source_audit = self.inspect_source(recipe.recipe_id, source)
         self._assert_no_stale_outputs(recipe, source)
         if request.observed_chip_capacity_bytes != recipe.expected_size_bytes:
@@ -1514,6 +1551,11 @@ class ArtifactEngine:
                 explanation="A second isolated build was not requested; reproducibility remains unproven.",
             ),
             finalized_operation_plan=finalized_operation_plan,
+            prebuild_intent_sha256=(
+                build_intent_sha256(request.build_intent)
+                if recipe.workflow_id == "x200-libreboot" and request.build_intent is not None
+                else None
+            ),
         )
         manifest_path = run_dir / "manifest.json"
         self._write_manifest_exclusive(manifest_path, manifest)
