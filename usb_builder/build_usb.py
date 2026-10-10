@@ -1642,10 +1642,28 @@ def execute_build(
     mkarchiso_candidate = mkarchiso_path or shutil.which("mkarchiso")
     if not mkarchiso_candidate:
         raise BuildContractError("mkarchiso is not installed; install the pinned archiso package in a supported Linux environment")
-    mkarchiso_file = _canonical_existing_file(Path(mkarchiso_candidate), "mkarchiso executable")
-    owner = _run_command(("pacman", "-Qo", str(mkarchiso_file)), runner=build_runner).stdout.strip()
-    if re.search(r"\bis owned by archiso\s+91-1\s*$", owner) is None:
-        raise BuildContractError(f"mkarchiso executable is not owned by the pinned archiso 91-1 package: {owner!r}")
+    try:
+        # Resolve trusted usrmerge aliases (for example /usr/sbin -> /usr/bin)
+        # before regular-file validation and package ownership checks. Invoke
+        # only this canonical path after ownership is bound to it.
+        mkarchiso_resolved = Path(mkarchiso_candidate).resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise BuildContractError("mkarchiso executable path cannot be resolved") from exc
+    mkarchiso_file = _canonical_existing_file(mkarchiso_resolved, "mkarchiso executable")
+    if sys.platform == "linux" and not (mkarchiso_file.stat().st_mode & 0o111):
+        raise BuildContractError("mkarchiso canonical target is not executable")
+    try:
+        owner = _run_command(("pacman", "-Qo", str(mkarchiso_file)), runner=build_runner).stdout.strip()
+    except (BuildContractError, OSError) as exc:
+        raise BuildContractError(
+            f"trusted pacman ownership evidence is unavailable for canonical mkarchiso path {mkarchiso_file}"
+        ) from exc
+    expected_owner = f"{mkarchiso_file} is owned by archiso {EXPECTED_MKARCHISO_VERSION}"
+    if owner != expected_owner:
+        raise BuildContractError(
+            f"mkarchiso ownership output must exactly bind canonical path and pinned package version; "
+            f"expected {expected_owner!r}, got {owner!r}"
+        )
     host_inventory = _parse_package_inventory(
         _run_command(("pacman", "-Q"), runner=build_runner).stdout,
         label="host package inventory",

@@ -601,7 +601,7 @@ def test_candidate_rejects_snapshot_redirect_outside_exact_locked_resource(tmp_p
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match=expected_error):
         build_usb.execute_build(
             config,
@@ -872,7 +872,7 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     result = build_usb.execute_build(
         config,
         host_platform="linux",
@@ -978,6 +978,79 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     assert all(command[0] not in {"sudo", "flashrom"} for command in runner.calls)
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux usrmerge executable path contract")
+def test_candidate_builder_resolves_usrmerge_mkarchiso_alias_and_binds_canonical_owner(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder()
+    usr = tmp_path / "usr"
+    canonical_dir = usr / "bin"
+    canonical_dir.mkdir(parents=True)
+    alias_dir = usr / "sbin"
+    alias_dir.symlink_to("bin", target_is_directory=True)
+    canonical_mkarchiso = canonical_dir / "mkarchiso"
+    _write_executable(canonical_mkarchiso, "synthetic pinned Archiso executable fixture\n")
+    alias_mkarchiso = alias_dir / "mkarchiso"
+
+    result = build_usb.execute_build(
+        config,
+        host_platform="linux",
+        mkarchiso_path=str(alias_mkarchiso),
+        runner=runner,
+        mountpoints_reader=lambda: (),
+        clock=lambda: 1_800_000_000,
+    )
+
+    canonical_path = str(canonical_mkarchiso.resolve())
+    assert ["pacman", "-Qo", canonical_path] in runner.calls
+    assert all(str(alias_mkarchiso) not in command for command in runner.calls)
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["host"]["mkarchiso"]["path"] == canonical_path
+    assert manifest["host"]["mkarchiso"]["package_owner_output"] == (
+        f"{canonical_path} is owned by archiso 91-1"
+    )
+    assert any(command[0] == canonical_path for command in manifest["commands"])
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux Archiso ownership contract")
+@pytest.mark.parametrize("owner_mismatch", ["different-path", "different-version"])
+def test_candidate_builder_rejects_mismatched_archiso_owner_before_work_or_output(tmp_path, owner_mismatch):
+    config = _config(tmp_path)
+    fake_mkarchiso = tmp_path / "fake-mkarchiso"
+    _write_executable(fake_mkarchiso, "untrusted executable fixture\n")
+    base_runner = _FakeBuilder()
+    calls: list[list[str]] = []
+
+    def wrong_owner_runner(command, **kwargs):
+        command = list(command)
+        calls.append(command)
+        if command[:2] == ["pacman", "-Qo"]:
+            owner_path = str(fake_mkarchiso.resolve())
+            version = "91-1"
+            if owner_mismatch == "different-path":
+                owner_path = str(fake_mkarchiso.parent / "other-mkarchiso")
+            else:
+                version = "90-1"
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                f"{owner_path} is owned by archiso {version}\n",
+                "",
+            )
+        return base_runner(command, **kwargs)
+
+    with pytest.raises(build_usb.BuildContractError, match="exactly bind canonical path and pinned package version"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=wrong_owner_runner,
+            mountpoints_reader=lambda: (),
+        )
+    assert not any(Path(command[0]).name == "mkarchiso" for command in calls)
+    assert list(config.output_dir.iterdir()) == []
+    assert list(config.work_parent.iterdir()) == []
+
+
 def test_offline_candidate_build_uses_only_verified_owned_cache_copy(tmp_path):
     config = _offline_config(tmp_path)
     assert config.offline_repository is not None
@@ -987,7 +1060,7 @@ def test_offline_candidate_build_uses_only_verified_owned_cache_copy(tmp_path):
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     fake_unshare = fake_tools / "unshare"
     _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     result = build_usb.execute_build(
@@ -1109,7 +1182,7 @@ def test_candidate_build_rejects_wrong_database_bytes_before_mkarchiso_or_output
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match="snapshot core.db bytes do not match"):
         build_usb.execute_build(
             config,
@@ -1129,7 +1202,7 @@ def test_pacman_sync_database_bytes_are_captured_when_archiso_retains_them(tmp_p
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     result = build_usb.execute_build(
         config,
         host_platform="linux",
@@ -1151,7 +1224,7 @@ def test_wrong_retained_pacman_sync_database_blocks_candidate_publication(tmp_pa
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match="retained a different core.db"):
         build_usb.execute_build(
             config,
@@ -1182,7 +1255,7 @@ def test_candidate_build_fails_closed_when_target_install_or_service_is_missing(
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match=expected_error):
         build_usb.execute_build(
             config,
@@ -1202,7 +1275,7 @@ def test_candidate_build_rejects_database_mutated_during_mkarchiso_before_output
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match="staged core.db changed"):
         build_usb.execute_build(
             config,
@@ -1222,7 +1295,7 @@ def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     fake_unshare = fake_tools / "unshare"
     _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     result = build_usb.execute_build(
@@ -1265,7 +1338,7 @@ def test_offline_build_fails_before_creating_work_or_output_without_namespace(tm
     fake_unshare = fake_tools / "unshare"
     _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     fake_mkarchiso = fake_tools / "mkarchiso"
-    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
     with pytest.raises(build_usb.BuildContractError, match="OFFLINE_NETWORK_ISOLATION_UNAVAILABLE"):
         build_usb.execute_build(
             config,

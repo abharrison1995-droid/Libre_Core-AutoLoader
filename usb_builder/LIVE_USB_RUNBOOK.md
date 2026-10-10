@@ -112,8 +112,11 @@ owned `mkarchiso` executable digest are enforced by this lock; the other host
 package versions are not pinned. Exact host-environment reproducibility and
 BIOS/UEFI boot validation remain release gates. Phase 09 software was accepted
 by SOL after the corrective review. Ubuntu is installed under WSL2 and its
-first-run setup is complete; the shell responds as `uid=1000(alex)`. Namespace,
-Archiso, ISO, and QEMU evidence is still pending. An Ubuntu WSL2 shell by itself
+first-run setup is complete; the shell responds as `uid=1000(alex)`. The
+signature-verified Archiso 91-1 package is installed in Arch WSL; `pacman -Q
+archiso` reports 91-1 and `pacman -Qo /usr/bin/mkarchiso` confirms ownership.
+No `mkarchiso` invocation/build has occurred. Namespace, target-root, ISO, and
+QEMU evidence is still pending. An Ubuntu WSL2 shell by itself
 is not the pinned Archiso 91-1 build environment: the builder still
 requires the exact Arch package/tool ownership, pacman repositories and
 snapshot-signature validation, plus usable mount, loop, chroot, and network
@@ -123,8 +126,8 @@ The offline network-namespace probe, real `mkarchiso` build, post-build
 `chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
 **NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 62
-passed, 2 skipped; Windows — 59 passed, 5 skipped; `mypy usb_builder` and
+Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 65
+passed, 2 skipped; Windows — 59 passed, 8 skipped; `mypy usb_builder` and
 `git diff --check` passed. The real Arch WSL namespace probe is
 **UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
 closed, and these focused software tests do not constitute offline builder
@@ -135,12 +138,22 @@ The first real online candidate attempt stopped at preflight, before
 `mkarchiso`, because the package-list pin did not match the checked-in profile.
 The checked-in package list's canonical LF hash is
 `4fd531281bd659695271de16bdd60283dc36eff5220ae1f07550c72716126262`, now
-recorded in the snapshot lock. Windows/WSL CRLF working-tree bytes hashed to
+recorded in the snapshot lock. Windows worktree CRLF bytes hashed to
 `70032fecf478ee2b0d9c65837837206596592db671cdf00a61bbdfbf27827595`. The
 validator now normalizes CRLF to LF before comparing the canonical pin and
-still rejects content drift. This fix awaits SOL review; no build retry has
-occurred, the output directory was empty after the blocked attempt, and no ISO
-was produced.
+still rejects content drift. SOL accepted the canonical line-ending pin in
+commit `3a146f8`; the output directory was empty after the blocked attempt, and
+no ISO was produced.
+
+A second clean online candidate attempt then stopped before invoking
+`mkarchiso`: discovery returned `/usr/sbin/mkarchiso`, whose parent
+`/usr/sbin` is an Arch usrmerge symlink to `/usr/bin`. The output directory
+remained empty, and no ISO was produced. The builder now resolves such aliases,
+requires an executable regular canonical target, and checks that `pacman -Qo`
+output exactly identifies that canonical path as owned by `archiso 91-1`.
+Tests cover an usrmerge-style alias and wrong-path/wrong-version owner output.
+SOL accepted this correction. No build retry has occurred; no ISO was
+produced, and no `mkarchiso` invocation/build has been run.
 
 ## Runtime storage and logs
 
