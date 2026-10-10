@@ -123,6 +123,14 @@ The offline network-namespace probe, real `mkarchiso` build, post-build
 `chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
 **NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
 
+Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 60
+passed, 2 skipped; Windows — 57 passed, 5 skipped; `mypy usb_builder` and
+`git diff --check` passed. The real Arch WSL namespace probe is
+**UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
+closed, and these focused software tests do not constitute offline builder
+validation. Online candidate build and BIOS/UEFI QEMU validation remain
+pending.
+
 ## Runtime storage and logs
 
 The UI is assigned to tty1. It runs from a local wheel in an isolated virtual

@@ -145,6 +145,7 @@ class NetworkIsolation:
     privilege_mode: str
     unshare_path: str | None
     unshare_sha256: str | None
+    unshare_package_owner_output: str | None
     probe_command: tuple[str, ...]
     probe_output: str
 
@@ -744,7 +745,37 @@ def _establish_offline_network_isolation(
     candidate = unshare_path or shutil.which("unshare")
     if not candidate:
         raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: util-linux unshare is required")
-    unshare_file = _canonical_existing_file(Path(candidate), "unshare executable")
+    try:
+        # Resolve usrmerge aliases such as /usr/sbin -> /usr/bin, then invoke
+        # only the canonical target so a PATH symlink cannot be swapped later.
+        resolved_candidate = Path(candidate).resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: unshare path cannot be resolved") from exc
+    unshare_file = _canonical_existing_file(resolved_candidate, "unshare executable")
+    if sys.platform == "linux" and not (unshare_file.stat().st_mode & 0o111):
+        raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: unshare target is not executable")
+    owner_output: str | None = None
+    # Production lookup is PATH-based. Require pacman's ownership evidence for
+    # the resolved executable, including explicit paths used with the real
+    # subprocess runner. Synthetic test executables are allowed only alongside
+    # an injected runner; the actual CLI never exposes either injection.
+    if unshare_path is None or runner is subprocess.run:
+        if sys.platform != "linux":
+            raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: trusted util-linux lookup requires Linux")
+        try:
+            ownership = _run_command(("pacman", "-Qo", str(unshare_file)), runner=runner)
+        except (BuildContractError, OSError) as exc:
+            raise BuildContractError(
+                "OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: trusted Arch pacman/util-linux ownership prerequisite "
+                f"is unavailable for resolved executable {unshare_file}; pacman -Qo must verify it"
+            ) from exc
+        owner_output = ownership.stdout.strip()
+        expected_owner = re.compile(re.escape(str(unshare_file)) + r" is owned by util-linux \S+")
+        if expected_owner.fullmatch(owner_output) is None:
+            raise BuildContractError(
+                "OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: pacman did not confirm that the exact resolved unshare "
+                "path is owned by util-linux"
+            )
     host_identity = host_namespace_identity or _current_network_namespace_identity()
     if is_root is None:
         get_effective_uid = getattr(os, "geteuid", None)
@@ -776,6 +807,7 @@ def _establish_offline_network_isolation(
         privilege_mode=privilege_mode,
         unshare_path=str(unshare_file),
         unshare_sha256=_sha256_file(unshare_file),
+        unshare_package_owner_output=owner_output,
         probe_command=command,
         probe_output=output.strip(),
     )
@@ -1585,6 +1617,7 @@ def execute_build(
             privilege_mode="not-applicable",
             unshare_path=None,
             unshare_sha256=None,
+            unshare_package_owner_output=None,
             probe_command=(),
             probe_output="NOT_REQUIRED",
         )
@@ -1842,6 +1875,7 @@ def execute_build(
                 "privilege_mode": network_isolation.privilege_mode,
                 "unshare_path": network_isolation.unshare_path,
                 "unshare_sha256": network_isolation.unshare_sha256,
+                "unshare_package_owner_output": network_isolation.unshare_package_owner_output,
                 "probe_command": list(network_isolation.probe_command),
                 "probe_output": network_isolation.probe_output,
             },

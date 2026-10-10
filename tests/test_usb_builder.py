@@ -38,6 +38,11 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
+def _write_executable(path: Path, content: str) -> None:
+    _write(path, content)
+    os.chmod(path, path.stat().st_mode | 0o111)
+
+
 def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
     (root / ".git").mkdir(parents=True, exist_ok=True)
     profile = root / "usb_builder" / "archiso_profile"
@@ -70,13 +75,13 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
         "initrd /%INSTALL_DIR%/boot/%ARCH%/initramfs-linux.img\n"
         "options archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS%\n",
     )
-    _write(profile / "airootfs" / "opt" / "autoloader" / "start.sh", "#!/bin/bash\nexit 0\n")
+    _write_executable(profile / "airootfs" / "opt" / "autoloader" / "start.sh", "#!/bin/bash\nexit 0\n")
     _write(
         profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service",
         "[Unit]\nDescription=AutoLoader\nAfter=getty@tty1.service\nConflicts=getty@tty1.service\n\n"
         "[Service]\nExecStart=/opt/autoloader/start.sh\nRestart=no\nStandardOutput=journal+console\n",
     )
-    _write(profile / "airootfs" / "root" / "customize_airootfs.sh", "#!/bin/bash\nexit 0\n")
+    _write_executable(profile / "airootfs" / "root" / "customize_airootfs.sh", "#!/bin/bash\nexit 0\n")
     lock = root / "usb_builder" / "snapshot.lock.json"
     lock.parent.mkdir(parents=True, exist_ok=True)
     lock.write_text(
@@ -786,7 +791,7 @@ class _FakeBuilder:
         if self.install_app:
             startup_script = staged_profile / "airootfs/opt/autoloader/start.sh"
             if self.startup and startup_script.is_file():
-                _write(root / "opt/autoloader/start.sh", startup_script.read_text(encoding="utf-8"))
+                _write_executable(root / "opt/autoloader/start.sh", startup_script.read_text(encoding="utf-8"))
             venv = root / "opt" / "autoloader" / "venv"
             bin_dir = venv / "bin"
             site = venv / "lib" / "python3.14" / "site-packages"
@@ -796,8 +801,8 @@ class _FakeBuilder:
             site.mkdir(parents=True, exist_ok=True)
             package_dir.mkdir(parents=True)
             dist_info.mkdir(parents=True)
-            _write(bin_dir / "python", "synthetic interpreter\n")
-            _write(bin_dir / "autoloader", "synthetic console script\n")
+            _write_executable(bin_dir / "python", "synthetic interpreter\n")
+            _write_executable(bin_dir / "autoloader", "synthetic console script\n")
             _write(venv / "pyvenv.cfg", "include-system-site-packages = true\n")
             _write(package_dir / "__init__.py", "\"\"\"fixture\"\"\"\n")
             _write(package_dir / "__main__.py", "def main():\n    return 0\n")
@@ -957,7 +962,7 @@ def test_offline_candidate_build_uses_only_verified_owned_cache_copy(tmp_path):
     fake_mkarchiso = fake_tools / "mkarchiso"
     fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
     fake_unshare = fake_tools / "unshare"
-    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     result = build_usb.execute_build(
         config,
         host_platform="linux",
@@ -1192,7 +1197,7 @@ def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_
     fake_mkarchiso = fake_tools / "mkarchiso"
     fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
     fake_unshare = fake_tools / "unshare"
-    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     result = build_usb.execute_build(
         config,
         host_platform="linux",
@@ -1205,10 +1210,14 @@ def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_
     )
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["network_isolation"]["mode"] == "linux-network-namespace"
-    assert manifest["network_isolation"]["privilege_mode"] == "user-mapped-root"
+    is_root = callable(getattr(os, "geteuid", None)) and os.geteuid() == 0
+    expected_mode = "root" if is_root else "user-mapped-root"
+    expected_flags = ["--net"] if is_root else ["--user", "--map-root-user", "--net"]
+    assert manifest["network_isolation"]["privilege_mode"] == expected_mode
     assert manifest["network_isolation"]["unshare_sha256"] == _sha(fake_unshare)
     assert manifest["network_isolation"]["probe_output"] == build_usb.OFFLINE_NETWORK_PROBE_MARKER
     expected_prefix = manifest["network_isolation"]["command_prefix"]
+    assert expected_prefix[1:-1] == expected_flags
     assert all(
         call[: len(expected_prefix)] == expected_prefix
         for call in runner.calls
@@ -1227,7 +1236,7 @@ def test_offline_build_fails_before_creating_work_or_output_without_namespace(tm
     fake_tools = tmp_path / "fake-tools"
     fake_tools.mkdir()
     fake_unshare = fake_tools / "unshare"
-    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     fake_mkarchiso = fake_tools / "mkarchiso"
     fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
     with pytest.raises(build_usb.BuildContractError, match="OFFLINE_NETWORK_ISOLATION_UNAVAILABLE"):
@@ -1246,13 +1255,34 @@ def test_offline_build_fails_before_creating_work_or_output_without_namespace(tm
     assert list(config.work_parent.iterdir()) == []
 
 
-@pytest.mark.skipif(sys.platform != "linux" or shutil.which("unshare") is None, reason="Linux util-linux unshare required")
+@pytest.mark.skipif(
+    sys.platform != "linux" or shutil.which("unshare") is None,
+    reason="UNVALIDATED: host lacks Linux util-linux unshare",
+)
 def test_real_offline_network_namespace_has_no_external_routes():
     try:
         isolation = build_usb._establish_offline_network_isolation(subprocess.run)
     except build_usb.BuildContractError as exc:
-        if "Operation not permitted" in str(exc) or "Permission denied" in str(exc):
-            pytest.skip("host does not permit creating an isolated network namespace")
+        if any(
+            marker in str(exc)
+            for marker in (
+                "trusted Arch pacman/util-linux ownership prerequisite",
+                "exact resolved unshare path is owned by util-linux",
+                "pacman did not confirm that the exact resolved unshare path",
+            )
+        ):
+            pytest.skip("UNVALIDATED: host lacks trusted Arch pacman/util-linux executable ownership evidence")
+        if any(
+            marker in str(exc)
+            for marker in (
+                "Operation not permitted",
+                "Permission denied",
+                "unexpected network interfaces",
+                "IPv4 routes exist",
+                "IPv6 routes exist",
+            )
+        ):
+            pytest.skip("UNVALIDATED: host does not expose a fully route-free network namespace to this test")
         raise
     assert isolation.mode == "linux-network-namespace"
     assert isolation.probe_output == build_usb.OFFLINE_NETWORK_PROBE_MARKER
@@ -1267,7 +1297,7 @@ def test_real_offline_network_namespace_has_no_external_routes():
 )
 def test_offline_namespace_uses_mode_appropriate_unshare_flags(tmp_path, is_root, expected_flags, expected_mode):
     fake_unshare = tmp_path / "unshare"
-    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    _write_executable(fake_unshare, "synthetic util-linux executable fixture\n")
     runner = _FakeBuilder()
     isolation = build_usb._establish_offline_network_isolation(
         runner,
@@ -1277,6 +1307,64 @@ def test_offline_namespace_uses_mode_appropriate_unshare_flags(tmp_path, is_root
     )
     assert isolation.privilege_mode == expected_mode
     assert isolation.command_prefix == (str(fake_unshare.resolve()), *expected_flags, "--")
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux executable ownership contract")
+@pytest.mark.parametrize("owner_output_kind", ["unowned", "different-path"])
+def test_default_unshare_lookup_rejects_attacker_controlled_path_symlink_before_execution(
+    tmp_path, monkeypatch, owner_output_kind
+):
+    outside = tmp_path / "attacker-unshare"
+    _write_executable(outside, "not util-linux\n")
+    bin_dir = tmp_path / "attacker-bin"
+    bin_dir.mkdir()
+    path_entry = bin_dir / "unshare"
+    path_entry.symlink_to(outside)
+    monkeypatch.setattr(build_usb.shutil, "which", lambda name: str(path_entry) if name == "unshare" else None)
+    calls: list[list[str]] = []
+
+    def reject_unowned(command, **kwargs):
+        calls.append(list(command))
+        assert command[:2] == ["pacman", "-Qo"]
+        output = (
+            f"{command[-1]} is not owned by any package\n"
+            if owner_output_kind == "unowned"
+            else f"{tmp_path / 'different-unshare'} is owned by util-linux 99.0\n"
+        )
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            output,
+            "",
+        )
+
+    with pytest.raises(build_usb.BuildContractError, match="OFFLINE_NETWORK_ISOLATION_UNAVAILABLE"):
+        build_usb._establish_offline_network_isolation(
+            reject_unowned,
+            host_namespace_identity="net:[test-host]",
+            is_root=True,
+        )
+    assert calls == [["pacman", "-Qo", str(outside.resolve())]]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux pacman ownership contract")
+def test_default_unshare_lookup_reports_missing_pacman_as_unavailable(tmp_path, monkeypatch):
+    unshare = tmp_path / "unshare"
+    _write_executable(unshare, "synthetic executable fixture\n")
+    monkeypatch.setattr(build_usb.shutil, "which", lambda name: str(unshare) if name == "unshare" else None)
+    calls: list[list[str]] = []
+
+    def missing_pacman(command, **kwargs):
+        calls.append(list(command))
+        raise FileNotFoundError("pacman is unavailable")
+
+    with pytest.raises(build_usb.BuildContractError, match="OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: trusted Arch pacman/util-linux ownership prerequisite"):
+        build_usb._establish_offline_network_isolation(
+            missing_pacman,
+            host_namespace_identity="net:[test-host]",
+            is_root=True,
+        )
+    assert calls == [["pacman", "-Qo", str(unshare.resolve())]]
 
 
 def test_target_package_inventory_requires_every_profile_package_and_valid_rows(tmp_path):
@@ -1374,6 +1462,7 @@ def test_click_build_usb_rejects_missing_options_before_builder(monkeypatch):
     assert "Missing option '--source-root'" in result.output
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific host platform contract")
 def test_real_build_usb_cli_fails_before_subprocess_on_windows(tmp_path):
     from autoloader.__main__ import cli
 
