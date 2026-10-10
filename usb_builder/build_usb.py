@@ -50,6 +50,8 @@ REQUIRED_MODES = frozenset(("online", "offline"))
 REQUIRED_BOOT_MODES = frozenset(("bios.syslinux", "uefi.systemd-boot"))
 EXPECTED_MKARCHISO_VERSION = "91-1"
 EXPECTED_SNAPSHOT_DATE = "2026-09-29"
+REQUIRED_RUNTIME_IMPORTS = ("autoloader", "click", "psutil", "rich", "textual")
+OFFLINE_NETWORK_PROBE_MARKER = "AUTOLOADER_NETNS_ISOLATION_OK"
 
 
 class BuildContractError(RuntimeError):
@@ -83,6 +85,17 @@ class BuildResult:
     manifest_path: Path
     sha256: str
     manifest_sha256: str
+
+
+@dataclass(frozen=True)
+class NetworkIsolation:
+    mode: str
+    command_prefix: tuple[str, ...]
+    privilege_mode: str
+    unshare_path: str | None
+    unshare_sha256: str | None
+    probe_command: tuple[str, ...]
+    probe_output: str
 
 
 Runner = Callable[..., subprocess.CompletedProcess[str]]
@@ -448,6 +461,92 @@ def _run_command(
     return result
 
 
+def _current_network_namespace_identity() -> str:
+    try:
+        return os.readlink("/proc/self/ns/net")
+    except OSError as exc:
+        raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: cannot identify the current Linux network namespace") from exc
+
+
+def _network_namespace_probe_script() -> str:
+    return (
+        "import os, pathlib, sys\n"
+        "expected = sys.argv[1]\n"
+        "actual = os.readlink('/proc/self/ns/net')\n"
+        "if actual == expected: raise SystemExit('network namespace was not changed')\n"
+        "interfaces = set(os.listdir('/sys/class/net'))\n"
+        "if interfaces != {'lo'}: raise SystemExit(f'unexpected network interfaces: {sorted(interfaces)}')\n"
+        "routes = pathlib.Path('/proc/net/route').read_text().splitlines()\n"
+        "if len(routes) != 1: raise SystemExit('IPv4 routes exist in offline namespace')\n"
+        "ipv6_routes = pathlib.Path('/proc/net/ipv6_route')\n"
+        "if ipv6_routes.exists() and ipv6_routes.read_text().strip(): raise SystemExit('IPv6 routes exist in offline namespace')\n"
+        f"print('{OFFLINE_NETWORK_PROBE_MARKER}')\n"
+    )
+
+
+def _establish_offline_network_isolation(
+    runner: Runner,
+    *,
+    unshare_path: str | None = None,
+    host_namespace_identity: str | None = None,
+    is_root: bool | None = None,
+) -> NetworkIsolation:
+    """Verify a route-free network namespace before creating any build work."""
+    candidate = unshare_path or shutil.which("unshare")
+    if not candidate:
+        raise BuildContractError("OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: util-linux unshare is required")
+    unshare_file = _canonical_existing_file(Path(candidate), "unshare executable")
+    host_identity = host_namespace_identity or _current_network_namespace_identity()
+    if is_root is None:
+        get_effective_uid = getattr(os, "geteuid", None)
+        is_root = callable(get_effective_uid) and get_effective_uid() == 0
+    privilege_mode = "root" if is_root else "user-mapped-root"
+    namespace_flags = ("--net",) if is_root else ("--user", "--map-root-user", "--net")
+    command = (
+        str(unshare_file),
+        *namespace_flags,
+        "--",
+        sys.executable,
+        "-c",
+        _network_namespace_probe_script(),
+        host_identity,
+    )
+    try:
+        result = runner(list(command), check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=None)
+    except OSError as exc:
+        raise BuildContractError(f"OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: failed to start unshare probe: {exc}") from exc
+    output = result.stdout or ""
+    if result.returncode != 0 or output.strip() != OFFLINE_NETWORK_PROBE_MARKER:
+        raise BuildContractError(
+            "OFFLINE_NETWORK_ISOLATION_UNAVAILABLE: could not establish and verify a route-free network namespace; "
+            f"unshare returned {result.returncode}: {output[-2000:]}"
+        )
+    return NetworkIsolation(
+        mode="linux-network-namespace",
+        command_prefix=(str(unshare_file), *namespace_flags, "--"),
+        privilege_mode=privilege_mode,
+        unshare_path=str(unshare_file),
+        unshare_sha256=_sha256_file(unshare_file),
+        probe_command=command,
+        probe_output=output.strip(),
+    )
+
+
+def _network_guarded_runner(
+    runner: Runner,
+    isolation: NetworkIsolation,
+    *,
+    command_log: list[list[str]] | None = None,
+) -> Runner:
+    def guarded(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        actual_command = [*isolation.command_prefix, *command]
+        if command_log is not None:
+            command_log.append(actual_command)
+        return runner(actual_command, **kwargs)
+
+    return guarded
+
+
 def _source_provenance(source: Path, runner: Runner) -> dict[str, str]:
     head = _run_command(("git", "-C", str(source), "rev-parse", "HEAD"), runner=runner).stdout.strip()
     tree = _run_command(("git", "-C", str(source), "rev-parse", "HEAD^{tree}"), runner=runner).stdout.strip()
@@ -662,11 +761,230 @@ def _record_package_versions(target_root: Path, runner: Runner, required_package
     return _parse_package_inventory(result.stdout, label="installed package version inventory", required=required_packages)
 
 
+def _require_rootfs_file(root: Path, relative: str, label: str, *, executable: bool = False, symlink_ok: bool = False) -> Path:
+    path = root.joinpath(*Path(relative).parts)
+    _assert_no_link_components(path, include_leaf=False)
+    try:
+        info = path.lstat()
+    except OSError as exc:
+        raise BuildContractError(f"target root is missing {label}: {relative}") from exc
+    if stat.S_ISLNK(info.st_mode):
+        if not symlink_ok:
+            raise BuildContractError(f"target root {label} must be a regular file, not a symlink")
+        resolved = _resolve_rootfs_symlink(root, path, label)
+        resolved_info = resolved.lstat()
+        if not stat.S_ISREG(resolved_info.st_mode):
+            raise BuildContractError(f"target root {label} symlink does not resolve to an in-image regular file")
+        if executable and sys.platform == "linux" and not (resolved_info.st_mode & 0o111):
+            raise BuildContractError(f"target root {label} symlink target is not executable")
+    elif not stat.S_ISREG(info.st_mode):
+        raise BuildContractError(f"target root {label} must be a regular file")
+    if executable and sys.platform == "linux" and not (info.st_mode & 0o111) and not stat.S_ISLNK(info.st_mode):
+        raise BuildContractError(f"target root {label} is not executable")
+    return path
+
+
+def _resolve_rootfs_symlink(root: Path, link_path: Path, label: str) -> Path:
+    """Follow an in-image symlink lexically without resolving it against the host root."""
+    current = link_path
+    seen: set[Path] = set()
+    for _ in range(40):
+        try:
+            relative = current.relative_to(root)
+        except ValueError as exc:
+            raise BuildContractError(f"target root {label} symlink escapes the image") from exc
+        _assert_no_link_components(current, include_leaf=False)
+        try:
+            info = current.lstat()
+        except OSError as exc:
+            raise BuildContractError(f"target root {label} symlink target is missing") from exc
+        if not stat.S_ISLNK(info.st_mode):
+            return current
+        if current in seen:
+            raise BuildContractError(f"target root {label} has a symlink cycle")
+        seen.add(current)
+        link_value = os.readlink(current)
+        # Symlink payloads in the target image use POSIX paths even in Windows fixture tests.
+        link_parts = list(Path(link_value.replace("\\", "/")).parts)
+        if link_value.startswith("/"):
+            parts: list[str] = []
+        else:
+            parts = list(relative.parent.parts)
+        for part in link_parts:
+            if part in {"", ".", "/", "\\"}:
+                continue
+            if part == "..":
+                if not parts:
+                    raise BuildContractError(f"target root {label} symlink escapes the image")
+                parts.pop()
+            else:
+                parts.append(part)
+        current = root.joinpath(*parts)
+    raise BuildContractError(f"target root {label} exceeds the symlink resolution limit")
+
+
+def _rootfs_runtime_validation_script() -> str:
+    imports = ", ".join(repr(name) for name in REQUIRED_RUNTIME_IMPORTS)
+    return (
+        "import hashlib, importlib, importlib.metadata, json, pathlib, sys\n"
+        f"required = ({imports},)\n"
+        "modules = {name: importlib.import_module(name) for name in required}\n"
+        "if not hasattr(importlib.import_module('autoloader.__main__'), 'main'): raise SystemExit('CLI main entrypoint missing')\n"
+        "dist = importlib.metadata.distribution('libre-core-autoloader')\n"
+        "if dist.metadata.get('Name', '').casefold().replace('_', '-') != 'libre-core-autoloader': raise SystemExit('wrong distribution name')\n"
+        "entries = [ep.value for ep in dist.entry_points if ep.group == 'console_scripts' and ep.name == 'autoloader']\n"
+        "if entries != ['autoloader.__main__:main']: raise SystemExit('AutoLoader console entrypoint missing or ambiguous')\n"
+        "if not str(pathlib.Path(modules['autoloader'].__file__).resolve()).startswith(str(pathlib.Path(sys.prefix).resolve()) + '/'):\n"
+        "    raise SystemExit('AutoLoader package is not installed in the application venv')\n"
+        "wheelhouse = pathlib.Path('/opt/autoloader/wheelhouse')\n"
+        "wheels = list(wheelhouse.glob('*.whl'))\n"
+        "if len(wheels) != 1: raise SystemExit('installed wheelhouse is missing or ambiguous')\n"
+        "wheel_hash = hashlib.sha256(wheels[0].read_bytes()).hexdigest()\n"
+        "if wheel_hash != sys.argv[1]: raise SystemExit('installed wheel fingerprint mismatch')\n"
+        "print(json.dumps({'distribution_name': dist.metadata['Name'], 'distribution_version': dist.version, "
+        "'entrypoint': entries[0], 'runtime_imports': sorted(modules), 'wheel_sha256': wheel_hash, "
+        "'python_version': sys.version.split()[0]}, sort_keys=True))\n"
+    )
+
+
+def _validate_target_root_install(
+    target_root: Path,
+    *,
+    wheel: Path,
+    runner: Runner,
+) -> dict[str, Any]:
+    """Require the customize hook's verified app install and active service in airootfs."""
+    _require_rootfs_file(
+        target_root,
+        "opt/autoloader/venv/bin/python",
+        "application venv interpreter",
+        executable=True,
+        symlink_ok=True,
+    )
+    _require_rootfs_file(
+        target_root,
+        "opt/autoloader/venv/bin/autoloader",
+        "AutoLoader console entrypoint",
+        executable=True,
+    )
+    _require_rootfs_file(target_root, "opt/autoloader/venv/pyvenv.cfg", "application venv configuration")
+    site_packages = list((target_root / "opt/autoloader/venv/lib").glob("python*/site-packages"))
+    if len(site_packages) != 1 or _is_reparse_or_symlink(site_packages[0]) or not site_packages[0].is_dir():
+        raise BuildContractError("target root does not contain exactly one regular application venv site-packages directory")
+    package_file = site_packages[0] / "autoloader" / "__init__.py"
+    _require_rootfs_file(target_root, package_file.relative_to(target_root).as_posix(), "installed AutoLoader package")
+    dist_infos = list(site_packages[0].glob("libre_core_autoloader-*.dist-info"))
+    if len(dist_infos) != 1 or _is_reparse_or_symlink(dist_infos[0]) or not dist_infos[0].is_dir():
+        raise BuildContractError("target root must contain exactly one AutoLoader dist-info directory")
+    metadata_path = dist_infos[0] / "METADATA"
+    entry_points_path = dist_infos[0] / "entry_points.txt"
+    _require_rootfs_file(target_root, metadata_path.relative_to(target_root).as_posix(), "AutoLoader distribution metadata")
+    _require_rootfs_file(target_root, entry_points_path.relative_to(target_root).as_posix(), "AutoLoader entry-point metadata")
+    metadata_text = metadata_path.read_text(encoding="utf-8")
+    entry_points_text = entry_points_path.read_text(encoding="utf-8")
+    if re.search(r"(?mi)^Name:\s*libre-core-autoloader\s*$", metadata_text) is None:
+        raise BuildContractError("target root AutoLoader distribution metadata has the wrong package name")
+    if re.search(r"(?m)^autoloader\s*=\s*autoloader\.__main__:main\s*$", entry_points_text) is None:
+        raise BuildContractError("target root AutoLoader distribution metadata lacks the expected CLI entrypoint")
+
+    service_path = _require_rootfs_file(
+        target_root,
+        "etc/systemd/system/autoloader.service",
+        "AutoLoader systemd unit",
+    )
+    activation_path = _require_rootfs_file(
+        target_root,
+        "etc/systemd/system/multi-user.target.d/autoloader.conf",
+        "AutoLoader systemd activation drop-in",
+    )
+    service = service_path.read_text(encoding="utf-8")
+    activation = activation_path.read_text(encoding="utf-8")
+    required_service_lines = (
+        "ExecStart=/opt/autoloader/start.sh",
+        "After=getty@tty1.service",
+        "Conflicts=getty@tty1.service",
+        "Restart=no",
+        "StandardOutput=journal+console",
+    )
+    if any(line not in service.splitlines() for line in required_service_lines):
+        raise BuildContractError("target root AutoLoader systemd unit is incomplete or does not own tty1 safely")
+    if activation.strip() != "[Unit]\nWants=autoloader.service":
+        raise BuildContractError("target root AutoLoader service is not enabled from multi-user.target")
+    start_script_path = _require_rootfs_file(
+        target_root,
+        "opt/autoloader/start.sh",
+        "AutoLoader startup script",
+        executable=True,
+    )
+    marker_path = _require_rootfs_file(
+        target_root,
+        "var/lib/autoloader/image-install.json",
+        "customize-hook install marker",
+    )
+    marker, _ = _load_json(marker_path, "customize-hook install marker")
+    expected_wheel_sha = _sha256_file(wheel)
+    marker_distribution = marker.get("distribution_name")
+    if (
+        marker.get("schema_version") != 1
+        or marker.get("status") != "APP_INSTALLED_AND_RUNTIME_CHECKED"
+        or not isinstance(marker_distribution, str)
+        or marker_distribution.casefold().replace("_", "-") != "libre-core-autoloader"
+        or marker.get("entrypoint") != "autoloader.__main__:main"
+        or marker.get("wheel_sha256") != expected_wheel_sha
+    ):
+        raise BuildContractError("target root lacks valid customize-hook app installation evidence")
+
+    runtime = _run_command(
+        (
+            "chroot",
+            str(target_root),
+            "/opt/autoloader/venv/bin/python",
+            "-c",
+            _rootfs_runtime_validation_script(),
+            expected_wheel_sha,
+        ),
+        runner=runner,
+    )
+    try:
+        runtime_document = json.loads(runtime.stdout.strip())
+    except (json.JSONDecodeError, AttributeError) as exc:
+        raise BuildContractError("target root runtime import check returned no parseable evidence") from exc
+    runtime_distribution = runtime_document.get("distribution_name")
+    if (
+        not isinstance(runtime_distribution, str)
+        or runtime_distribution.casefold().replace("_", "-") != "libre-core-autoloader"
+        or runtime_document.get("entrypoint") != "autoloader.__main__:main"
+        or tuple(runtime_document.get("runtime_imports", ())) != tuple(sorted(REQUIRED_RUNTIME_IMPORTS))
+        or runtime_document.get("wheel_sha256") != expected_wheel_sha
+    ):
+        raise BuildContractError("target root runtime import evidence does not match the application wheel contract")
+    cli = _run_command(
+        ("chroot", str(target_root), "/opt/autoloader/venv/bin/autoloader", "--help"),
+        runner=runner,
+    )
+    if not cli.stdout.startswith("Usage: autoloader"):
+        raise BuildContractError("target root AutoLoader console command did not pass its --help smoke check")
+    return {
+        "status": "APP_INSTALLED_AND_RUNTIME_CHECKED",
+        "customize_hook_marker_sha256": _sha256_file(marker_path),
+        "wheel_sha256": expected_wheel_sha,
+        "distribution_metadata_sha256": _sha256_file(metadata_path),
+        "entrypoint_metadata_sha256": _sha256_file(entry_points_path),
+        "service_unit_sha256": _sha256_file(service_path),
+        "service_activation_sha256": _sha256_file(activation_path),
+        "startup_script_sha256": _sha256_file(start_script_path),
+        "runtime_smoke": runtime_document,
+        "console_help_sha256": _sha256_bytes(cli.stdout.encode("utf-8")),
+    }
+
+
 def execute_build(
     config: BuildConfig,
     *,
     host_platform: str | None = None,
     mkarchiso_path: str | None = None,
+    unshare_path: str | None = None,
+    host_namespace_identity: str | None = None,
     mountpoints_reader: Callable[[], Sequence[str]] = _mountpoints_from_proc,
     runner: Runner = subprocess.run,
     clock: Callable[[], float] = time.time,
@@ -677,8 +995,26 @@ def execute_build(
     profile = config.profile_dir.resolve(strict=True)
     output = config.output_dir.resolve(strict=True)
     work_parent = config.work_parent.resolve(strict=True)
-    source_info = _source_provenance(source, runner)
-    version = _run_command(("pacman", "-Q", "archiso"), runner=runner).stdout.strip()
+    if config.network_mode == "offline":
+        network_isolation = _establish_offline_network_isolation(
+            runner,
+            unshare_path=unshare_path,
+            host_namespace_identity=host_namespace_identity,
+        )
+    else:
+        network_isolation = NetworkIsolation(
+            mode="online-allowed-by-request",
+            command_prefix=(),
+            privilege_mode="not-applicable",
+            unshare_path=None,
+            unshare_sha256=None,
+            probe_command=(),
+            probe_output="NOT_REQUIRED",
+        )
+    command_log: list[list[str]] = [list(network_isolation.probe_command)] if network_isolation.probe_command else []
+    build_runner = _network_guarded_runner(runner, network_isolation, command_log=command_log)
+    source_info = _source_provenance(source, build_runner)
+    version = _run_command(("pacman", "-Q", "archiso"), runner=build_runner).stdout.strip()
     if version != f"archiso {EXPECTED_MKARCHISO_VERSION}":
         raise BuildContractError(
             f"installed Archiso version must be exactly {EXPECTED_MKARCHISO_VERSION}; got {version!r}"
@@ -687,18 +1023,18 @@ def execute_build(
     if not mkarchiso_candidate:
         raise BuildContractError("mkarchiso is not installed; install the pinned archiso package in a supported Linux environment")
     mkarchiso_file = _canonical_existing_file(Path(mkarchiso_candidate), "mkarchiso executable")
-    owner = _run_command(("pacman", "-Qo", str(mkarchiso_file)), runner=runner).stdout.strip()
+    owner = _run_command(("pacman", "-Qo", str(mkarchiso_file)), runner=build_runner).stdout.strip()
     if re.search(r"\bis owned by archiso\s+91-1\s*$", owner) is None:
         raise BuildContractError(f"mkarchiso executable is not owned by the pinned archiso 91-1 package: {owner!r}")
     host_inventory = _parse_package_inventory(
-        _run_command(("pacman", "-Q"), runner=runner).stdout,
+        _run_command(("pacman", "-Q"), runner=build_runner).stdout,
         label="host package inventory",
         required=("archiso",),
     )
     host_archiso = next(row for row in host_inventory if row.startswith("archiso "))
     if host_archiso != f"archiso {EXPECTED_MKARCHISO_VERSION}":
         raise BuildContractError(f"host package inventory does not contain pinned Archiso {EXPECTED_MKARCHISO_VERSION}")
-    wheel_backend = _build_backend_evidence(runner)
+    wheel_backend = _build_backend_evidence(build_runner)
     mkarchiso_bin = str(mkarchiso_file)
 
     owner_token = uuid.uuid4().hex
@@ -710,7 +1046,6 @@ def execute_build(
     build_log = work_dir / "build.log"
     keep_work = True
     start_epoch = int(clock())
-    command_log: list[list[str]] = []
     try:
         stage_profile = _profile_copy(profile, work_dir)
         wheel_source_dir = work_dir / "wheel-source"
@@ -739,11 +1074,10 @@ def execute_build(
             str(wheel_dir),
             str(wheel_source_dir),
         )
-        command_log.append(list(wheel_command))
         wheel_log = work_dir / "wheel-build.log"
         with wheel_log.open("w", encoding="utf-8", newline="\n") as log:
-            _run_command(wheel_command, runner=runner, env=build_env, stdout=log)
-        if _source_provenance(source, runner) != source_info:
+            _run_command(wheel_command, runner=build_runner, env=build_env, stdout=log)
+        if _source_provenance(source, build_runner) != source_info:
             raise BuildContractError("source checkout changed during isolated wheel build; retaining build logs")
         wheel = _one_wheel(wheel_dir)
         _copy_wheel_into_profile(wheel, stage_profile)
@@ -763,6 +1097,8 @@ def execute_build(
             pacman_conf = _install_offline_conf(stage_profile, ready.offline_repository, work_dir)
         archiso_work = work_dir / "archiso-work"
         archiso_work.mkdir()
+        staged_image_output = work_dir / "image-output"
+        staged_image_output.mkdir()
         command = (
             mkarchiso_bin,
             "-v",
@@ -771,28 +1107,32 @@ def execute_build(
             "-w",
             str(archiso_work),
             "-o",
-            str(output),
+            str(staged_image_output),
             str(stage_profile),
         )
-        command_log.append(list(command))
         with build_log.open("w", encoding="utf-8", newline="\n") as log:
             try:
-                _run_command(command, runner=runner, stdout=log)
+                _run_command(command, runner=build_runner, stdout=log)
             except BuildContractError as exc:
                 log.write(f"\nBUILD_FAILED: {exc}\n")
                 raise
 
-        images = [p for p in output.iterdir() if p.suffix.casefold() == ".iso"]
+        images = [p for p in staged_image_output.iterdir() if p.suffix.casefold() == ".iso"]
         if len(images) != 1 or _is_reparse_or_symlink(images[0]) or not images[0].is_file() or images[0].stat().st_size == 0:
             raise BuildContractError("mkarchiso did not produce exactly one non-empty regular ISO file")
         image = images[0]
         target_root = archiso_work / "x86_64" / "airootfs"
-        package_inventory = _record_package_versions(target_root, runner, ready.package_names)
+        target_install = _validate_target_root_install(
+            target_root,
+            wheel=wheel,
+            runner=build_runner,
+        )
+        package_inventory = _record_package_versions(target_root, build_runner, ready.package_names)
         end_epoch = int(clock())
         profile_hashes = _source_hashes(source, profile)
         staged_hashes = _source_hashes(work_dir, stage_profile)
         image_outputs: list[dict[str, Any]] = []
-        for path in sorted(output.iterdir()):
+        for path in sorted(staged_image_output.iterdir()):
             if _is_reparse_or_symlink(path) or not path.is_file():
                 raise BuildContractError(f"mkarchiso produced an unexpected non-regular output: {path}")
             image_outputs.append(
@@ -830,11 +1170,21 @@ def execute_build(
                     "sha256": _sha256_file(mkarchiso_file),
                 },
             },
+            "network_isolation": {
+                "mode": network_isolation.mode,
+                "command_prefix": list(network_isolation.command_prefix),
+                "privilege_mode": network_isolation.privilege_mode,
+                "unshare_path": network_isolation.unshare_path,
+                "unshare_sha256": network_isolation.unshare_sha256,
+                "probe_command": list(network_isolation.probe_command),
+                "probe_output": network_isolation.probe_output,
+            },
             "profile_file_sha256": profile_hashes,
             "staged_profile_file_sha256": staged_hashes,
             "wheel_source_file_sha256": wheel_source_hashes,
             "packages_x86_64": list(ready.package_names),
             "installed_package_inventory": list(package_inventory),
+            "target_root_install": target_install,
             "commands": command_log,
             "wheel": {"filename": wheel.name, "sha256": _sha256_file(wheel), "size_bytes": wheel.stat().st_size},
             "outputs": image_outputs,
@@ -846,6 +1196,8 @@ def execute_build(
             "qemu_uefi_boot": "NOT_PERFORMED",
             "usb_media_write": "NOT_PERFORMED",
         }
+        final_image = output / image.name
+        shutil.copy2(image, final_image)
         shutil.copy2(build_log, output / "build.log")
         shutil.copy2(wheel_log, output / "wheel-build.log")
         manifest_path = output / "build-provenance.json"
@@ -857,7 +1209,7 @@ def execute_build(
         ]
         (output / "SHA256SUMS").write_text("\n".join(sums) + "\n", encoding="ascii")
         keep_work = False
-        return BuildResult(image, manifest_path, _sha256_file(image), _sha256_file(manifest_path))
+        return BuildResult(final_image, manifest_path, _sha256_file(final_image), _sha256_file(manifest_path))
     except Exception:
         # Keep logs and intermediate evidence after any failure for inspection.
         if not build_log.exists():

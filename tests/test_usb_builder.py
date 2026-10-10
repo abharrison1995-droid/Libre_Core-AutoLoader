@@ -5,14 +5,24 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from click.testing import CliRunner
 
 from usb_builder import build_usb
+
+
+@pytest.fixture(autouse=True)
+def _short_owned_work_paths(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Keep synthetic target-root paths below Windows' legacy MAX_PATH limit.
+    monkeypatch.setattr(build_usb, "WORK_PREFIX", "w-")
+    monkeypatch.setattr(build_usb.uuid, "uuid4", lambda: SimpleNamespace(hex="fixture"))
 
 
 def _sha(path: Path) -> str:
@@ -57,7 +67,11 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
         "options archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS%\n",
     )
     _write(profile / "airootfs" / "opt" / "autoloader" / "start.sh", "#!/bin/bash\nexit 0\n")
-    _write(profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service", "[Service]\nRestart=no\n")
+    _write(
+        profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service",
+        "[Unit]\nDescription=AutoLoader\nAfter=getty@tty1.service\nConflicts=getty@tty1.service\n\n"
+        "[Service]\nExecStart=/opt/autoloader/start.sh\nRestart=no\nStandardOutput=journal+console\n",
+    )
     _write(profile / "airootfs" / "root" / "customize_airootfs.sh", "#!/bin/bash\nexit 0\n")
     lock = root / "usb_builder" / "snapshot.lock.json"
     lock.parent.mkdir(parents=True, exist_ok=True)
@@ -104,6 +118,52 @@ def _config(tmp_path: Path, *, pinned: bool = True) -> build_usb.BuildConfig:
     output.mkdir()
     work.mkdir()
     return build_usb.BuildConfig(source, profile, output, work, lock, "online")
+
+
+def _offline_config(tmp_path: Path) -> build_usb.BuildConfig:
+    online = _config(tmp_path)
+    _, lock_bytes = build_usb._load_json(online.snapshot_lock, "snapshot lock")
+    repository = tmp_path / "offline-repo"
+    files: dict[str, str] = {}
+    paths = [
+        "core/os/x86_64/core.db",
+        "core/os/x86_64/core.db.sig",
+        "extra/os/x86_64/extra.db",
+        "extra/os/x86_64/extra.db.sig",
+    ]
+    for package in sorted(build_usb.REQUIRED_PACKAGES):
+        archive = f"extra/os/x86_64/{package}-1-1-x86_64.pkg.tar.zst"
+        paths.extend((archive, archive + ".sig"))
+    for index, name in enumerate(paths):
+        item = repository / name
+        _write(item, f"synthetic local fixture {index}\n")
+        files[name] = _sha(item)
+    manifest = tmp_path / "offline-repo.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "snapshot_lock_sha256": hashlib.sha256(lock_bytes).hexdigest(),
+                "packages": {
+                    package: next(path for path in paths if path.endswith(f"/{package}-1-1-x86_64.pkg.tar.zst"))
+                    for package in sorted(build_usb.REQUIRED_PACKAGES)
+                },
+                "files": files,
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return build_usb.BuildConfig(
+        online.source_root,
+        online.profile_dir,
+        online.output_dir,
+        online.work_parent,
+        online.snapshot_lock,
+        "offline",
+        repository,
+        manifest,
+    )
 
 
 def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
@@ -290,12 +350,35 @@ def test_cleanup_rechecks_owner_prefix_and_mounts(tmp_path):
 
 
 class _FakeBuilder:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        install_app: bool = True,
+        marker: bool = True,
+        service: bool = True,
+        activation: bool = True,
+        startup: bool = True,
+        namespace_ok: bool = True,
+    ) -> None:
         self.calls: list[list[str]] = []
         self.embedded_provenance = ""
+        self.install_app = install_app
+        self.marker = marker
+        self.service = service
+        self.activation = activation
+        self.startup = startup
+        self.namespace_ok = namespace_ok
 
     def __call__(self, command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        command = list(command)
         self.calls.append(command)
+        if Path(command[0]).name == "unshare" and "--net" in command:
+            separator = command.index("--")
+            inner = command[separator + 1 :]
+            if len(inner) >= 3 and inner[1] == "-c" and build_usb.OFFLINE_NETWORK_PROBE_MARKER in inner[2]:
+                output = build_usb.OFFLINE_NETWORK_PROBE_MARKER + "\n" if self.namespace_ok else "network namespace probe failed\n"
+                return subprocess.CompletedProcess(command, 0 if self.namespace_ok else 1, output, "")
+            command = inner
         stdout = kwargs.get("stdout")
         if isinstance(stdout, (object,)) and hasattr(stdout, "write"):
             stdout.write("fake command log\n")
@@ -331,6 +414,19 @@ class _FakeBuilder:
             wheel_dir.mkdir(parents=True, exist_ok=True)
             (wheel_dir / "libre_core_autoloader-0.1.0-py3-none-any.whl").write_bytes(b"synthetic wheel")
             return subprocess.CompletedProcess(command, 0, "built synthetic wheel\n", "")
+        if command and command[0] == "chroot":
+            if command[2:4] == ["/opt/autoloader/venv/bin/python", "-c"]:
+                document = {
+                    "distribution_name": "libre-core-autoloader",
+                    "distribution_version": "0.1.0",
+                    "entrypoint": "autoloader.__main__:main",
+                    "runtime_imports": sorted(build_usb.REQUIRED_RUNTIME_IMPORTS),
+                    "wheel_sha256": command[-1],
+                    "python_version": "3.14.0",
+                }
+                return subprocess.CompletedProcess(command, 0, json.dumps(document, sort_keys=True) + "\n", "")
+            if command[2:] == ["/opt/autoloader/venv/bin/autoloader", "--help"]:
+                return subprocess.CompletedProcess(command, 0, "Usage: autoloader [OPTIONS] COMMAND [ARGS]...\n", "")
         if Path(command[0]).name == "mkarchiso":
             output = Path(command[command.index("-o") + 1])
             work = Path(command[command.index("-w") + 1])
@@ -339,9 +435,61 @@ class _FakeBuilder:
                 profile / "airootfs/usr/share/doc/libre-core-autoloader/image-build-inputs.json"
             ).read_text(encoding="utf-8")
             (output / "libre_core_autoloader-test-x86_64.iso").write_bytes(b"synthetic fake ISO")
-            (work / "x86_64" / "airootfs").mkdir(parents=True)
+            self._populate_target_root(work / "x86_64" / "airootfs", profile)
             return subprocess.CompletedProcess(command, 0, "fake mkarchiso completed\n", "")
         return subprocess.CompletedProcess(command, 0, "", "")
+
+    def _populate_target_root(self, root: Path, staged_profile: Path) -> None:
+        root.mkdir(parents=True)
+        if self.install_app:
+            startup_script = staged_profile / "airootfs/opt/autoloader/start.sh"
+            if self.startup and startup_script.is_file():
+                _write(root / "opt/autoloader/start.sh", startup_script.read_text(encoding="utf-8"))
+            venv = root / "opt" / "autoloader" / "venv"
+            bin_dir = venv / "bin"
+            site = venv / "lib" / "python3.14" / "site-packages"
+            package_dir = site / "autoloader"
+            dist_info = site / "libre_core_autoloader-0.1.0.dist-info"
+            bin_dir.mkdir(parents=True)
+            site.mkdir(parents=True, exist_ok=True)
+            package_dir.mkdir(parents=True)
+            dist_info.mkdir(parents=True)
+            _write(bin_dir / "python", "synthetic interpreter\n")
+            _write(bin_dir / "autoloader", "synthetic console script\n")
+            _write(venv / "pyvenv.cfg", "include-system-site-packages = true\n")
+            _write(package_dir / "__init__.py", "\"\"\"fixture\"\"\"\n")
+            _write(package_dir / "__main__.py", "def main():\n    return 0\n")
+            _write(dist_info / "METADATA", "Metadata-Version: 2.1\nName: libre-core-autoloader\nVersion: 0.1.0\n")
+            _write(dist_info / "entry_points.txt", "[console_scripts]\nautoloader = autoloader.__main__:main\n")
+            wheels = list((staged_profile / "airootfs/opt/autoloader/wheelhouse").glob("*.whl"))
+            assert len(wheels) == 1
+            if self.marker:
+                _write(
+                    root / "var/lib/autoloader/image-install.json",
+                    json.dumps(
+                        {
+                            "schema_version": 1,
+                            "status": "APP_INSTALLED_AND_RUNTIME_CHECKED",
+                            "distribution_name": "libre-core-autoloader",
+                            "distribution_version": "0.1.0",
+                            "entrypoint": "autoloader.__main__:main",
+                            "runtime_imports": sorted(build_usb.REQUIRED_RUNTIME_IMPORTS),
+                            "wheel_sha256": _sha(wheels[0]),
+                        },
+                        sort_keys=True,
+                    )
+                    + "\n",
+                )
+        if self.service:
+            source_service = staged_profile / "airootfs/etc/systemd/system/autoloader.service"
+            destination = root / "etc/systemd/system/autoloader.service"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_service, destination)
+        if self.activation:
+            source_activation = staged_profile / "airootfs/etc/systemd/system/multi-user.target.d/autoloader.conf"
+            destination = root / "etc/systemd/system/multi-user.target.d/autoloader.conf"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_activation, destination)
 
 
 def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path):
@@ -374,7 +522,9 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
         "wheel": "0.45.1",
     }
     assert manifest["wheel"]["sha256"] == hashlib.sha256(b"synthetic wheel").hexdigest()
-    wheel_command = next(command for command in manifest["commands"] if "pip" in command and "wheel" in command)
+    wheel_command = next(
+        command for command in manifest["commands"] if any("wheel-source" in part for part in command)
+    )
     assert Path(wheel_command[-1]).name == "wheel-source"
     assert Path(wheel_command[-1]) != config.source_root
     assert "autoloader/__init__.py" in manifest["wheel_source_file_sha256"]
@@ -388,6 +538,13 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     assert manifest["qemu_uefi_boot"] == "NOT_PERFORMED"
     assert manifest["usb_media_write"] == "NOT_PERFORMED"
     assert len(manifest["installed_package_inventory"]) >= len(manifest["packages_x86_64"])
+    assert manifest["target_root_install"]["status"] == "APP_INSTALLED_AND_RUNTIME_CHECKED"
+    assert manifest["target_root_install"]["startup_script_sha256"] == _sha(
+        config.profile_dir / "airootfs/opt/autoloader/start.sh"
+    )
+    assert manifest["target_root_install"]["runtime_smoke"]["runtime_imports"] == sorted(
+        build_usb.REQUIRED_RUNTIME_IMPORTS
+    )
     assert any(command[0] == str(fake_mkarchiso.resolve()) and "-C" in command for command in manifest["commands"])
     assert any("--no-index" in command and "--no-deps" in command for command in manifest["commands"])
     assert (config.output_dir / "build.log").is_file()
@@ -395,6 +552,133 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     assert (config.output_dir / "SHA256SUMS").is_file()
     assert list(config.work_parent.iterdir()) == []
     assert all(command[0] not in {"sudo", "flashrom"} for command in runner.calls)
+
+
+@pytest.mark.parametrize(
+    ("builder_options", "expected_error"),
+    [
+        ({"marker": False}, "customize-hook install marker"),
+        ({"install_app": False}, "application venv interpreter"),
+        ({"service": False}, "systemd unit"),
+        ({"activation": False}, "systemd activation drop-in"),
+        ({"startup": False}, "AutoLoader startup script"),
+    ],
+)
+def test_candidate_build_fails_closed_when_target_install_or_service_is_missing(
+    tmp_path, builder_options, expected_error
+):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(**builder_options)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match=expected_error):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert list(config.output_dir.iterdir()) == [], "unvalidated image must not appear as a candidate output"
+    assert not (config.output_dir / "build-provenance.json").exists()
+
+
+def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_path):
+    config = _offline_config(tmp_path)
+    runner = _FakeBuilder()
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    fake_unshare = fake_tools / "unshare"
+    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    result = build_usb.execute_build(
+        config,
+        host_platform="linux",
+        mkarchiso_path=str(fake_mkarchiso),
+        unshare_path=str(fake_unshare),
+        host_namespace_identity="net:[host-fixture]",
+        runner=runner,
+        mountpoints_reader=lambda: (),
+        clock=lambda: 1_800_000_000,
+    )
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["network_isolation"]["mode"] == "linux-network-namespace"
+    assert manifest["network_isolation"]["privilege_mode"] == "user-mapped-root"
+    assert manifest["network_isolation"]["unshare_sha256"] == _sha(fake_unshare)
+    assert manifest["network_isolation"]["probe_output"] == build_usb.OFFLINE_NETWORK_PROBE_MARKER
+    expected_prefix = manifest["network_isolation"]["command_prefix"]
+    assert all(
+        call[: len(expected_prefix)] == expected_prefix
+        for call in runner.calls
+    ), "all offline subprocesses must inherit the verified network namespace"
+    assert any(Path(call[len(expected_prefix)]).name == "mkarchiso" for call in runner.calls)
+    assert any(call[len(expected_prefix)] == "chroot" for call in runner.calls)
+    assert all(
+        command[: len(expected_prefix)] == expected_prefix
+        for command in manifest["commands"]
+    )
+
+
+def test_offline_build_fails_before_creating_work_or_output_without_namespace(tmp_path):
+    config = _offline_config(tmp_path)
+    runner = _FakeBuilder(namespace_ok=False)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_unshare = fake_tools / "unshare"
+    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    fake_mkarchiso.write_bytes(b"synthetic mkarchiso executable fixture")
+    with pytest.raises(build_usb.BuildContractError, match="OFFLINE_NETWORK_ISOLATION_UNAVAILABLE"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            unshare_path=str(fake_unshare),
+            host_namespace_identity="net:[host-fixture]",
+            runner=runner,
+            mountpoints_reader=lambda: (),
+        )
+    assert len(runner.calls) == 1
+    assert runner.calls[0][0] == str(fake_unshare.resolve())
+    assert list(config.output_dir.iterdir()) == []
+    assert list(config.work_parent.iterdir()) == []
+
+
+@pytest.mark.skipif(sys.platform != "linux" or shutil.which("unshare") is None, reason="Linux util-linux unshare required")
+def test_real_offline_network_namespace_has_no_external_routes():
+    try:
+        isolation = build_usb._establish_offline_network_isolation(subprocess.run)
+    except build_usb.BuildContractError as exc:
+        if "Operation not permitted" in str(exc) or "Permission denied" in str(exc):
+            pytest.skip("host does not permit creating an isolated network namespace")
+        raise
+    assert isolation.mode == "linux-network-namespace"
+    assert isolation.probe_output == build_usb.OFFLINE_NETWORK_PROBE_MARKER
+
+
+@pytest.mark.parametrize(
+    ("is_root", "expected_flags", "expected_mode"),
+    [
+        (True, ("--net",), "root"),
+        (False, ("--user", "--map-root-user", "--net"), "user-mapped-root"),
+    ],
+)
+def test_offline_namespace_uses_mode_appropriate_unshare_flags(tmp_path, is_root, expected_flags, expected_mode):
+    fake_unshare = tmp_path / "unshare"
+    fake_unshare.write_bytes(b"synthetic util-linux executable fixture")
+    runner = _FakeBuilder()
+    isolation = build_usb._establish_offline_network_isolation(
+        runner,
+        unshare_path=str(fake_unshare),
+        host_namespace_identity="net:[host-fixture]",
+        is_root=is_root,
+    )
+    assert isolation.privilege_mode == expected_mode
+    assert isolation.command_prefix == (str(fake_unshare.resolve()), *expected_flags, "--")
 
 
 def test_target_package_inventory_requires_every_profile_package_and_valid_rows(tmp_path):

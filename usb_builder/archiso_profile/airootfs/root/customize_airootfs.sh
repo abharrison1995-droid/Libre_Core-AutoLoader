@@ -18,5 +18,47 @@ PIP_DISABLE_PIP_VERSION_CHECK=1 \
 /opt/autoloader/venv/bin/python -m pip install \
     --no-index --no-deps --no-cache-dir "${wheels[0]}"
 
-/opt/autoloader/venv/bin/python -c \
-    'import autoloader, click, psutil, rich, textual; print("AutoLoader wheel and locked runtime imports verified")'
+test -x /opt/autoloader/venv/bin/python
+test -x /opt/autoloader/venv/bin/autoloader
+test -x /opt/autoloader/start.sh
+test -f /etc/systemd/system/autoloader.service
+test -f /etc/systemd/system/multi-user.target.d/autoloader.conf
+grep -Fxq 'Wants=autoloader.service' /etc/systemd/system/multi-user.target.d/autoloader.conf
+
+/opt/autoloader/venv/bin/autoloader --help >/dev/null
+/opt/autoloader/venv/bin/python - "${wheels[0]}" <<'PY'
+import hashlib
+import importlib
+import importlib.metadata
+import json
+from pathlib import Path
+import sys
+
+required_imports = ("autoloader", "click", "psutil", "rich", "textual")
+modules = {name: importlib.import_module(name) for name in required_imports}
+importlib.import_module("autoloader.__main__")
+distribution = importlib.metadata.distribution("libre-core-autoloader")
+entrypoints = [
+    item.value
+    for item in distribution.entry_points
+    if item.group == "console_scripts" and item.name == "autoloader"
+]
+if entrypoints != ["autoloader.__main__:main"]:
+    raise SystemExit("AutoLoader console entrypoint is missing or ambiguous")
+if not str(Path(modules["autoloader"].__file__).resolve()).startswith(str(Path(sys.prefix).resolve()) + "/"):
+    raise SystemExit("AutoLoader package is not installed in its application venv")
+wheel = Path(sys.argv[1])
+wheel_sha256 = hashlib.sha256(wheel.read_bytes()).hexdigest()
+marker = {
+    "schema_version": 1,
+    "status": "APP_INSTALLED_AND_RUNTIME_CHECKED",
+    "distribution_name": distribution.metadata["Name"],
+    "distribution_version": distribution.version,
+    "entrypoint": entrypoints[0],
+    "runtime_imports": sorted(modules),
+    "wheel_sha256": wheel_sha256,
+}
+marker_path = Path("/var/lib/autoloader/image-install.json")
+marker_path.parent.mkdir(parents=True, exist_ok=True)
+marker_path.write_text(json.dumps(marker, sort_keys=True) + "\n", encoding="utf-8")
+PY
