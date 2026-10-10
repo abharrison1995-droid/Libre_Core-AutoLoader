@@ -321,6 +321,20 @@ def test_x200_variable_capacity_requires_exact_observed_artifact_size(tmp_path: 
     assert _assert_decision(wrong_size, CompatibilityDecision.BLOCKED)
 
 
+def test_x200_profile_rejects_tablet_and_x200s_variants_with_regular_mtm(
+    x200_files: dict[str, Path],
+) -> None:
+    plan = make_x200_plan(x200_files)
+    for variant in ("ThinkPad X200 Tablet", "ThinkPad X200s", "ThinkPad X200si"):
+        candidate = replace(
+            plan,
+            device=replace(plan.device, raw_dmi_product_name=variant),
+        )
+        result = CompatibilityValidator().validate(candidate)
+        assert result.decision is CompatibilityDecision.BLOCKED, (variant, result.reasons)
+        assert any("unsupported model alias" in reason for reason in result.reasons)
+
+
 def test_x220_unknown_topology_and_regions_never_pass(tmp_path: Path) -> None:
     rom = tmp_path / "x220.rom"
     rom.write_bytes(b"C" * (8 * MIB))

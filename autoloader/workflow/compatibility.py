@@ -28,6 +28,10 @@ from .types import (
 )
 
 _MODEL_TOKEN = re.compile(r"(?<![a-z0-9])(t430|x200|x220)(?![a-z0-9])", re.I)
+_UNSUPPORTED_MODEL_ALIAS = re.compile(
+    r"(?<![a-z0-9])(?:t430s|x200s(?:i)?|x200\s+tablet(?:\s+pc)?|x220i)(?![a-z0-9])",
+    re.I,
+)
 _MTM_TOKEN = re.compile(r"^([0-9]{4})[0-9A-Z-]*$", re.I)
 _EMBEDDED_MTM_TOKEN = re.compile(r"(?<![A-Z0-9])([0-9]{4}[A-Z0-9-]*)(?![A-Z0-9])", re.I)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$", re.I)
@@ -77,7 +81,7 @@ class CompatibilityValidator:
             return None, False
         folded = value.strip().lower()
         # Reject common adjacent aliases instead of allowing a substring match.
-        if re.search(r"(?<![a-z0-9])(?:t430s|x200s|x220i)(?![a-z0-9])", folded):
+        if _UNSUPPORTED_MODEL_ALIAS.search(folded):
             return None, True
         tokens = {match.group(1).lower() for match in _MODEL_TOKEN.finditer(folded)}
         if len(tokens) > 1:

@@ -2,10 +2,10 @@
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Application and CLI launch cleanly | SOFTWARE TESTED | Isolated Python 3.12.14 venv; editable `pip install -e '.[dev]'` succeeds; `python -m autoloader --help` succeeds; `python -m pytest -q` passes 100 tests including CLI routing, the welcome screen, all nine Textual screen mounts and Phase 02 policy/state/journal tests. |
+| Application and CLI launch cleanly | SOFTWARE TESTED | Isolated Python 3.12.14 venv; editable `pip install -e '.[dev]'` succeeds; `python -m autoloader --help` succeeds; `python -m pytest -q` passes 101 tests including CLI routing, the welcome screen, all nine Textual screen mounts and Phase 02 policy/state/journal tests. |
 | No simulated build/flash/verification success | SOFTWARE TESTED | Orchestrator and `OnevyRainManager` fail closed for unimplemented operations; TUI downstream/capture controls stay disabled and verification shows `NOT PERFORMED`; recorded backup entries are not presented as reverified. CLI regression tests reject the removed `--write`/`--yes` bypass. |
 | CLI and TUI call one validated backend | IN PROGRESS | CLI build/backup/flash and TUI build requests use `Orchestrator`; the Phase 02 safety core exists but is not yet wired into either interface. Physical build/capture/write controls intentionally report unavailable; integration remains Phase 08. |
-| Model-specific compatibility checks block unsupported combinations | SOFTWARE TESTED — PHASE 02 CORE | Three explicit profiles and fail-closed tri-state identity, BIOS, artifact, topology, voltage, region and backup checks; 20 focused safety tests. Hardware evidence and app integration remain pending. |
+| Model-specific compatibility checks block unsupported combinations | SOFTWARE TESTED — PHASE 02 CORE | Three explicit profiles and fail-closed tri-state identity, BIOS, artifact, topology, voltage, region and backup checks; 21 focused safety tests. Hardware evidence and app integration remain pending. |
 | T430 1vyrain workflow accepted on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
 | X200 Libreboot workflow accepted on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
 | X220 Coreboot build/workflow accepted on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
