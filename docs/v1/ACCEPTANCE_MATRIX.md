@@ -27,3 +27,7 @@ No row is hardware accepted. Automated tests and simulations cannot satisfy the 
 | X220 | [Coreboot Sandy Bridge guide](https://doc.coreboot.org/mainboard/lenovo/Sandy_Bridge_series.html) | External SPI programmer for initial flash; exact interface/wiring and chip voltage must match at 3300 mV. | One observed 8 MiB chip; artifact and observed IFD/GBE/ME/3 MiB BIOS maps must match. | Board variant, descriptor/protection state, region map, programmer voltage and image semantics remain unobserved. |
 
 Any conflict between detected hardware and these provisional descriptions blocks work. Sources establish research constraints, not completed device validation.
+
+## Phase 04 cross-platform software gate
+
+After the accepted Git identity correction, the full Windows suite passed **395 tests, 9 skipped in 877.46 seconds** and the full Ubuntu suite passed **402 tests, 2 skipped in 427.12 seconds**, both exit 0. The first Ubuntu run exposed two test-only portability assumptions and failed 2 tests; the corrected rerun passed. Windows mypy and Ubuntu `mypy --platform win32` are clean on 102 source files. Native Ubuntu mypy reports the existing Windows-only `ctypes.windll` attribute typing issue at `autoloader/utils.py:15`. Fake/synthetic tests do not demonstrate upstream firmware compilation or hardware success; those gates remain pending.

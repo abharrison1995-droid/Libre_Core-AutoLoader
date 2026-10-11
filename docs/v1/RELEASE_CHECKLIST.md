@@ -31,3 +31,7 @@
 | Pinned upstream Linux builds and generated-ROM structural evidence | PENDING | Ubuntu 26.04 WSL and the pinned Libreboot checkout/dependencies are available, except `g++-mipsel-linux-gnu` (not needed for x86 X200). SOL accepted the operation-scoped deterministic Git identity and postprocessing recheck before COMPLETE publication. The focused follow-up passed 77 tests with 1 skipped; mypy is clean on 102 source files; the full Windows suite passed 395 tests with 9 skipped in 877.46s (exit 0). The older 388/8 result predates the identity correction. No Coreboot/Libreboot ROM was compiled or produced; generated-image CBFS/IFD parsing is unverified. No artifact is flash-ready. |
 
 V1 cannot be marked complete while any release-blocking software check or any of the three hardware workflows remains pending.
+
+## Latest Phase 04 cross-platform software evidence
+
+The full Windows suite passed **395 tests, 9 skipped in 877.46 seconds** and the full Ubuntu suite passed **402 tests, 2 skipped in 427.12 seconds**, both exit 0, after two test-only portability assumptions from the first Ubuntu run were corrected. Windows mypy and Ubuntu `mypy --platform win32` reported no issues in 102 source files. Native Ubuntu mypy still reports the existing Windows-only `ctypes.windll` attribute typing issue at `autoloader/utils.py:15`. No firmware build or hardware/media operation was part of these software tests.

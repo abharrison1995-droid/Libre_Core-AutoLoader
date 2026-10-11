@@ -493,6 +493,8 @@ def test_x200_writers_and_process_paths_remain_unreachable(captured_backup, tmp_
 def test_x200_build_fails_cleanly_without_supported_linux_tools(captured_backup, tmp_path, monkeypatch):
     import autoloader.rom_builder.artifact_engine as artifact_module
 
+    monkeypatch.setattr(artifact_module.platform, "system", lambda: "Windows")
+
     def forbidden(*args, **kwargs):
         pytest.fail("unsupported host must not spawn a build command")
 

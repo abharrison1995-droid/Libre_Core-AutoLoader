@@ -1017,7 +1017,10 @@ def test_operation_git_config_refuses_modified_existing_file(tmp_path: Path) -> 
 
     operation = tmp_path / "operation"
     operation.mkdir()
-    (operation / "gitconfig").write_text("[user]\n\tname = unexpected\n", encoding="utf-8")
+    gitconfig = operation / "gitconfig"
+    gitconfig.write_text("[user]\n\tname = unexpected\n", encoding="utf-8")
+    if os.name != "nt":
+        gitconfig.chmod(0o600)
     with pytest.raises(ValueError, match="differs from the pinned deterministic identity"):
         _ensure_operation_git_config(operation)
 
