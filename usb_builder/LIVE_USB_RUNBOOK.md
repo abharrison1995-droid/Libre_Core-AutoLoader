@@ -31,6 +31,12 @@ read-only import and CLI-help checks with `chroot`. These checks establish
 target-root installation contents only; they do not establish ISO boot or
 service behavior on a booted system.
 
+The target-root interpreter check resolves POSIX symlink components inside the
+image root itself, including absolute guest paths and Arch usrmerge links such
+as `/usr/sbin -> bin`. It never resolves a guest absolute link against the host
+filesystem. Root escapes, cycles, missing targets, and traversal through a
+non-directory component fail closed.
+
 The 2026-09-29 lock pins the exact SHA-256 of both `core.db` and `extra.db`.
 The archive currently publishes no detached signature for either database.
 The builder stages those exact bytes and configures them as the sole pacman
@@ -115,23 +121,33 @@ by SOL after the corrective review. Ubuntu is installed under WSL2 and its
 first-run setup is complete; the shell responds as `uid=1000(alex)`. The
 signature-verified Archiso 91-1 package is installed in Arch WSL; `pacman -Q
 archiso` reports 91-1 and `pacman -Qo /usr/bin/mkarchiso` confirms ownership.
-No `mkarchiso` invocation/build has occurred. Namespace, target-root, ISO, and
-QEMU evidence is still pending. An Ubuntu WSL2 shell by itself
+A third online candidate attempt did invoke `mkarchiso`, but failed BIOS
+profile validation before package installation because `syslinux` was absent;
+it produced no ISO and did not reach target-root validation. A fourth attempt
+on 2026-10-13 passed package validation and completed the Archiso build stages,
+then failed target-root validation because `/usr/sbin` inside `airootfs` is a
+usrmerge link to `/usr/bin`. The output directory remained empty and no ISO was
+published. An image-rooted symlink resolver now handles this path safely, but
+no later build has exercised it. Namespace, successful build, target-root,
+ISO, and QEMU evidence is still pending. An
+Ubuntu WSL2 shell by itself
 is not the pinned Archiso 91-1 build environment: the builder still
 requires the exact Arch package/tool ownership, pacman repositories and
 snapshot-signature validation, plus usable mount, loop, chroot, and network
 namespace capabilities. This checkout is currently dirty, so do not start a
 candidate build until a reviewed local commit provides a clean Git checkout.
-The offline network-namespace probe, real `mkarchiso` build, post-build
+The offline network-namespace probe, successful candidate build, post-build
 `chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
 **NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 66 passed, 2 skipped; Windows — 60 passed, 8 skipped; `mypy usb_builder` and
+Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 68 passed, 2 skipped; Windows — 60 passed, 10 skipped; native `mypy usb_builder` on both hosts and
 `git diff --check` passed. The real Arch WSL namespace probe is
 **UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
 closed, and these focused software tests do not constitute offline builder
 validation. Online candidate build and BIOS/UEFI QEMU validation remain
-pending.
+pending. SOL approved the target-root POSIX symlink resolver code; this runbook
+records the attempt and correction. No ISO rebuild has yet exercised the new
+resolver.
 
 The first real online candidate attempt stopped at preflight, before
 `mkarchiso`, because the package-list pin did not match the checked-in profile.
@@ -151,7 +167,17 @@ remained empty, and no ISO was produced. The builder now resolves such aliases,
 requires an executable regular canonical target, and checks that `pacman -Qo`
 output exactly identifies that canonical path as owned by `archiso 91-1`.
 Tests cover an usrmerge-style alias and wrong-path/wrong-version owner output.
-SOL accepted the canonical-path correction. A third attempt invoked `mkarchiso` but failed BIOS profile validation before package installation because `syslinux` was absent. The output directory remained empty and no ISO was produced. The pinned `core.db` contains `syslinux` 6.04.pre3.r3.g05ac953c-5 with package-signature metadata. The profile and required package policy now include `syslinux`; canonical LF package-list SHA-256 is `520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329`; SOL accepted the syslinux package-list correction. No further retry has occurred.
+SOL accepted the canonical-path correction. A third attempt invoked `mkarchiso` but failed BIOS profile validation before package installation because `syslinux` was absent. The output directory remained empty and no ISO was produced. The pinned `core.db` contains `syslinux` 6.04.pre3.r3.g05ac953c-5 with package-signature metadata. The profile and required package policy now include `syslinux`; canonical LF package-list SHA-256 is `520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329`; SOL accepted the syslinux package-list correction. At that checkpoint, no later retry had run; the fourth attempt is recorded in the current-status section below.
+
+The target-root validator then exposed an in-image path case: the venv
+interpreter can resolve through `/usr/sbin/python`, where `/usr/sbin` is a
+usrmerge link to `/usr/bin`. The image-rooted resolver and regression tests now
+accept this internal chain and reject escapes, cycles, missing targets, and
+non-directory traversal. Latest focused USB tests: Arch WSL 68 passed, 2
+skipped; Windows 60 passed, 10 skipped. `mypy usb_builder` is clean on both
+hosts. SOL approved the resolver code; the documentation correction is incorporated. No candidate build
+retry has occurred; no ISO, target-root smoke result, or boot validation is
+claimed.
 
 ## Runtime storage and logs
 

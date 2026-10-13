@@ -1020,6 +1020,66 @@ def test_candidate_builder_resolves_usrmerge_mkarchiso_alias_and_binds_canonical
     assert any(command[0] == canonical_path for command in manifest["commands"])
 
 
+def _make_rootfs_symlink_or_skip(link: Path, target: str, *, is_directory: bool = False) -> None:
+    link.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.symlink(target, link, target_is_directory=is_directory)
+    except (OSError, NotImplementedError) as exc:
+        pytest.skip(f"POSIX-style target-root symlinks unavailable: {exc}")
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="target-root uses POSIX symlink semantics")
+def test_rootfs_resolver_accepts_internal_usrmerge_and_absolute_guest_path(tmp_path):
+    root = tmp_path / "airootfs"
+    interpreter = root / "usr/bin/python"
+    interpreter.parent.mkdir(parents=True)
+    _write_executable(interpreter, "synthetic target interpreter\n")
+    _make_rootfs_symlink_or_skip(root / "usr/sbin", "bin", is_directory=True)
+    guest_python = root / "opt/autoloader/venv/bin/python"
+    _make_rootfs_symlink_or_skip(guest_python, "/usr/sbin/python")
+
+    resolved = build_usb._resolve_rootfs_symlink(root, guest_python, "venv interpreter")
+
+    assert resolved == interpreter
+    assert build_usb._require_rootfs_file(
+        root,
+        "opt/autoloader/venv/bin/python",
+        "application venv interpreter",
+        executable=True,
+        symlink_ok=True,
+    ) == interpreter
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="target-root uses POSIX symlink semantics")
+def test_rootfs_resolver_rejects_symlink_escape_cycle_missing_and_non_directory(tmp_path):
+    root = tmp_path / "airootfs"
+    root.mkdir()
+
+    escaping = root / "opt/escape"
+    _make_rootfs_symlink_or_skip(escaping, "../../outside")
+    with pytest.raises(build_usb.BuildContractError, match="escapes the image"):
+        build_usb._resolve_rootfs_symlink(root, escaping, "escape fixture")
+
+    cycle_a = root / "opt/cycle-a"
+    cycle_b = root / "opt/cycle-b"
+    _make_rootfs_symlink_or_skip(cycle_a, "cycle-b")
+    _make_rootfs_symlink_or_skip(cycle_b, "cycle-a")
+    with pytest.raises(build_usb.BuildContractError, match="cycle|resolution limit"):
+        build_usb._resolve_rootfs_symlink(root, cycle_a, "cycle fixture")
+
+    missing = root / "opt/missing"
+    _make_rootfs_symlink_or_skip(missing, "not-present")
+    with pytest.raises(build_usb.BuildContractError, match="missing"):
+        build_usb._resolve_rootfs_symlink(root, missing, "missing fixture")
+
+    regular_file = root / "usr/file"
+    _write(regular_file, "not a directory\n")
+    non_directory = root / "opt/non-directory"
+    _make_rootfs_symlink_or_skip(non_directory, "/usr/file/child")
+    with pytest.raises(build_usb.BuildContractError, match="non-directory"):
+        build_usb._resolve_rootfs_symlink(root, non_directory, "non-directory fixture")
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="Linux Archiso ownership contract")
 @pytest.mark.parametrize("owner_mismatch", ["different-path", "different-version"])
 def test_candidate_builder_rejects_mismatched_archiso_owner_before_work_or_output(tmp_path, owner_mismatch):

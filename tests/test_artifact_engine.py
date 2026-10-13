@@ -97,6 +97,81 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "fd6a56a8e20c15f4fd8f03511f05ce8264f120ad0a0dc11900e2e04f89a88dda",
         "0cfd0e5cfb4b169355508e270b1cff1f644010cda72bd36a9a8f07952377e3cb",
     )
+    assert {item.path: item.sha256 for item in LIBREBOOT_2601.files} == {
+        "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
+        "config/coreboot/x200_4mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+        "config/coreboot/x200_4mb/config/libgfxinit_corebootfb": "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
+        "config/coreboot/x200_4mb/config/libgfxinit_txtmode": "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65",
+        "config/coreboot/x200_8mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+        "config/coreboot/x200_8mb/config/libgfxinit_corebootfb": "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4",
+        "config/coreboot/x200_8mb/config/libgfxinit_txtmode": "d0558fb2221060c7062bd225b30ab65c71d994c3d1dcad98240440475062edaf",
+        "config/coreboot/default/target.cfg": "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e",
+        "config/git/coreboot/pkg.cfg": "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f",
+        "include/lib.sh": "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a",
+    }
+    assert X200_4MB.expected_config_sha256 == "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c"
+    assert X200_8MB.expected_config_sha256 == "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4"
+    assert tuple(item.sha256 for item in ONEVYRAIN_HANDOFF.source.files) == (
+        "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e335b14e8c33a",
+        "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a",
+    )
+
+
+def test_coreboot_2609_source_hashes_match_reviewed_raw_blobs() -> None:
+    expected = {
+        "configs/builder/config.lenovo_x220": "beeb15673bd4ef1394e19c7bbbac7f9ab3589552671d9502de4621b0b32c2cd1",
+        "src/mainboard/lenovo/x220/Kconfig.name": "1ca8ac6f14193e04be8d49e2ddfc7383aed8af0988db93d482140b6852664fa5",
+        "src/mainboard/lenovo/x220/Kconfig": "8c94a9d6976698b6e5cd7e3c3e0ee652a9916a878e85ab6bb9f7ba85a6c71f53",
+        "src/Kconfig": "0557dc3ea3ffbdeaddd9c55dd8fbfe0e6d8259b18e7ca250f403fd5fe992eb01",
+        "util/cbfstool/cbfs_image.c": "fd6a56a8e20c15f4fd8f03511f05ce8264f120ad0a0dc11900e2e04f89a88dda",
+        "util/cbfstool/cbfstool.c": "f34621b9d58083fc7c3e31571aaf5bd02f78476101e249a53995189d8a71488b",
+    }
+    assert {item.path: item.sha256 for item in COREBOOT_2609.files} == expected
+    assert X220_COREBOOT.expected_config_sha256 == expected["configs/builder/config.lenovo_x220"]
+    assert COREBOOT_2609.repository_url == "https://github.com/coreboot/coreboot.git"
+
+
+def test_x220_inspect_source_accepts_only_the_documented_github_mirror(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    source = tmp_path / "coreboot"
+    expected_hashes = {item.path: item.sha256 for item in COREBOOT_2609.files}
+    for relative_path in expected_hashes:
+        candidate = source / Path(*relative_path.split("/"))
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        candidate.write_bytes(b"raw pinned fixture bytes")
+
+    engine = ArtifactEngine()
+    git_values = {
+        ("remote", "get-url", "origin"): COREBOOT_2609.repository_url,
+        ("rev-parse", "HEAD"): COREBOOT_2609.revision,
+        ("rev-parse", "HEAD^{tree}"): COREBOOT_2609.tree_id,
+        ("status", "--porcelain=v1", "--untracked-files=all"): "",
+    }
+    monkeypatch.setattr(engine, "_git_value", lambda _source, *args: git_values[args])
+
+    def pinned_fixture_hash(path: Path) -> str:
+        relative = path.relative_to(source).as_posix()
+        return expected_hashes[relative]
+
+    monkeypatch.setattr(module, "sha256_file", pinned_fixture_hash)
+
+    audit = engine.inspect_source(X220_COREBOOT.recipe_id, source)
+    assert audit.clean is True
+    assert audit.repository_url == "https://github.com/coreboot/coreboot.git"
+    assert audit.revision == COREBOOT_2609.revision
+    assert audit.tree_id == COREBOOT_2609.tree_id
+    assert dict(audit.pinned_file_hashes) == expected_hashes
+
+    for rejected_origin in (
+        "https://review.coreboot.org/coreboot.git",
+        "https://github.com/untrusted/coreboot.git",
+    ):
+        git_values[("remote", "get-url", "origin")] = rejected_origin
+        with pytest.raises(ValueError, match="origin"):
+            engine.inspect_source(X220_COREBOOT.recipe_id, source)
 
 
 _CBFS_FIXTURE = "\n".join((
@@ -188,8 +263,8 @@ def test_cbfs_inspection_records_exact_pinned_tool_invocations(tmp_path: Path, m
     assert record.region == "COREBOOT"
     assert record.tool_sha256 == hashlib.sha256(coreboot_tool.read_bytes()).hexdigest()
     assert record.source_file_hashes == (
-        ("util/cbfstool/cbfs_image.c", "2526616afa482cdd2552788e7326f8b0dd840c218c17f1757081f5df516b6ed7"),
-        ("util/cbfstool/cbfstool.c", "ebdb9caae36be926fae39af2ae3a97d02a18c796ab9c963f68e5b7ea3decc00a"),
+        ("util/cbfstool/cbfs_image.c", "fd6a56a8e20c15f4fd8f03511f05ce8264f120ad0a0dc11900e2e04f89a88dda"),
+        ("util/cbfstool/cbfstool.c", "f34621b9d58083fc7c3e31571aaf5bd02f78476101e249a53995189d8a71488b"),
     )
 
     lbmk_recipe = X200_4MB

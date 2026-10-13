@@ -461,16 +461,16 @@ class ArtifactBuildResult:
 
 COREBOOT_2609 = SourcePin(
     name="coreboot-26.09",
-    repository_url="https://review.coreboot.org/coreboot.git",
+    repository_url="https://github.com/coreboot/coreboot.git",
     revision="8b0e34f90e08547cf19e550a43ed72f69c39d6ed",
     tree_id="1cb70fc2c4a0229fa17991b19cf6916b71f75ba7",
     files=(
-        PinnedFile("configs/builder/config.lenovo_x220", "fa1a81bb2019586dfcf79d8fb8026a0f622cabc3c92058ae19fb725a5ada37a2"),
-        PinnedFile("src/mainboard/lenovo/x220/Kconfig.name", "c78ca677729c27bff9e7428afadfc76bdf5f49d42e198e74647739f05fd8cad7"),
-        PinnedFile("src/mainboard/lenovo/x220/Kconfig", "70dff890037e2985b074efab4a0fbce894645935fa0d2aecc528bea2b790a9b7"),
-        PinnedFile("src/Kconfig", "9e70bc157540d738a3a506c6bbfa4dd3662441390af405e27aec5bf5182647f2"),
-        PinnedFile("util/cbfstool/cbfs_image.c", "2526616afa482cdd2552788e7326f8b0dd840c218c17f1757081f5df516b6ed7"),
-        PinnedFile("util/cbfstool/cbfstool.c", "ebdb9caae36be926fae39af2ae3a97d02a18c796ab9c963f68e5b7ea3decc00a"),
+        PinnedFile("configs/builder/config.lenovo_x220", "beeb15673bd4ef1394e19c7bbbac7f9ab3589552671d9502de4621b0b32c2cd1"),
+        PinnedFile("src/mainboard/lenovo/x220/Kconfig.name", "1ca8ac6f14193e04be8d49e2ddfc7383aed8af0988db93d482140b6852664fa5"),
+        PinnedFile("src/mainboard/lenovo/x220/Kconfig", "8c94a9d6976698b6e5cd7e3c3e0ee652a9916a878e85ab6bb9f7ba85a6c71f53"),
+        PinnedFile("src/Kconfig", "0557dc3ea3ffbdeaddd9c55dd8fbfe0e6d8259b18e7ca250f403fd5fe992eb01"),
+        PinnedFile("util/cbfstool/cbfs_image.c", "fd6a56a8e20c15f4fd8f03511f05ce8264f120ad0a0dc11900e2e04f89a88dda"),
+        PinnedFile("util/cbfstool/cbfstool.c", "f34621b9d58083fc7c3e31571aaf5bd02f78476101e249a53995189d8a71488b"),
     ),
 )
 
@@ -480,16 +480,16 @@ LIBREBOOT_2601 = SourcePin(
     revision="1cf3181537b8d1fe1df0e91681f700850a3d9bf6",
     tree_id="0cb9451c6e2e265d3aa5b7e371752d45cab98f53",
     files=(
-        PinnedFile("include/rom.sh", "0ef30d3d74883fa7ec25ca7cc93e72871f3fa6dfcc323a552010b85d3046f6fb"),
-        PinnedFile("config/coreboot/x200_4mb/target.cfg", "0cfe222114c3d426274e4a051fa70351890434815b69b8966f728af54f145c1c"),
-        PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_corebootfb", "750097bbd13280ab2cafe23899f5455d18f4f35869113dba97701c6ac50b8fc8"),
-        PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_txtmode", "32d374514953a31be8542957d1a9d79d4e809639905ef2f7f429a0c51eed1e5b"),
-        PinnedFile("config/coreboot/x200_8mb/target.cfg", "0cfe222114c3d426274e4a051fa70351890434815b69b8966f728af54f145c1c"),
-        PinnedFile("config/coreboot/x200_8mb/config/libgfxinit_corebootfb", "b56c94a049701799ad993e574264be44972dc06a39d05d688445d3477c37246a"),
-        PinnedFile("config/coreboot/x200_8mb/config/libgfxinit_txtmode", "f4ae1770e8c6a655d1b8d5aa47ed47aa0332ed02c950c0806f42227ad86c0951"),
-        PinnedFile("config/coreboot/default/target.cfg", "e139c57c0561933d19f34fcae8e34033245e948637479936c1aabb8578c8ecd1"),
-        PinnedFile("config/git/coreboot/pkg.cfg", "c3ba8eeb2f5597be5dd525ea7f211f207996d33124508ca116c86bdb9c823162"),
-        PinnedFile("include/lib.sh", "98226349787dbfbe0ffb5752fcb2a236ea7e9dfc43e18c3c8f18c0d6c900861a"),
+        PinnedFile("include/rom.sh", "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b"),
+        PinnedFile("config/coreboot/x200_4mb/target.cfg", "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b"),
+        PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_corebootfb", "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c"),
+        PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_txtmode", "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65"),
+        PinnedFile("config/coreboot/x200_8mb/target.cfg", "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b"),
+        PinnedFile("config/coreboot/x200_8mb/config/libgfxinit_corebootfb", "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4"),
+        PinnedFile("config/coreboot/x200_8mb/config/libgfxinit_txtmode", "d0558fb2221060c7062bd225b30ab65c71d994c3d1dcad98240440475062edaf"),
+        PinnedFile("config/coreboot/default/target.cfg", "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e"),
+        PinnedFile("config/git/coreboot/pkg.cfg", "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f"),
+        PinnedFile("include/lib.sh", "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a"),
     ),
 )
 
@@ -502,8 +502,8 @@ ONEVYRAIN_HANDOFF = HandoffRecipe(
         revision="a3427b34102f8f9887acf65e23d7fd5900fe1d40",
         tree_id="2298fa23e74c7112b7227d8354a0e51404fda4da",
         files=(
-            PinnedFile("README.md", "cab46b2a2eccbe0a8723856368e223e697f7d4bf9cbb812b9e5eabc6f5dc9d77"),
-            PinnedFile("start.sh", "93c8287fd4e51dcb61a202d027828df50aa548d3de3b2d8ed2f074950b3f93fe"),
+            PinnedFile("README.md", "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e335b14e8c33a"),
+            PinnedFile("start.sh", "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a"),
         ),
     ),
     required_board="T430",
@@ -622,13 +622,13 @@ X200_4MB = _recipe(
     "x200-libreboot-4mb",
     "x200_4mb",
     4,
-    "750097bbd13280ab2cafe23899f5455d18f4f35869113dba97701c6ac50b8fc8",
+    "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
 )
 X200_8MB = _recipe(
     "x200-libreboot-8mb",
     "x200_8mb",
     8,
-    "b56c94a049701799ad993e574264be44972dc06a39d05d688445d3477c37246a",
+    "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4",
 )
 X220_COREBOOT = ArtifactRecipe(
     recipe_id="x220-coreboot-8mb-seabios",
@@ -638,7 +638,7 @@ X220_COREBOOT = ArtifactRecipe(
     target="lenovo/x220",
     expected_size_bytes=8 * 1024 * 1024,
     config_file="configs/builder/config.lenovo_x220",
-    expected_config_sha256="fa1a81bb2019586dfcf79d8fb8026a0f622cabc3c92058ae19fb725a5ada37a2",
+    expected_config_sha256="beeb15673bd4ef1394e19c7bbbac7f9ab3589552671d9502de4621b0b32c2cd1",
     build_command=("make", "-j"),
     config_expectations=(
         ("CONFIG_BOARD_LENOVO_X220", "y"),
@@ -1788,17 +1788,17 @@ class ArtifactEngine:
             raise ValueError("Pinned lbmk nested Coreboot tree selection changed")
         if not re.search(rf'^rev="{_LBMK_COREBOOT_REVISION}"$', default_target_text, re.MULTILINE):
             raise ValueError("Pinned lbmk nested Coreboot source revision changed")
-        if sha256_file(default_coreboot_target) != "e139c57c0561933d19f34fcae8e34033245e948637479936c1aabb8578c8ecd1":
+        if sha256_file(default_coreboot_target) != "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e":
             raise ValueError("Pinned lbmk default Coreboot target config hash mismatch")
         pkg_text = coreboot_pkg_config.read_text(encoding="utf-8")
         pkg_values = dict(re.findall(r'^([A-Za-z0-9_]+)="([^"]*)"$', pkg_text, re.MULTILINE))
         if pkg_values.get("url") != "https://github.com/coreboot/coreboot.git" or pkg_values.get("bkup_url") != "https://review.coreboot.org/coreboot":
             raise ValueError("Pinned lbmk Coreboot source repository configuration changed")
-        if sha256_file(coreboot_pkg_config) != "c3ba8eeb2f5597be5dd525ea7f211f207996d33124508ca116c86bdb9c823162":
+        if sha256_file(coreboot_pkg_config) != "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f":
             raise ValueError("Pinned lbmk Coreboot source repository config hash mismatch")
         if 'cbfstool="elf/coreboot/$tree/cbfstool"' not in lib_script.read_text(encoding="utf-8"):
             raise ValueError("Pinned lbmk cbfstool path selection changed")
-        if sha256_file(lib_script) != "98226349787dbfbe0ffb5752fcb2a236ea7e9dfc43e18c3c8f18c0d6c900861a":
+        if sha256_file(lib_script) != "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a":
             raise ValueError("Pinned lbmk cbfstool path source hash mismatch")
         if sha256_file(mode_cfg) != recipe.expected_config_sha256:
             raise ValueError("Pinned lbmk resolved-config seed hash mismatch")

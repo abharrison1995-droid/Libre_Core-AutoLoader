@@ -1383,64 +1383,90 @@ def _record_package_versions(target_root: Path, runner: Runner, required_package
 
 def _require_rootfs_file(root: Path, relative: str, label: str, *, executable: bool = False, symlink_ok: bool = False) -> Path:
     path = root.joinpath(*Path(relative).parts)
+    if symlink_ok:
+        resolved = _resolve_rootfs_symlink(root, path, label)
+        try:
+            info = resolved.lstat()
+        except OSError as exc:
+            raise BuildContractError(f"target root is missing {label}: {relative}") from exc
+        if not stat.S_ISREG(info.st_mode):
+            raise BuildContractError(f"target root {label} does not resolve to an in-image regular file")
+        if executable and sys.platform == "linux" and not (info.st_mode & 0o111):
+            raise BuildContractError(f"target root {label} symlink target is not executable")
+        return resolved
+
     _assert_no_link_components(path, include_leaf=False)
     try:
         info = path.lstat()
     except OSError as exc:
         raise BuildContractError(f"target root is missing {label}: {relative}") from exc
     if stat.S_ISLNK(info.st_mode):
-        if not symlink_ok:
-            raise BuildContractError(f"target root {label} must be a regular file, not a symlink")
-        resolved = _resolve_rootfs_symlink(root, path, label)
-        resolved_info = resolved.lstat()
-        if not stat.S_ISREG(resolved_info.st_mode):
-            raise BuildContractError(f"target root {label} symlink does not resolve to an in-image regular file")
-        if executable and sys.platform == "linux" and not (resolved_info.st_mode & 0o111):
-            raise BuildContractError(f"target root {label} symlink target is not executable")
-    elif not stat.S_ISREG(info.st_mode):
+        raise BuildContractError(f"target root {label} must be a regular file, not a symlink")
+    if not stat.S_ISREG(info.st_mode):
         raise BuildContractError(f"target root {label} must be a regular file")
-    if executable and sys.platform == "linux" and not (info.st_mode & 0o111) and not stat.S_ISLNK(info.st_mode):
+    if executable and sys.platform == "linux" and not (info.st_mode & 0o111):
         raise BuildContractError(f"target root {label} is not executable")
     return path
 
 
 def _resolve_rootfs_symlink(root: Path, link_path: Path, label: str) -> Path:
-    """Follow an in-image symlink lexically without resolving it against the host root."""
-    current = link_path
-    seen: set[Path] = set()
-    for _ in range(40):
+    """Resolve a target-root POSIX path without following links on the host."""
+    root_path = Path(os.path.abspath(root))
+    requested_path = Path(os.path.abspath(link_path))
+    _assert_no_link_components(root_path, include_leaf=True)
+    try:
+        relative = requested_path.relative_to(root_path)
+    except ValueError as exc:
+        raise BuildContractError(f"target root {label} symlink escapes the image") from exc
+
+    pending = list(relative.parts)
+    resolved_parts: list[str] = []
+    seen_states: set[tuple[tuple[str, ...], tuple[str, ...]]] = set()
+    symlink_count = 0
+    while pending:
+        part = pending.pop(0)
+        if part in {"", "."}:
+            continue
+        if part == "..":
+            if not resolved_parts:
+                raise BuildContractError(f"target root {label} symlink escapes the image")
+            resolved_parts.pop()
+            continue
+
+        candidate = root_path.joinpath(*resolved_parts, part)
         try:
-            relative = current.relative_to(root)
-        except ValueError as exc:
-            raise BuildContractError(f"target root {label} symlink escapes the image") from exc
-        _assert_no_link_components(current, include_leaf=False)
-        try:
-            info = current.lstat()
+            info = candidate.lstat()
         except OSError as exc:
-            raise BuildContractError(f"target root {label} symlink target is missing") from exc
-        if not stat.S_ISLNK(info.st_mode):
-            return current
-        if current in seen:
-            raise BuildContractError(f"target root {label} has a symlink cycle")
-        seen.add(current)
-        link_value = os.readlink(current)
-        # Symlink payloads in the target image use POSIX paths even in Windows fixture tests.
-        link_parts = list(Path(link_value.replace("\\", "/")).parts)
-        if link_value.startswith("/"):
-            parts: list[str] = []
-        else:
-            parts = list(relative.parent.parts)
-        for part in link_parts:
-            if part in {"", ".", "/", "\\"}:
-                continue
-            if part == "..":
-                if not parts:
-                    raise BuildContractError(f"target root {label} symlink escapes the image")
-                parts.pop()
-            else:
-                parts.append(part)
-        current = root.joinpath(*parts)
-    raise BuildContractError(f"target root {label} exceeds the symlink resolution limit")
+            raise BuildContractError(f"target root {label} symlink target is missing: {candidate}") from exc
+
+        if stat.S_ISLNK(info.st_mode):
+            state = (tuple((*resolved_parts, part)), tuple(pending))
+            if state in seen_states:
+                raise BuildContractError(f"target root {label} has a symlink cycle")
+            seen_states.add(state)
+            symlink_count += 1
+            if symlink_count > 40:
+                raise BuildContractError(f"target root {label} exceeds the symlink resolution limit")
+
+            link_value = os.readlink(candidate)
+            if link_value.startswith("/"):
+                resolved_parts = []
+            target_parts = [item for item in link_value.split("/") if item not in {"", "."}]
+            pending = target_parts + pending
+            continue
+
+        if pending and not stat.S_ISDIR(info.st_mode):
+            raise BuildContractError(
+                f"target root {label} symlink path traverses a non-directory component: {candidate}"
+            )
+        resolved_parts.append(part)
+
+    resolved_path = root_path.joinpath(*resolved_parts)
+    try:
+        resolved_path.relative_to(root_path)
+    except ValueError as exc:
+        raise BuildContractError(f"target root {label} symlink escapes the image") from exc
+    return resolved_path
 
 
 def _rootfs_runtime_validation_script() -> str:
