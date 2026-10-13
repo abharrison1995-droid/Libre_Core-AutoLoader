@@ -197,7 +197,7 @@ def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry
         (run / rel).write_bytes(content)
         commands.append(CommandRecord(argv, 0, rel, hashlib.sha256(content).hexdigest()))
     manifest = ArtifactManifest(
-        schema_version=1,
+        schema_version=2,
         operation_id=operation_id,
         created_at_utc=(datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat(),
         recipe_id=workflow.intent.recipe_id,

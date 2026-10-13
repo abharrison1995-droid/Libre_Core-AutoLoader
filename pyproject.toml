@@ -28,3 +28,6 @@ autoloader = "autoloader.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["autoloader*", "usb_builder*"]
+
+[tool.setuptools.package-data]
+"autoloader.rom_builder" = ["patches/*.patch"]

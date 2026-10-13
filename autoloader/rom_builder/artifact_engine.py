@@ -15,6 +15,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tempfile
 import uuid
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
@@ -22,6 +23,7 @@ from enum import Enum
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Mapping, Sequence
+from urllib.parse import urlsplit
 
 from autoloader.config import BASE_DIR, BUILD_TIMEOUT
 from autoloader.exceptions import ROMBuildUnavailableError
@@ -70,6 +72,116 @@ _LBMK_COREBOOT_ORIGINS = frozenset({
     "https://github.com/coreboot/coreboot.git",
     "https://review.coreboot.org/coreboot",
 })
+_UBOOT_X86_64_SOURCE_URL = "https://source.denx.de/u-boot/u-boot.git"
+_UBOOT_X86_64_BACKUP_URL = "https://github.com/u-boot/u-boot.git"
+_UBOOT_X86_64_BASE_REVISION = "f919c3a889f0ec7d63a48b5d0ed064386b0980bd"
+_UBOOT_X86_64_BASE_TREE = "66e7e696eeaa875250ff12d586db009bf8631056"
+_UBOOT_X86_64_PATCHED_TREE = "12e245c8ad4d68099c7127afd5c61a0e36992b1c"
+_UBOOT_X86_64_BASE_CONFIG_SHA256 = "775e0c524aaefcffd4133597104dad638ed7db06cec9f76eb7d31e0e8d934839"
+_UBOOT_X86_64_PATCHED_CONFIG_SHA256 = "75ba0582f3240d1bffe9c1cf4710d0620001651e79c5288773607a7d30cf44fb"
+_UBOOT_X86_64_TARGET_CFG_SHA256 = "98d8b99e09fc64257aa6d2dfc2d470123e22d42bca718dd34aae107a09f71c9f"
+_UBOOT_PACKAGE_CFG_SHA256 = "84088781b2b1630ffc95a5024945986f2ff8c83cc3cc86e474eef52a2f324ce0"
+_UBOOT_AMD64_TARGET_CFG_SHA256 = "b7198cb054718c73194c3e7d193a758469c8dac64b0dc2bc5abd0fdb9746afde"
+_UBOOT_AMD64_DEFAULT_SHA256 = "16c6839809a9755a39d9674216b40b0b9f299c4869e7a3448ad755f3eec0ae6a"
+_X200_UBOOT_PATCH_DIR = "config/u-boot/x86_64/patches"
+_X200_UBOOT_OVERLAY_PATH = f"{_X200_UBOOT_PATCH_DIR}/0009-x86-use-output-target-for-efi.patch"
+_X200_UBOOT_OVERLAY_SHA256 = "03c17c53372864265bb6716b96ad90022dcc1b84d5ebd7a54fd93820be8b55e4"
+_X200_UBOOT_PATCH_INPUTS = (
+    ("0001-x86-serial-ns16550-Allow-the-UART-to-be-silently-dis.patch", "03b77b02eaf90bcb35e6fb0c5ba1afb749241a14a94be8a87606a1df9386fa85"),
+    ("0002-x86-Avoid-clearing-the-VESA-display.patch", "f7bff931f1f0735d63eb86bfd4a53cd6e93c4fdaf25d04bee804c5c3f64b176e"),
+    ("0003-x86-Avoid-clearing-the-VESA-display.patch", "e40b5e133de50befff9b1b1738e20420c0e86873668bed1ae3aec1b309bebf56"),
+    ("0004-Support-auto-boot-timeout-delay-bootflow-menu.patch", "36b864aad951ecdb5680ca1d4d87bdf9dfbe82511be840664fbbd34ef8f67b53"),
+    ("0005-Libreboot-branding-version-on-the-bootflow-menu.patch", "df7ff820dbe9ebea8b2b19ac7c7f48d2342c1a3e525bbe51644c35873c758081"),
+    ("0006-i-made-it-purple.patch", "fdf1baab5844be0a6ed8068afeeb4589fc0e346d72850f2232dc42dd1b007471"),
+    ("0008-scripts-dtc-pylibfdt-libfdt.i_shipped-Use-SWIG_Appen.patch", "91ad0bae21b0f459e49e4edebdbd17993af7efffabe379287fb1089d917f77d5"),
+)
+_X200_UBOOT_OVERLAY_INPUT = (_X200_UBOOT_OVERLAY_PATH.rsplit("/", 1)[1], _X200_UBOOT_OVERLAY_SHA256)
+_X200_UBOOT_PATCH_STACK = _X200_UBOOT_PATCH_INPUTS + (_X200_UBOOT_OVERLAY_INPUT,)
+_X200_UBOOT_LBMK_BUILD_ROOT = "work/lbmk"
+_X200_UBOOT_SOURCE_RELATIVE_PATH = "work/lbmk/src/u-boot/x86_64"
+
+
+def _uboot_cache_relative_path(repository_url: str) -> str:
+    parsed = urlsplit(repository_url)
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.port is not None
+        or parsed.query
+        or parsed.fragment
+        or not parsed.path.startswith("/")
+    ):
+        raise ValueError("U-Boot cache URL is not a plain pinned HTTPS repository URL")
+    parts = PurePosixPath(parsed.path.lstrip("/")).parts
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        raise ValueError("U-Boot cache URL contains an invalid repository path")
+    return PurePosixPath("cache", "clone", parsed.hostname, *parts).as_posix()
+
+
+def _uboot_x86_64_cache_origins() -> dict[str, str]:
+    return {
+        _uboot_cache_relative_path(_UBOOT_X86_64_SOURCE_URL): _UBOOT_X86_64_SOURCE_URL,
+        _uboot_cache_relative_path(_UBOOT_X86_64_BACKUP_URL): _UBOOT_X86_64_BACKUP_URL,
+    }
+
+
+def _assert_no_symlink_components(path: Path, *, root: Path) -> None:
+    resolved_root = root.resolve(strict=True)
+    candidate = Path(path)
+    try:
+        relative = candidate.relative_to(resolved_root)
+    except ValueError as exc:
+        raise ValueError("Pinned U-Boot cache path escapes the disposable lbmk root") from exc
+    current = resolved_root
+    for component in relative.parts:
+        if component in {"", ".", ".."}:
+            raise ValueError("Pinned U-Boot cache path contains traversal")
+        current = current / component
+        if current.is_symlink():
+            raise ValueError("Pinned U-Boot cache path contains a symlink component")
+
+
+def _validate_x200_uboot_cache_binding(
+    build_source: Path,
+    worktree_origin: str,
+    cache_toplevel: str,
+    cache_git_dir: str,
+    cache_remote_url: str,
+    cache_base_revision: str,
+    cache_base_tree: str,
+) -> str:
+    """Bind lbmk's local worktree origin to its exact in-root URL cache."""
+    root = Path(build_source).resolve(strict=True)
+    if Path(build_source).is_symlink() or not root.is_dir():
+        raise ValueError("Disposable lbmk root must be a real directory")
+    origin_path = Path(worktree_origin)
+    if not origin_path.is_absolute() or ".." in origin_path.parts:
+        raise ValueError("U-Boot worktree origin must be an absolute in-root lbmk cache path")
+    origins = _uboot_x86_64_cache_origins()
+    for relative, expected_remote in origins.items():
+        expected_path = root.joinpath(*PurePosixPath(relative).parts)
+        if origin_path != expected_path:
+            continue
+        _assert_no_symlink_components(expected_path, root=root)
+        if not expected_path.is_dir():
+            raise ValueError("Pinned U-Boot cache repository is missing")
+        expected_root = expected_path.resolve(strict=True)
+        observed_toplevel = Path(cache_toplevel).resolve(strict=True)
+        observed_git_dir = Path(cache_git_dir).resolve(strict=True)
+        expected_git_dir = expected_root / ".git"
+        if observed_toplevel != expected_root or observed_git_dir != expected_git_dir:
+            raise ValueError("U-Boot cache Git metadata is not rooted in the expected in-root checkout")
+        if cache_remote_url != expected_remote:
+            raise ValueError("U-Boot cache repository remote differs from the pinned package URL")
+        if (
+            cache_base_revision != _UBOOT_X86_64_BASE_REVISION
+            or cache_base_tree != _UBOOT_X86_64_BASE_TREE
+        ):
+            raise ValueError("U-Boot cache does not contain the exact pinned base commit and tree")
+        return relative
+    raise ValueError("U-Boot worktree origin is not one of the exact pinned in-root cache paths")
 
 
 class RecipeKind(str, Enum):
@@ -119,6 +231,76 @@ class SourcePin:
         if not _GIT_OBJECT_RE.fullmatch(self.tree_id):
             raise ValueError("Source tree ID must be a full 40-character Git tree SHA")
         object.__setattr__(self, "files", tuple(self.files))
+
+
+@dataclass(frozen=True)
+class X200UBootDependencyEvidence:
+    """Typed provenance for the exact patched x86_64 U-Boot used by lbmk."""
+
+    source_url: str
+    backup_url: str
+    package_config_sha256: str
+    target_config_sha256: str
+    amd64_target_config_sha256: str
+    amd64_default_config_sha256: str
+    target_tree: str
+    base_revision: str
+    base_tree_id: str
+    base_config_sha256: str
+    overlay_path: str
+    overlay_sha256: str
+    patched_config_sha256: str
+    patch_inputs: tuple[tuple[str, str], ...]
+    patch_commits: tuple[str, ...]
+    resulting_revision: str
+    resulting_tree_id: str
+    cache_origin_relative_path: str
+    resulting_origin_url: str
+    base_ancestor_verified: bool
+    tracked_worktree_clean: bool
+    objcopy_path: str
+    objcopy_sha256: str
+    objcopy_version: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "patch_inputs", tuple(tuple(item) for item in self.patch_inputs))
+        object.__setattr__(self, "patch_commits", tuple(self.patch_commits))
+        fixed_values = (
+            (self.source_url, _UBOOT_X86_64_SOURCE_URL),
+            (self.backup_url, _UBOOT_X86_64_BACKUP_URL),
+            (self.package_config_sha256, _UBOOT_PACKAGE_CFG_SHA256),
+            (self.target_config_sha256, _UBOOT_X86_64_TARGET_CFG_SHA256),
+            (self.amd64_target_config_sha256, _UBOOT_AMD64_TARGET_CFG_SHA256),
+            (self.amd64_default_config_sha256, _UBOOT_AMD64_DEFAULT_SHA256),
+            (self.target_tree, "x86_64"),
+            (self.base_revision, _UBOOT_X86_64_BASE_REVISION),
+            (self.base_tree_id, _UBOOT_X86_64_BASE_TREE),
+            (self.base_config_sha256, _UBOOT_X86_64_BASE_CONFIG_SHA256),
+            (self.overlay_path, _X200_UBOOT_OVERLAY_PATH),
+            (self.overlay_sha256, _X200_UBOOT_OVERLAY_SHA256),
+            (self.patched_config_sha256, _UBOOT_X86_64_PATCHED_CONFIG_SHA256),
+            (self.patch_inputs, _X200_UBOOT_PATCH_STACK),
+        )
+        if any(actual != expected for actual, expected in fixed_values):
+            raise ValueError("X200 U-Boot dependency evidence differs from the pinned source and overlay")
+        if (
+            len(self.patch_commits) != len(_X200_UBOOT_PATCH_STACK)
+            or len(set(self.patch_commits)) != len(self.patch_commits)
+            or any(not _GIT_OBJECT_RE.fullmatch(commit) for commit in self.patch_commits)
+            or self.patch_commits[-1] != self.resulting_revision
+            or not _GIT_OBJECT_RE.fullmatch(self.resulting_revision)
+            or not _GIT_OBJECT_RE.fullmatch(self.resulting_tree_id)
+            or self.resulting_tree_id != _UBOOT_X86_64_PATCHED_TREE
+            or self.cache_origin_relative_path not in _uboot_x86_64_cache_origins()
+            or self.resulting_origin_url != _uboot_x86_64_cache_origins()[self.cache_origin_relative_path]
+            or not self.base_ancestor_verified
+            or not self.tracked_worktree_clean
+        ):
+            raise ValueError("X200 U-Boot dependency commit chain or clean-tree evidence is incomplete")
+        if not Path(self.objcopy_path).is_absolute() or not _SHA256_RE.fullmatch(self.objcopy_sha256):
+            raise ValueError("X200 objcopy path or digest is invalid")
+        if not self.objcopy_version.startswith("GNU objcopy "):
+            raise ValueError("X200 dependency build requires a recorded GNU objcopy version")
 
 
 @dataclass(frozen=True)
@@ -357,6 +539,7 @@ class ArtifactManifest:
     reproducibility: ReproducibilityRecord
     finalized_operation_plan: OperationPlan | None = None
     prebuild_intent_sha256: str | None = None
+    x200_uboot_dependency: X200UBootDependencyEvidence | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_files", tuple(self.source_files))
@@ -366,6 +549,8 @@ class ArtifactManifest:
         object.__setattr__(self, "expected_regions", tuple(self.expected_regions))
         object.__setattr__(self, "blob_sha256", tuple(self.blob_sha256))
         object.__setattr__(self, "artifacts", tuple(self.artifacts))
+        if self.schema_version != 2:
+            raise ValueError("Artifact manifest schema version 2 is required")
         if self.status not in {"complete", "failed"}:
             raise ValueError("Artifact manifest status must be complete or failed")
         if self.status == "complete":
@@ -389,6 +574,10 @@ class ArtifactManifest:
                 or not _SHA256_RE.fullmatch(self.prebuild_intent_sha256)
             ):
                 raise ValueError("A complete X200 artifact requires its pre-build intent digest")
+            if self.recipe_id.startswith("x200-libreboot-") and self.x200_uboot_dependency is None:
+                raise ValueError("A complete X200 artifact requires pinned patched U-Boot dependency provenance")
+            if self.recipe_id.startswith("x220-coreboot-") and self.x200_uboot_dependency is not None:
+                raise ValueError("X200 U-Boot overlay evidence cannot be attached to an X220 artifact")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.backup_provenance is None:
                 raise ValueError("A complete X220 full-chip artifact requires original-backup provenance")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.region_inspection_tool is None:
@@ -429,6 +618,8 @@ class ArtifactManifest:
                 raise ValueError("A complete artifact manifest must record the isolated deterministic Git identity")
         elif self.selected_artifact_relative_path is not None or self.selected_artifact_sha256 is not None:
             raise ValueError("A failed manifest cannot select an artifact")
+        if self.x200_uboot_dependency is not None and not self.recipe_id.startswith("x200-libreboot-"):
+            raise ValueError("X200 U-Boot overlay evidence cannot be attached to a non-X200 manifest")
         if self.status == "failed" and not self.failure_code:
             raise ValueError("A failed artifact manifest requires a failure code")
 
@@ -481,6 +672,12 @@ LIBREBOOT_2601 = SourcePin(
     tree_id="0cb9451c6e2e265d3aa5b7e371752d45cab98f53",
     files=(
         PinnedFile("include/rom.sh", "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b"),
+        PinnedFile("include/get.sh", "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9"),
+        PinnedFile("config/git/u-boot/pkg.cfg", _UBOOT_PACKAGE_CFG_SHA256),
+        PinnedFile("config/u-boot/x86_64/target.cfg", _UBOOT_X86_64_TARGET_CFG_SHA256),
+        PinnedFile("config/u-boot/amd64coreboot/target.cfg", _UBOOT_AMD64_TARGET_CFG_SHA256),
+        PinnedFile("config/u-boot/amd64coreboot/config/default", _UBOOT_AMD64_DEFAULT_SHA256),
+        *(PinnedFile(f"{_X200_UBOOT_PATCH_DIR}/{name}", digest) for name, digest in _X200_UBOOT_PATCH_INPUTS),
         PinnedFile("config/coreboot/x200_4mb/target.cfg", "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b"),
         PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_corebootfb", "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c"),
         PinnedFile("config/coreboot/x200_4mb/config/libgfxinit_txtmode", "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65"),
@@ -669,6 +866,18 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: file_obj.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _email_patch_subject(patch_bytes: bytes) -> str:
+    text = patch_bytes.decode("utf-8")
+    match = re.search(r"(?m)^Subject: ([^\n]+(?:\n[ \t]+[^\n]+)*)\n\n", text)
+    if match is None:
+        raise ValueError("Pinned U-Boot patch lacks a valid email Subject header")
+    subject = re.sub(r"\n[ \t]+", " ", match.group(1)).strip()
+    subject = re.sub(r"^\[PATCH[^\]]*\][ \t]*", "", subject)
+    if not subject:
+        raise ValueError("Pinned U-Boot patch has an empty normalized subject")
+    return subject
 
 
 def parse_kconfig(text: str) -> dict[str, str]:
@@ -1369,6 +1578,18 @@ class ArtifactEngine:
         if manifest.status != "complete":
             raise ValueError("Only a COMPLETE persisted artifact can be reopened")
         _validate_persisted_git_config(path.parent, manifest.build_environment)
+        if manifest.recipe_id.startswith("x200-libreboot-"):
+            dependency = manifest.x200_uboot_dependency
+            if dependency is None:
+                raise ValueError("Complete X200 artifact is missing typed U-Boot dependency evidence")
+            objcopy = Path(dependency.objcopy_path)
+            if (
+                objcopy.is_symlink()
+                or not objcopy.is_file()
+                or not os.access(objcopy, os.X_OK)
+                or sha256_file(objcopy) != dependency.objcopy_sha256
+            ):
+                raise ValueError("Recorded X200 GNU objcopy identity is missing or changed")
         if manifest.selected_artifact_relative_path is None:
             raise ValueError("Complete artifact manifest lacks a selected relative path")
         selected = path.parent.joinpath(*PurePosixPath(manifest.selected_artifact_relative_path).parts)
@@ -1534,18 +1755,28 @@ class ArtifactEngine:
         logs_dir = run_dir / "logs"
         logs_dir.mkdir()
         commands: list[CommandRecord] = []
+        build_source = source
         config_hash = recipe.expected_config_sha256
         resolved_config_hash: str | None = None
         blob_hashes: list[tuple[str, str]] = []
         artifacts: list[ArtifactRecord] = []
         region_inspection_tool: ToolEvidence | None = None
         finalized_operation_plan: OperationPlan | None = None
+        x200_uboot_dependency: X200UBootDependencyEvidence | None = None
         failure_code: str | None = None
         failure_detail: str | None = None
         git_config_sha256: str | None = None
 
         try:
             _, git_config_sha256 = _ensure_operation_git_config(run_dir)
+            if recipe.workflow_id == "x200-libreboot":
+                build_source, x200_uboot_dependency = self._prepare_x200_lbmk_build_source(
+                    recipe,
+                    source,
+                    run_dir,
+                    logs_dir,
+                    commands,
+                )
             if recipe is X220_COREBOOT:
                 self._stage_x220_inputs(source, prepared_blobs, blob_hashes)
                 seed_path = source / ".config"
@@ -1566,19 +1797,19 @@ class ArtifactEngine:
                 self._run_logged(("make", "crossgcc-i386", f"CPUS={request.cpu_count}"), source, logs_dir, commands)
                 self._run_logged(("make", f"-j{request.cpu_count}"), source, logs_dir, commands)
             else:
-                self._run_logged(recipe.build_command, source, logs_dir, commands)
-                resolved_config_path = source / "src" / "coreboot" / "default" / ".config"
+                self._run_logged(recipe.build_command, build_source, logs_dir, commands)
+                resolved_config_path = build_source / "src" / "coreboot" / "default" / ".config"
                 if not resolved_config_path.is_file():
                     raise ValueError("Pinned lbmk build did not leave a resolved Coreboot .config")
                 resolved_config = resolved_config_path.read_text(encoding="utf-8")
                 resolved_config_hash = validate_recipe_config(recipe, resolved_config)
 
             raw_artifacts = (
-                validated_lbmk_artifacts(source, recipe)
+                validated_lbmk_artifacts(build_source, recipe)
                 if recipe.kind is RecipeKind.LIBREBOOT
-                else (source / PurePosixPath(recipe.output_relative_path),)
+                else (build_source / PurePosixPath(recipe.output_relative_path),)
             )
-            selected_raw = source / PurePosixPath(recipe.output_relative_path)
+            selected_raw = build_source / PurePosixPath(recipe.output_relative_path)
             if selected_raw not in raw_artifacts:
                 raise ValueError("The exact recipe-selected artifact is absent from the validated output set")
             regions: tuple[RegionEvidence, ...]
@@ -1614,7 +1845,7 @@ class ArtifactEngine:
                 regions = (RegionEvidence("whole_flash", 0, recipe.expected_size_bytes),)
             cbfs_inspection = self._inspect_cbfs(
                 recipe,
-                source,
+                build_source,
                 selected_raw,
                 logs_dir,
                 commands,
@@ -1645,7 +1876,7 @@ class ArtifactEngine:
                     sha256=raw_digest,
                     size_bytes=raw_artifact.stat().st_size,
                     regions=regions,
-                    source_relative_path=raw_artifact.relative_to(source).as_posix(),
+                    source_relative_path=raw_artifact.relative_to(build_source).as_posix(),
                     cbfs_inspection=(cbfs_inspection if raw_artifact == selected_raw else None),
                     backup_provenance=(backup_provenance if raw_artifact == selected_raw else None),
                     region_inspection_tool=(region_inspection_tool if raw_artifact == selected_raw else None),
@@ -1667,6 +1898,20 @@ class ArtifactEngine:
                     selected_record.regions,
                     expected_sha256=selected_record.sha256,
                 )
+            elif recipe.workflow_id == "x200-libreboot":
+                if x200_uboot_dependency is None:
+                    raise ValueError("X200 U-Boot dependency evidence disappeared before final validation")
+                x200_uboot_dependency = self._validate_x200_uboot_dependency_after_build(
+                    recipe,
+                    build_source,
+                    run_dir,
+                    logs_dir,
+                    commands,
+                    x200_uboot_dependency,
+                )
+                final_source_audit = self.inspect_source(recipe.recipe_id, source)
+                if final_source_audit != source_audit:
+                    raise ValueError("Original pinned Libreboot checkout changed during isolated X200 build")
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
             failure_code = "ARTIFACT_VALIDATION_FAILED"
             failure_detail = str(exc)
@@ -1687,7 +1932,7 @@ class ArtifactEngine:
 
         status = "complete" if artifacts and failure_code is None else "failed"
         manifest = ArtifactManifest(
-            schema_version=1,
+            schema_version=2,
             operation_id=run_id,
             created_at_utc=datetime.now(timezone.utc).isoformat(),
             recipe_id=recipe.recipe_id,
@@ -1733,6 +1978,7 @@ class ArtifactEngine:
                 if recipe.workflow_id == "x200-libreboot" and request.build_intent is not None
                 else None
             ),
+            x200_uboot_dependency=x200_uboot_dependency,
         )
         manifest_path = run_dir / "manifest.json"
         self._write_manifest_exclusive(manifest_path, manifest)
@@ -1809,6 +2055,386 @@ class ArtifactEngine:
         if expected_output != recipe.output_relative_path:
             raise ValueError("Internal X200 output path does not match pinned lbmk naming rules")
         lbmk_expected_output_paths(source, recipe)
+
+    def _prepare_x200_lbmk_build_source(
+        self,
+        recipe: ArtifactRecipe,
+        source: Path,
+        run_dir: Path,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+    ) -> tuple[Path, X200UBootDependencyEvidence]:
+        """Clone the pinned lbmk input, add one fixed patch, and fetch its U-Boot target."""
+        if recipe.workflow_id != "x200-libreboot":
+            raise ValueError("The U-Boot compatibility overlay is limited to X200 Libreboot recipes")
+        build_source = run_dir.joinpath(*PurePosixPath(_X200_UBOOT_LBMK_BUILD_ROOT).parts)
+        build_source.parent.mkdir(parents=True, exist_ok=False)
+        if build_source.exists() or build_source.is_symlink():
+            raise ValueError("Disposable X200 lbmk source destination already exists")
+        self._run_logged(
+            ("git", "clone", "--no-hardlinks", "--no-local", "--quiet", str(source), str(build_source)),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        self._run_logged(
+            ("git", "-C", str(build_source), "checkout", "--detach", recipe.source.revision),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        self._run_logged(
+            ("git", "-C", str(build_source), "remote", "set-url", "origin", recipe.source.repository_url),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        cloned_audit = self.inspect_source(recipe.recipe_id, build_source)
+        if cloned_audit != SourceAudit(
+            recipe.source.repository_url,
+            recipe.source.revision,
+            recipe.source.tree_id,
+            True,
+            tuple((item.path, item.sha256) for item in recipe.source.files),
+        ):
+            raise ValueError("Disposable lbmk clone does not match the exact reviewed source pin")
+        self._validate_lbmk_target(recipe, build_source)
+        self._install_x200_uboot_overlay(build_source)
+        before_objcopy = self._capture_gnu_objcopy(run_dir, logs_dir, commands)
+        self._run_logged(("./mk", "-f", "u-boot", "x86_64"), build_source, logs_dir, commands)
+        return build_source, self._collect_x200_uboot_dependency(build_source, before_objcopy, logs_dir, commands)
+
+    @staticmethod
+    def _install_x200_uboot_overlay(build_source: Path) -> None:
+        source_patch = Path(__file__).parent / "patches" / _X200_UBOOT_OVERLAY_INPUT[0]
+        if source_patch.is_symlink() or not source_patch.is_file():
+            raise ValueError("Pinned X200 U-Boot overlay resource is missing or unsafe")
+        patch_bytes = source_patch.read_bytes()
+        if hashlib.sha256(patch_bytes).hexdigest() != _X200_UBOOT_OVERLAY_SHA256:
+            raise ValueError("Pinned X200 U-Boot overlay resource hash mismatch")
+        patch_directory = build_source.joinpath(*PurePosixPath(_X200_UBOOT_PATCH_DIR).parts)
+        if patch_directory.is_symlink() or not patch_directory.is_dir():
+            raise ValueError("Pinned X200 U-Boot patch directory is missing or unsafe")
+        actual_files = sorted(path.name for path in patch_directory.glob("*.patch") if path.is_file() and not path.is_symlink())
+        expected_files = sorted(name for name, _ in _X200_UBOOT_PATCH_INPUTS)
+        if actual_files != expected_files:
+            raise ValueError("Pinned X200 U-Boot patch stack differs from the reviewed seven source patches")
+        for name, expected_hash in _X200_UBOOT_PATCH_INPUTS:
+            candidate = patch_directory / name
+            if candidate.is_symlink() or not candidate.is_file() or sha256_file(candidate) != expected_hash:
+                raise ValueError(f"Pinned X200 U-Boot source patch mismatch: {name}")
+        destination = build_source.joinpath(*PurePosixPath(_X200_UBOOT_OVERLAY_PATH).parts)
+        try:
+            with destination.open("xb") as output_file:
+                output_file.write(patch_bytes)
+        except FileExistsError as exc:
+            raise ValueError("X200 U-Boot overlay destination already exists") from exc
+
+    def _capture_gnu_objcopy(
+        self,
+        run_dir: Path,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+    ) -> tuple[str, str, str]:
+        executable = shutil.which("objcopy")
+        if executable is None:
+            raise ValueError("Pinned X200 build requires GNU objcopy on PATH")
+        path = Path(executable).resolve(strict=True)
+        if not path.is_file() or not os.access(path, os.X_OK):
+            raise ValueError("X200 GNU objcopy must resolve to an executable regular file")
+        version = self._run_readonly((str(path), "--version"), run_dir, logs_dir, commands).splitlines()
+        if not version or not version[0].startswith("GNU objcopy "):
+            raise ValueError("X200 build requires GNU objcopy, not an unverified substitute")
+        return (str(path), sha256_file(path), version[0].strip())
+
+    def _patch_file_produces_commit_tree(
+        self,
+        repository: Path,
+        parent_commit: str,
+        commit: str,
+        patch_file: Path,
+        logs_dir: Path,
+        command_records: list[CommandRecord],
+    ) -> bool:
+        """Apply one pinned email patch to an isolated Git index and compare its tree.
+
+        This validates patch content rather than trusting only its mail subject or
+        the final source file. All Git commands are fixed, local, and no-shell;
+        the temporary index is outside both the checkout and the cache.
+        """
+        if (
+            not _GIT_OBJECT_RE.fullmatch(parent_commit)
+            or not _GIT_OBJECT_RE.fullmatch(commit)
+            or patch_file.is_symlink()
+            or not patch_file.is_file()
+        ):
+            return False
+        repo = Path(repository).resolve(strict=True)
+        try:
+            expected_tree = self._run_readonly(
+                ("git", "-C", str(repo), "rev-parse", f"{commit}^{{tree}}"),
+                repo,
+                logs_dir,
+                command_records,
+            ).strip()
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+            return False
+        temporary_parent = logs_dir.parent / "tmp"
+        temporary_parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix="uboot-patch-index-",
+            dir=temporary_parent,
+        ) as temporary:
+            index_path = Path(temporary) / "index"
+            patch_commands = (
+                ["git", "-C", str(repo), "read-tree", parent_commit],
+                ["git", "-C", str(repo), "apply", "--cached", "--check", str(patch_file)],
+                ["git", "-C", str(repo), "apply", "--cached", str(patch_file)],
+            )
+            for argv in patch_commands:
+                try:
+                    self._run_readonly(
+                        argv,
+                        repo,
+                        logs_dir,
+                        command_records,
+                        git_index_path=index_path,
+                    )
+                except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+                    return False
+            try:
+                actual_tree = self._run_readonly(
+                    ("git", "-C", str(repo), "write-tree"),
+                    repo,
+                    logs_dir,
+                    command_records,
+                    git_index_path=index_path,
+                ).strip()
+            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+                return False
+            return actual_tree == expected_tree
+
+    def _collect_x200_uboot_dependency(
+        self,
+        build_source: Path,
+        objcopy: tuple[str, str, str],
+        logs_dir: Path,
+        commands: list[CommandRecord],
+    ) -> X200UBootDependencyEvidence:
+        package_cfg = build_source / "config" / "git" / "u-boot" / "pkg.cfg"
+        target_cfg = build_source / "config" / "u-boot" / "x86_64" / "target.cfg"
+        amd64_target_cfg = build_source / "config" / "u-boot" / "amd64coreboot" / "target.cfg"
+        amd64_default = build_source / "config" / "u-boot" / "amd64coreboot" / "config" / "default"
+        for candidate in (package_cfg, target_cfg, amd64_target_cfg, amd64_default):
+            if candidate.is_symlink() or not candidate.is_file():
+                raise ValueError("Pinned U-Boot package or target configuration is missing or unsafe")
+        hashes = tuple(sha256_file(candidate) for candidate in (package_cfg, target_cfg, amd64_target_cfg, amd64_default))
+        if hashes != (
+            _UBOOT_PACKAGE_CFG_SHA256,
+            _UBOOT_X86_64_TARGET_CFG_SHA256,
+            _UBOOT_AMD64_TARGET_CFG_SHA256,
+            _UBOOT_AMD64_DEFAULT_SHA256,
+        ):
+            raise ValueError("Pinned U-Boot package/target configuration hash mismatch")
+        package_values = dict(re.findall(r'^([A-Za-z0-9_]+)="([^"\n]*)"$', package_cfg.read_text(encoding="utf-8"), re.MULTILINE))
+        target_values = dict(re.findall(r'^([A-Za-z0-9_]+)="([^"\n]*)"$', target_cfg.read_text(encoding="utf-8"), re.MULTILINE))
+        if (
+            package_values.get("url") != _UBOOT_X86_64_SOURCE_URL
+            or package_values.get("bkup_url") != _UBOOT_X86_64_BACKUP_URL
+            or target_values.get("tree") != "x86_64"
+            or target_values.get("rev") != _UBOOT_X86_64_BASE_REVISION
+        ):
+            raise ValueError("Pinned U-Boot source URL or target revision changed")
+        patch_directory = build_source.joinpath(*PurePosixPath(_X200_UBOOT_PATCH_DIR).parts)
+        actual_patch_names = sorted(
+            path.name for path in patch_directory.glob("*.patch") if path.is_file() and not path.is_symlink()
+        )
+        if actual_patch_names != sorted(name for name, _ in _X200_UBOOT_PATCH_STACK):
+            raise ValueError("X200 U-Boot patch directory contains an unexpected patch stack")
+        overlay = patch_directory / _X200_UBOOT_OVERLAY_INPUT[0]
+        if overlay.is_symlink() or not overlay.is_file() or sha256_file(overlay) != _X200_UBOOT_OVERLAY_SHA256:
+            raise ValueError("X200 U-Boot overlay is missing or changed in the disposable lbmk tree")
+        for name, expected_hash in _X200_UBOOT_PATCH_INPUTS:
+            candidate = patch_directory / name
+            if candidate.is_symlink() or not candidate.is_file() or sha256_file(candidate) != expected_hash:
+                raise ValueError(f"X200 U-Boot source patch changed: {name}")
+
+        lbmk_revision = self._run_readonly(("git", "-C", str(build_source), "rev-parse", "HEAD"), build_source, logs_dir, commands).strip()
+        lbmk_tree = self._run_readonly(("git", "-C", str(build_source), "rev-parse", "HEAD^{tree}"), build_source, logs_dir, commands).strip()
+        lbmk_origin = self._run_readonly(("git", "-C", str(build_source), "remote", "get-url", "origin"), build_source, logs_dir, commands).strip()
+        lbmk_status = self._run_readonly(("git", "-C", str(build_source), "status", "--porcelain", "--untracked-files=all"), build_source, logs_dir, commands)
+        if (
+            lbmk_revision != LIBREBOOT_2601.revision
+            or lbmk_tree != LIBREBOOT_2601.tree_id
+            or lbmk_origin != LIBREBOOT_2601.repository_url
+            or tuple(filter(None, lbmk_status.splitlines())) != (f"?? {_X200_UBOOT_OVERLAY_PATH}",)
+        ):
+            raise ValueError("Disposable lbmk checkout changed from its pinned tracked source tree")
+        uboot_source = build_source / "src" / "u-boot" / "x86_64"
+        for parent_dir in (build_source / "src", build_source / "src" / "u-boot", uboot_source):
+            if parent_dir.is_symlink() or not parent_dir.is_dir():
+                raise ValueError("lbmk did not produce a safe x86_64 U-Boot source checkout")
+        worktree_origin = self._run_readonly(("git", "-C", str(uboot_source), "remote", "get-url", "origin"), build_source, logs_dir, commands).strip()
+        origin_path = Path(worktree_origin)
+        if not origin_path.is_absolute() or ".." in origin_path.parts:
+            raise ValueError("lbmk U-Boot origin is not a canonical local cache path")
+        root = build_source.resolve(strict=True)
+        relative_origin = next(
+            (relative for relative in _uboot_x86_64_cache_origins() if origin_path == root.joinpath(*PurePosixPath(relative).parts)),
+            None,
+        )
+        if relative_origin is None:
+            raise ValueError("lbmk U-Boot origin is outside the exact pinned cache locations")
+        cache_repository = root.joinpath(*PurePosixPath(relative_origin).parts)
+        _assert_no_symlink_components(cache_repository, root=root)
+        cache_toplevel = self._run_readonly(
+            ("git", "-C", str(cache_repository), "rev-parse", "--show-toplevel"),
+            build_source,
+            logs_dir,
+            commands,
+        ).strip()
+        cache_git_dir = self._run_readonly(
+            ("git", "-C", str(cache_repository), "rev-parse", "--absolute-git-dir"),
+            build_source,
+            logs_dir,
+            commands,
+        ).strip()
+        cache_remote = self._run_readonly(
+            ("git", "-C", str(cache_repository), "remote", "get-url", "origin"),
+            build_source,
+            logs_dir,
+            commands,
+        ).strip()
+        cache_base_revision = self._run_readonly(
+            ("git", "-C", str(cache_repository), "rev-parse", _UBOOT_X86_64_BASE_REVISION),
+            build_source,
+            logs_dir,
+            commands,
+        ).strip()
+        cache_base_tree = self._run_readonly(
+            ("git", "-C", str(cache_repository), "rev-parse", f"{_UBOOT_X86_64_BASE_REVISION}^{{tree}}"),
+            build_source,
+            logs_dir,
+            commands,
+        ).strip()
+        relative_origin = _validate_x200_uboot_cache_binding(
+            root,
+            worktree_origin,
+            cache_toplevel,
+            cache_git_dir,
+            cache_remote,
+            cache_base_revision,
+            cache_base_tree,
+        )
+        base_tree = self._run_readonly(("git", "-C", str(uboot_source), "rev-parse", f"{_UBOOT_X86_64_BASE_REVISION}^{{tree}}"), build_source, logs_dir, commands).strip()
+        revision = self._run_readonly(("git", "-C", str(uboot_source), "rev-parse", "HEAD"), build_source, logs_dir, commands).strip()
+        tree_id = self._run_readonly(("git", "-C", str(uboot_source), "rev-parse", "HEAD^{tree}"), build_source, logs_dir, commands).strip()
+        self._run_readonly(("git", "-C", str(uboot_source), "merge-base", "--is-ancestor", _UBOOT_X86_64_BASE_REVISION, "HEAD"), build_source, logs_dir, commands)
+        patch_commits = tuple(filter(None, self._run_readonly((
+            "git", "-C", str(uboot_source), "rev-list", "--reverse",
+            f"{_UBOOT_X86_64_BASE_REVISION}..HEAD",
+        ), build_source, logs_dir, commands).splitlines()))
+        patch_subjects: list[str] = []
+        previous_patch_commit = _UBOOT_X86_64_BASE_REVISION
+        for (name, _), commit in zip(_X200_UBOOT_PATCH_STACK, patch_commits, strict=True):
+            patch_file = patch_directory / name
+            expected_subject = _email_patch_subject(patch_file.read_bytes())
+            observed_subject = self._run_readonly(
+                ("git", "-C", str(uboot_source), "show", "-s", "--format=%s", commit),
+                build_source,
+                logs_dir,
+                commands,
+            ).strip()
+            if observed_subject != expected_subject:
+                raise ValueError(f"Applied U-Boot patch order/content mismatch: {name}")
+            parent_commit = self._run_readonly(
+                ("git", "-C", str(uboot_source), "rev-parse", f"{commit}^1"),
+                build_source,
+                logs_dir,
+                commands,
+            ).strip()
+            if parent_commit != previous_patch_commit or not self._patch_file_produces_commit_tree(
+                uboot_source, previous_patch_commit, commit, patch_file, logs_dir, commands
+            ):
+                raise ValueError(f"Applied U-Boot patch tree does not match its pinned patch bytes: {name}")
+            previous_patch_commit = commit
+            patch_subjects.append(observed_subject)
+        tracked_status = self._run_readonly(("git", "-C", str(uboot_source), "status", "--porcelain", "--untracked-files=no"), build_source, logs_dir, commands)
+        last_commit_paths = tuple(filter(None, self._run_readonly((
+            "git", "-C", str(uboot_source), "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD",
+        ), build_source, logs_dir, commands).splitlines()))
+        base_config = self._run_readonly((
+            "git", "-C", str(uboot_source), "show", f"{_UBOOT_X86_64_BASE_REVISION}:arch/x86/config.mk",
+        ), build_source, logs_dir, commands).encode("utf-8")
+        final_config_path = uboot_source / "arch" / "x86" / "config.mk"
+        if final_config_path.is_symlink() or not final_config_path.is_file():
+            raise ValueError("Patched U-Boot x86 configuration is missing or unsafe")
+        final_config = final_config_path.read_bytes()
+        old_line = b"EFI_TARGET := --target=efi-app-x86_64"
+        new_line = b"EFI_TARGET := --output-target=efi-app-x86_64"
+        if base_config.count(old_line) != 1 or b"EFI_TARGET := --target=efi-app-ia32" not in base_config:
+            raise ValueError("Pinned U-Boot base x86 EFI target lines differ from the reviewed source")
+        expected_config = base_config.replace(old_line, new_line, 1)
+        if (
+            base_tree != _UBOOT_X86_64_BASE_TREE
+            or not _GIT_OBJECT_RE.fullmatch(revision)
+            or not _GIT_OBJECT_RE.fullmatch(tree_id)
+            or len(patch_commits) != len(_X200_UBOOT_PATCH_STACK)
+            or len(patch_subjects) != len(_X200_UBOOT_PATCH_STACK)
+            or any(not _GIT_OBJECT_RE.fullmatch(commit) for commit in patch_commits)
+            or previous_patch_commit != revision
+            or patch_commits[-1] != revision
+            or tree_id != _UBOOT_X86_64_PATCHED_TREE
+            or tracked_status.strip()
+            or last_commit_paths != ("arch/x86/config.mk",)
+            or hashlib.sha256(base_config).hexdigest() != _UBOOT_X86_64_BASE_CONFIG_SHA256
+            or hashlib.sha256(expected_config).hexdigest() != _UBOOT_X86_64_PATCHED_CONFIG_SHA256
+            or final_config != expected_config
+        ):
+            raise ValueError("Patched U-Boot checkout does not prove the exact eight-patch source transformation")
+        return X200UBootDependencyEvidence(
+            source_url=_UBOOT_X86_64_SOURCE_URL,
+            backup_url=_UBOOT_X86_64_BACKUP_URL,
+            package_config_sha256=hashes[0],
+            target_config_sha256=hashes[1],
+            amd64_target_config_sha256=hashes[2],
+            amd64_default_config_sha256=hashes[3],
+            target_tree="x86_64",
+            base_revision=_UBOOT_X86_64_BASE_REVISION,
+            base_tree_id=_UBOOT_X86_64_BASE_TREE,
+            base_config_sha256=_UBOOT_X86_64_BASE_CONFIG_SHA256,
+            overlay_path=_X200_UBOOT_OVERLAY_PATH,
+            overlay_sha256=_X200_UBOOT_OVERLAY_SHA256,
+            patched_config_sha256=_UBOOT_X86_64_PATCHED_CONFIG_SHA256,
+            patch_inputs=_X200_UBOOT_PATCH_STACK,
+            patch_commits=patch_commits,
+            resulting_revision=revision,
+            resulting_tree_id=tree_id,
+            cache_origin_relative_path=relative_origin,
+            resulting_origin_url=cache_remote,
+            base_ancestor_verified=True,
+            tracked_worktree_clean=True,
+            objcopy_path=objcopy[0],
+            objcopy_sha256=objcopy[1],
+            objcopy_version=objcopy[2],
+        )
+
+    def _validate_x200_uboot_dependency_after_build(
+        self,
+        recipe: ArtifactRecipe,
+        build_source: Path,
+        run_dir: Path,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+        before: X200UBootDependencyEvidence,
+    ) -> X200UBootDependencyEvidence:
+        if recipe.workflow_id != "x200-libreboot":
+            raise ValueError("X200 U-Boot validation was requested for a different model workflow")
+        after_objcopy = self._capture_gnu_objcopy(run_dir, logs_dir, commands)
+        after = self._collect_x200_uboot_dependency(build_source, after_objcopy, logs_dir, commands)
+        if after != before:
+            raise ValueError("X200 U-Boot dependency source or GNU objcopy changed during the build")
+        return after
 
     def _inspect_cbfs(
         self,
@@ -1933,8 +2559,17 @@ class ArtifactEngine:
         cwd: Path,
         logs_dir: Path,
         commands: list[CommandRecord],
+        *,
+        git_index_path: Path | None = None,
     ) -> str:
-        return self._run_command(argv, cwd, logs_dir, commands, capture=True)
+        return self._run_command(
+            argv,
+            cwd,
+            logs_dir,
+            commands,
+            capture=True,
+            git_index_path=git_index_path,
+        )
 
     def _run_command(
         self,
@@ -1944,6 +2579,7 @@ class ArtifactEngine:
         commands: list[CommandRecord],
         *,
         capture: bool,
+        git_index_path: Path | None = None,
     ) -> str:
         if not argv or any("\x00" in part for part in argv):
             raise ValueError("Invalid empty or NUL-containing build command")
@@ -1961,6 +2597,21 @@ class ArtifactEngine:
             "LANG": "C",
             "TZ": "UTC",
         }
+        if git_index_path is not None:
+            index = Path(git_index_path)
+            try:
+                relative_index = index.relative_to(temporary_dir.resolve(strict=True))
+            except ValueError as exc:
+                raise ValueError("Temporary Git index must remain inside the operation temporary directory") from exc
+            if (
+                len(relative_index.parts) != 2
+                or relative_index.name != "index"
+                or index.parent.parent.resolve(strict=True) != temporary_dir.resolve(strict=True)
+                or index.parent.is_symlink()
+                or index.is_symlink()
+            ):
+                raise ValueError("Temporary Git index path is unsafe")
+            environment["GIT_INDEX_FILE"] = str(index)
         try:
             result = subprocess.run(
                 list(argv),
@@ -2256,6 +2907,60 @@ def _artifact_manifest_from_mapping(value: object) -> ArtifactManifest:
         ))
     repro_row = _mapping(row["reproducibility"], "reproducibility record")
     finalized = row.get("finalized_operation_plan")
+    dependency_value = row.get("x200_uboot_dependency")
+    dependency = None
+    if dependency_value is not None:
+        entry = _mapping(dependency_value, "X200 U-Boot dependency evidence")
+        if set(entry) != set(X200UBootDependencyEvidence.__dataclass_fields__):
+            raise ValueError("Persisted X200 U-Boot evidence has missing or unsupported fields")
+        raw_patch_inputs = _array(entry["patch_inputs"], "X200 U-Boot patch inputs")
+        patch_inputs: list[tuple[str, str]] = []
+        for raw_pair in raw_patch_inputs:
+            pair = _array(raw_pair, "X200 U-Boot patch input")
+            if len(pair) != 2 or any(not isinstance(part, str) for part in pair):
+                raise ValueError("Persisted X200 U-Boot patch input must be a text pair")
+            patch_name, patch_digest = pair
+            if not isinstance(patch_name, str) or not isinstance(patch_digest, str):
+                raise ValueError("Persisted X200 U-Boot patch input must be a text pair")
+            patch_inputs.append((patch_name, patch_digest))
+        raw_commits = _array(entry["patch_commits"], "X200 U-Boot patch commits")
+        if any(not isinstance(commit, str) for commit in raw_commits):
+            raise ValueError("Persisted X200 U-Boot patch commits must be text")
+        text_fields = {
+            "source_url", "backup_url", "package_config_sha256", "target_config_sha256",
+            "amd64_target_config_sha256", "amd64_default_config_sha256", "target_tree",
+            "base_revision", "base_tree_id", "base_config_sha256", "overlay_path",
+            "overlay_sha256", "patched_config_sha256", "resulting_revision", "resulting_tree_id",
+            "cache_origin_relative_path", "resulting_origin_url", "objcopy_path", "objcopy_sha256", "objcopy_version",
+        }
+        if any(not isinstance(entry[key], str) for key in text_fields):
+            raise ValueError("Persisted X200 U-Boot dependency text fields are malformed")
+        dependency = X200UBootDependencyEvidence(
+            source_url=str(entry["source_url"]),
+            backup_url=str(entry["backup_url"]),
+            package_config_sha256=str(entry["package_config_sha256"]),
+            target_config_sha256=str(entry["target_config_sha256"]),
+            amd64_target_config_sha256=str(entry["amd64_target_config_sha256"]),
+            amd64_default_config_sha256=str(entry["amd64_default_config_sha256"]),
+            target_tree=str(entry["target_tree"]),
+            base_revision=str(entry["base_revision"]),
+            base_tree_id=str(entry["base_tree_id"]),
+            base_config_sha256=str(entry["base_config_sha256"]),
+            overlay_path=str(entry["overlay_path"]),
+            overlay_sha256=str(entry["overlay_sha256"]),
+            patched_config_sha256=str(entry["patched_config_sha256"]),
+            patch_inputs=tuple(patch_inputs),
+            patch_commits=tuple(str(commit) for commit in raw_commits),
+            resulting_revision=str(entry["resulting_revision"]),
+            resulting_tree_id=str(entry["resulting_tree_id"]),
+            cache_origin_relative_path=str(entry["cache_origin_relative_path"]),
+            resulting_origin_url=str(entry["resulting_origin_url"]),
+            base_ancestor_verified=_required_bool(entry, "base_ancestor_verified"),
+            tracked_worktree_clean=_required_bool(entry, "tracked_worktree_clean"),
+            objcopy_path=str(entry["objcopy_path"]),
+            objcopy_sha256=str(entry["objcopy_sha256"]),
+            objcopy_version=str(entry["objcopy_version"]),
+        )
     return ArtifactManifest(
         schema_version=_integer(row, "schema_version"), operation_id=str(row["operation_id"]),
         created_at_utc=str(row["created_at_utc"]), recipe_id=str(row["recipe_id"]),
@@ -2285,4 +2990,5 @@ def _artifact_manifest_from_mapping(value: object) -> ArtifactManifest:
         ),
         finalized_operation_plan=_operation_plan_from_mapping(finalized) if finalized is not None else None,
         prebuild_intent_sha256=str(row["prebuild_intent_sha256"]) if row.get("prebuild_intent_sha256") is not None else None,
+        x200_uboot_dependency=dependency,
     )

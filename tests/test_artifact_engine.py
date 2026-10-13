@@ -29,6 +29,7 @@ from autoloader.rom_builder.artifact_engine import (
     PinnedFile,
     ReproducibilityRecord,
     SourcePin,
+    X200UBootDependencyEvidence,
     compare_region_maps,
     derive_lbmk_output_path,
     _finalize_x220_operation_plan,
@@ -99,6 +100,18 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
     )
     assert {item.path: item.sha256 for item in LIBREBOOT_2601.files} == {
         "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
+        "include/get.sh": "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9",
+        "config/git/u-boot/pkg.cfg": "84088781b2b1630ffc95a5024945986f2ff8c83cc3cc86e474eef52a2f324ce0",
+        "config/u-boot/x86_64/target.cfg": "98d8b99e09fc64257aa6d2dfc2d470123e22d42bca718dd34aae107a09f71c9f",
+        "config/u-boot/amd64coreboot/target.cfg": "b7198cb054718c73194c3e7d193a758469c8dac64b0dc2bc5abd0fdb9746afde",
+        "config/u-boot/amd64coreboot/config/default": "16c6839809a9755a39d9674216b40b0b9f299c4869e7a3448ad755f3eec0ae6a",
+        "config/u-boot/x86_64/patches/0001-x86-serial-ns16550-Allow-the-UART-to-be-silently-dis.patch": "03b77b02eaf90bcb35e6fb0c5ba1afb749241a14a94be8a87606a1df9386fa85",
+        "config/u-boot/x86_64/patches/0002-x86-Avoid-clearing-the-VESA-display.patch": "f7bff931f1f0735d63eb86bfd4a53cd6e93c4fdaf25d04bee804c5c3f64b176e",
+        "config/u-boot/x86_64/patches/0003-x86-Avoid-clearing-the-VESA-display.patch": "e40b5e133de50befff9b1b1738e20420c0e86873668bed1ae3aec1b309bebf56",
+        "config/u-boot/x86_64/patches/0004-Support-auto-boot-timeout-delay-bootflow-menu.patch": "36b864aad951ecdb5680ca1d4d87bdf9dfbe82511be840664fbbd34ef8f67b53",
+        "config/u-boot/x86_64/patches/0005-Libreboot-branding-version-on-the-bootflow-menu.patch": "df7ff820dbe9ebea8b2b19ac7c7f48d2342c1a3e525bbe51644c35873c758081",
+        "config/u-boot/x86_64/patches/0006-i-made-it-purple.patch": "fdf1baab5844be0a6ed8068afeeb4589fc0e346d72850f2232dc42dd1b007471",
+        "config/u-boot/x86_64/patches/0008-scripts-dtc-pylibfdt-libfdt.i_shipped-Use-SWIG_Appen.patch": "91ad0bae21b0f459e49e4edebdbd17993af7efffabe379287fb1089d917f77d5",
         "config/coreboot/x200_4mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
         "config/coreboot/x200_4mb/config/libgfxinit_corebootfb": "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
         "config/coreboot/x200_4mb/config/libgfxinit_txtmode": "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65",
@@ -115,6 +128,165 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e335b14e8c33a",
         "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a",
     )
+
+
+def test_x200_uboot_overlay_is_pinned_and_changes_only_the_x86_64_objcopy_target(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    patch_path = Path(module.__file__).parent / "patches" / module._X200_UBOOT_OVERLAY_INPUT[0]
+    assert hashlib.sha256(patch_path.read_bytes()).hexdigest() == module._X200_UBOOT_OVERLAY_SHA256
+    assert module._UBOOT_X86_64_BASE_REVISION == "f919c3a889f0ec7d63a48b5d0ed064386b0980bd"
+    assert module._UBOOT_X86_64_BASE_TREE == "66e7e696eeaa875250ff12d586db009bf8631056"
+    assert module._UBOOT_X86_64_PATCHED_TREE == "12e245c8ad4d68099c7127afd5c61a0e36992b1c"
+    assert tuple(name for name, _ in module._X200_UBOOT_PATCH_STACK) == tuple(sorted(name for name, _ in module._X200_UBOOT_PATCH_STACK))
+
+    repository = tmp_path / "u-boot-fixture"
+    config_path = repository / "arch" / "x86" / "config.mk"
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text(
+        "header\n" * 128
+        + "ifdef CONFIG_X86_64\n"
+        + "EFI_TARGET := --target=efi-app-x86_64\n"
+        + "else\nEFI_TARGET := --target=efi-app-ia32\nendif\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(["git", *args], cwd=repository, check=True, capture_output=True, text=True)
+
+    git("init", "--quiet")
+    git("config", "user.name", "Synthetic Patch Test")
+    git("config", "user.email", "test@example.invalid")
+    git("add", "arch/x86/config.mk")
+    git("commit", "--quiet", "-m", "fixture base")
+    base = git("rev-parse", "HEAD").stdout.strip()
+    git("am", str(patch_path))
+    applied_commit = git("rev-parse", "HEAD").stdout.strip()
+    changed = config_path.read_text(encoding="utf-8")
+    assert changed.count("EFI_TARGET := --output-target=efi-app-x86_64") == 1
+    assert changed.count("EFI_TARGET := --target=efi-app-ia32") == 1
+    assert "EFI_TARGET := --target=efi-app-x86_64" not in changed
+    diff = git("diff", "--no-ext-diff", "--unified=0", f"{base}..HEAD", "--", "arch/x86/config.mk").stdout
+    assert diff.count("-EFI_TARGET := --target=efi-app-x86_64") == 1
+    assert diff.count("+EFI_TARGET := --output-target=efi-app-x86_64") == 1
+    assert "--target=efi-app-ia32" not in diff
+    engine = ArtifactEngine()
+    operation_dir = tmp_path / "patch-check-operation"
+    logs_dir = operation_dir / "logs"
+    logs_dir.mkdir(parents=True)
+    _ensure_operation_git_config(operation_dir)
+    command_records: list[CommandRecord] = []
+    assert engine._patch_file_produces_commit_tree(
+        repository, base, applied_commit, patch_path, logs_dir, command_records
+    )
+    assert len(command_records) == 5
+    assert all(record.exit_code == 0 for record in command_records)
+
+    altered_patch = tmp_path / "same-subject-altered-content.patch"
+    altered_bytes = patch_path.read_bytes().replace(
+        b"EFI_TARGET := --output-target=efi-app-x86_64",
+        b"EFI_TARGET := --output-target=efi-app-x86_64-altered",
+    )
+    altered_patch.write_bytes(altered_bytes)
+    assert module._email_patch_subject(altered_bytes) == module._email_patch_subject(patch_path.read_bytes())
+    assert not engine._patch_file_produces_commit_tree(
+        repository, base, applied_commit, altered_patch, logs_dir, command_records
+    )
+    assert command_records[-1].exit_code != 0 or "write-tree" in command_records[-1].argv
+
+
+def test_x200_uboot_cache_origin_binds_real_lbmk_local_cache_layout(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    root = tmp_path / "disposable-lbmk"
+    relative = "cache/clone/source.denx.de/u-boot/u-boot.git"
+    cache = root / Path(*relative.split("/"))
+    cache.mkdir(parents=True)
+    subprocess.run(["git", "init", "--quiet"], cwd=cache, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", module._UBOOT_X86_64_SOURCE_URL],
+        cwd=cache,
+        check=True,
+    )
+    cache_remote = subprocess.run(
+        ["git", "-C", str(cache), "remote", "get-url", "origin"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    # lbmk's generated src/u-boot worktree uses the local cache directory as
+    # origin, while the cache's own origin remains the pinned HTTPS remote.
+    worktree_origin = str(cache)
+    cache_toplevel = str(cache.resolve())
+    cache_git_dir = str((cache / ".git").resolve())
+    assert module._validate_x200_uboot_cache_binding(
+        root,
+        worktree_origin,
+        cache_toplevel,
+        cache_git_dir,
+        cache_remote,
+        module._UBOOT_X86_64_BASE_REVISION,
+        module._UBOOT_X86_64_BASE_TREE,
+    ) == relative
+    with pytest.raises(ValueError, match="remote differs"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            worktree_origin,
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_BACKUP_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned in-root cache paths"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            str(tmp_path / "outside-cache.git"),
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_SOURCE_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned in-root cache paths"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            str(root / "cache" / "clone" / "untrusted.example" / "u-boot.git"),
+            cache_toplevel,
+            cache_git_dir,
+            cache_remote,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned base"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            worktree_origin,
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_SOURCE_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            "0" * 40,
+        )
+    linked_root = tmp_path / "linked-lbmk"
+    linked_root.mkdir()
+    linked_cache_parent = linked_root / "cache" / "clone" / "source.denx.de" / "u-boot"
+    linked_cache_parent.mkdir(parents=True)
+    try:
+        linked_cache_parent.joinpath("u-boot.git").symlink_to(cache, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"Symlink creation is unavailable for this test host: {exc}")
+    with pytest.raises(ValueError, match="symlink component"):
+        module._validate_x200_uboot_cache_binding(
+            linked_root,
+            str(linked_cache_parent / "u-boot.git"),
+            cache_toplevel,
+            cache_git_dir,
+            cache_remote,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
 
 
 def test_coreboot_2609_source_hashes_match_reviewed_raw_blobs() -> None:
@@ -854,7 +1026,7 @@ def test_unknown_recipe_never_selects_a_firmware_family(tmp_path: Path) -> None:
 
 def test_manifest_is_immutable_and_hashes_canonical_content() -> None:
     manifest = ArtifactManifest(
-        schema_version=1,
+        schema_version=2,
         operation_id="operation-1",
         created_at_utc="2026-10-10T00:00:00+00:00",
         recipe_id="x220-coreboot-8mb-seabios",
@@ -1035,6 +1207,42 @@ def test_operation_git_config_mutation_during_artifact_postprocessing_never_publ
     monkeypatch.setattr(engine, "_validate_lbmk_target", lambda _recipe, _source: None)
     monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("git.version", "fixture"),))
     monkeypatch.setattr(module, "validate_recipe_config", lambda _recipe, _config: "a" * 64)
+
+    objcopy = tmp_path / "fixture-objcopy"
+    objcopy.write_bytes(b"Synthetic GNU objcopy identity; not executed.\n")
+    commits = tuple(f"{index:x}" * 40 for index in range(1, 9))
+    dependency = module.X200UBootDependencyEvidence(
+        source_url=module._UBOOT_X86_64_SOURCE_URL,
+        backup_url=module._UBOOT_X86_64_BACKUP_URL,
+        package_config_sha256=module._UBOOT_PACKAGE_CFG_SHA256,
+        target_config_sha256=module._UBOOT_X86_64_TARGET_CFG_SHA256,
+        amd64_target_config_sha256=module._UBOOT_AMD64_TARGET_CFG_SHA256,
+        amd64_default_config_sha256=module._UBOOT_AMD64_DEFAULT_SHA256,
+        target_tree="x86_64",
+        base_revision=module._UBOOT_X86_64_BASE_REVISION,
+        base_tree_id=module._UBOOT_X86_64_BASE_TREE,
+        base_config_sha256=module._UBOOT_X86_64_BASE_CONFIG_SHA256,
+        overlay_path=module._X200_UBOOT_OVERLAY_PATH,
+        overlay_sha256=module._X200_UBOOT_OVERLAY_SHA256,
+        patched_config_sha256=module._UBOOT_X86_64_PATCHED_CONFIG_SHA256,
+        patch_inputs=module._X200_UBOOT_PATCH_STACK,
+        patch_commits=commits,
+        resulting_revision=commits[-1],
+        resulting_tree_id=module._UBOOT_X86_64_PATCHED_TREE,
+        cache_origin_relative_path=module._uboot_cache_relative_path(module._UBOOT_X86_64_SOURCE_URL),
+        resulting_origin_url=module._UBOOT_X86_64_SOURCE_URL,
+        base_ancestor_verified=True,
+        tracked_worktree_clean=True,
+        objcopy_path=str(objcopy.resolve()),
+        objcopy_sha256=hashlib.sha256(objcopy.read_bytes()).hexdigest(),
+        objcopy_version="GNU objcopy fixture; no tool run",
+    )
+    monkeypatch.setattr(engine, "_prepare_x200_lbmk_build_source", lambda _recipe, _source, _run, _logs, _commands: (source, dependency))
+    monkeypatch.setattr(
+        engine,
+        "_validate_x200_uboot_dependency_after_build",
+        lambda _recipe, _source, _run, _logs, _commands, previous: previous,
+    )
 
     selected_raw = source / module.PurePosixPath(recipe.output_relative_path)
 

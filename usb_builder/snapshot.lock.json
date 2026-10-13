@@ -7,7 +7,44 @@
   "archiso_package": "archiso",
   "archiso_version": "91-1",
   "archiso_source_commit": "723da192226e1c9d5def9168f13332793c82a85e",
-  "packages_x86_64_sha256": "520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329",
+  "archiso_initramfs_config_sha256": "cd1d328d0b343719c5975729bf7c8c5a227542beb396574ff4adeac30381db0b",
+  "archiso_initramfs_base_packages": [
+    "bash",
+    "coreutils",
+    "device-mapper",
+    "mkinitcpio",
+    "util-linux"
+  ],
+  "archiso_initramfs_hook_packages": {
+    "archiso": [
+      "mkinitcpio-archiso",
+      "mkinitcpio",
+      "pv"
+    ],
+    "archiso_loop_mnt": [
+      "mkinitcpio-archiso"
+    ],
+    "archiso_pxe_common": [
+      "mkinitcpio-archiso",
+      "gnupg",
+      "openssl"
+    ],
+    "archiso_pxe_nbd": [
+      "mkinitcpio-archiso",
+      "nbd"
+    ],
+    "archiso_pxe_http": [
+      "mkinitcpio-archiso",
+      "curl",
+      "ca-certificates-utils"
+    ],
+    "archiso_pxe_nfs": [
+      "mkinitcpio-archiso",
+      "mkinitcpio-nfs-utils",
+      "nfs-utils"
+    ]
+  },
+  "packages_x86_64_sha256": "7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd",
   "repository_database_sha256": {
     "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
     "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1"

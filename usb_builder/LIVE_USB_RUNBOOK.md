@@ -127,27 +127,33 @@ it produced no ISO and did not reach target-root validation. A fourth attempt
 on 2026-10-13 passed package validation and completed the Archiso build stages,
 then failed target-root validation because `/usr/sbin` inside `airootfs` is a
 usrmerge link to `/usr/bin`. The output directory remained empty and no ISO was
-published. An image-rooted symlink resolver now handles this path safely, but
-no later build has exercised it. Namespace, successful build, target-root,
-ISO, and QEMU evidence is still pending. An
+published. An image-rooted symlink resolver now handles this path safely. A
+later temporary pre-initramfs ISO passed target-root checks but failed both
+QEMU boot modes, as recorded below. An
 Ubuntu WSL2 shell by itself
 is not the pinned Archiso 91-1 build environment: the builder still
 requires the exact Arch package/tool ownership, pacman repositories and
 snapshot-signature validation, plus usable mount, loop, chroot, and network
 namespace capabilities. This checkout is currently dirty, so do not start a
 candidate build until a reviewed local commit provides a clean Git checkout.
-The offline network-namespace probe, successful candidate build, post-build
-`chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
-**NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
+At that earlier checkpoint candidate build, post-build `chroot` checks,
+BIOS/UEFI QEMU boot, and ISO production were **NOT_PERFORMED**. The offline
+network-namespace probe remains **UNVALIDATED** because `unshare` exposes
+`eth0`. The later temporary ISO and its failed QEMU results are recorded
+below; no passing boot or release validation is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 68 passed, 2 skipped; Windows — 60 passed, 10 skipped; native `mypy usb_builder` on both hosts and
+Historical resolver-focused checks were Arch WSL `tests/test_usb_builder.py` —
+68 passed, 2 skipped; Windows — 60 passed, 10 skipped. The latest staged
+initramfs-fragment guard passed 89 Arch tests with 2 skipped; Windows focused
+rerun is pending. `mypy usb_builder` is clean on the Arch run, and
 `git diff --check` passed. The real Arch WSL namespace probe is
 **UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
 closed, and these focused software tests do not constitute offline builder
 validation. Online candidate build and BIOS/UEFI QEMU validation remain
-pending. SOL approved the target-root POSIX symlink resolver code; this runbook
-records the attempt and correction. No ISO rebuild has yet exercised the new
-resolver.
+pending. SOL approved the target-root POSIX symlink resolver and the later
+staged initramfs-fragment integrity guard. The statement that the fragment had
+not been exercised was true at that earlier checkpoint; the later candidate
+includes it, with its failed QEMU evidence recorded below.
 
 The first real online candidate attempt stopped at preflight, before
 `mkarchiso`, because the package-list pin did not match the checked-in profile.
@@ -173,11 +179,61 @@ The target-root validator then exposed an in-image path case: the venv
 interpreter can resolve through `/usr/sbin/python`, where `/usr/sbin` is a
 usrmerge link to `/usr/bin`. The image-rooted resolver and regression tests now
 accept this internal chain and reject escapes, cycles, missing targets, and
-non-directory traversal. Latest focused USB tests: Arch WSL 68 passed, 2
-skipped; Windows 60 passed, 10 skipped. `mypy usb_builder` is clean on both
-hosts. SOL approved the resolver code; the documentation correction is incorporated. No candidate build
-retry has occurred; no ISO, target-root smoke result, or boot validation is
-claimed.
+non-directory traversal. Historical resolver-focused tests passed 68 Arch and 60 Windows cases (with 2 and 10 skipped respectively); the staged-fragment guard checkpoint passed 89 Arch tests with 2 skipped. The accepted hook-package correction passes 105 Arch tests with 2 skipped and 94 Windows tests with 13 skipped. `mypy usb_builder` is clean on both hosts. SOL approved the resolver and package-policy corrections.
+The statement that no candidate retry had occurred was accurate at that
+checkpoint. A later candidate built with the accepted staged initramfs fragment
+and its failed BIOS/UEFI emulator results are recorded below.
+
+## Prior temporary candidate and QEMU evidence
+
+A temporary candidate built before the accepted Archiso initramfs fragment was
+added had SHA-256
+`5a19235fbfa57c6d32a1d73f4c6868abae60e90b3b7be0d39e508e698e2cc478` and size
+897,921,024 bytes. BIOS QEMU failed at `Failed to start Switch Root`; UEFI QEMU
+timed out mounting `/dev/gpt-auto-root` and entered the initrd emergency path.
+Neither mode reached the application service or yielded usable second-TTY
+service/journal evidence. The build log contained a nonfatal mkinitcpio
+`failed to detect root filesystem` message. Investigation traced the failure
+to the absent `archiso` and `archiso_loop_mnt` initramfs hooks. This ISO is
+failed emulator evidence only, not a passing candidate.
+
+## Latest candidate build and QEMU boot failure
+
+On 2026-10-13, clean source snapshot `349e7961264131f69019ad1ab61cfa950af688a8`
+produced a temporary candidate ISO with SHA-256
+`9d6fd80e5757b2f5a075fd46f5d60548c782166cacf95378d6bde2ad3dee42fc` and size
+1,285,586,944 bytes. The bundle's build manifest SHA-256 is
+`e0fd030367e792bf39913f1145804fd3470a9357263cc141486b2bb7a8857689`. This is
+temporary emulator evidence, not a release-validated image.
+
+Both QEMU boots used that same ISO hash, QEMU 11.1.2, no network device and no
+write-capable firmware interface. BIOS initramfs reported missing `archiso`,
+`archiso_loop_mnt`, and PXE hooks, failed to mount the real root and dropped to
+`[rootfs~]#`. UEFI ran the udev and memdisk hooks, then also failed mounting the
+real root and dropped to `[rootfs~]#`. The BIOS VGA capture SHA-256 is
+`1fa299e8e5e4ca4d499bb9c900d15b7e7ca47d2c272cfed4ab28579ff967f848`; the UEFI
+capture is `0e76945cb5486cad5f3a7aab41833dcad3fef05561c421633ae8bd286a325ebe`.
+Both serial logs were empty. Neither boot reached the application or startup
+service, so no service/journal evidence exists and the app, service, and
+no-writer behavior were not observed in a booted guest.
+
+The pinned Archiso 91-1 releng package list and its `mkinitcpio-archiso` package
+show that the configured hooks require runtime packages missing from this
+profile. The exact locked 2026-09-29 core/extra database hashes were verified
+while checking that the required packages exist in the snapshot. The accepted
+package correction now pins the base and per-hook package map, includes the
+required packages in the profile and records them in build provenance. Its
+canonical LF package-list SHA-256 is
+`7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd`.
+Focused USB tests pass 105 on Arch (2 skipped) and 94 on Windows (13 skipped);
+`mypy usb_builder` is clean on both. No new build retry has run after this
+correction. SOL accepted the package policy; a fresh candidate and successful
+BIOS/UEFI app/service boot evidence remain pending. No USB media or physical
+hardware was accessed.
+
+## Post-build package inventory guard
+
+Before candidate publication, the builder validates the target root and its `var/lib/pacman/local` database as contained, non-symlink directories and requires package records with regular `desc` files. It then runs the fixed query `pacman --config /dev/null --dbpath <airootfs>/var/lib/pacman -Q`, using merged stdout/stderr and the strict inventory parser. This uses only the image's local package database; it does not read the host pacman configuration or refresh a repository. Missing or unsafe database paths, a nonzero pacman exit, warnings, malformed or duplicate rows, or missing required packages block the build before atomic candidate publication. The fake-only regression suite passed 79 tests with 2 skipped; `mypy usb_builder` and `git diff --check` passed. SOL accepted this inventory correction. No ISO build or retry was run at that earlier checkpoint.
 
 ## Runtime storage and logs
 

@@ -252,7 +252,11 @@ def _confirmation(intent):
 
 
 def test_x200_intent_binds_fresh_probe_artifact_backup_recovery_and_fixed_command(tmp_path):
-    plan, intent, _service, probe, backup, readiness, _transport, _paths, _operation_id = _prepared_write(tmp_path)
+    # A parent path containing the writer option must not be mistaken for
+    # the executable itself when checking the fixed command boundary.
+    command_path = tmp_path / "parent-w-option"
+    command_path.mkdir()
+    plan, intent, _service, probe, backup, readiness, _transport, _paths, _operation_id = _prepared_write(command_path)
     intent.validate_integrity()
     assert intent.action is WriteAction.FLASH
     assert intent.profile_id == "x200-libreboot"
@@ -268,7 +272,7 @@ def test_x200_intent_binds_fresh_probe_artifact_backup_recovery_and_fixed_comman
     assert intent.command.argv == (
         "-p", ProgrammerType.CH341A.value, "-c", "W25Q32.V", "-w", intent.artifact_path,
     )
-    assert "-w" not in intent.command.executable
+    assert "-w" not in Path(intent.command.executable).name
     assert intent.command.executable_sha256 == hashlib.sha256(Path(intent.command.executable).read_bytes()).hexdigest()
 
 

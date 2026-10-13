@@ -75,6 +75,12 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
         "initrd /%INSTALL_DIR%/boot/%ARCH%/initramfs-linux.img\n"
         "options archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS%\n",
     )
+    _write(
+        profile / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH,
+        "HOOKS=(base udev microcode modconf kms memdisk archiso archiso_loop_mnt archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs block filesystems keyboard)\n"
+        'COMPRESSION="xz"\n'
+        'COMPRESSION_OPTIONS=(-9e)\n',
+    )
     _write_executable(profile / "airootfs" / "opt" / "autoloader" / "start.sh", "#!/bin/bash\nexit 0\n")
     _write(
         profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service",
@@ -95,6 +101,11 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
                 "archiso_package": "archiso",
                 "archiso_version": "91-1",
                 "archiso_source_commit": build_usb.ARCHISO_V91_SOURCE_COMMIT,
+                "archiso_initramfs_config_sha256": build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256,
+                "archiso_initramfs_base_packages": list(build_usb.ARCHISO_INITRAMFS_BASE_PACKAGES),
+                "archiso_initramfs_hook_packages": {
+                    hook: list(packages) for hook, packages in build_usb.ARCHISO_INITRAMFS_HOOK_PACKAGES.items()
+                },
                 "packages_x86_64_sha256": hashlib.sha256(package_text.encode("utf-8")).hexdigest(),
                 "repository_database_sha256": {
                     name: hashlib.sha256(value).hexdigest() for name, value in _FIXTURE_DB_BYTES.items()
@@ -197,12 +208,21 @@ def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
     assert lock["snapshot_pin_status"] == "fixed-candidate"
     assert lock["release_validation_status"] == "pending-linux-build-and-qemu"
     assert lock["package_signature_policy"] == "Required DatabaseOptional"
+    assert lock["archiso_initramfs_config_sha256"] == build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
     assert lock["repository_database_sha256"] == {
         "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
         "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1",
     }
     assert set(lock["required_boot_modes"]) == build_usb.REQUIRED_BOOT_MODES
     assert set(build_usb._profile_boot_modes(profile)) >= build_usb.REQUIRED_BOOT_MODES
+
+
+def test_checked_in_lock_binds_official_archiso_initramfs_hooks():
+    lock, _ = build_usb._load_json(build_usb.DEFAULT_SNAPSHOT, "snapshot lock")
+    config = build_usb.DEFAULT_PROFILE / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+    assert build_usb._sha256_file(config) == build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
+    assert lock["archiso_initramfs_config_sha256"] == build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
+    assert "archiso archiso_loop_mnt" in config.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
@@ -251,6 +271,54 @@ def test_preflight_rejects_package_list_drift_from_snapshot_hash(tmp_path):
         build_usb.preflight(config, host_platform="linux")
 
 
+@pytest.mark.parametrize("package", sorted(build_usb.ARCHISO_INITRAMFS_REQUIRED_PACKAGES))
+def test_preflight_requires_every_configured_archiso_hook_runtime_package(tmp_path, package):
+    config = _config(tmp_path)
+    package_list = config.profile_dir / "packages.x86_64"
+    names = package_list.read_text(encoding="utf-8").splitlines()
+    package_list.write_text("\n".join(name for name in names if name != package) + "\n", encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="missing required closed runtime/boot packages"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_preflight_requires_locked_archiso_hook_package_map(tmp_path):
+    config = _config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    snapshot["archiso_initramfs_hook_packages"]["archiso"] = ["mkinitcpio"]
+    config.snapshot_lock.write_text(json.dumps(snapshot), encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="does not pin package requirements"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_preflight_requires_locked_archiso_base_package_list(tmp_path):
+    config = _config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    snapshot["archiso_initramfs_base_packages"].remove("mkinitcpio")
+    config.snapshot_lock.write_text(json.dumps(snapshot), encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="does not pin mandatory Archiso initramfs base packages"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_preflight_requires_exact_archiso_initramfs_hooks(tmp_path):
+    config = _config(tmp_path)
+    hook_config = config.profile_dir / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+    hook_config.write_text(
+        "HOOKS=(base systemd autodetect block filesystems fsck)\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(build_usb.BuildContractError, match="initramfs hook configuration"):
+        build_usb.preflight(config, host_platform="linux")
+
+
+def test_preflight_requires_initramfs_config_lock_pin(tmp_path):
+    config = _config(tmp_path)
+    snapshot, _ = build_usb._load_json(config.snapshot_lock, "snapshot lock")
+    snapshot.pop("archiso_initramfs_config_sha256")
+    config.snapshot_lock.write_text(json.dumps(snapshot), encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="initramfs hook configuration"):
+        build_usb.preflight(config, host_platform="linux")
+
+
 def test_bios_syslinux_mode_requires_syslinux_package(tmp_path):
     config = _config(tmp_path)
     package_list = config.profile_dir / "packages.x86_64"
@@ -277,6 +345,12 @@ def test_checked_in_package_list_and_lock_bind_canonical_lf_and_accept_crlf(tmp_
     package_path = repository_root / "usb_builder" / "archiso_profile" / "packages.x86_64"
     lock_path = repository_root / "usb_builder" / "snapshot.lock.json"
     snapshot, _ = build_usb._load_json(lock_path, "snapshot lock")
+    assert snapshot["archiso_initramfs_base_packages"] == list(build_usb.ARCHISO_INITRAMFS_BASE_PACKAGES)
+    assert snapshot["archiso_initramfs_hook_packages"] == {
+        hook: list(packages) for hook, packages in build_usb.ARCHISO_INITRAMFS_HOOK_PACKAGES.items()
+    }
+    checked_in_names = set(build_usb._read_package_names(package_path))
+    assert build_usb.ARCHISO_INITRAMFS_REQUIRED_PACKAGES <= checked_in_names
     checked_in_bytes = package_path.read_bytes()
     canonical_bytes = checked_in_bytes.replace(b"\r\n", b"\n")
     assert hashlib.sha256(canonical_bytes).hexdigest() == snapshot["packages_x86_64_sha256"]
@@ -695,11 +769,13 @@ class _FakeBuilder:
         startup: bool = True,
         namespace_ok: bool = True,
         mutate_database_after_build: bool = False,
+        mutate_profile_config_after_build: bool = False,
         wrong_downloaded_database: bool = False,
         retain_sync_databases: bool = False,
         wrong_retained_database: bool = False,
         redirect_to: str | None = None,
         mutate_offline_source_during_build: Path | None = None,
+        target_pacman_returncode: int = 0,
     ) -> None:
         self.calls: list[list[str]] = []
         self.embedded_provenance = ""
@@ -710,11 +786,13 @@ class _FakeBuilder:
         self.startup = startup
         self.namespace_ok = namespace_ok
         self.mutate_database_after_build = mutate_database_after_build
+        self.mutate_profile_config_after_build = mutate_profile_config_after_build
         self.wrong_downloaded_database = wrong_downloaded_database
         self.retain_sync_databases = retain_sync_databases
         self.wrong_retained_database = wrong_retained_database
         self.redirect_to = redirect_to
         self.mutate_offline_source_during_build = mutate_offline_source_during_build
+        self.target_pacman_returncode = target_pacman_returncode
         self.pacman_conf_content = ""
 
     def __call__(self, command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
@@ -774,10 +852,11 @@ class _FakeBuilder:
                 "Name: setuptools\nVersion: 80.9.0\n\nName: wheel\nVersion: 0.45.1\n",
                 "",
             )
-        if command[:2] == ["pacman", "--root"]:
+        if command[:2] == ["pacman", "--config"] and "--dbpath" in command and command[-1] == "-Q":
             package_names = set(build_usb.REQUIRED_PACKAGES) | {"intel-ucode"}
             inventory = "".join(f"{name} 1-1\n" for name in sorted(package_names))
-            return subprocess.CompletedProcess(command, 0, inventory, "")
+            status = self.target_pacman_returncode
+            return subprocess.CompletedProcess(command, status, inventory if status == 0 else "pacman fixture failure\n", "")
         if "-m" in command and "pip" in command and "wheel" in command:
             wheel_dir = Path(command[command.index("--wheel-dir") + 1])
             wheel_dir.mkdir(parents=True, exist_ok=True)
@@ -800,6 +879,9 @@ class _FakeBuilder:
             output = Path(command[command.index("-o") + 1])
             work = Path(command[command.index("-w") + 1])
             profile = Path(command[-1])
+            if self.mutate_profile_config_after_build:
+                config_path = profile / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+                config_path.write_text("HOOKS=(base udev block filesystems)\n", encoding="utf-8")
             self.pacman_conf_content = Path(command[command.index("-C") + 1]).read_text(encoding="utf-8")
             self.embedded_provenance = (
                 profile / "airootfs/usr/share/doc/libre-core-autoloader/image-build-inputs.json"
@@ -824,6 +906,12 @@ class _FakeBuilder:
 
     def _populate_target_root(self, root: Path, staged_profile: Path) -> None:
         root.mkdir(parents=True)
+        local_db = root / "var" / "lib" / "pacman" / "local"
+        _write(local_db / "ALPM_DB_VERSION", build_usb.EXPECTED_ALPM_LOCAL_DB_VERSION)
+        for package in sorted(set(build_usb.REQUIRED_PACKAGES) | {"intel-ucode"}):
+            package_record = local_db / f"{package}-1-1"
+            package_record.mkdir(parents=True, exist_ok=True)
+            _write(package_record / "desc", f"%NAME%\n{package}\n\n%VERSION%\n1-1\n")
         if self.install_app:
             startup_script = staged_profile / "airootfs/opt/autoloader/start.sh"
             if self.startup and startup_script.is_file():
@@ -905,6 +993,28 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
         "complete_before_visible": True,
     }
     assert manifest["snapshot"]["archiso_version"] == "91-1"
+    assert manifest["snapshot"]["archiso_initramfs_config_sha256"] == build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
+    assert manifest["snapshot"]["archiso_initramfs_config_source_path"] == (
+        build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SOURCE_PATH
+    )
+    assert manifest["snapshot"]["archiso_initramfs_config_staged_path"] == (
+        build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+    )
+    assert manifest["snapshot"]["staged_archiso_initramfs_config_sha256"] == (
+        build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
+    )
+    assert manifest["snapshot"]["archiso_initramfs_hook_packages"] == {
+        hook: list(packages) for hook, packages in build_usb.ARCHISO_INITRAMFS_HOOK_PACKAGES.items()
+    }
+    assert manifest["snapshot"]["archiso_initramfs_base_packages"] == list(
+        build_usb.ARCHISO_INITRAMFS_BASE_PACKAGES
+    )
+    assert manifest["snapshot"]["archiso_initramfs_required_packages"] == sorted(
+        build_usb.ARCHISO_INITRAMFS_REQUIRED_PACKAGES
+    )
+    assert manifest["staged_profile_file_sha256"][
+        f"profile/{Path(build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH).as_posix()}"
+    ] == build_usb.ARCHISO_V91_INITRAMFS_CONFIG_SHA256
     consumption = manifest["pacman_sync_database_consumption"]
     assert consumption["status"] == "SOURCE_LEVEL_INVARIANT_ONLY"
     assert consumption["runtime_capture_absence_reason"].startswith("Archiso v91 successful cleanup")
@@ -1358,6 +1468,58 @@ def test_candidate_build_rejects_database_mutated_during_mkarchiso_before_output
     assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 1
 
 
+@pytest.mark.parametrize("changed_profile", ["source", "staged"])
+def test_archiso_config_mutation_after_preflight_blocks_before_mkarchiso(tmp_path, monkeypatch, changed_profile):
+    config = _config(tmp_path)
+    runner = _FakeBuilder()
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+    original = build_usb._write_image_input_provenance
+
+    def mutate_after_staging(source_root, stage_profile, **kwargs):
+        result = original(source_root, stage_profile, **kwargs)
+        profile_root = source_root / "usb_builder" / "archiso_profile" if changed_profile == "source" else stage_profile
+        altered_config = profile_root / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+        altered_config.write_text("HOOKS=(base udev block filesystems)\n", encoding="utf-8")
+        return result
+
+    monkeypatch.setattr(build_usb, "_write_image_input_provenance", mutate_after_staging)
+    with pytest.raises(build_usb.BuildContractError, match=f"{changed_profile} Archiso initramfs config differs"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 0
+    assert list(config.output_dir.iterdir()) == []
+
+
+def test_staged_archiso_config_mutation_during_mkarchiso_blocks_publication(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(mutate_profile_config_after_build=True)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+    with pytest.raises(build_usb.BuildContractError, match="staged Archiso initramfs config differs"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert sum(Path(call[0]).name == "mkarchiso" for call in runner.calls) == 1
+    assert list(config.output_dir.iterdir()) == []
+    assert list(config.output_dir.rglob("*.iso")) == []
+
+
 def test_offline_build_wraps_every_subprocess_in_verified_network_namespace(tmp_path):
     config = _offline_config(tmp_path)
     runner = _FakeBuilder()
@@ -1536,21 +1698,170 @@ def test_default_unshare_lookup_reports_missing_pacman_as_unavailable(tmp_path, 
     assert calls == [["pacman", "-Qo", str(unshare.resolve())]]
 
 
-def test_target_package_inventory_requires_every_profile_package_and_valid_rows(tmp_path):
+def _populate_local_package_database(root: Path, *package_names: str) -> Path:
+    db_path = root / "var" / "lib" / "pacman"
+    local = db_path / "local"
+    _write(local / "ALPM_DB_VERSION", build_usb.EXPECTED_ALPM_LOCAL_DB_VERSION)
+    for name in package_names:
+        record = local / f"{name}-1-1"
+        record.mkdir(parents=True, exist_ok=True)
+        _write(record / "desc", f"%NAME%\n{name}\n\n%VERSION%\n1-1\n")
+    return db_path
+
+
+def test_target_package_inventory_uses_exact_offline_image_database_command(tmp_path):
     target = tmp_path / "target-root"
     target.mkdir()
+    db_path = _populate_local_package_database(target, "flashrom", "python")
+    calls: list[list[str]] = []
 
-    def incomplete_runner(command, **kwargs):
-        return subprocess.CompletedProcess(command, 0, "python 3.13-1\n", "")
+    def valid_runner(command, **kwargs):
+        calls.append(list(command))
+        assert kwargs["stderr"] == subprocess.STDOUT
+        return subprocess.CompletedProcess(command, 0, "python 3.13-1\nflashrom 1.4-1\n", "")
 
-    with pytest.raises(build_usb.BuildContractError, match="missing required packages"):
-        build_usb._record_package_versions(target, incomplete_runner, ("python", "flashrom"))
+    inventory = build_usb._record_package_versions(target, valid_runner, ("python", "flashrom"))
 
-    def malformed_runner(command, **kwargs):
-        return subprocess.CompletedProcess(command, 0, "python 3.13-1\nnot a package row\n", "")
+    assert inventory == ("flashrom 1.4-1", "python 3.13-1")
+    assert calls == [["pacman", "--config", "/dev/null", "--dbpath", str(db_path.resolve()), "-Q"]]
 
-    with pytest.raises(build_usb.BuildContractError, match="malformed"):
-        build_usb._record_package_versions(target, malformed_runner, ("python",))
+
+@pytest.mark.parametrize(
+    ("output", "error"),
+    [
+        ("python 3.13-1\n", "missing required packages"),
+        ("python 3.13-1\nnot a package row\n", "malformed"),
+        ("python 3.13-1\npython 3.13-1\n", "duplicate package names"),
+        ("warning: package database is corrupt\npython 3.13-1\n", "malformed"),
+    ],
+)
+def test_target_package_inventory_rejects_missing_malformed_duplicate_and_warning_rows(tmp_path, output, error):
+    target = tmp_path / "target-root"
+    target.mkdir()
+    _populate_local_package_database(target, "python", "flashrom")
+
+    def runner(command, **kwargs):
+        return subprocess.CompletedProcess(command, 0, output, "")
+
+    with pytest.raises(build_usb.BuildContractError, match=error):
+        build_usb._record_package_versions(target, runner, ("python", "flashrom"))
+
+
+@pytest.mark.parametrize("database_state", ["missing-db", "missing-local", "empty-local", "missing-desc"])
+def test_target_package_inventory_rejects_missing_or_incomplete_local_database_before_runner(tmp_path, database_state):
+    target = tmp_path / "target-root"
+    target.mkdir()
+    if database_state in {"empty-local", "missing-desc"}:
+        local = target / "var" / "lib" / "pacman" / "local"
+        local.mkdir(parents=True)
+        if database_state == "missing-desc":
+            _write(local / "ALPM_DB_VERSION", build_usb.EXPECTED_ALPM_LOCAL_DB_VERSION)
+            (local / "python-1-1").mkdir()
+    elif database_state == "missing-db":
+        (target / "var" / "lib").mkdir(parents=True)
+    elif database_state == "missing-local":
+        (target / "var" / "lib" / "pacman").mkdir(parents=True)
+
+    def runner(command, **kwargs):
+        pytest.fail(f"pacman must not run against {database_state}: {command}")
+
+    with pytest.raises(build_usb.BuildContractError, match="target root local pacman database"):
+        build_usb._record_package_versions(target, runner, ())
+
+
+@pytest.mark.parametrize(
+    ("marker_state", "error"),
+    [
+        ("missing", "ALPM_DB_VERSION"),
+        ("wrong-version", "unsupported ALPM_DB_VERSION"),
+        ("unexpected-root-file", "unsafe package record"),
+    ],
+)
+def test_target_package_inventory_validates_pacman_local_db_metadata(tmp_path, marker_state, error):
+    target = tmp_path / "target-root"
+    target.mkdir()
+    db_path = _populate_local_package_database(target, "python")
+    local = db_path / "local"
+    marker = local / "ALPM_DB_VERSION"
+    if marker_state == "missing":
+        marker.unlink()
+    elif marker_state == "wrong-version":
+        marker.write_text("8\n", encoding="ascii")
+    else:
+        _write(local / "unrecognized-metadata", "must not be treated as a package record")
+
+    def runner(command, **kwargs):
+        pytest.fail(f"pacman must not run with {marker_state}: {command}")
+
+    with pytest.raises(build_usb.BuildContractError, match=error):
+        build_usb._record_package_versions(target, runner, ())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="POSIX symlink test")
+def test_target_package_inventory_rejects_linked_pacman_db_version_marker(tmp_path):
+    target = tmp_path / "target-root"
+    target.mkdir()
+    db_path = _populate_local_package_database(target, "python")
+    marker = db_path / "local" / "ALPM_DB_VERSION"
+    external = tmp_path / "external-version"
+    external.write_text(build_usb.EXPECTED_ALPM_LOCAL_DB_VERSION, encoding="ascii")
+    marker.unlink()
+    marker.symlink_to(external)
+
+    def runner(command, **kwargs):
+        pytest.fail(f"pacman must not run with a linked version marker: {command}")
+
+    with pytest.raises(build_usb.BuildContractError, match="ALPM_DB_VERSION"):
+        build_usb._record_package_versions(target, runner, ())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="POSIX symlink test")
+@pytest.mark.parametrize("link_component", ["pacman", "local"])
+def test_target_package_inventory_rejects_symlinked_database_component_before_runner(tmp_path, link_component):
+    target = tmp_path / "target-root"
+    target.mkdir()
+    outside = tmp_path / "outside-pacman-db"
+    outside_local = outside / "local"
+    outside_local.mkdir(parents=True)
+    pacman_db = target / "var" / "lib" / "pacman"
+    if link_component == "pacman":
+        pacman_db.parent.mkdir(parents=True)
+        pacman_db.symlink_to(outside, target_is_directory=True)
+    else:
+        pacman_db.mkdir(parents=True)
+        (pacman_db / "local").symlink_to(outside_local, target_is_directory=True)
+
+    def runner(command, **kwargs):
+        pytest.fail(f"pacman must not run against linked {link_component} database path: {command}")
+
+    with pytest.raises(build_usb.BuildContractError, match="missing or unsafe"):
+        build_usb._record_package_versions(target, runner, ())
+
+
+def test_nonzero_target_pacman_inventory_prevents_candidate_publication(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(target_pacman_returncode=1)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(build_usb.BuildContractError, match="command failed") as exc:
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+    assert "pacman fixture failure" in str(exc.value)
+
+    target_commands = [command for command in runner.calls if command[:2] == ["pacman", "--config"]]
+    assert len(target_commands) == 1
+    assert target_commands[0][2] == "/dev/null"
+    assert target_commands[0][-1] == "-Q"
+    assert list(config.output_dir.iterdir()) == []
 
 
 def test_wheel_build_backend_requires_setuptools_and_wheel():

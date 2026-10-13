@@ -30,6 +30,18 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROFILE = REPOSITORY_ROOT / "usb_builder" / "archiso_profile"
 DEFAULT_SNAPSHOT = REPOSITORY_ROOT / "usb_builder" / "snapshot.lock.json"
 WORK_PREFIX = "librecore-autoloader-"
+ARCHISO_INITRAMFS_HOOK_PACKAGES = {
+    "archiso": ("mkinitcpio-archiso", "mkinitcpio", "pv"),
+    "archiso_loop_mnt": ("mkinitcpio-archiso",),
+    "archiso_pxe_common": ("mkinitcpio-archiso", "gnupg", "openssl"),
+    "archiso_pxe_nbd": ("mkinitcpio-archiso", "nbd"),
+    "archiso_pxe_http": ("mkinitcpio-archiso", "curl", "ca-certificates-utils"),
+    "archiso_pxe_nfs": ("mkinitcpio-archiso", "mkinitcpio-nfs-utils", "nfs-utils"),
+}
+ARCHISO_INITRAMFS_BASE_PACKAGES = ("bash", "coreutils", "device-mapper", "mkinitcpio", "util-linux")
+ARCHISO_INITRAMFS_REQUIRED_PACKAGES = frozenset(ARCHISO_INITRAMFS_BASE_PACKAGES).union(
+    package for packages in ARCHISO_INITRAMFS_HOOK_PACKAGES.values() for package in packages
+)
 REQUIRED_PACKAGES = frozenset(
     {
         "base",
@@ -47,11 +59,15 @@ REQUIRED_PACKAGES = frozenset(
         "pciutils",
         "syslinux",
     }
-)
+) | ARCHISO_INITRAMFS_REQUIRED_PACKAGES
 REQUIRED_MODES = frozenset(("online", "offline"))
 REQUIRED_BOOT_MODES = frozenset(("bios.syslinux", "uefi.systemd-boot"))
 EXPECTED_MKARCHISO_VERSION = "91-1"
+EXPECTED_ALPM_LOCAL_DB_VERSION = "9\n"
 ARCHISO_V91_SOURCE_COMMIT = "723da192226e1c9d5def9168f13332793c82a85e"
+ARCHISO_V91_INITRAMFS_CONFIG_SHA256 = "cd1d328d0b343719c5975729bf7c8c5a227542beb396574ff4adeac30381db0b"
+ARCHISO_V91_INITRAMFS_CONFIG_SOURCE_PATH = "configs/releng/airootfs/etc/mkinitcpio.conf.d/archiso.conf"
+ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH = "airootfs/etc/mkinitcpio.conf.d/archiso.conf"
 ARCHISO_V91_SOURCE_URL = (
     "https://github.com/archlinux/archiso/blob/"
     + ARCHISO_V91_SOURCE_COMMIT
@@ -423,6 +439,7 @@ def _profile_boot_modes(profile_dir: Path) -> tuple[str, ...]:
         "syslinux/archiso_sys-linux.cfg",
         "efiboot/loader/loader.conf",
         "efiboot/loader/entries/01-autoloader.conf",
+        ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH,
     )
     missing = [name for name in boot_files if not (profile_dir / name).is_file()]
     if missing:
@@ -505,6 +522,25 @@ def _validate_online_pacman_config(profile_dir: Path, snapshot: Mapping[str, Any
         raise BuildContractError("local package file signatures must be required")
     if "mirrorlist" in content.casefold():
         raise BuildContractError("online pacman config must not include moving mirrors")
+
+
+def _verify_archiso_initramfs_config(profile_dir: Path, *, label: str) -> str:
+    """Revalidate the exact pinned Archiso hook file at each trust boundary."""
+    root = _canonical_existing_dir(profile_dir, f"{label} profile", reject_root=False)
+    configured_path = root / ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH
+    try:
+        canonical_config = _canonical_existing_file(configured_path, f"{label} Archiso initramfs config")
+    except BuildContractError as exc:
+        raise BuildContractError(f"{label} Archiso initramfs config is missing or unsafe") from exc
+    if canonical_config != configured_path or not _is_within(canonical_config, root):
+        raise BuildContractError(f"{label} Archiso initramfs config escaped its profile root")
+    digest = _sha256_file(canonical_config)
+    if digest != ARCHISO_V91_INITRAMFS_CONFIG_SHA256:
+        raise BuildContractError(
+            f"{label} Archiso initramfs config differs from the pinned Archiso 91 releng fragment; "
+            "initramfs hook configuration mismatch"
+        )
+    return digest
 
 
 def _snapshot_database_pins(snapshot: Mapping[str, Any]) -> dict[str, str]:
@@ -625,6 +661,15 @@ def preflight(config: BuildConfig, *, host_platform: str | None = None) -> Prefl
         raise BuildContractError("snapshot lock does not pin the reviewed archiso package version")
     if snapshot.get("archiso_source_commit") != ARCHISO_V91_SOURCE_COMMIT:
         raise BuildContractError("snapshot lock does not bind Archiso 91 to its reviewed source commit")
+    if snapshot.get("archiso_initramfs_config_sha256") != ARCHISO_V91_INITRAMFS_CONFIG_SHA256:
+        raise BuildContractError("snapshot lock does not pin the Archiso 91 initramfs hook configuration")
+    if snapshot.get("archiso_initramfs_hook_packages") != {
+        hook: list(packages) for hook, packages in ARCHISO_INITRAMFS_HOOK_PACKAGES.items()
+    }:
+        raise BuildContractError("snapshot lock does not pin package requirements for configured Archiso initramfs hooks")
+    if snapshot.get("archiso_initramfs_base_packages") != list(ARCHISO_INITRAMFS_BASE_PACKAGES):
+        raise BuildContractError("snapshot lock does not pin mandatory Archiso initramfs base packages")
+    _verify_archiso_initramfs_config(profile, label="source")
     if snapshot.get("snapshot_date") != EXPECTED_SNAPSHOT_DATE:
         raise BuildContractError("snapshot lock date differs from the reviewed pinned repository snapshot")
     expected_repository_base = "https://archive.archlinux.org/repos/" + EXPECTED_SNAPSHOT_DATE.replace("-", "/")
@@ -1375,9 +1420,48 @@ def _one_wheel(wheel_dir: Path) -> Path:
 
 
 def _record_package_versions(target_root: Path, runner: Runner, required_packages: Sequence[str]) -> tuple[str, ...]:
-    if not target_root.is_dir():
-        raise BuildContractError("mkarchiso completed without its target root filesystem; package provenance is unavailable")
-    result = _run_command(("pacman", "--root", str(target_root), "-Q"), runner=runner)
+    try:
+        root = _canonical_existing_dir(target_root, "target root filesystem")
+    except BuildContractError as exc:
+        raise BuildContractError(
+            "mkarchiso completed without a safe target root filesystem; package provenance is unavailable"
+        ) from exc
+
+    db_path = root / "var" / "lib" / "pacman"
+    local_db = db_path / "local"
+    try:
+        canonical_db_path = _canonical_existing_dir(db_path, "target root pacman database directory")
+        canonical_local_db = _canonical_existing_dir(local_db, "target root local pacman database")
+    except BuildContractError as exc:
+        raise BuildContractError(f"target root local pacman database is missing or unsafe: {exc}") from exc
+    if not _is_within(canonical_db_path, root) or not _is_within(canonical_local_db, root):
+        raise BuildContractError("target root local pacman database escapes the image root")
+
+    database_entries = tuple(canonical_local_db.iterdir())
+    if not database_entries:
+        raise BuildContractError("target root local pacman database is empty")
+    version_marker = canonical_local_db / "ALPM_DB_VERSION"
+    _assert_no_link_components(version_marker)
+    if _is_reparse_or_symlink(version_marker) or not version_marker.is_file():
+        raise BuildContractError("target root local pacman database has no regular ALPM_DB_VERSION marker")
+    try:
+        local_db_version = version_marker.read_text(encoding="ascii")
+    except (OSError, UnicodeError) as exc:
+        raise BuildContractError("target root local pacman database has an unreadable ALPM_DB_VERSION marker") from exc
+    if local_db_version != EXPECTED_ALPM_LOCAL_DB_VERSION:
+        raise BuildContractError("target root local pacman database has an unsupported ALPM_DB_VERSION marker")
+    for entry in database_entries:
+        if entry == version_marker:
+            continue
+        if _is_reparse_or_symlink(entry) or not entry.is_dir():
+            raise BuildContractError("target root local pacman database contains an unsafe package record")
+        description = entry / "desc"
+        _assert_no_link_components(description)
+        if not description.is_file() or _is_reparse_or_symlink(description):
+            raise BuildContractError("target root local pacman database package record has no regular desc file")
+
+    command = ("pacman", "--config", "/dev/null", "--dbpath", str(canonical_db_path), "-Q")
+    result = _run_command(command, runner=runner)
     return _parse_package_inventory(result.stdout, label="installed package version inventory", required=required_packages)
 
 
@@ -1831,12 +1915,17 @@ def execute_build(
         if _sha256_file(pacman_conf) != pacman_config_sha256_before:
             raise BuildContractError("pacman config changed before mkarchiso invocation")
         _verify_staged_repository_databases(snapshot_database_root, database_evidence, runner=build_runner)
+        _verify_archiso_initramfs_config(profile, label="source")
+        _verify_archiso_initramfs_config(stage_profile, label="staged")
         with build_log.open("w", encoding="utf-8", newline="\n") as log:
             try:
                 _run_command(command, runner=build_runner, stdout=log)
             except BuildContractError as exc:
                 log.write(f"\nBUILD_FAILED: {exc}\n")
                 raise
+
+        _verify_archiso_initramfs_config(profile, label="source")
+        _verify_archiso_initramfs_config(stage_profile, label="staged")
 
         _verify_staged_repository_databases(snapshot_database_root, database_evidence, runner=build_runner)
         if _sha256_file(pacman_conf) != pacman_config_sha256_before:
@@ -1875,6 +1964,9 @@ def execute_build(
         end_epoch = int(clock())
         profile_hashes = _source_hashes(source, profile)
         staged_hashes = _source_hashes(work_dir, stage_profile)
+        staged_initramfs_key = f"profile/{Path(ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH).as_posix()}"
+        if staged_hashes.get(staged_initramfs_key) != ARCHISO_V91_INITRAMFS_CONFIG_SHA256:
+            raise BuildContractError("staged Archiso initramfs config hash is absent or differs from its pin")
         image_outputs: list[dict[str, Any]] = []
         for path in sorted(staged_image_output.iterdir()):
             if _is_reparse_or_symlink(path) or not path.is_file():
@@ -1908,6 +2000,15 @@ def execute_build(
                 "repository_database_sha256": dict(_snapshot_database_pins(ready.snapshot)),
                 "repository_databases": {name: dict(value) for name, value in database_evidence.items()},
                 "archiso_source_commit": ARCHISO_V91_SOURCE_COMMIT,
+                "archiso_initramfs_config_source_path": ARCHISO_V91_INITRAMFS_CONFIG_SOURCE_PATH,
+                "archiso_initramfs_config_sha256": ready.snapshot.get("archiso_initramfs_config_sha256"),
+                "archiso_initramfs_config_staged_path": ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH,
+                "staged_archiso_initramfs_config_sha256": staged_hashes[staged_initramfs_key],
+                "archiso_initramfs_hook_packages": {
+                    hook: list(packages) for hook, packages in ARCHISO_INITRAMFS_HOOK_PACKAGES.items()
+                },
+                "archiso_initramfs_base_packages": list(ARCHISO_INITRAMFS_BASE_PACKAGES),
+                "archiso_initramfs_required_packages": sorted(ARCHISO_INITRAMFS_REQUIRED_PACKAGES),
                 "packages_x86_64_sha256": ready.snapshot.get("packages_x86_64_sha256"),
             },
             "host": {
@@ -1972,6 +2073,12 @@ def execute_build(
             "qemu_uefi_boot": "NOT_PERFORMED",
             "usb_media_write": "NOT_PERFORMED",
         }
+        # The staged copy is the input mkarchiso consumes. Check it again at
+        # the publication boundary so provenance cannot outlive its bytes.
+        _verify_archiso_initramfs_config(profile, label="source")
+        final_staged_initramfs_hash = _verify_archiso_initramfs_config(stage_profile, label="staged")
+        if final_staged_initramfs_hash != staged_hashes[staged_initramfs_key]:
+            raise BuildContractError("staged Archiso initramfs config changed after provenance hashing")
         published_result = _publish_candidate_bundle(
             output,
             artifact_paths=tuple(sorted(staged_image_output.iterdir())),

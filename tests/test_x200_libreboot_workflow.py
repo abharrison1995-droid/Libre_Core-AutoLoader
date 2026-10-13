@@ -29,6 +29,7 @@ from autoloader.rom_builder.artifact_engine import (
     CBFSEntry,
     CommandRecord,
     ReproducibilityRecord,
+    X200UBootDependencyEvidence,
     derive_lbmk_output_inventory,
     _build_environment_record,
     _ensure_operation_git_config,
@@ -130,6 +131,41 @@ def _workflow(intent, backup: BackupSetResult, journal_path: Path) -> X200Libreb
     return workflow
 
 
+def _synthetic_uboot_dependency(root: Path) -> X200UBootDependencyEvidence:
+    import autoloader.rom_builder.artifact_engine as module
+
+    objcopy = root / "fixture-objcopy"
+    objcopy.write_bytes(b"Synthetic GNU objcopy identity; no tool executed.\n")
+    objcopy.chmod(0o755)
+    patch_commits = tuple(f"{index:x}" * 40 for index in range(1, 9))
+    return X200UBootDependencyEvidence(
+        source_url=module._UBOOT_X86_64_SOURCE_URL,
+        backup_url=module._UBOOT_X86_64_BACKUP_URL,
+        package_config_sha256=module._UBOOT_PACKAGE_CFG_SHA256,
+        target_config_sha256=module._UBOOT_X86_64_TARGET_CFG_SHA256,
+        amd64_target_config_sha256=module._UBOOT_AMD64_TARGET_CFG_SHA256,
+        amd64_default_config_sha256=module._UBOOT_AMD64_DEFAULT_SHA256,
+        target_tree="x86_64",
+        base_revision=module._UBOOT_X86_64_BASE_REVISION,
+        base_tree_id=module._UBOOT_X86_64_BASE_TREE,
+        base_config_sha256=module._UBOOT_X86_64_BASE_CONFIG_SHA256,
+        overlay_path=module._X200_UBOOT_OVERLAY_PATH,
+        overlay_sha256=module._X200_UBOOT_OVERLAY_SHA256,
+        patched_config_sha256=module._UBOOT_X86_64_PATCHED_CONFIG_SHA256,
+        patch_inputs=module._X200_UBOOT_PATCH_STACK,
+        patch_commits=patch_commits,
+        resulting_revision=patch_commits[-1],
+        resulting_tree_id=module._UBOOT_X86_64_PATCHED_TREE,
+        cache_origin_relative_path=module._uboot_cache_relative_path(module._UBOOT_X86_64_SOURCE_URL),
+        resulting_origin_url=module._UBOOT_X86_64_SOURCE_URL,
+        base_ancestor_verified=True,
+        tracked_worktree_clean=True,
+        objcopy_path=str(objcopy.resolve()),
+        objcopy_sha256=hashlib.sha256(objcopy.read_bytes()).hexdigest(),
+        objcopy_version="GNU objcopy fixture; no compilation occurred",
+    )
+
+
 def _fake_complete_result(
     tmp_path: Path,
     intent,
@@ -184,6 +220,14 @@ def _fake_complete_result(
     command_log = b"fake pinned build command log; no upstream build executed\n"
     log_path = logs_dir / "01-build.log"
     log_path.write_bytes(command_log)
+    fetch_log = logs_dir / "00-fetch-uboot.log"
+    fetch_log.write_bytes(b"Synthetic pinned U-Boot fetch/patch fixture; no upstream command executed.\n")
+    fetch_command = CommandRecord(
+        argv=("./mk", "-f", "u-boot", "x86_64"),
+        exit_code=0,
+        log_relative_path="logs/00-fetch-uboot.log",
+        log_sha256=hashlib.sha256(fetch_log.read_bytes()).hexdigest(),
+    )
     command = CommandRecord(
         argv=recipe.build_command,
         exit_code=0,
@@ -191,7 +235,7 @@ def _fake_complete_result(
         log_sha256=hashlib.sha256(command_log).hexdigest(),
     )
     manifest = ArtifactManifest(
-        schema_version=1,
+        schema_version=2,
         operation_id=operation_id,
         created_at_utc=created_at_utc or (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat(),
         recipe_id=recipe.recipe_id,
@@ -201,7 +245,7 @@ def _fake_complete_result(
         source_revision=recipe.source.revision,
         source_tree_id=recipe.source.tree_id,
         source_files=tuple((item.path, item.sha256) for item in recipe.source.files),
-        commands=(command,),
+        commands=(fetch_command, command),
         host_platform="fake test fixture; no build executed",
         toolchain=(("make", "fake fixture"),),
         build_environment=_build_environment_record(git_config_sha256),
@@ -220,6 +264,7 @@ def _fake_complete_result(
             "not_attempted", digest, None, "Synthetic fixture only; no compilation occurred."
         ),
         prebuild_intent_sha256=prebuild_digest or build_intent_sha256(intent),
+        x200_uboot_dependency=_synthetic_uboot_dependency(tmp_path),
     )
     manifest_path = run_dir / "manifest.json"
     raw_manifest = (json.dumps(asdict(manifest), sort_keys=True, indent=2) + "\n").encode()
@@ -276,6 +321,28 @@ def test_x200_workflow_stages_only_a_hardware_pending_plan(captured_backup, tmp_
 
     resumed = WorkflowSession.resume(result.operation_plan, proposed.operation_journal_path)
     assert resumed.state is OperationState.BACKUP_VERIFIED
+
+
+def test_x200_manifest_reopens_exact_typed_uboot_provenance_and_rejects_mutation(tmp_path):
+    import autoloader.rom_builder.artifact_engine as module
+
+    result = _fake_complete_result(tmp_path, _regular_x200_intent())
+    assert result.manifest is not None
+    dependency = result.manifest.x200_uboot_dependency
+    assert dependency is not None
+    restored = module._artifact_manifest_from_mapping(json.loads(result.manifest.canonical_json()))
+    assert restored.x200_uboot_dependency == dependency
+    with pytest.raises(ValueError, match="requires pinned patched U-Boot"):
+        replace(result.manifest, x200_uboot_dependency=None)
+    with pytest.raises(ValueError, match="differs from the pinned source and overlay"):
+        replace(dependency, overlay_sha256="0" * 64)
+    with pytest.raises(ValueError, match="commit chain or clean-tree evidence"):
+        replace(dependency, resulting_tree_id="9" * 40)
+
+    document = json.loads(result.manifest.canonical_json())
+    document["x200_uboot_dependency"]["patched_config_sha256"] = "0" * 64
+    with pytest.raises(ValueError, match="differs from the pinned source and overlay"):
+        module._artifact_manifest_from_mapping(document)
 
 
 def test_x200_durable_stage_revalidates_exact_plan_and_rejects_changed_resume(captured_backup, tmp_path):
