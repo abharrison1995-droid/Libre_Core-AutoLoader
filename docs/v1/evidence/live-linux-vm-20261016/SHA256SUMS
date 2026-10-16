@@ -21,6 +21,9 @@ f49f57fbc889236729f848d8d24e9d7819f735cb7fc0696a7072721c5c55f10c  ./attempt2-bou
 ea48476a803d607ade9998fcb84cea56f5e3180f6e0b21c0e554d2980145b8c6  ./attempt3-full-system-inspection/emergency-shell.png
 17660db608dc384fe90b93cc862f7dfc9b446e921ff903e1265a55a77fcccfd4  ./attempt3-full-system-inspection/emergency-shell.ppm
 678993607c451946708e263bdff1c1f174d0b1153ca74da00f1a7c6c2a24d6b9  ./attempt3-full-system-inspection/SHA256SUMS
-57df556987e7332fbdf11100b05323b833084dbee8325a77bbca9aa1514d9a88  ./host-storage-20261016.txt
-66b5ca55a4534ddea8ffd8d253f1c3d90ba6e642f7557492a41f316df8858980  ./README.md
+97a2464ea864930e2be5ea7c3c1ef8acc6db8692662eb062b91e9fa3e5059892  ./current-qemu-inspection-20261016/qemu-info-status-block.bmp
+0f3871da06a8be1a921b55f226640780c5aeb1767c1354ddbe40e9d7053adbbe  ./current-qemu-inspection-20261016/qemu-no-bootable-device.bmp
+46e5b6b4bdcab04d6c32c8ba381e31888384a99169708e0af606f4477fd460d9  ./current-qemu-inspection-20261016/README.md
+54bcc40c18f3bb7b4b026ce4f9a7d64ece7bdfd46fcbac377d49965fe5f47878  ./host-storage-20261016.txt
+28e96e337dd69424eb9c1020b30d1ba3082e91636451bb92fbc64f3a366b92d1  ./README.md
 0176f13eb6acd7ae99791041841aefe7eb8c96b89179d5e128e2cca5d1027974  ./run_arch_vm.py

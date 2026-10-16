@@ -60,6 +60,10 @@ after capture. This confirms the generic guest reached an emergency shell; it
 does not establish a normal multi-user boot, current-source build capability,
 an AutoLoader image, product app/service startup, or hardware operation.
 
+## Current WSL QEMU state inspection
+
+A later read-only VNC inspection at about 20:22 UTC showed a QEMU 10.2.1 instance on its monitor console. HMP `info status` reported `VM status: running`; `info block` showed only an empty CD-ROM and floppy device. The preceding guest screen showed PXE fallback and `No bootable device.` No guest commands or block-device changes were made. This is not a usable Linux build guest and is separate from the earlier QEMU 11.1.2 Archiso candidate-build attempt. See the [current QEMU inspection evidence](current-qemu-inspection-20261016/README.md).
+
 Input SHA-256 values: ISO
 `4b1af44dbeed97acec0204a95f6393818bb8fd903b423a20b7ea141f80b27e59`, kernel
 `1a0c0dae7bdd7176e40518966428f05a01061bd9fd5c98389e115246b335f278`, and
@@ -67,13 +71,22 @@ initramfs `e5f90bffa6894fa7bda2d7af1b09e2442a6c0f085caa943ed0729d8e22c524c9`.
 The capture and its lossless PNG conversion are hashed in the attempt-local
 `SHA256SUMS`.
 
-The separate 8 GiB Archiso build guest remains paused with its existing qcow2
-overlay unchanged. It was not resumed or modified. The earlier host-storage
-checkpoint found about 2.1 GiB free. A later PowerShell measurement at
-2026-10-16 20:12 UTC found 5,981,900,800 bytes free (about 5.57 GiB), still
-below the approximately 10 GiB estimated for a full current-source Live USB
-build and VM evidence. The exact command and output are recorded in
-[`host-storage-20261016.txt`](host-storage-20261016.txt).
+The earlier host-storage checkpoint found about 2.1 GiB free. PowerShell
+measurements later found 5,981,900,800 bytes free (about 5.57 GiB) at 20:12
+UTC and 6,120,456,192 bytes (about 5.70 GiB) at 20:17 UTC; the corresponding
+commands and outputs are recorded in
+[`host-storage-20261016.txt`](host-storage-20261016.txt). The 10 GiB figure
+used during planning is a conservative reserve, not a measured minimum or
+peak. The checked-in evidence does not establish that 5.70 GiB is sufficient
+or insufficient for a complete current-source build and VM run.
+
+The earlier candidate-build attempt grew its qcow2 overlay by about 382 MB in
+91 seconds while blocked-task warnings were present. It was manually paused
+with 3,243,921,408 bytes free, before the previously stated 2 GiB host-space
+reserve. That incomplete attempt produced no ISO and no peak-footprint
+measurement. Any continuation requires an accessible VM control session and
+a monitored stop threshold; this evidence does not authorize an unbounded
+resume.
 
 ## Attempt 1: rejected runner result
 
