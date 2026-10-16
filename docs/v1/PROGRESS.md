@@ -682,7 +682,7 @@ no-incremental mypy passed on **108 source files**. No physical capture, probe,
 write, read-back, recovery or boot was performed. Real-device acceptance,
 ROM/ISO build gates and successful Live USB app/service boot remain open.
 
-## Current-commit full software regression — 6cabb23d, 2026-10-16
+## Earlier full software regression — commit 6cabb23d, 2026-10-16
 
 The full Ubuntu 26.04 WSL suite passed **755 tests, 4 skipped** (759
 collected; 1108.07 seconds; exit 0). The full Windows suite passed **699
@@ -705,6 +705,47 @@ These are software checks. Ubuntu is WSL rather than native Linux; neither run
 establishes an ISO build or boot, successful ROM build, or hardware result.
 Native Linux/VM validation, Live USB app/service boot and all physical hardware
 workflows remain pending. V1 is not release complete.
+
+## Current-commit Arch WSL full software regression — 72a302b, 2026-10-16
+
+The full suite on Arch Linux WSL2 at source HEAD `72a302b` passed **756 tests,
+3 skipped** (759 collected; 1161.62 seconds; exit 0). Its JUnit XML records
+1161.431 seconds, zero failures/errors, and three skips. The skips are
+`Windows-specific production durability policy`, `UNVALIDATED: test requires
+a non-root host account so host-root ownership is unmapped`, and
+`Windows-specific host platform contract`. The ownership case is unvalidated,
+not a passing Linux check. Full-project no-incremental mypy passed on 108
+source files in Arch WSL.
+
+The exact command, report, and SHA-256 are recorded in
+[`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
+The Ubuntu and Windows full-suite reports immediately above are for the earlier
+commit `6cabb23d`; they do not cover `72a302b`. Arch WSL is not native Linux.
+This is software-only evidence and does not pass the VM/native Linux, ISO,
+ROM, Live USB boot, or hardware gates.
+
+## Arch WSL namespace primitive diagnostic — 2026-10-16
+
+At 2026-10-16T17:25:57Z on source HEAD `72a302b`, a clean recapture fed the
+probe script through a PowerShell `$probe` variable and the WSL wrapper
+`wsl -d archlinux -- sh -c 'tr -d "\r" | sh'`. It created a fresh network
+namespace with `unshare --net --fork`, dropped to UID/GID 65534
+with no supplementary groups, and inspected interfaces, addresses, routes,
+policy rules, capabilities, and `NoNewPrivs`. It exited 0. The host namespace
+was `net:[4026531833]`; the child was `net:[4026532308]`. The child exposed
+only a down `lo`, no addresses or routes, only default policy rules, zero
+capability sets, and `NoNewPrivs=1`. No file, network, package, build, or
+candidate-output operation occurred. The exact command and limitations are
+recorded in
+[`evidence/rootless-archiso-namespace-primitive-20261016/namespace-primitive-probe-20261016.txt`](evidence/rootless-archiso-namespace-primitive-20261016/namespace-primitive-probe-20261016.txt). The captured output is linked from that note and both files are hashed in the adjacent `SHA256SUMS`.
+
+This proves only an ephemeral root-created route-free namespace plus a
+privilege drop on Arch WSL2. It does not prove the fixed root-owned launcher,
+dedicated `fwbuild` account/subuid mapping, pinned `pacstrap -N` or
+`arch-chroot -N` compatibility, namespace-drift/descriptor/timeout handling,
+or ISO support. Production offline execution remains closed with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`; native Linux, ISO, ROM, boot, and
+hardware gates remain pending.
 
 ## V1 package wheel smoke — 2026-10-16
 

@@ -692,3 +692,16 @@ run in this implementation slice; the parent is handling the disposable-VM
 build gate. The existing b2 ISO and its incomplete BIOS/UEFI app/service boot
 evidence remain historical and unchanged. WSL results are not native Linux
 validation, and all three hardware workflows remain pending.
+
+A clean Arch WSL2 recapture at 2026-10-16T17:25:57Z established only that an
+ephemeral root-created network namespace could be made route-free and then
+dropped to UID/GID 65534 with no capabilities. The raw output records host
+`net:[4026531833]` and child `net:[4026532308]`, with only a down loopback,
+no addresses/routes, default policy rules, zero capability sets, and
+`NoNewPrivs=1`. It did not exercise a fixed root-owned launcher, the
+dedicated `fwbuild` account/subuid mapping, pinned Archiso `-N` commands,
+descriptor or timeout controls, or an ISO build. Offline production execution
+remains blocked; this primitive check is not launcher evidence or acceptance.
+See the exact PowerShell `$probe` input, CR-stripping WSL wrapper, raw output,
+limitations, and SHA-256 records at
+[`namespace primitive diagnostic`](../docs/v1/evidence/rootless-archiso-namespace-primitive-20261016/namespace-primitive-probe-20261016.txt).

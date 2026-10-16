@@ -1,0 +1,14 @@
+UTC 2026-10-16T17:25:57Z
+HOST_NETNS net:[4026531833]
+CHILD_NETNS net:[4026532308]
+uid=65534(nobody) gid=65534(nobody) groups=65534(nobody)
+[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","linkmode":"DEFAULT","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00"}]
+[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00","addr_info":[]}]
+[]
+[{"priority":0,"src":"all","table":"local"},{"priority":32766,"src":"all","table":"main"},{"priority":32767,"src":"all","table":"default"}]
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	0000000000000000
+CapAmb:	0000000000000000
+NoNewPrivs:	1

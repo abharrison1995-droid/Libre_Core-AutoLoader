@@ -46,6 +46,17 @@ Both suites include the exact-period SPI safety fixture optimization. Focused `t
 - Per-test temporary-directory cleanup was enabled; the C: drive remained above 2.3 GiB free.
 - Windows-targeted full-project `mypy --platform win32` passed on **108 source files**. Together with the Ubuntu result above, this is software-only evidence; WSL is not native Linux and neither result establishes an ISO build, boot, or hardware success.
 
+## Current-commit Arch WSL full suite — 2026-10-16
+
+- Source HEAD under test: `72a302b`.
+- Environment: Arch Linux on WSL2, not native Linux.
+- Command: `wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env TMPDIR=/dev/shm python -m pytest -q --basetemp=/dev/shm/lc-v1-release-full-arch-20261016 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261016/arch-post-reboot-full.xml`.
+- Result: **756 passed, 3 skipped, 0 failures, 0 errors** (759 collected; 1161.62 seconds; exit 0). The JUnit XML records 1161.431 seconds, 0 failures/errors, and 3 skips.
+- Exact skips: `Windows-specific production durability policy`; `UNVALIDATED: test requires a non-root host account so host-root ownership is unmapped`; `Windows-specific host platform contract`. The host-root ownership case is unvalidated, not a passing Linux check.
+- JUnit report: [`arch-post-reboot-full.xml`](arch-post-reboot-full.xml), SHA-256 `C6086D980C67643FCE5A53A29EACB797BE0BDE9730663A3C950BB0E6DC5A6AF5`.
+- Full-project `mypy --no-incremental` passed on **108 source files** in Arch WSL.
+- This Arch WSL run is for commit `72a302b`. The Windows and Ubuntu WSL reports above are for the earlier commit `6cabb23d`; they do not cover `72a302b`. WSL results are not native Linux, VM, ISO, ROM, boot, or hardware validation.
+
 `git diff --check` passed after the runs. Git printed only the existing Windows LF-to-CRLF working-copy notices. These suites and type checks are software validation. They do not establish native Linux, firmware build, SPI, Live USB boot, or physical hardware success.
 
 ## Current Archiso candidate build observation
