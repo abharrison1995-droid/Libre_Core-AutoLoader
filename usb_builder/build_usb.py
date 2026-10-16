@@ -20,6 +20,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 from dataclasses import asdict, dataclass, replace
@@ -38,6 +39,7 @@ from usb_builder.mount_probe import (
 )
 from usb_builder.network_probe import PROBE_MARKER as OFFLINE_NETWORK_PROBE_MARKER
 from usb_builder import rootless_mount_probe
+from usb_builder import rootless_offline_preflight
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -3657,15 +3659,31 @@ def execute_build(
         )
         _assert_rootless_process_state(rootless_host)
         if config.network_mode == "offline":
-            # The mapped -N mount stack requires a nonroot caller. There is no
-            # reviewed mechanism yet that keeps each package/build command
-            # route-free without either nesting another user namespace or
-            # running project/package code as EUID 0. Do not create work/output.
-            raise BuildContractError(
-                "OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE: rootless -N preflight passed, but no reviewed "
-                "route-isolation launcher is compatible with the nonroot Archiso -N contract; "
-                "offline build stopped before work/output creation"
-            )
+            tool_map = {tool.name: tool for tool in rootless_host.trusted_tools}
+            try:
+                rootless_offline_preflight.preflight(
+                    host=rootless_host,
+                    mount=rootless_mount,
+                    tool_pins={
+                        "pacstrap": {
+                            "path": tool_map["pacstrap"].path,
+                            "sha256": tool_map["pacstrap"].sha256,
+                            "version": rootless_host.arch_install_scripts_package_version,
+                        },
+                        "arch-chroot": {
+                            "path": tool_map["arch-chroot"].path,
+                            "sha256": tool_map["arch-chroot"].sha256,
+                            "version": rootless_host.arch_install_scripts_package_version,
+                        },
+                    },
+                    scratch_parent=Path(tempfile.gettempdir()),
+                    runner=runner,
+                )
+            except rootless_offline_preflight.OfflineLauncherPreflightError as exc:
+                # This is strictly a no-build probe; the missing fixed
+                # launcher pin keeps offline execution closed before builder
+                # work/output creation or package/build commands.
+                raise BuildContractError(str(exc)) from exc
     source = config.source_root.resolve(strict=True)
     profile = config.profile_dir.resolve(strict=True)
     output = config.output_dir.resolve(strict=True)

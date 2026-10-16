@@ -4367,7 +4367,14 @@ def test_rootless_mount_preflight_rejects_host_mount_drift(tmp_path, monkeypatch
 
 def test_production_offline_build_stays_closed_after_rootless_preflight(tmp_path, monkeypatch):
     config = _offline_config(tmp_path)
-    host = SimpleNamespace(uid=1000)
+    host = SimpleNamespace(
+        uid=1000,
+        arch_install_scripts_package_version=build_usb.EXPECTED_ARCH_INSTALL_SCRIPTS_VERSION,
+        trusted_tools=(
+            SimpleNamespace(name="pacstrap", path="/usr/bin/pacstrap", sha256="a" * 64),
+            SimpleNamespace(name="arch-chroot", path="/usr/bin/arch-chroot", sha256="b" * 64),
+        ),
+    )
     mount_calls: list[object] = []
     monkeypatch.setattr(build_usb, "_rootless_archiso_host_preflight", lambda **_kwargs: host)
     monkeypatch.setattr(build_usb, "_assert_rootless_process_state", lambda _host: None)
