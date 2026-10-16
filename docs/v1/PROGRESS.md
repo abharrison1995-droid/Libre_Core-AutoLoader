@@ -466,7 +466,7 @@ pending.
 
 Repository and preserved direct-kernel records contained no earlier use of `systemd.mask=systemd-nsresourced.service` or `systemd.mask=systemd-nsresourced.socket`. One bounded 282.40-second QEMU 11.1.2 TCG run used the unchanged b2 ISO SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`, kernel SHA-256 `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`, and initramfs SHA-256 `c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090`. The only added kernel parameters were those two masks; `-nic none` was used with no writable disk or firmware writer. Serial confirms both units were masked to `/dev/null`. At 270s, `sysinit.target` still waited on `systemd-tmpfiles-setup-dev.service`; the debug-shell service had started on tty9, but no guest command was entered. The masks did not clear that observed wait during the run. This is a narrow emulator observation and does not prove whether nsresourced is otherwise causal, establish a root cause, or pass normal boot/app/service validation. QEMU exited 0 after HMP quit; the host controller reported a monitor reset while reading the quit response after QEMU had stopped. Inputs were unchanged. Evidence and hashes are under `docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/`. Native Linux/KVM, normal BIOS/UEFI app/service boot, ISO build, and hardware gates remain pending.
 
-## Latest cross-platform software regression after EC API quarantine — 2026-10-15
+## Earlier cross-platform software regression after EC API quarantine — 2026-10-15
 
 The full Windows suite passed **601 tests, 18 skipped in 707.05 seconds**; Ubuntu 26.04 WSL passed **616 tests, 3 skipped in 466.57 seconds**; and Arch WSL passed **618 tests, 1 skipped in 539.81 seconds**. Full-project mypy (`autoloader usb_builder`) passed on 104 source files in Windows, Ubuntu WSL, and Arch WSL. Windows-targeted and native checks were run sequentially with `--no-incremental` and isolated caches. Concurrent shared-cache mypy invocations initially reported internal errors; sequential isolated-cache reruns passed, and the cause was not established. Windows top-level CLI help and Ubuntu `flash --help` passed; `git diff --check` passed before this documentation update.
 
@@ -616,7 +616,7 @@ current-source VM build or native Linux validation. Offline ISO build,
 current-source online candidate build and BIOS/UEFI app/service boot remain
 open; all three hardware workflows remain **HARDWARE PENDING**.
 
-## Latest cross-platform software regression — 2026-10-16
+## Earlier cross-platform software regression — pre-6cabb23d, 2026-10-16
 
 The full Windows suite passed **693 tests, 45 skipped** (738 collected) in
 737.64 seconds, exit 0. The full Ubuntu 26.04 WSL2 suite passed **734 tests,
@@ -681,6 +681,30 @@ per-check timestamp/UI delta passed **4 tests in 25.55s**. Full-project
 no-incremental mypy passed on **108 source files**. No physical capture, probe,
 write, read-back, recovery or boot was performed. Real-device acceptance,
 ROM/ISO build gates and successful Live USB app/service boot remain open.
+
+## Current-commit full software regression — 6cabb23d, 2026-10-16
+
+The full Ubuntu 26.04 WSL suite passed **755 tests, 4 skipped** (759
+collected; 1108.07 seconds; exit 0). The full Windows suite passed **699
+tests, 60 skipped** (759 collected; 770.94 seconds; exit 0). Both reports
+record zero failures and errors. Ubuntu's four skips are two
+`UNVALIDATED: host lacks trusted Arch pacman executable ownership evidence`
+cases, one Windows-specific host platform contract, and one Windows-specific
+production durability policy. The two Arch trust checks are unvalidated, not
+passing Linux checks. Windows skips include POSIX directory-fsync, ownership
+and process contracts, Linux-only namespace/device checks, and several POSIX
+symlink-contract cases; one separate symlink-creation test was skipped because
+this account lacks that privilege (`WinError 1314`). These skipped checks are
+not passes. JUnit files, hashes and exact Ubuntu command are
+in [`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
+Full-project mypy passed on 108 source files in Ubuntu and with the Windows
+target. The earlier Windows full-suite result (693 passed, 45 skipped) predates
+this commit; the current-commit run above supersedes it for Windows evidence.
+
+These are software checks. Ubuntu is WSL rather than native Linux; neither run
+establishes an ISO build or boot, successful ROM build, or hardware result.
+Native Linux/VM validation, Live USB app/service boot and all physical hardware
+workflows remain pending. V1 is not release complete.
 
 ## V1 package wheel smoke — 2026-10-16
 

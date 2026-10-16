@@ -27,6 +27,25 @@
 
 Both suites include the exact-period SPI safety fixture optimization. Focused `tests/test_phase03_spi_safety.py` verification passed **21 tests in 25.65 seconds**. The optimization changes test data generation only; it does not alter production safety behavior.
 
+## Current-commit Ubuntu WSL full suite — 2026-10-16
+
+- Commit under test: `6cabb23d`.
+- Command: `wsl.exe -d Ubuntu -- env TMPDIR=/dev/shm /home/alex/librecore-v1-test-venv/bin/python -m pytest -q --basetemp=/dev/shm/lc-v1-release-full-20261016 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261016/ubuntu-post-reboot-full.xml`.
+- Result: **755 passed, 4 skipped, 0 failures, 0 errors** (759 collected; 1108.07 seconds; exit 0). The JUnit XML records 1107.900 seconds, 0 failures/errors, and 4 skips.
+- Exact skip accounting: two tests report `UNVALIDATED: host lacks trusted Arch pacman executable ownership evidence`; one is the Windows-specific host platform contract; one is the Windows-specific production durability policy. The two Arch trust checks are unvalidated, not passing Linux checks.
+- JUnit report: [`ubuntu-post-reboot-full.xml`](ubuntu-post-reboot-full.xml), SHA-256 `5f6785a50da796f4977365d9f7d12345512bdb24ce7718ea307b6186aa89073c`.
+- Passing temporary directories were removed by the requested retention policy; `/dev/shm` returned to about 43 MiB free. This run is software-only and reports no firmware, ISO, or hardware success.
+- The earlier Windows full suite (693 passed, 45 skipped; documented above) predates commit `6cabb23d`; it is not evidence for that commit. Full-project mypy passed on 108 source files after the final guided UI change.
+
+## Current-commit Windows full suite — 2026-10-16
+
+- Commit under test: `6cabb23d`.
+- Result: **699 passed, 60 skipped, 0 failures, 0 errors** (759 collected; 770.94 seconds; exit 0). The JUnit XML records 770.928 seconds, 0 failures/errors and 60 skips.
+- Skips include POSIX directory-fsync, ownership and process semantics, Linux-only namespace/device checks, and several POSIX symlink-contract tests. One separate symlink-creation test was skipped because this Windows account lacks the required privilege (`WinError 1314`). These skipped checks are not passes on Windows.
+- JUnit report: [`windows-post-reboot-full.xml`](windows-post-reboot-full.xml), SHA-256 `e743f5be50e6432e60bc0c145eda9aeb8bf11cf017ab031c551ddffa5f15dce4`.
+- Per-test temporary-directory cleanup was enabled; the C: drive remained above 2.3 GiB free.
+- Windows-targeted full-project `mypy --platform win32` passed on **108 source files**. Together with the Ubuntu result above, this is software-only evidence; WSL is not native Linux and neither result establishes an ISO build, boot, or hardware success.
+
 `git diff --check` passed after the runs. Git printed only the existing Windows LF-to-CRLF working-copy notices. These suites and type checks are software validation. They do not establish native Linux, firmware build, SPI, Live USB boot, or physical hardware success.
 
 ## Current Archiso candidate build observation
