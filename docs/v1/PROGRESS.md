@@ -780,3 +780,56 @@ Detailed evidence is in
 [`evidence/software-regression-20261016/wheel-build-and-install.txt`](evidence/software-regression-20261016/wheel-build-and-install.txt).
 This closes the current packaging/resource smoke gate only; it does not
 change the pending firmware ROM, ISO/boot, or hardware gates.
+
+## Rootless offline launcher preflight contract — 2026-10-16
+
+The offline route now calls an isolated, versioned launcher-preflight contract
+after the existing trusted-host and Archiso `-N` mount checks and before build
+work or output creation. It validates the dedicated account and private
+primary group, delegated UID/GID ranges, exact launcher identity, helper pins,
+the complete host namespace map and distinct child namespace identities,
+network snapshots bound to the child network namespace, route state,
+descriptor/stdio boundaries, mount cleanup, and bounded process-group
+cleanup. Synthetic tests exercise rejection paths only.
+
+No reviewed root-owned launcher path/hash/authorization pin is deployed, so
+the production pin remains absent and the route stops with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE` before launcher-specific scratch/child
+creation and before builder work/output. The existing trusted-host and mount
+preflights, including their child processes, run first. No live launcher
+probe, pacstrap package action, build command, or builder output/work creation
+occurred in this slice. `pacstrap -N --help` evidence alone does not
+establish operational compatibility; controlled disposable-VM package-input
+evidence remains required. Status is **CONTRACT IMPLEMENTED;
+DEPLOYMENT/COMPATIBILITY UNVALIDATED**. Native Linux, ISO/boot, ROM, and all
+hardware gates remain open.
+
+If later deployed, the launcher pin requires the exact root-owned setuid mode
+`04755`; every launcher parent directory must be root-owned and not writable
+by group or other. Its scratch parent must be a root-owned, non-link temporary
+directory with exact mode `01777`; the operation-owned child remains caller-
+owned mode `0700`. These checks make the default `/tmp` choice explicit and
+prevent the current user-owned-temp check from rejecting a correctly protected
+system temp directory after a launcher pin is reviewed.
+
+SOL accepted this contract. Independent focused verification on Arch Linux
+WSL2 passed **53 tests in 3.15 seconds**. The exact command was:
+
+```sh
+wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env PATH=/usr/bin:/bin HOME=/dev/shm TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-rootless-offline-contract-20261016 --override-ini=tmp_path_retention_policy=failed tests/test_rootless_offline_preflight.py tests/test_usb_builder.py::test_production_offline_build_stays_closed_after_rootless_preflight
+```
+
+Independent mypy passed on the two touched Python source files with
+`--no-incremental` and an isolated `/dev/shm` cache. Exact command:
+
+```sh
+wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env PATH=/usr/bin:/bin HOME=/dev/shm TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 python -m mypy --no-incremental --cache-dir=/dev/shm/lc-v1-rootless-offline-mypy-20261016 usb_builder/rootless_offline_preflight.py usb_builder/build_usb.py
+```
+
+The full current-source Arch WSL2 non-root suite then passed **809 tests, with
+2 Windows-specific skips and 0 failures/errors** (811 collected; 1771.18s;
+exit 0). JUnit records 1771.094s; its SHA-256 and exact command are in
+[`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
+This remains WSL software evidence only. Launcher deployment, controlled
+`pacstrap -N` package-input compatibility, a disposable full-system VM build,
+ISO build/boot, ROM, and hardware gates remain open.

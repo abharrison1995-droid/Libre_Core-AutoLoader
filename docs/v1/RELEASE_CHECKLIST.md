@@ -132,3 +132,28 @@ WSL run reaches mount checks and safely fails at devtmpfs; native Linux build,
 successful ISO app/service boot and hardware workflows remain pending.
 
 A 2026-10-15 direct-kernel diagnostic masked only nsresourced service/socket on the unchanged b2 image. Serial confirmed the masks, but the guest still reported `sysinit.target` waiting on `systemd-tmpfiles-setup-dev.service` at 270 seconds. No guest command, app/service success, normal boot pass, or root cause was established. It is emulator-only evidence; QEMU exited 0 after the planned HMP quit, and its controller reported a monitor reset after shutdown. Details and hashes are in `docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/`. Normal BIOS/UEFI app/service and native Linux/KVM gates remain open.
+
+The offline rootless launcher preflight contract is implemented, but no
+reviewed root-owned launcher path/hash/authorization pin is deployed. The
+production route remains fail-closed with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE` before launcher-specific scratch/child
+creation and before builder work/output. The contract binds all four host
+namespace IDs and requires each child namespace ID to differ, with
+before/after network observations bound to
+the child network namespace. The existing trusted-host and mount preflights,
+including their child processes, run before this contract. The missing pin
+stops only before launcher-specific scratch/child creation and builder
+work/output. The planned helper mode is exact root-owned
+setuid `04755`, with root-owned non-writable parent directories; its scratch
+parent must be root-owned sticky mode `01777`, and its fresh child caller-owned
+mode `0700`. Synthetic contract tests are not operational compatibility
+evidence; controlled disposable-VM package-input proof for `pacstrap -N`
+remains required. Offline ISO build remains pending.
+SOL accepted this contract; the independent focused Arch Linux WSL2 re-review
+passed **53 tests in 3.15s**, and mypy passed on the two touched source files.
+The current-source Arch WSL2 non-root full suite passed **809 tests, 2
+Windows-specific skips, 0 failures/errors** (811 collected; 1771.18s; exit
+0). JUnit hash and exact command are in
+`docs/v1/evidence/software-regression-20261016/README.md`. These are WSL
+software checks; they do not validate launcher deployment, `pacstrap -N`
+package-input compatibility, or an ISO build.

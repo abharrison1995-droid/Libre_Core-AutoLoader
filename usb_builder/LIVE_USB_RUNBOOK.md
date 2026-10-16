@@ -705,3 +705,39 @@ remains blocked; this primitive check is not launcher evidence or acceptance.
 See the exact PowerShell `$probe` input, CR-stripping WSL wrapper, raw output,
 limitations, and SHA-256 records at
 [`namespace primitive diagnostic`](../docs/v1/evidence/rootless-archiso-namespace-primitive-20261016/namespace-primitive-probe-20261016.txt).
+
+## Offline rootless launcher status
+
+The no-build launcher preflight contract is implemented and called by the
+offline path after the existing trusted-host and Archiso `-N` mount checks,
+before build work or output creation. Synthetic tests validate the strict
+report contract, including the full host namespace map, a distinct child
+namespace for each namespace type, and network views bound to the reported
+child network namespace. They cover rejection cases only. There is no reviewed
+root-owned launcher path/hash/authorization pin deployed, so the production
+pin remains absent and offline mode returns
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE` before launcher-specific scratch/child
+creation and before builder work/output. The existing trusted-host and mount
+preflights, including their child processes, run first. No live launcher probe
+or pacstrap package action was performed in this implementation slice.
+`pacstrap -N --help` alone would not prove operational
+compatibility; controlled disposable-VM package-input evidence is still
+required. Status: **CONTRACT IMPLEMENTED;
+DEPLOYMENT/COMPATIBILITY UNVALIDATED**.
+
+The future launcher identity requires exact root-owned setuid mode `04755`,
+with every parent directory root-owned and not writable by group or other.
+Its scratch parent must be a root-owned, non-link directory of exact mode
+`01777` (the protected system temporary directory); the fresh operation-owned
+scratch child is checked as caller-owned mode `0700`. This does not validate an
+ISO build, boot, ROM, or hardware workflow.
+
+SOL accepted the contract. The independent Arch Linux WSL2 focused selection
+passed **53 tests in 3.15s**, and mypy passed on the two touched source files.
+The current-source Arch WSL2 non-root full suite passed **809 tests, 2
+Windows-specific skips, 0 failures/errors** (811 collected; 1771.18s; exit
+0). This WSL result does not establish a deployed launcher or operational
+`pacstrap -N` package-input compatibility; offline execution remains
+unavailable until those gates are separately proved. The JUnit report and
+exact command are recorded in
+`docs/v1/evidence/software-regression-20261016/README.md`.

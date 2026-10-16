@@ -85,6 +85,49 @@ The Windows and Ubuntu WSL reports above are for the earlier commit `6cabb23d`; 
 - Following SOL's recommendation, HMP `stop` paused the same TCG guest at 14:55:36, before the 2 GiB reserve. The overlay remains in place; no snapshot, conversion, accelerator change, reboot, or guest command was issued. No completed build log, ISO, or target-root check was verified.
 - **Status: INCOMPLETE — NOT A BUILD PASS.** ISO creation, package-integrity checks, BIOS/UEFI boot to AutoLoader and service readiness remain open. Resume only after a storage-safe plan is available.
 
+## Current-source Arch WSL non-root full suite — 2026-10-16
+
+- Source and tests under test: `588a48f05083652f0146edb3c95b7132341b84fe`.
+  The four reviewed documentation updates were also present in the working
+  tree; Python source and tests were unchanged from this commit.
+- Environment: Arch Linux WSL2, launched with `setpriv` as UID/GID 65534
+  (`nobody`), without supplementary groups or capabilities and with
+  `NoNewPrivs=1`; `PATH=/usr/bin:/bin`, `HOME=/dev/shm`,
+  `TMPDIR=/dev/shm`, bytecode and pytest cache disabled. This was not the
+  dedicated `fwbuild` account or a native Linux VM.
+- Exact command:
+
+  ```sh
+  wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- setpriv --bounding-set=-all --inh-caps=-all --ambient-caps=-all --reuid=65534 --regid=65534 --clear-groups --no-new-privs --reset-env -- env PATH=/usr/bin:/bin HOME=/dev/shm TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-arch-nonroot-full-20261016-rc1 --override-ini=tmp_path_retention_policy=failed --junitxml=/dev/shm/lc-v1-arch-nonroot-full-20261016-rc1.xml
+  ```
+
+- Result: **809 passed, 2 skipped, 0 failures, 0 errors** (811 collected;
+  console time 1771.18 seconds; JUnit time 1771.094 seconds; exit 0).
+- Exact skips: `test_windows_directory_fsync_policy_keeps_approval_closed`
+  (Windows-specific production durability policy) and
+  `test_real_build_usb_cli_fails_before_subprocess_on_windows` (Windows-
+  specific host platform contract). They are not Linux validation gaps.
+- JUnit report: [`arch-post-reboot-nonroot-rc1-full.xml`](arch-post-reboot-nonroot-rc1-full.xml),
+  SHA-256 `2552199c4ccfa25ef60af5116057cece2d9fcb37dffad4935e060fb5b99da246`.
+- The full current-source Python suite passed in this non-root WSL run. It
+  does not establish native Linux or full-system VM package/build behavior,
+  a Live USB build/boot, ROM build, or any hardware result.
+
+## QEMU host preparation — 2026-10-16
+
+- Installed Ubuntu packages `qemu-system-x86` and `qemu-utils`; QEMU reports
+  version 10.2.1, and the binary advertises TCG, MSHV, and KVM accelerators.
+  This setup uses TCG unless a guest probe proves another accelerator is
+  actually available.
+- Downloaded the official Arch 2026.10.01 x86_64 installer to Ubuntu WSL
+  `/dev/shm`; its SHA-256 matches the official release value
+  `684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5`.
+  The volatile copy is temporary and is not a project artifact.
+- No VM guest has been booted in this preparation step. C: had 3.54 GiB free,
+  below the documented space needed to resume the existing build guest or
+  create the full Live USB build workspace. Guest build and ISO gates remain
+  open.
+
 ## Hardware status
 
 No device identity, SPI probe, measured voltage, backup, write, read-back, recovery action, boot, or functional check occurred in these runs. The requested hardware workflows remain **HARDWARE PENDING** and were deferred until software and VM gates are as complete as possible.
