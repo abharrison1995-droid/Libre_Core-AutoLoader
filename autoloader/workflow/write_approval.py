@@ -81,6 +81,7 @@ class DeviceCaptureEvidence:
     observed_at_utc: str
     device: DeviceEvidence
     source: str = "local-dmi"
+    device_fingerprint_sha256: str | None = None
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,7 @@ class WriteIntent:
     device_capture_id: str
     device_capture_at_utc: str
     device_evidence_sha256: str
+    device_fingerprint_sha256: str
     probe_id: str
     probe_at_utc: str
     probe_output_sha256: str
@@ -697,6 +699,7 @@ class WriteIntentFactory:
             device_capture_id=capture.capture_id,
             device_capture_at_utc=capture.observed_at_utc,
             device_evidence_sha256=_sha256(_json_bytes(plan.device)),
+            device_fingerprint_sha256=capture.device_fingerprint_sha256 or "",
             probe_id=probe.probe_id,
             probe_at_utc=probe.observed_at_utc,
             probe_output_sha256=probe.raw_output_sha256,
@@ -1320,6 +1323,8 @@ def _validate_capture(capture: DeviceCaptureEvidence, plan_device: DeviceEvidenc
     if type(capture) is not DeviceCaptureEvidence or capture.source != "local-dmi":
         raise WriteApprovalError("fresh local DMI capture is required; imported candidate evidence is not accepted")
     _require_uuid(capture.capture_id, "device capture")
+    if not isinstance(capture.device_fingerprint_sha256, str) or not _SHA256.fullmatch(capture.device_fingerprint_sha256):
+        raise WriteApprovalError("local device capture must include the serial-derived device fingerprint")
     observed = _parse_utc(capture.observed_at_utc, "device capture time")
     if observed > now + timedelta(seconds=30) or now - observed > _CAPTURE_MAX_AGE:
         raise WriteApprovalError("device identity capture is stale or future-dated")
@@ -1549,6 +1554,7 @@ def _validate_intent_policy(intent: WriteIntent) -> None:
         _require_uuid(value, name)
     for label, value in (
         ("device evidence", intent.device_evidence_sha256),
+        ("device fingerprint", intent.device_fingerprint_sha256),
         ("probe output", intent.probe_output_sha256),
         ("artifact", intent.artifact_sha256),
         ("artifact manifest", intent.artifact_manifest_sha256),

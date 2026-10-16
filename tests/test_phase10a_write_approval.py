@@ -182,6 +182,7 @@ def _prepared_write(tmp_path: Path):
         capture_id=str(uuid.uuid4()),
         observed_at_utc=_iso_now(),
         device=bound_plan.device,
+        device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest(),
     )
     intent = _write_intent_factory(backup_service).create(
         bound_plan,
@@ -269,7 +270,7 @@ def _prepared_x220_write(tmp_path: Path, monkeypatch):
         "operation_journal_path": staged.proposed_external_spi_plan.operation_journal_path,
         "artifact_manifest_path": staged.proposed_external_spi_plan.artifact_manifest_path,
     }
-    capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), bound_plan.device)
+    capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), bound_plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest())
     intent = _write_intent_factory(service).create(
         bound_plan,
         operation_id=operation_id,
@@ -533,7 +534,7 @@ def test_stale_intent_is_consumed_and_cannot_be_replayed(tmp_path):
     changed = _write_intent_factory(service).create(
         plan,
         operation_id=operation_id,
-        capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
+        capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()),
         probe=probe,
         backup_set=backup,
         recovery_readiness=readiness,
@@ -600,7 +601,7 @@ def test_t430_candidate_and_internal_programmer_are_rejected_before_approval(tmp
 
     plan, *_ = _prepared_write(tmp_path / "candidate")
     candidate = replace(plan, device=replace(plan.device, manual_model_candidate="x200"))
-    capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), candidate.device)
+    capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), candidate.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest())
     with pytest.raises(WriteApprovalError, match="candidate-only"):
         _write_intent_factory(service).create(
             candidate,
@@ -617,7 +618,7 @@ def test_stale_probe_or_wrong_chip_capacity_blocks_intent(tmp_path):
         _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()),
             probe=old_probe,
             backup_set=backup,
             recovery_readiness=readiness,
@@ -636,7 +637,7 @@ def test_stale_probe_or_wrong_chip_capacity_blocks_intent(tmp_path):
         _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()),
             probe=wrong_capacity,
             backup_set=backup,
             recovery_readiness=readiness,
@@ -663,7 +664,7 @@ def test_factory_reopens_only_accepted_journal_and_pinned_artifact_manifest(tmp_
         _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()),
             probe=probe,
             backup_set=backup,
             recovery_readiness=readiness,
@@ -686,7 +687,7 @@ def test_factory_reopens_only_accepted_journal_and_pinned_artifact_manifest(tmp_
         _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()),
             probe=probe,
             backup_set=backup,
             recovery_readiness=readiness,
@@ -700,7 +701,7 @@ def test_unknown_or_changed_voltage_provenance_blocks_intent(tmp_path):
     with pytest.raises(WriteApprovalError, match="3300 mV"):
         _write_intent_factory(service).create(
             unknown, operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), unknown.device), probe=probe,
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), unknown.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
             **paths,
         )
@@ -711,7 +712,7 @@ def test_unknown_or_changed_voltage_provenance_blocks_intent(tmp_path):
     with pytest.raises(WriteApprovalError, match="same operator"):
         _write_intent_factory(service).create(
             changed_provenance, operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), changed_provenance.device), probe=probe,
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), changed_provenance.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
             **paths,
         )
@@ -723,7 +724,7 @@ def test_backup_tamper_and_recovery_mismatch_block_intent(tmp_path):
     with pytest.raises(WriteApprovalError, match="backup"):
         _write_intent_factory(service).create(
             plan, operation_id=operation_id,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device), probe=probe,
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
             **paths,
         )
@@ -735,7 +736,7 @@ def test_backup_tamper_and_recovery_mismatch_block_intent(tmp_path):
     with pytest.raises(WriteApprovalError, match="readiness evidence changed"):
         _write_intent_factory(service2).create(
             plan2, operation_id=operation_id2,
-            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan2.device), probe=probe2,
+            capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan2.device, device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest()), probe=probe2,
             backup_set=backup2, recovery_readiness=forged_readiness,
             **paths2,
         )

@@ -8,6 +8,7 @@ from autoloader.application_controller import ApplicationAction, ApplicationCont
 from autoloader.ui.screens.controller_screen import ControllerScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
+from autoloader.ui.screens.post_reboot_evidence import PostRebootEvidenceScreen
 
 
 class PathwaySelectScreen(ControllerScreen):
@@ -93,7 +94,13 @@ class PathwaySelectScreen(ControllerScreen):
             "action-boot": ApplicationAction.BOOT_CHECK,
         }
         for widget_id, action in mapping.items():
-            self.query_one(f"#{widget_id}", Button).disabled = action not in status.allowed_next_actions
+            enabled_for_post_reboot_intake = (
+                action is ApplicationAction.BOOT_CHECK
+                and status.profile_id in {"x200-libreboot", "x220-coreboot", "t430-1vyrain"}
+            )
+            self.query_one(f"#{widget_id}", Button).disabled = (
+                action not in status.allowed_next_actions and not enabled_for_post_reboot_intake
+            )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
@@ -150,13 +157,15 @@ class PathwaySelectScreen(ControllerScreen):
             }:
                 self.app.push_screen(WriteConfirmationScreen())
             return
+        if button_id == "action-boot":
+            self.app.push_screen(PostRebootEvidenceScreen())
+            return
         action_by_button = {
             "action-detect": ApplicationAction.DETECT_DEVICE,
             "action-evidence": ApplicationAction.VIEW_EVIDENCE,
             "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
             "action-restore": ApplicationAction.RESTORE,
             "action-readback": ApplicationAction.READBACK,
-            "action-boot": ApplicationAction.BOOT_CHECK,
         }
         routed_action = action_by_button.get(button_id or "")
         if routed_action is None:

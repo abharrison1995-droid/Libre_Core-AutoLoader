@@ -5,7 +5,9 @@ a generic firmware configuration surface. Construction, status, and imported
 candidate evidence are side-effect free. Explicit typed X200/X220 preparation
 and backup actions may invoke read-only local evidence services; explicit
 build actions invoke only the pinned artifact engine. Physical writes, restore,
-post-write read-back, and boot actions remain unavailable.
+and raw recovery writes remain blocked. Guarded external writes include their
+own full-chip read-back; BOOT_CHECK only records post-reboot observations as
+pending human review and cannot declare hardware acceptance.
 """
 from __future__ import annotations
 
@@ -98,6 +100,7 @@ class ApplicationStatus(str, Enum):
     WRITE_VERIFIED = "WRITE_VERIFIED"
     WRITE_UNCERTAIN = "WRITE_UNCERTAIN"
     WRITE_FAILED = "WRITE_FAILED"
+    PENDING_HUMAN_REVIEW = "PENDING_HUMAN_REVIEW"
 
 
 @dataclass(frozen=True)
@@ -933,6 +936,42 @@ class ApplicationController:
                 confirmation_screen=confirmation_screen,
                 screen_mount_nonce=screen_mount_nonce,
             )
+        if action is ApplicationAction.BOOT_CHECK:
+            if not isinstance(profile_id, str) or profile_id not in V1_PROFILES:
+                return self._unavailable(
+                    action, "PROFILE_REQUIRED", "Select an allowlisted V1 profile and supply its terminal operation checkpoint.", profile_id
+                )
+            if checkpoint_path is None or request_document is None:
+                return self._unavailable(
+                    action, "POST_REBOOT_EVIDENCE_REQUIRED",
+                    "A terminal write/return checkpoint and complete human observation document are required. The controller will capture fresh local DMI/BIOS itself.",
+                    profile_id,
+                )
+            try:
+                from autoloader.workflow.post_reboot import PostRebootEvidenceService
+
+                report_path, report = PostRebootEvidenceService.record(
+                    checkpoint_path,
+                    profile_id=profile_id,
+                    request_document=request_document,
+                    model_detector=self.model_detector,
+                    bios_detector=self.bios_detector,
+                )
+                local_capture = report["local_capture"]
+                return ApplicationActionResult(
+                    action,
+                    ApplicationStatus.PENDING_HUMAN_REVIEW,
+                    "POST_REBOOT_EVIDENCE_PENDING_REVIEW",
+                    "Observations were durably recorded as pending human review. This does not verify hardware success or change the terminal operation checkpoint.",
+                    ("Human-reported checks are not authenticated measurements or an accepted hardware result.",),
+                    (
+                        str(report_path),
+                        f"operation:{report['operation_id']}",
+                        f"dmi-capture:{local_capture['capture_id']}",
+                    ),
+                )
+            except (OSError, ValueError, RuntimeError, AutoLoaderError, TypeError) as exc:
+                return self._unavailable(action, "POST_REBOOT_EVIDENCE_REJECTED", str(exc), profile_id)
         if action is ApplicationAction.DETECT_DEVICE:
             capture, status = self.detect_device()
             if status is not None and status.stage in {
@@ -1026,7 +1065,7 @@ class ApplicationController:
             ),
             ApplicationAction.RESTORE: ("RESTORE_UNAVAILABLE", "Firmware restore is disabled; no writer or subprocess was invoked."),
             ApplicationAction.READBACK: ("READBACK_NOT_PERFORMED", "Hardware read-back is unavailable through this interface; no SPI read was attempted."),
-            ApplicationAction.BOOT_CHECK: ("BOOT_CHECK_NOT_PERFORMED", "No hardware boot check has been performed."),
+            ApplicationAction.BOOT_CHECK: ("POST_REBOOT_EVIDENCE_REQUIRED", "A terminal checkpoint and fresh human-reported observations are required; no hardware result is inferred."),
         }
         code, message = unavailable.get(action, ("ACTION_UNAVAILABLE", "This action is unavailable."))
         return self._unavailable(action, code, message, profile_id)
@@ -1765,6 +1804,7 @@ class _ControllerFreshWriteEvidenceProvider:
                 observed_at_utc=capture.observed_at.isoformat(),
                 device=capture.device,
                 source="local-dmi",
+                device_fingerprint_sha256=capture.device_fingerprint_sha256,
             ),
             probe=probe,
             setup=self.setup,

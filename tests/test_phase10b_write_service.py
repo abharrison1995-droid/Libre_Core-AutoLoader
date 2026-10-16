@@ -80,7 +80,10 @@ class _QueueEvidence:
             probe_id=str(uuid.uuid4()),
             observed_at_utc=_iso_now(),
         )
-        capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), self.plan.device)
+        capture = DeviceCaptureEvidence(
+            str(uuid.uuid4()), _iso_now(), self.plan.device,
+            device_fingerprint_sha256=hashlib.sha256(b"SYNTHETIC-SERIAL").hexdigest(),
+        )
         programmer = self.plan.programmer
         setup = HardwareSetupAttestation(
             actor=programmer.attested_by or "",

@@ -14,7 +14,7 @@ from dataclasses import asdict, dataclass, fields
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from autoloader.exceptions import BIOSReversionError, SafetyError
 from autoloader.workflow.compatibility import CompatibilityValidator
@@ -296,11 +296,13 @@ class T430HandoffCheckpointStore:
         payload = cls.load(session.checkpoint_path)
         if payload.get("operation_id") != session.operation_id or payload.get("stage") != session.stage.value:
             raise SafetyError("T430 checkpoint does not match the outstanding handoff operation")
+        consumed_at = datetime.now(timezone.utc).isoformat()
         terminal = dict(payload)
         terminal.update(
             {
                 "checkpoint_status": "consumed",
                 "stage": "consumed",
+                "consumed_at_utc": consumed_at,
                 "result_code": result_code,
                 "reported_by": reported_by,
                 "return_capture": {
@@ -317,6 +319,33 @@ class T430HandoffCheckpointStore:
             "sha256": hashlib.sha256(cls._canonical(terminal)).hexdigest(),
         }
         cls._write_envelope(session.checkpoint_path, envelope)
+
+    @classmethod
+    def inspect_consumed_return(cls, path: str | Path) -> dict[str, object]:
+        """Read a checksummed consumed handoff without making it resumable."""
+        payload = cls._read_verified_payload(path)
+        required = {
+            "version", "checkpoint_status", "operation_id", "stage", "capture",
+            "approved_by", "approved_at", "preflight", "media", "consumed_at_utc",
+            "result_code", "reported_by", "return_capture", "return_evidence",
+        }
+        if set(payload) != required or payload.get("version") != cls.VERSION:
+            raise SafetyError("Consumed T430 return record has an unsupported schema")
+        if payload.get("checkpoint_status") != "consumed" or payload.get("stage") != "consumed":
+            raise SafetyError("T430 return record is not terminal and consumed")
+        try:
+            UUID(str(payload.get("operation_id")))
+        except ValueError as exc:
+            raise SafetyError("Consumed T430 return operation ID is invalid") from exc
+        for field_name in ("approved_by", "reported_by", "result_code"):
+            if not isinstance(payload.get(field_name), str) or not str(payload[field_name]).strip():
+                raise SafetyError(f"Consumed T430 return {field_name} is missing")
+        _parse_utc_timestamp(payload.get("consumed_at_utc"), "consumption")
+        if not isinstance(payload.get("capture"), dict) or not isinstance(payload.get("return_capture"), dict):
+            raise SafetyError("Consumed T430 return captures are missing")
+        if not isinstance(payload.get("return_evidence"), dict):
+            raise SafetyError("Consumed T430 return evidence is missing")
+        return payload
 
     @classmethod
     def _write_envelope(cls, path: str | Path, envelope: dict[str, object]) -> None:

@@ -487,10 +487,16 @@ class ExternalSPIWriteService:
                     writer_duration=duration,
                 )
             verification_message = _canonical_json({
+                "operation_id": request.operation_id,
                 "approval_id": token.approval_id,
                 "intent_sha256": intent.intent_sha256,
+                "device_fingerprint_sha256": intent.device_fingerprint_sha256,
                 "artifact_sha256": intent.artifact_sha256,
+                "artifact_path": str(Path(intent.artifact_path).resolve(strict=True)),
+                "artifact_size_bytes": intent.artifact_size_bytes,
                 "readback_sha256": readback_hash,
+                "readback_path": str(readback_path.resolve(strict=True)),
+                "readback_size_bytes": readback_path.stat().st_size,
                 "comparison_status": comparison.status.value,
                 "boot_status": VerificationStatus.NOT_PERFORMED.value,
             })
@@ -903,10 +909,15 @@ class ExternalSPIWriteService:
             "argv": intent.command.argv,
         }
         payload = {
+            "operation_id": intent.operation_id,
             "approval_id": token.approval_id,
             "approval_record_sha256": token.record_sha256,
             "approval_consumed_at_utc": getattr(receipt, "consumed_at_utc", ""),
             "intent_sha256": intent.intent_sha256,
+            "device_fingerprint_sha256": intent.device_fingerprint_sha256,
+            "artifact_sha256": intent.artifact_sha256,
+            "artifact_path": str(Path(intent.artifact_path).resolve(strict=True)),
+            "artifact_size_bytes": intent.artifact_size_bytes,
             "plan_digests": intent.plan_digests,
             "initial_capture_id": initial.capture.capture_id,
             "revalidated_capture_id": current.capture.capture_id,

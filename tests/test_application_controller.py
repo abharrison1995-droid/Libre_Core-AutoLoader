@@ -404,7 +404,7 @@ def test_mutating_or_hardware_actions_fail_closed_with_no_writer_build_or_spi_ca
         ApplicationAction.FLASH: "TUI_WRITE_ROUTE_BLOCKED",
         ApplicationAction.RESTORE: "RESTORE_UNAVAILABLE",
         ApplicationAction.READBACK: "READBACK_NOT_PERFORMED",
-        ApplicationAction.BOOT_CHECK: "BOOT_CHECK_NOT_PERFORMED",
+        ApplicationAction.BOOT_CHECK: "POST_REBOOT_EVIDENCE_REQUIRED",
     }
     for action, expected_code in expected_codes.items():
         result = controller.request_action(action)

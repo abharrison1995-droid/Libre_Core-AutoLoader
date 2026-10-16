@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from textual.screen import Screen
-from textual.widgets import Button, Checkbox, Input, RadioButton, Static, TextArea
+from textual.widgets import Button, Checkbox, Input, RadioButton, Select, Static, TextArea
 
 from autoloader.app import AutoLoaderApp
 from autoloader.application_controller import ApplicationAction, ApplicationController, ApplicationStatus
@@ -20,6 +20,7 @@ from autoloader.ui.screens.evidence_import import EvidenceImportScreen
 from autoloader.ui.screens.flash_guide import FlashGuideScreen
 from autoloader.ui.screens.model_select import ModelSelectScreen
 from autoloader.ui.screens.pathway_select import PathwaySelectScreen
+from autoloader.ui.screens.post_reboot_evidence import PostRebootEvidenceScreen
 from autoloader.ui.screens.rom_config import RomConfigScreen
 from autoloader.ui.screens.verify_screen import VerifyScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
@@ -32,7 +33,7 @@ def test_app_registers_only_v1_workflow_screens():
     expected = {
         "welcome", "model_select", "pathway_select", "rom_config", "build_progress",
         "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "x_workflow_action",
-        "write_confirmation",
+        "write_confirmation", "post_reboot_evidence",
     }
     assert set(app.SCREENS) == expected
     for screen in app.SCREENS.values():
@@ -50,7 +51,7 @@ def test_screens_mount_without_hardware_input_or_false_success():
             assert "not run" in str(app.screen.query_one("#detection-status", Static).render()).lower()
 
             app.set_selected_profile("x200-libreboot")
-            for name in ("model_select", "pathway_select", "rom_config", "build_progress", "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "write_confirmation"):
+            for name in ("model_select", "pathway_select", "rom_config", "build_progress", "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "write_confirmation", "post_reboot_evidence"):
                 await app.push_screen(name)
                 await pilot.pause()
                 assert isinstance(app.screen, app.SCREENS[name])
@@ -131,13 +132,167 @@ def test_pathway_actions_and_status_come_from_controller():
             assert "detect-device" in screen.query_one("#profile-next-actions", Static).render().plain
             assert screen.query_one("#action-detect", Button).disabled is False
             assert screen.query_one("#action-import", Button).disabled is False
-            for widget_id in ("action-accept-backup", "action-build", "action-accept-artifact", "action-flash", "action-restore", "action-readback", "action-boot"):
+            for widget_id in ("action-accept-backup", "action-build", "action-accept-artifact", "action-flash", "action-restore", "action-readback"):
                 assert screen.query_one(f"#{widget_id}", Button).disabled
+            assert screen.query_one("#action-boot", Button).disabled is False
+            await pilot.click("#action-boot")
+            await pilot.pause()
+            assert isinstance(app.screen, PostRebootEvidenceScreen)
+            app.pop_screen()
+            await pilot.pause()
             await pilot.click("#action-import")
             await pilot.pause()
             assert isinstance(app.screen, EvidenceImportScreen)
 
     asyncio.run(runner())
+
+
+def test_post_reboot_screen_submits_observations_through_shared_controller(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_request(action, **kwargs):
+        from autoloader.application_controller import ApplicationActionResult
+
+        calls.append((action, kwargs))
+        return ApplicationActionResult(
+            action,
+            ApplicationStatus.PENDING_HUMAN_REVIEW,
+            "POST_REBOOT_EVIDENCE_PENDING_REVIEW",
+            "Synthetic pending response only.",
+            evidence_refs=("synthetic-report",),
+        )
+
+    controller = ApplicationController()
+    controller.select_profile("x220-coreboot")
+    monkeypatch.setattr(controller, "request_action", fake_request)
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen("post_reboot_evidence")
+            await pilot.pause()
+            app.screen.query_one("#post-checkpoint", Input).value = str(tmp_path / "write.json")
+            app.screen.query_one("#post-operator", Input).value = "Test Operator"
+            app.screen.query_one("#post-boot-session", Input).value = "boot-session-1"
+            app.screen.query_one("#post-reboot-attested", Checkbox).value = True
+            app.screen.query_one("#post-reboot-ref", Input).value = "reboot-observation-1"
+            app.screen.query_one("#post-reboot-time", Input).value = datetime.now(timezone.utc).isoformat()
+            for check_id in (
+                "cold_boot", "display", "keyboard", "pointing_device", "storage", "sleep_resume", "ethernet"
+            ):
+                app.screen.query_one(f"#post-check-{check_id}-outcome", Select).value = "pass"
+                app.screen.query_one(f"#post-check-{check_id}-evidence", Input).value = f"evidence-{check_id}"
+                app.screen.query_one(f"#post-check-{check_id}-time", Input).value = datetime.now(
+                    timezone.utc
+                ).isoformat()
+            await pilot.click("#post-submit")
+            await pilot.pause(0.2)
+            assert calls
+            assert calls[0][0] is ApplicationAction.BOOT_CHECK
+            assert calls[0][1]["profile_id"] == "x220-coreboot"
+            assert calls[0][1]["checkpoint_path"] == str(tmp_path / "write.json")
+            request = json.loads(calls[0][1]["request_document"])
+            assert request["operator"] == "Test Operator"
+            assert request["boot_session_id"] == "boot-session-1"
+            assert request["human_reboot_attested"] is True
+            assert request["human_reboot_evidence_ref"] == "reboot-observation-1"
+            assert request["checks"]["ethernet"]["outcome"] == "pass"
+            assert request["checks"]["cold_boot"]["evidence_ref"] == "evidence-cold_boot"
+            assert request["checks"]["cold_boot"]["observed_at_utc"].endswith("+00:00")
+            assert request["checks"]["ethernet"]["observed_at_utc"].endswith("+00:00")
+            assert request["checks"]["cold_boot"]["observed_at_utc"] != ""
+            assert len(app.screen.query("#post-request")) == 0
+            assert len(app.screen.query("#post-checks-time")) == 0
+            assert "POST_REBOOT_EVIDENCE_PENDING_REVIEW" in app.screen.query_one(
+                "#post-status", Static
+            ).render().plain
+
+    asyncio.run(runner())
+
+
+@pytest.mark.parametrize(
+    ("profile_id", "required_checks", "has_mac_fields"),
+    [
+        (
+            "x200-libreboot",
+            ("cold_boot", "display", "keyboard", "pointing_device", "storage", "sleep_resume"),
+            True,
+        ),
+        (
+            "x220-coreboot",
+            ("cold_boot", "display", "keyboard", "pointing_device", "storage", "sleep_resume", "ethernet"),
+            False,
+        ),
+        (
+            "t430-1vyrain",
+            (
+                "cold_boot", "display", "keyboard", "pointing_device", "storage", "sleep_resume",
+                "advanced_bios_menu", "option_1_default_lenovo_bios", "bios_identity",
+            ),
+            False,
+        ),
+    ],
+)
+def test_post_reboot_screen_guides_model_specific_timestamped_observations(
+    profile_id, required_checks, has_mac_fields
+):
+    async def runner():
+        controller = ApplicationController()
+        controller.select_profile(profile_id)
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen("post_reboot_evidence")
+            await pilot.pause()
+            for check_id in required_checks:
+                assert len(app.screen.query(f"#post-check-{check_id}-outcome")) == 1
+                assert len(app.screen.query(f"#post-check-{check_id}-evidence")) == 1
+                assert len(app.screen.query(f"#post-check-{check_id}-time")) == 1
+            assert (len(app.screen.query("#post-x200-mac-time")) == 1) is has_mac_fields
+            assert (len(app.screen.query("#post-x200-observed-mac")) == 1) is has_mac_fields
+            assert "No post-reboot report has been recorded." in app.screen.query_one(
+                "#post-status", Static
+            ).render().plain
+
+    asyncio.run(runner())
+
+
+def test_post_reboot_cli_uses_shared_boot_check_controller(monkeypatch, tmp_path):
+    import autoloader.__main__ as entrypoint
+
+    calls = []
+
+    class FakeController:
+        def select_profile(self, profile_id):
+            assert profile_id == "x220-coreboot"
+
+        def request_action(self, action, **kwargs):
+            from autoloader.application_controller import ApplicationActionResult
+
+            calls.append((action, kwargs))
+            return ApplicationActionResult(
+                action,
+                ApplicationStatus.PENDING_HUMAN_REVIEW,
+                "POST_REBOOT_EVIDENCE_PENDING_REVIEW",
+                "Synthetic pending response only.",
+                evidence_refs=("synthetic-report",),
+            )
+
+    monkeypatch.setattr(entrypoint, "ApplicationController", FakeController)
+    checkpoint = tmp_path / "terminal.json"
+    checkpoint.write_text("synthetic checkpoint", encoding="utf-8")
+    observations = tmp_path / "observations.json"
+    observations.write_text('{"operator":"synthetic"}', encoding="utf-8")
+    result = CliRunner().invoke(cli, [
+        "post-reboot-check", "--profile", "x220-coreboot",
+        "--checkpoint", str(checkpoint), "--observations", str(observations),
+    ])
+
+    assert result.exit_code == 0, result.output
+    assert calls[0][0] is ApplicationAction.BOOT_CHECK
+    assert calls[0][1]["profile_id"] == "x220-coreboot"
+    assert calls[0][1]["checkpoint_path"] == checkpoint
+    assert calls[0][1]["request_document"] == '{"operator":"synthetic"}'
+    assert "POST_REBOOT_EVIDENCE_PENDING_REVIEW" in result.output
 
 
 def test_pathway_refreshes_controller_status_after_child_workflow_screen_returns():
@@ -438,7 +593,7 @@ def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
 def test_cli_commands_use_v1_profiles_and_remove_generic_build_options(tmp_path):
     help_result = CliRunner().invoke(cli, ["--help"])
     assert help_result.exit_code == 0
-    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "build-rom", "usb", "build-usb", "backup", "verify", "flash"):
+    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "post-reboot-check", "build-rom", "usb", "build-usb", "backup", "verify", "flash"):
         assert command in help_result.output
 
     result = CliRunner().invoke(cli, ["build-rom", "--profile", "x200-libreboot"])

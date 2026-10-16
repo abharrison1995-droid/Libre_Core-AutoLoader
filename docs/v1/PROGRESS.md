@@ -654,6 +654,34 @@ read-only evidence is in
 The X220 ROM build remains blocked pending real device-derived inputs; the
 separate Archiso guest is paused and storage is still constrained.
 
+## Post-reboot evidence intake — 2026-10-16
+
+Added one shared `BOOT_CHECK` intake for the CLI and Textual route. X200/X220
+reports reopen only the terminal `WRITE_VERIFIED` journal and recheck the
+approved derived artifact, full-chip read-back bytes/hash/size, operation and
+device fingerprint; X200 also reopens the source-artifact and GbE-preservation
+manifest binding. T430 reports reopen only a consumed return checkpoint and
+bind the option-1, reboot, Advanced BIOS and fresh-return chronology. Each
+intake takes a new local read-only DMI/BIOS capture. It writes one operation-
+owned pending sidecar and leaves the terminal write/handoff checkpoint
+unchanged. Reopening the sidecar validates its full model-specific schema,
+chronology, identity and (for X200) expected MAC even if its checksum was
+recomputed.
+
+Every report remains `PENDING_HUMAN_REVIEW` / `NOT_ASSESSED`; operator-entered
+checks are not authenticated measurements and never set a hardware-success
+flag. The service-only fake selection passed **24 tests in 319.27s**; retain
+that as the earlier service checkpoint. The guided Textual form now presents
+profile-specific checks and asks for a separate UTC observation time and
+evidence reference for each check; X200 MAC observation has its own time and
+evidence fields. It still submits the same schema through `BOOT_CHECK`, and an
+unsubmitted screen does not claim a pending report exists. The combined
+guided-UI/service selection passed **43 tests in 359.37s**, and the focused
+per-check timestamp/UI delta passed **4 tests in 25.55s**. Full-project
+no-incremental mypy passed on **108 source files**. No physical capture, probe,
+write, read-back, recovery or boot was performed. Real-device acceptance,
+ROM/ISO build gates and successful Live USB app/service boot remain open.
+
 ## V1 package wheel smoke — 2026-10-16
 
 Built the current wheel from an isolated package-only copy in WSL `/dev/shm`,

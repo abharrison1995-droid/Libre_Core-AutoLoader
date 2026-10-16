@@ -271,6 +271,30 @@ def inspect_checkpoint(checkpoint: Path) -> None:
     console.print("Evidence references: " + ", ".join(result.evidence_refs))
 
 
+@cli.command("post-reboot-check")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Terminal WRITE_VERIFIED X200/X220 journal or consumed T430 return checkpoint.")
+@click.option("--observations", "observations_file", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Strict human observation JSON. DMI/BIOS is captured locally by the controller.")
+def post_reboot_check(profile: str, checkpoint: Path, observations_file: Path) -> None:
+    """Record post-reboot observations as pending; never claims hardware verification."""
+    controller = ApplicationController()
+    controller.select_profile(profile)
+    try:
+        request = observations_file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise click.ClickException(f"[POST_REBOOT_REQUEST_UNREADABLE] {exc}") from exc
+    result = controller.request_action(
+        ApplicationAction.BOOT_CHECK,
+        profile_id=profile,
+        checkpoint_path=checkpoint,
+        request_document=request,
+    )
+    if result.code != "POST_REBOOT_EVIDENCE_PENDING_REVIEW":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
+    console.print("Evidence: " + ", ".join(result.evidence_refs))
+
+
 @cli.command("build-rom")
 @click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
 @click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint with verified backup.")
