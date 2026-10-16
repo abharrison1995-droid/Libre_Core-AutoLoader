@@ -461,7 +461,7 @@ class X200LibrebootWorkflow:
         if result.status is not BuildStatus.COMPLETE or result.manifest is None or result.manifest_path is None:
             raise ValueError(f"ArtifactEngine did not return a COMPLETE X200 manifest: {result.code}: {result.message}")
         manifest = result.manifest
-        if manifest.status != "complete" or manifest.schema_version != 1:
+        if manifest.status != "complete" or manifest.schema_version != 3:
             raise ValueError("Artifact manifest is not a supported COMPLETE manifest")
         if (
             manifest.recipe_id != recipe.recipe_id
@@ -478,6 +478,32 @@ class X200LibrebootWorkflow:
             raise ValueError("Artifact manifest source, configuration, capacity, or status differs from the pinned X200 plan")
         if manifest.prebuild_intent_sha256 != build_intent_sha256(self.intent):
             raise ValueError("Artifact manifest is not bound to this exact X200 pre-build intent")
+        dependency = manifest.x200_uboot_dependency
+        if dependency is None:
+            raise ValueError("Artifact manifest lacks exact patched U-Boot dependency provenance")
+        if (
+            dependency.source_url != "https://source.denx.de/u-boot/u-boot.git"
+            or dependency.base_revision != "f919c3a889f0ec7d63a48b5d0ed064386b0980bd"
+            or dependency.base_config_sha256 != "775e0c524aaefcffd4133597104dad638ed7db06cec9f76eb7d31e0e8d934839"
+            or dependency.overlay_path != "config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch"
+            or dependency.overlay_sha256 != "03c17c53372864265bb6716b96ad90022dcc1b84d5ebd7a54fd93820be8b55e4"
+            or dependency.patched_config_sha256 != "75ba0582f3240d1bffe9c1cf4710d0620001651e79c5288773607a7d30cf44fb"
+        ):
+            raise ValueError("Artifact manifest U-Boot dependency evidence differs from the reviewed X200 overlay")
+        grub_font = manifest.x200_grub_font
+        if grub_font is None:
+            raise ValueError("Artifact manifest lacks pinned GRUB Unifont and payload provenance")
+        if (
+            grub_font.source_font_sha256 != "0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d"
+            or grub_font.source_package != "fonts-unifont"
+            or grub_font.source_package_version != "1:16.0.04-1build1"
+            or grub_font.overlay_resource_sha256 != "3356bf29879cf87659230a201ab81f5e45cc5a0e9c80161463a9b868955f036d"
+            or grub_font.grub_result_tree_id != "9e76050f8ab01306e51fb28ab88c1f8481c9e26a"
+            or len(grub_font.grub_patch_commits) != 10
+            or len(grub_font.grub_patch_tree_ids) != 10
+            or grub_font.grub_patch_commits[-1] != grub_font.grub_result_revision
+        ):
+            raise ValueError("Artifact manifest GRUB font evidence differs from the reviewed X200 build overlay")
         if manifest.resolved_configuration_sha256 is None or not _SHA256.fullmatch(manifest.resolved_configuration_sha256):
             raise ValueError("Artifact manifest lacks a valid resolved configuration digest")
         expected_sources = tuple((item.path, item.sha256) for item in recipe.source.files)
@@ -492,6 +518,11 @@ class X200LibrebootWorkflow:
             for command in manifest.commands
         ):
             raise ValueError("Artifact manifest does not record the exact successful pinned X200 build command")
+        if not any(
+            command.argv == ("./mk", "-f", "u-boot", "x86_64") and command.exit_code == 0
+            for command in manifest.commands
+        ):
+            raise ValueError("Artifact manifest does not record the pinned U-Boot fetch/patch integration command")
         if result.manifest_path is None:
             raise ValueError("ArtifactEngine did not return its durable manifest path")
         self._validate_command_logs(manifest, result.manifest_path)

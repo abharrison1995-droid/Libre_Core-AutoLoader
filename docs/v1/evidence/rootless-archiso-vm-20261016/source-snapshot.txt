@@ -1,0 +1,12 @@
+SOURCE_ARCHIVE_SHA256:
+9a0b8aa03c1661b37cb4aa7123e79c5bfab0d7f26040735db79462e16a457aa3  /mnt/archv1/work/librecore-source-20261016.tar.gz
+SOURCE_FILE_COUNT:
+875
+SOURCE_TREE_BYTES:
+221037620	/mnt/archv1/work/source-v1-20261016
+PROFILE_EXECUTABLE_BITS:
+644 /mnt/archv1/work/source-v1-20261016/usb_builder/archiso_profile/profiledef.sh
+755 /mnt/archv1/work/source-v1-20261016/usb_builder/archiso_profile/airootfs/opt/autoloader/start.sh
+SOURCE_ROOT:
+TARGET      SOURCE   FSTYPE OPTIONS
+/mnt/archv1 /dev/vda ext4   rw,relatime

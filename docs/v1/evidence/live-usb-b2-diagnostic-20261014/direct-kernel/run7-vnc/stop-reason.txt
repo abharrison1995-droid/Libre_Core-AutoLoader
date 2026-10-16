@@ -1,0 +1,1 @@
+Launcher exception: transient OSError [Errno 61] No data available while reading the active serial log on the mounted Windows path. QEMU was terminated by the launcher at 150.1 seconds. No debug-shell marker, HMP key, or guest command was observed.

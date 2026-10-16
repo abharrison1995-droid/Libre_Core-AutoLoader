@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -16,6 +17,7 @@ from autoloader.reversion.ivprep import (
     IVPrepManager,
 )
 from autoloader.reversion.t430_handoff import (
+    ONEVYRAIN_OPTION,
     ONEVYRAIN_README_SHA256,
     ONEVYRAIN_REV5_MD5,
     ONEVYRAIN_REV5_MEDIA_URL,
@@ -62,6 +64,16 @@ def capture(
         device=device,
         device_fingerprint_sha256=fingerprint,
     )
+
+
+def _valid_onevyrain_return_evidence():
+    return {
+        "selected_option": ONEVYRAIN_OPTION,
+        "selected_option_evidence_ref": "operator-observation:1vyrain-option-1",
+        "selected_option_observed_at": BASE + timedelta(minutes=3, seconds=30),
+        "successful_reboot_evidence_ref": "operator-observation:post-install-reboot",
+        "successful_reboot_observed_at": BASE + timedelta(minutes=5),
+    }
 
 
 def preflight(
@@ -481,6 +493,9 @@ def test_onevyrain_requires_fresh_reboot_evidence_and_remains_pending(tmp_path):
     assert descriptor.user_reported_image_sha256 == "c" * 64
     assert descriptor.image_size_bytes == 2_000_000
     assert descriptor.user_reported_image_source_url == ONEVYRAIN_REV5_MEDIA_URL
+    assert descriptor.selected_option == "option-1-default-modified-lenovo-bios"
+    with pytest.raises(ValueError, match="option 1/default"):
+        replace(descriptor, selected_option="custom-bios-url")
     assert descriptor.user_reported_media_fingerprint_sha256 == "d" * 64
     assert descriptor.upstream_rev5_media_url == ONEVYRAIN_REV5_MEDIA_URL
     assert descriptor.upstream_rev5_published_md5 == ONEVYRAIN_REV5_MD5
@@ -538,17 +553,98 @@ def test_onevyrain_requires_fresh_reboot_evidence_and_remains_pending(tmp_path):
             user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
             user_reported_1vyrain_validation_passed=True,
         )
+    post_capture = capture(t430_device("G1ET74WW (2.64 )"), "post-install-valid", 6)
+    with pytest.raises(BIOSReversionError, match="Advanced BIOS"):
+        resumed.record_post_install_return(
+            post_capture,
+            reported_by="operator", user_reported_handoff_complete=True,
+            user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+            user_reported_1vyrain_validation_passed=True,
+            **_valid_onevyrain_return_evidence(),
+        )
+    with pytest.raises(BIOSReversionError, match="requires both"):
+        resumed.record_post_install_return(
+            post_capture,
+            reported_by="operator", user_reported_handoff_complete=True,
+            user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+            user_reported_1vyrain_validation_passed=True,
+            advanced_bios_menu_observed=True,
+            advanced_bios_evidence_ref="observation:advanced-bios-menu",
+            advanced_bios_observed_at=BASE + timedelta(minutes=5, seconds=30),
+            flash_command_evidence_ref="observation:flash-command",
+            **_valid_onevyrain_return_evidence(),
+        )
+    for rejected_option in ("option-2-custom-bios", "custom-bios-url", "unknown"):
+        wrong_option = _valid_onevyrain_return_evidence()
+        wrong_option["selected_option"] = rejected_option
+        with pytest.raises(SafetyError, match="actual upstream option 1"):
+            resumed.record_post_install_return(
+                post_capture,
+                reported_by="operator", user_reported_handoff_complete=True,
+                user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+                user_reported_1vyrain_validation_passed=True,
+                advanced_bios_menu_observed=True,
+                advanced_bios_evidence_ref="observation:advanced-bios-menu",
+                advanced_bios_observed_at=BASE + timedelta(minutes=5, seconds=30),
+                **wrong_option,
+            )
+    missing_option_evidence = _valid_onevyrain_return_evidence()
+    missing_option_evidence["selected_option_evidence_ref"] = ""
+    with pytest.raises(SafetyError, match="selection requires a named evidence reference"):
+        resumed.record_post_install_return(
+            post_capture,
+            reported_by="operator", user_reported_handoff_complete=True,
+            user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+            user_reported_1vyrain_validation_passed=True,
+            advanced_bios_menu_observed=True,
+            advanced_bios_evidence_ref="observation:advanced-bios-menu",
+            advanced_bios_observed_at=BASE + timedelta(minutes=5, seconds=30),
+            **missing_option_evidence,
+        )
+    stale_option = _valid_onevyrain_return_evidence()
+    stale_option["selected_option_observed_at"] = BASE + timedelta(minutes=2, seconds=59)
+    with pytest.raises(SafetyError, match="after the approved handoff"):
+        resumed.record_post_install_return(
+            post_capture,
+            reported_by="operator", user_reported_handoff_complete=True,
+            user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+            user_reported_1vyrain_validation_passed=True,
+            advanced_bios_menu_observed=True,
+            advanced_bios_evidence_ref="observation:advanced-bios-menu",
+            advanced_bios_observed_at=BASE + timedelta(minutes=5, seconds=30),
+            **stale_option,
+        )
+    with pytest.raises(BIOSReversionError, match="after the operator-reported successful reboot"):
+        resumed.record_post_install_return(
+            post_capture,
+            reported_by="operator", user_reported_handoff_complete=True,
+            user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
+            user_reported_1vyrain_validation_passed=True,
+            advanced_bios_menu_observed=True,
+            advanced_bios_evidence_ref="observation:advanced-bios-menu",
+            advanced_bios_observed_at=BASE + timedelta(minutes=4, seconds=30),
+            **_valid_onevyrain_return_evidence(),
+        )
     report = resumed.record_post_install_return(
-        capture(t430_device("G1ET74WW (2.64 )"), "post-install-valid", 6),
+        post_capture,
         reported_by="operator", user_reported_handoff_complete=True,
         user_reported_successful_reboot=True, user_reported_boot_test_passed=True,
         user_reported_1vyrain_validation_passed=True,
+        advanced_bios_menu_observed=True,
+        advanced_bios_evidence_ref="observation:advanced-bios-menu",
+        advanced_bios_observed_at=BASE + timedelta(minutes=5, seconds=30),
+        **_valid_onevyrain_return_evidence(),
     )
     assert report.status is T430HandoffStage.POST_INSTALL_EVIDENCE_PENDING_ACCEPTANCE
     assert report.device_fingerprint_sha256 == DEVICE_FP
     assert report.onevy_approved_at == BASE + timedelta(minutes=3)
     assert report.preflight.capture_id == initial.capture_id
     assert report.media.capture_id == initial.capture_id
+    assert report.flash_status == "UNKNOWN"
+    assert report.advanced_bios_menu_observed is True
+    assert report.selected_option == ONEVYRAIN_OPTION
+    assert report.selected_option_evidence_ref == "operator-observation:1vyrain-option-1"
+    assert report.successful_reboot_observed_at == BASE + timedelta(minutes=5)
     assert resumed.stage is T430HandoffStage.POST_INSTALL_EVIDENCE_PENDING_ACCEPTANCE
     terminal = json.loads(checkpoint.read_text(encoding="utf-8"))["payload"]
     assert terminal["checkpoint_status"] == "consumed"

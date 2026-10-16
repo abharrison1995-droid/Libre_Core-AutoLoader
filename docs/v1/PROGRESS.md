@@ -149,17 +149,17 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 **Status: SOFTWARE COMPLETE — SOL ACCEPT; LINUX BUILD/BOOT PENDING**
 
 - Scope: replace the permissive Archiso script with a strict host/profile/snapshot contract; build and install the application wheel with a closed runtime dependency set; make offline mode local-only and verified or fail before build; confine temporary cleanup to an owned directory; remove arbitrary ROM inclusion; and make startup/service failures visible without root-shell fallback or restart loops.
-- Implementation commits: `4a5343e` (`Add guarded Archiso candidate builder`) and accepted correction `f46e312` (`Validate Live USB target install and offline isolation`). The `build-usb` Click command invokes the shared fail-closed builder contract; `usb` remains directory preparation only. The candidate contract pins the official 2026-09-29 Arch archive, Archiso 91-1 and package-list SHA-256, enforces trusted package signatures and exact database hashes, validates the BIOS/UEFI profile, records host package inventory and the Archiso executable owner/hash, and preflights/records pip, setuptools >=61 and wheel. Wheel creation uses a temporary package-only copy and rechecks the source checkout. Offline mode establishes a route-free namespace before creating work/output, using `unshare --net` as root or `unshare --user --map-root-user --net` when unprivileged, and prefixes subsequent build commands so children inherit the namespace.
+- Implementation commits: `4a5343e` (`Add guarded Archiso candidate builder`) and accepted correction `f46e312` (`Validate Live USB target install and offline isolation`). The `build-usb` Click command invokes the shared fail-closed builder contract; `usb` remains directory preparation only. The candidate contract pins the official 2026-09-29 Arch archive, Archiso 91-1 and package-list SHA-256, enforces trusted package signatures and exact database hashes, validates the BIOS/UEFI profile, records host package inventory and the Archiso executable owner/hash, and preflights/records pip, setuptools >=61 and wheel. Wheel creation uses a temporary package-only copy and rechecks the source checkout. At the original Phase 09 acceptance checkpoint (later superseded by the rootless online-execution integration below), offline mode used a route-free namespace before work/output with `unshare --net` as root or `unshare --user --map-root-user --net` when unprivileged, then prefixed build commands so children inherited the namespace. The current offline path fails closed before work/output because the reviewed rootless no-egress launcher remains unavailable.
 - After `mkarchiso`, the builder validates the image target root before publishing an ISO bundle: venv interpreter, AutoLoader package and dist-info/entrypoint, runtime imports, executable startup script, systemd unit and enablement, hook marker bound to the wheel SHA-256, plus read-only `chroot` import and CLI-help checks. ISO, logs, provenance and `SHA256SUMS` are staged privately and exposed together in `candidate-bundle` through one atomic directory rename. The app venv uses `--system-site-packages` with runtime dependencies installed from the locked Arch package set. These target-root checks do not prove that an ISO boots or that service startup works on a booted system. There is no ROM/backup/credential import path.
 - The corrective review revision resolves SOL findings for partial ISO publication, same-host archive redirects that changed date/resource, and database-consumption evidence. Fault injection covers copy, write, hash, directory-sync and final-rename failures. Provenance captures retained target sync database hashes when available; when Archiso 91-1 cleanup removes them, it labels the evidence `SOURCE_LEVEL_INVARIANT_ONLY`, records the exact source commit/config path and states that no runtime internal-read capture occurred. SOL accepted the corrective software review.
-- Earlier independent software evidence from this host: `python -m pytest -q` — **385 passed, 2 skipped in 652.41 seconds**; `mypy autoloader usb_builder` — **no issues in 102 source files**; top-level and `build-usb` CLI help and `git diff --check` passed. Latest focused builder rechecks are Arch WSL `python3 -m pytest -q tests/test_usb_builder.py` — **68 passed, 2 skipped** and Windows `python -m pytest -q tests/test_usb_builder.py` — **60 passed, 10 skipped**; `mypy usb_builder` is clean on both hosts. The latest cross-host tests use fake builder/process fixtures except for the real namespace probe.
-- Linux validation correction (2026-10-10): the real Arch WSL offline namespace probe is **UNVALIDATED** because the created namespace still exposes `eth0`; the test skips with that explicit reason. Offline isolation fails closed, so no offline builder validation or offline build has occurred. This supersedes the earlier preliminary claim that the namespace contained only loopback and no routes. The signature-verified Archiso 91-1 package is installed (`pacman -Q archiso` reports 91-1 and `pacman -Qo /usr/bin/mkarchiso` confirms ownership). A third attempt invoked `mkarchiso` and failed BIOS profile validation before package installation because `syslinux` was missing; the output directory remained empty and no ISO was produced. The profile and required package policy now include `syslinux` at canonical LF package-list hash `520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329`; SOL accepted the syslinux package-list correction. Target-root `chroot` smoke, BIOS/UEFI QEMU boot, ISO media writing and all hardware operations remain unperformed. No candidate ISO is claimed as produced. Actual Linux build/boot review and real-device workflows remain release gates.
+- Earlier independent software evidence from this host: `python -m pytest -q` — **385 passed, 2 skipped in 652.41 seconds**; `mypy autoloader usb_builder` — **no issues in 102 source files**; top-level and `build-usb` CLI help and `git diff --check` passed. Historical resolver-only focused tests were Arch WSL **68 passed, 2 skipped** and Windows **60 passed, 10 skipped**; the staged-fragment guard checkpoint was Arch WSL **89 passed, 2 skipped**. Current accepted hook-package correction: Arch WSL `python3 -m pytest -q tests/test_usb_builder.py` — **105 passed, 2 skipped**; Windows `python -m pytest -q tests/test_usb_builder.py` — **94 passed, 13 skipped**; `mypy usb_builder` is clean on Arch and Windows. These software tests use fake builder/process fixtures except for the real namespace probe.
+- Linux validation correction (2026-10-10): the real Arch WSL offline namespace probe is **UNVALIDATED** because the created namespace still exposes `eth0`; the test skips with that explicit reason. Offline isolation fails closed, so no offline builder validation or offline build has occurred. This supersedes the earlier preliminary claim that the namespace contained only loopback and no routes. The signature-verified Archiso 91-1 package is installed (`pacman -Q archiso` reports 91-1 and `pacman -Qo /usr/bin/mkarchiso` confirms ownership). A third attempt invoked `mkarchiso` and failed BIOS profile validation before package installation because `syslinux` was missing; the output directory remained empty and no ISO was produced. The profile and required package policy now include `syslinux` at canonical LF package-list hash `520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329`; SOL accepted the syslinux package-list correction. Target-root `chroot` smoke, BIOS/UEFI QEMU boot, ISO media writing and all hardware operations remain unperformed. At that checkpoint no ISO had yet been produced; the later temporary pre-initramfs ISO is documented in the current-status section. Actual Linux build/boot review and real-device workflows remain release gates.
 - Online build preflight correction (2026-10-10): the first real Arch WSL `build-usb --network-mode online` attempt stopped before `mkarchiso` with a profile package-list pin mismatch; the output directory remained empty and no ISO was produced. The checked-in package list's canonical LF hash is `4fd531281bd659695271de16bdd60283dc36eff5220ae1f07550c72716126262`, recorded in accepted commit `3a146f8`. Windows worktree CRLF bytes hash to `70032fecf478ee2b0d9c65837837206596592db671cdf00a61bbdfbf27827595`; validation normalizes CRLF to LF and regression tests load the checked-in profile/lock plus a CRLF copy. A second clean online attempt passed the accepted package pin but stopped before `mkarchiso` on `/usr/sbin/mkarchiso`, whose parent `/usr/sbin` is a usrmerge symlink to `/usr/bin`; the output remained empty and no ISO was produced. Canonical mkarchiso path resolution and exact `pacman -Qo` binding to `archiso 91-1` are implemented with positive alias and negative owner tests; SOL accepted this second correction. A third online attempt invoked mkarchiso but failed BIOS profile validation before package installation because syslinux was missing from the profile package list. The output directory remained empty and no ISO was produced. The exact pinned core.db contains syslinux 6.04.pre3.r3.g05ac953c-5 with package-signature metadata. The profile and required package policy now include syslinux; the updated canonical LF package-list SHA-256 is 520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329; SOL accepted the syslinux package-list correction. At that checkpoint, no later retry had run; the fourth attempt is recorded in the current-status section below. Online candidate build, target-root smoke and BIOS/UEFI QEMU remain pending.
-- Target-root symlink correction (code approved by SOL; docs updated): the interpreter validation path can traverse the internal Arch usrmerge chain `/usr/sbin/python` -> `/usr/bin/python`. The new resolver processes POSIX link components relative to `airootfs` and rejects root escapes, cycles, missing targets and non-directory traversal. Arch WSL tests pass **68 passed, 2 skipped**; Windows tests pass **60 passed, 10 skipped**; `mypy usb_builder` is clean on both. The pre-fix fourth attempt failed target-root validation and published no ISO; no post-fix rebuild has run. BIOS/UEFI QEMU remain pending.
+- Target-root symlink correction (SOL accepted; historical checkpoint): the interpreter validation path can traverse the internal Arch usrmerge chain `/usr/sbin/python` -> `/usr/bin/python`. The image-rooted resolver processes POSIX link components relative to `airootfs` and rejects root escapes, cycles, missing targets and non-directory traversal. At that correction checkpoint, focused tests passed 68 Arch cases (2 skipped) and 60 Windows cases (10 skipped), with mypy clean on both. A later temporary pre-initramfs ISO failed both BIOS and UEFI QEMU before app startup; the currently accepted initramfs-fragment fix and build status are detailed in the current-status section below.
 
 ## Current Live USB build status (2026-10-13)
 
-The fourth online Arch WSL attempt passed package checks and completed the Archiso build stages, then failed target-root validation because the image interpreter path traversed `/usr/sbin -> /usr/bin`. The build output directory remained empty and no ISO was published. The image-rooted symlink resolver has since passed focused Arch WSL and Windows tests and SOL approved the code; the runbook has been corrected. A fresh post-fix build has not yet run. Target-root runtime smoke, published ISO inspection, BIOS/UEFI QEMU boots and media writing remain unperformed. This current update supersedes earlier checkpoint notes that no later retry had occurred.
+The fifth online Arch WSL attempt built a temporary candidate from clean snapshot `349e7961264131f69019ad1ab61cfa950af688a8`, including the accepted source/staged initramfs-fragment checks. The ISO SHA-256 was `9d6fd80e5757b2f5a075fd46f5d60548c782166cacf95378d6bde2ad3dee42fc` (1,285,586,944 bytes); its manifest SHA-256 was `e0fd030367e792bf39913f1145804fd3470a9357263cc141486b2bb7a8857689`. Same-hash QEMU 11.1.2 BIOS and UEFI boots both failed before the live root: BIOS explicitly reported missing `archiso`, `archiso_loop_mnt`, and PXE hooks; both modes failed mounting the real root and entered `[rootfs~]#`. Neither reached the app or service, so there is no guest startup/journal or no-writer evidence. The BIOS and UEFI VGA capture hashes are recorded in the Live USB runbook; both serial logs were empty. Diagnosis found that the profile enabled Archiso hooks without listing their runtime packages. The SOL-accepted package correction now pins the base and per-hook package map, includes those packages and records them in build provenance. Its canonical LF package-list SHA-256 is `7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd`; the exact pinned core/extra database hashes were verified and contain the required package records. Current focused USB suites pass 105 Arch tests with 2 skipped and 94 Windows tests with 13 skipped; `mypy usb_builder` is clean on both. No rebuild has run after the package correction; successful candidate target-root and BIOS/UEFI app/service boot evidence and media writing remain pending. This update supersedes earlier checkpoints that no ISO had been produced or that the accepted initramfs fragment had not been exercised.
 
 ## Phase 10A — Write-intent approval preparation (SOL accepted)
 
@@ -201,10 +201,442 @@ The fourth online Arch WSL attempt passed package checks and completed the Archi
 | Partially implemented | Model/BIOS detection, model compatibility data, two-pass flash backup, read-back utility, Coreboot/Libreboot builders, USB payload preparation. |
 | Simulated or missing | Orchestrator build, TUI flash result, TUI verification report, and `OnevyRainManager` unlock/flash outcomes are simulated/canned at baseline; model-specific authorization/state machine and full-device recovery evidence are missing. |
 
-## Latest Phase 04 cross-platform regression evidence
+## Earlier Phase 04 cross-platform regression evidence
 
-After the accepted Git identity correction, the full Windows suite passed **395 tests, 9 skipped in 877.46 seconds** and the full Ubuntu suite passed **402 tests, 2 skipped in 427.12 seconds**, both exit 0. The first Ubuntu run passed 400 tests, skipped 2 and failed 2 because of test-only portability assumptions: a POSIX temp-file permission fixture and a Windows-only unsupported-host assertion. Both tests were corrected before the passing rerun. Windows `mypy autoloader usb_builder` and Ubuntu `mypy --platform win32 autoloader usb_builder` reported no issues in 102 files. Native Ubuntu mypy reports an existing platform-specific `ctypes.windll` attribute error at `autoloader/utils.py:15`. The suites use fake/synthetic build evidence only; no upstream firmware build, hardware, or media operation occurred. All three hardware workflows and Linux firmware compilation remain pending.
+At that earlier checkpoint after the accepted Git identity correction, the full Windows suite passed **395 tests, 9 skipped in 877.46 seconds** and the full Ubuntu suite passed **402 tests, 2 skipped in 427.12 seconds**, both exit 0. The first Ubuntu run passed 400 tests, skipped 2 and failed 2 because of test-only portability assumptions; both were corrected before that passing rerun. Native Ubuntu mypy then reported a platform-specific `ctypes.windll` attribute error, which the later guarded Windows API lookup below resolves. No upstream firmware build, hardware, or media operation occurred.
 
 ## Full upstream source-pin audit (SOL accepted)
 
 The raw-byte audit found CRLF-derived pins across the ten enforced lbmk 26.01 source files and in the artifact engine's 1vyrain handoff descriptor. Pins now use exact upstream raw bytes; X220 pin corrections remain included. Nested lbmk-Coreboot parser pins and IVprep handoff pins were independently checked and already matched. Regression tests assert source-pin maps and recipe config/hash agreement. Full hash values and commit/tree provenance are recorded in [the Phase 04 artifact-engine audit](PHASE04_ARTIFACT_ENGINE.md). Focused audit-related tests pass: 76 passed, 1 skipped; Windows mypy is clean on 102 source files. SOL accepted the source-pin correction. This only corrects source identity metadata: no upstream build, hardware operation, media action, or firmware validation occurred.
+
+## Phase 04 X200 U-Boot compatibility follow-up — SOL accepted
+
+The pinned X200 `x200_4mb` build's U-Boot target config requests `objcopy --target=efi-app-x86_64`, which fails for the authenticated x86-64 ELF input; `--output-target` is the architecture-appropriate option. The one-line email patch changes only the x86_64 option; IA32 stays unchanged. The ArtifactEngine applies it only to the disposable lbmk copy and leaves the canonical Libreboot checkout untouched. Follow-up validation now matches lbmk's observed cache behavior: `src/u-boot/x86_64` may point to the exact local cache directory under `cache/clone/source.denx.de/u-boot/u-boot.git` or `cache/clone/github.com/u-boot/u-boot.git`, and the corresponding cache must remain under the disposable root, have the expected `.git` metadata location, configured pinned HTTPS remote, and exact U-Boot base commit/tree. Other local origins, symlinked paths and mismatches fail closed.
+
+The final U-Boot tree is pinned to `12e245c8ad4d68099c7127afd5c61a0e36992b1c`; the preceding seven-patch stack produces `3ef37c6bc3181317f609d5a6367aa14be7d58f86`. Every applied commit is checked by applying that exact pinned patch file to a temporary index and comparing the generated tree with the commit tree, so a same-subject content alteration cannot pass; the commands/logs are recorded. A fresh disposable reconstruction confirmed the seven-patch tree, overlay commit/tree, clean source state and `arch/x86/config.mk` as the sole overlay change. Synthetic tests cover the local cache layout, remote/base mismatches, path escape/symlink rejection, fixed final tree and same-subject altered patch content. The ArtifactEngine/X200/X220 suite passed **83 tests in 45.74s**; `mypy --platform win32 autoloader` found no issues in 100 source files; `git diff --check` passed. The Windows-targeted overlay/cache helper tests passed 1 and skipped 1 because Windows denied symlink creation (`WinError 1314`); Ubuntu focused coverage exercises the symlink case. SOL accepted this software/provenance correction. No upstream ROM build, artifact publication, hardware or media operation occurred.
+
+
+## Phase 09 post-build package inventory correction — SOL accepted
+
+The post-build package inventory validates the target root plus `var/lib/pacman/local` as contained, non-symlink directories with local package records before calling pacman. It queries only that image-local database using fixed argv `pacman --config /dev/null --dbpath <airootfs>/var/lib/pacman -Q`; merged output remains subject to the strict parser, so warnings, malformed or duplicate rows, missing required packages, unsafe or missing DB paths, or nonzero exit prevent candidate publication. Tests cover exact argv, accepted rows, rejection cases, and nonzero-exit no-publication behavior. The acceptance checkpoint passed 79 tests, 2 skipped; mypy and diff-check passed. SOL accepted the correction. A later temporary candidate and failed QEMU results are recorded in the Live USB runbook. No hardware or media operation occurred.
+
+## Earlier Live USB boot investigation and KMS-only derivative
+
+The 2026-10-13 clean Arch snapshot `d87bc03a6b94bdde86ff3e3ebf89b24df0b4b275` (tree `0a433bfc6382c56e24b0b5c2bb766ef3d6ff246a`) produced a 1,339,064,320-byte candidate ISO with SHA-256 `b96f83ba84e67ab7e747c95296319d549b57d167010d1ce98a43be2d45c3e4a5`. Build provenance hash: `d1d74d087b8598e3b3ef86973dd2d6f5fa1b22154864ea37e98becbe5da082c3`. That candidate used the original pinned initramfs fragment and included `kms`.
+
+Bounded QEMU 11.1.2 runs had no network device or firmware-write interface. BIOS (`-accel tcg,thread=multi -m 3072 -smp 4`) mounted the ISO and loop-backed live root and reached the Arch root shell, but the AutoLoader app/service status was not visible. tty2 stayed black and serial was empty. UEFI with OVMF pflash and the same CPU/memory flags reached udev and `archiso_pxe_nbd`, then stalled at event triggering and did not mount the live root. Its guest serial/journal also did not show app/service status. Captures and exact commands are recorded in `usb_builder/LIVE_USB_RUNBOOK.md`; the ISO hash was unchanged. These are failed/incomplete emulator acceptance results, not hardware tests or release success. No same-hash BIOS/UEFI run has demonstrated app startup, active service, journal entries or no-writer behavior.
+
+SOL accepted a separately named and SHA-256-pinned USB profile derivative that removes exactly the `kms` hook while preserving all other hooks/order, every PXE hook, xz compression and the pinned compression options. Its source and staged bytes are checked before and after `mkarchiso` and before publication; the lock and provenance record its identity and hashes. The package map is unchanged. Windows `tests/test_usb_builder.py` passed 102 tests with 13 skipped; derivative-focused cases passed 6; `mypy usb_builder` and diff-check passed. The derivative was exercised by candidate b2 below. The `kms` omission remains an experiment; it has not resolved the startup block. Physical display and keyboard checks on T430, X200 and X220 are also pending.
+
+## Live USB derivative candidate b2 and WSL namespace result
+
+Candidate b2 was built from clean USB-only snapshot commit
+`1197d9040a39d6da012f459b8bb1f45385ee0072`, tree
+`d2588ddff4f0c5d4115565f47360314553106d38`. Its 1,012,215,808-byte ISO has
+SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`;
+the build-provenance JSON has SHA-256
+`c8ad6f6c1b04ed87626a4410566ed11e5d23893293a8945d4e865c28d63e481f`. Target
+root installation and packaged CLI checks passed. The inspected 79 MiB
+initramfs contained 2,005 CPIO paths and omitted `kms`, retaining the PXE
+hooks; the exact full initramfs digest was not preserved in provenance.
+
+Same-hash BIOS QEMU ran for 310 seconds and UEFI QEMU for 922 seconds. Both
+reached systemd on the live system but remained in early startup without
+AutoLoader/service evidence. BIOS waited on Namespace Resource Manager; UEFI
+repeatedly failed `systemd-nsresourced.service` and waited on `/dev` node
+setup. Neither second TTY showed a login prompt. UEFI serial output stopped at
+the boot menu. Both QEMU processes exited 0, which does not indicate guest boot
+success. The machine-readable records and captures are preserved in
+`docs/v1/evidence/live-usb-b2/` and described in the Live USB runbook.
+
+At the earlier 2026-10-13 checkpoint, the real offline-isolation test skipped
+as **UNVALIDATED** on Arch WSL: it used bare `unshare --net`, shared
+`/sys/class/net` exposed `eth0`, and raw IPv6 route data contained the exact
+kernel sentinel rows. This was later addressed by a strict user-mapped probe
+that independently checks namespace-aware views and allows only zero or two
+exact sentinel rows. See the current WSL-only result below; no offline build
+has been validated.
+
+## Phase 04 X200 GRUB patch-chain identity correction — SOL accepted
+
+The pinned GRUB base is commit `eaa3b8f0f90605a82c6bfda4c5c4b73c58eb81ac` / tree `c10cf577627e980308fb0cb3785cdc669c2582d9`; the ordered ten patch files remain bound by exact hashes. Their ten intermediate tree IDs, ending at `9e76050f8ab01306e51fb28ab88c1f8481c9e26a`, are the deterministic source evidence. `git am` commit IDs vary with committer metadata, so each run's IDs are recorded in its manifest and later checked for exact linear ancestry and matching per-patch trees; generated IDs are not hard-coded. SOL accepted this correction. The focused ArtifactEngine/X200/X220 suite passed 90 tests with 2 skipped in 116.89s; mypy passed on the three touched Python modules and diff-check passed. Synthetic Git tests prove timestamp-varying IDs with identical trees are accepted and altered trees are rejected. No actual Linux ROM build or manifest reopen from a real build has occurred; Linux build and hardware workflows remain pending.
+
+## Earlier cross-platform full software regression — SOL accepted portability correction
+
+SOL accepted the X200 Unifont manifest portability correction and test-fixture isolation. Build-time validation still checks the real source font hash and package owner/version; manifest reopen validates the operation-owned staged font and the pinned source identity without requiring the original Ubuntu absolute path to exist on the reopening host. Policy-only approval/controller tests use an explicitly synthetic ArtifactEngine adapter; dedicated ArtifactEngine tests retain strict manifest and staged-file validation.
+
+The full Windows suite passed **451 tests, 15 skipped in 981.30 seconds** (exit 0). The full Ubuntu suite passed **464 tests, 2 skipped in 609.63 seconds** (exit 0). After those full runs, `is_admin()` was changed to guard the Windows-only `ctypes.windll` lookup without changing its Windows result; `tests/test_flasher.py` then passed **26 tests in 9.94 seconds**. Windows and Ubuntu `mypy --platform win32 autoloader usb_builder` both passed with no issues in 102 source files, and native Ubuntu `mypy autoloader usb_builder` passed after the guard. Top-level CLI help and `flash --help` passed. An isolated-backend wheel build succeeded (`libre_core_autoloader-0.1.0-py3-none-any.whl`, SHA-256 `2daae38489cbce1e1c33d0f50e95255e3d7140995279a8cee274343872f15e7e`), and `git diff --check` passed. These software tests use fake/synthetic firmware and hardware evidence only. Actual pinned ROM builds, generated artifact validation, a passing Live USB BIOS/UEFI app/service boot, offline namespace validation, and all three physical hardware workflows remain open; no hardware workflow is claimed passed.
+
+## 2026-10-15 release-gate follow-up
+
+The X200 pinned-source audit passed in Ubuntu WSL, but the ArtifactEngine attempt used no target DMI, observed chip capacity, physical programmer evidence, or complete backup/recovery record. Compatibility therefore remained UNKNOWN; the engine correctly returned `ARTIFACT_BUILD_BLOCKED` before any build command, and the output folder remained empty. The exact attempt and hashes are recorded under `docs/v1/evidence/x200-artifact-preflight-20261015/`. Earlier X200 work compiled some upstream components only; no complete pinned ROM, accepted parser result, or COMPLETE manifest was produced.
+
+For the Live USB issue, the checksum-verified official Arch Linux 2026.10.01 ISO was booted with QEMU 11.1.2 under the same WSL2 TCG environment. The normal BIOS control ran for 600 seconds and showed the same early Namespace Resource Manager and static `/dev`-node startup stalls as b2. A separately gated tty9 shell capture issued one serialized read-only state command and returned to the prompt; at its snapshot, stock `systemd-nsresourced` was still activating with 38.267 CPU seconds after about 40 seconds, while the failed-unit list was empty and its journal had no entries. A longer serial capture records the service timing out; screenshots taken before command completion in that older capture are explicitly excluded. Neither control establishes a root cause. WSL exposes neither `/dev/kvm` nor `/dev/mshv`; a native Linux/KVM comparison remains open. Full BIOS/UEFI app/service boot, offline namespace, Linux ROM builds, and all physical device workflows remain release gates.
+
+## 2026-10-15 offline namespace probe correction — WSL only
+
+The production offline-isolation check now always uses
+`unshare --user --map-root-user --net`, including for root, so capabilities
+are confined to the child user/network namespaces. It verifies canonical
+`/usr/bin/unshare` and `/usr/bin/ip` with exact Arch pacman ownership, hashes
+both binaries, and checks route/interface state inside the exact child before
+and after a build command. The wrapper closes inherited descriptors, sets
+stdin to `DEVNULL`, forces stderr to `STDOUT`, and accepts stdout only as
+`PIPE` or an already-open regular log file checked with `fstat`. Socket-backed
+stdio, raw file descriptors, devices, FIFOs, caller stdin overrides and other
+subprocess controls fail before a child starts. It applies a sanitized
+environment and sends SIGKILL to the whole child process group after the
+termination grace period even if the group leader exits first. This does not
+stop a descendant that calls
+`setsid()` and escapes the process group. Such a process remains in the
+isolated network namespace but could outlive the wrapper and continue local
+filesystem activity; no offline build is claimed until this residual is
+resolved or bounded for the actual builder.
+
+On Arch WSL (`6.18.54.1-microsoft-standard-WSL2`, x86_64), the production
+probe passed with `archiso 91-1`, `util-linux 2.42.4-1`, `iproute2 7.2.0-1`,
+and pacman ownership confirmed for both executables. Its namespace ID differed
+from the host; namespace-aware views showed loopback only and no routes, and
+procfs contained exactly two copies of the pinned IPv6 null/unreachable row.
+Ubuntu WSL independently showed the same namespace-aware state while shared
+sysfs still listed stale `eth0`. Raw command/output evidence is under
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/` and
+`docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`.
+
+After the CRLF safeguard, `tests/test_usb_builder.py` passed 176 tests with 1
+skipped on Arch WSL and 163 with 14 skipped on Windows. Win32-targeted and
+native Arch `mypy usb_builder` each passed with no issues in 3 source files;
+`git diff --check` passed. Targeted descriptor/stdin boundary
+tests passed 15 cases on each platform. The Linux process-group regressions
+passed in Ubuntu WSL (3 passed, including a forked grandchild that ignores
+SIGTERM after its leader exits); the Windows-specific subset passed 3 tests
+with the fork-specific case skipped. Win32-targeted and native Arch
+`mypy usb_builder` each passed on 3 source files. The namespace probe is
+validated only in WSL. No successful offline Archiso build has been produced;
+the later invocation that failed on CRLF is recorded below. Native Linux
+behavior and mount/loop/chroot requirements inside the namespace remain open, as do
+the BIOS/UEFI app/service boot and all physical-device gates.
+
+The 2026-10-15 clean temporary offline build attempt reached `mkarchiso` but
+failed with `profiledef.sh: line 3: $'<CR>': command not found`; mkarchiso exited
+127. `<CR>` denotes the carriage-return byte in the script. The attempt did
+not produce an accepted/published candidate. Repository attributes now pin the
+known Archiso text inputs and package list to LF, source preflight rejects
+carriage returns in the supported profile scripts/configs, and staged profile
+checks repeat before and after the builder and at publication. The focused
+Windows and Arch WSL suites and both mypy modes now pass. A later private
+mount/PID namespace probe is recorded below; no offline build retry was run
+after the LF correction. No hardware or media action occurred.
+
+## 2026-10-15 WSL mount capability follow-up
+
+The production isolation wrapper now adds private mount and PID namespaces to
+the existing user-mapped network namespace:
+`unshare --user --map-root-user --net --mount --pid --fork --mount-proc`.
+The Arch WSL child had distinct PID/mount/network namespace IDs and only the
+loopback interface. Temporary mount probes succeeded for proc, sysfs and
+tmpfs. WSL denied devtmpfs, bind mounts of `/dev` and `/run`, and devpts with
+the `gid=5` required by Archiso. Exact command output is preserved in
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/mount-probe-20261015.txt`.
+The test used only temporary directories and did not run mkarchiso. Because
+the required chroot device/runtime mounts are unavailable in this WSL
+namespace, no offline image build is claimed; native Linux build validation
+remains pending. The network isolation was not weakened to bare-root netns.
+
+At that earlier checkpoint, `tests/test_usb_builder.py` passed 176 tests with
+1 skipped on Arch WSL (11.10s) and 163 with 14 skipped on Windows (40.61s).
+After integrating the production mount preflight and dependency-state tests,
+the focused USB suite at that checkpoint passed 234 tests with 1 skipped on Arch WSL
+(22.54s) and 219 with 16 skipped on Windows. Native Arch and
+Win32-targeted `mypy usb_builder` both pass with no issues in 4 source files.
+The suite now has distinct real network-namespace and integrated production
+preflight tests. On Arch WSL, the integrated test confirms the route-free
+child report and unchanged host mount snapshots. At that checkpoint, it
+expected `tmpfs-run` EINVAL to fail closed as an integrity error; a later
+disposable syscall comparison showed that EINVAL came from probe-plan flags,
+not a WSL limitation. These are WSL/software checks only; this does not
+establish native Linux behavior.
+
+Historical pre-errno-correction run: the earlier broad OSError classifier
+reported `ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for `devtmpfs`, `tmpfs-run`,
+and `tmpfs-tmp`; see the preserved, explicitly historical
+`production-mount-preflight-20261015.txt`. The stricter errno policy correctly
+classified the subsequent `tmpfs-run` EINVAL as an integrity failure. A
+disposable same-namespace comparison then showed that the probe passed generic
+VFS flags as tmpfs filesystem data: the old call returned EINVAL, while
+`MS_NOSUID|MS_NODEV` with only `mode=0755` data and the exact util-linux
+`mount(8)` command succeeded. The probe plan now splits VFS flags from
+filesystem-specific data for devpts, shared memory, `/run`, and `/tmp`. The
+current production preflight reports only the unavailable WSL `devtmpfs`
+operation. Route-free evidence passed, host mountinfo stayed unchanged, and no
+builder work/output or mkarchiso was invoked. Full details are in
+`tmpfs-option-split-diagnostic-20261015.txt`. After this correction, focused
+USB tests passed 259/1 skipped on Arch WSL and 244/16 on Windows; at this
+checkpoint, full suites and mypy had not yet been rerun. The later full-gate
+results are recorded below. Native Linux mount behavior and offline image build
+remain unvalidated.
+
+
+## 2026-10-15 release-gate software checkpoint - SOL accepted (pre tmpfs argument correction)
+
+Before the later tmpfs argument-plan correction, the complete Windows suite
+passed **594 tests with 18 platform skips** (864.09s) and the complete Arch WSL
+suite passed **611 tests with 1 skip** (679.85s). Focused USB
+suites passed 243/16 on Windows and 258/1 on Arch WSL. Native Arch and
+Win32-targeted mypy passed on 104 source files; CLI top-level and `flash
+--help` passed. The evidence checksum manifest and `git diff --check` passed.
+SOL accepted the narrowed mount errno policy, the POSIX system-temp rejection,
+and the updated historical/current evidence wording.
+
+At the accepted pre-correction checkpoint, the real Arch WSL production
+preflight stopped with `ARCHISO_MOUNT_PREFLIGHT_INTEGRITY_FAILURE` because
+`tmpfs-run` returned EINVAL; the earlier devtmpfs result was EPERM. The
+disposable syscall investigation found and corrected a probe-plan argument
+bug. The current direct production preflight now stops at the unavailable WSL
+`devtmpfs` operation. Route-free namespace evidence passed and the host mount
+table was unchanged; no builder work/output or mkarchiso was started. This is
+WSL-only, not native Linux validation. A native Linux mount probe, offline ISO
+build, working BIOS/UEFI live startup, pinned ROM builds, and all three
+physical-device workflows remain open. No hardware action occurred.
+
+## 2026-10-15 post-tmpfs-correction full software checkpoint
+
+Full regression results after the tmpfs mount-argument correction:
+
+- Windows: **595 passed, 18 skipped in 1093.64s**.
+- Ubuntu 26.04 WSL: **610 passed, 3 skipped in 740.43s**.
+- Arch WSL: **612 passed, 1 skipped in 904.35s**.
+
+Windows-targeted mypy passed on 104 source files from Windows and from isolated
+Ubuntu and Arch runs. Native Ubuntu and Arch mypy also passed on 104 files.
+Concurrent shared-cache mypy invocations initially errored internally;
+sequential no-incremental reruns with isolated caches passed. The cause of the
+initial errors was not established. Windows top-level CLI help, Ubuntu
+`flash --help`, and `git diff --check` passed.
+
+These are software results; Ubuntu and Arch evidence is from WSL, not native
+Linux. The current Arch WSL mount preflight safely stops at devtmpfs with
+`EPERM` and creates no builder work or output. Native Linux build validation,
+an offline ISO build, successful Live USB app/service boot, and all three
+hardware workflows remain pending. V1 is not release complete; no hardware
+operation occurred.
+
+## Arch WSL QEMU acceleration preflight — 2026-10-15
+
+QEMU 11.1.2 listed `tcg`, `mshv`, `nitro`, and `kvm` in `-accel help`, but
+`/dev/kvm` and `/dev/mshv` were absent. The bounded MSHV probe exited 1 with
+`Failed to open /dev/mshv` and `failed to initialize mshv: Operation not
+permitted`. No accelerated guest path was established in Arch WSL. This is
+not a native Linux or QEMU/KVM result; prior WSL TCG boots remain unchanged and
+did not reach app/service validation. The exact record is
+`docs/v1/evidence/live-usb-b2-diagnostic-20261014/qemu-acceleration-preflight-20261015.txt`.
+Native Linux/KVM comparison, offline ISO build, successful Live USB app/service
+boot, and hardware workflows remain pending.
+
+## Arch WSL online-candidate readiness check — 2026-10-15
+
+The production mount-capability preflight was run directly from the current
+shared checkout. It returned `ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for
+`devtmpfs`. `execute_build` requires that gate for both online and offline
+modes before build work/output creation, so no online build was launched; no
+repository sync/download, package installation, `mkarchiso`, or candidate ISO
+occurred. The exact command and result are recorded in
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/online-candidate-readiness-preflight-20261015.txt`.
+This is Arch WSL evidence only, not native Linux build validation. Existing
+workspace changes and prior candidate/TCG evidence were preserved. Native
+Linux build, offline ISO build, successful Live USB app/service boot, and all
+hardware workflows remain pending.
+
+## Ubuntu WSL trusted-tool preflight — 2026-10-15
+
+A direct production `_establish_offline_network_isolation(subprocess.run)`
+call from Ubuntu 26.04 WSL failed closed with
+`OFFLINE_NETWORK_ISOLATION_UNAVAILABLE`: `/usr/bin/unshare` resolved, but
+`pacman` was absent, so the trusted `pacman -Qo` ownership check could not
+start. The run did not reach namespace or mount checks and did not test
+devtmpfs. It did not call `execute_build`, create candidate-build work/output,
+sync/install packages, or invoke `mkarchiso`. This confirms Ubuntu WSL is not
+the pinned Archiso 91-1 build host; it does not replace the separate Arch WSL
+preflight, which reaches the mount gate and fails at devtmpfs. Exact command
+and result: `docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`.
+Native Linux, candidate ISO, app/service boot, and hardware gates remain
+pending.
+
+## Same-hash b2 nsresourced mask diagnostic — 2026-10-15
+
+Repository and preserved direct-kernel records contained no earlier use of `systemd.mask=systemd-nsresourced.service` or `systemd.mask=systemd-nsresourced.socket`. One bounded 282.40-second QEMU 11.1.2 TCG run used the unchanged b2 ISO SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`, kernel SHA-256 `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`, and initramfs SHA-256 `c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090`. The only added kernel parameters were those two masks; `-nic none` was used with no writable disk or firmware writer. Serial confirms both units were masked to `/dev/null`. At 270s, `sysinit.target` still waited on `systemd-tmpfiles-setup-dev.service`; the debug-shell service had started on tty9, but no guest command was entered. The masks did not clear that observed wait during the run. This is a narrow emulator observation and does not prove whether nsresourced is otherwise causal, establish a root cause, or pass normal boot/app/service validation. QEMU exited 0 after HMP quit; the host controller reported a monitor reset while reading the quit response after QEMU had stopped. Inputs were unchanged. Evidence and hashes are under `docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/`. Native Linux/KVM, normal BIOS/UEFI app/service boot, ISO build, and hardware gates remain pending.
+
+## Latest cross-platform software regression after EC API quarantine — 2026-10-15
+
+The full Windows suite passed **601 tests, 18 skipped in 707.05 seconds**; Ubuntu 26.04 WSL passed **616 tests, 3 skipped in 466.57 seconds**; and Arch WSL passed **618 tests, 1 skipped in 539.81 seconds**. Full-project mypy (`autoloader usb_builder`) passed on 104 source files in Windows, Ubuntu WSL, and Arch WSL. Windows-targeted and native checks were run sequentially with `--no-incremental` and isolated caches. Concurrent shared-cache mypy invocations initially reported internal errors; sequential isolated-cache reruns passed, and the cause was not established. Windows top-level CLI help and Ubuntu `flash --help` passed; `git diff --check` passed before this documentation update.
+
+The full suites include the new fail-closed EC regression. The legacy `ThinkPadECManager` source download/build/flash/verification methods now raise `ECModError` as unavailable, patch reporting is empty, and tests assert zero subprocess/file-write calls and no changes to an existing arbitrary checkout. This quarantines an unsupported packaged API; it does not add an EC workflow or establish simulated hardware success.
+
+These are software checks, with Ubuntu and Arch results coming from WSL rather than native Linux. Native Linux and Archiso build validation, a successful Live USB BIOS/UEFI app/service boot, complete validated X200/X220 ROM builds, and all three physical hardware workflows remain pending. V1 is not release complete.
+
+## Rootless Archiso host preflight checkpoint — 2026-10-16
+
+Added a fail-closed production host preflight for Archiso's non-root `-N`
+path. It checks a private account/group (including supplementary groups),
+matching real/effective IDs, empty effective/permitted/ambient capabilities,
+bounded capability policy, `NoNewPrivs=0`, and distinct non-overlapping subuid
+and subgid ranges of at least 65,536 IDs assigned to the invoking UID. The
+snapshot lock now binds Archiso 91-1, arch-install-scripts 31-2, shadow
+4.20.0.arch1-1 and libcap 2.78-1, plus the signed package identities, helper
+hashes/modes/owners and exact map-helper file capabilities (`newuidmap`
+`cap_setuid=ep`, `newgidmap` `cap_setgid=ep`).
+
+The focused synthetic USB selection passed **24 tests, 260 deselected**. This
+does not validate host-side `-N` execution. On Arch WSL the production route
+stops at the root-account check before subprocesses or candidate work/output
+creation; the distro also lacks delegated ID maps and the pinned file-capability
+state. If a future host passes these checks, `execute_build` still fails closed
+until the exact rootless mount/helper path is validated. Thus online and
+offline Archiso build execution remain unavailable. No package installation,
+ISO build, QEMU run, hardware, or media operation occurred in this checkpoint.
+The latest broad suite counts above predate this rootless-preflight change.
+
+## Rootless pacstrap status-propagation correction — 2026-10-16
+
+The disposable Arch VM probe exposed a pinned `arch-install-scripts 31-2`
+false-success: `pacstrap -N` logged “no usable package repositories” and
+“Failed to install packages to new root” but returned status 0. The exact
+command, source identity, output, and control are preserved in
+[`namespace-and-pacstrap-probes.txt`](evidence/rootless-archiso-vm-20261016/namespace-and-pacstrap-probes.txt).
+
+A narrowly pinned patch resource now captures the `-N` child status before
+cleanup and exits with that status; failed temporary-file cleanup remains a
+failure. The source SHA-256, patch ID/hash, and patched-script SHA-256 are
+bound in the snapshot lock. Staging helpers require a private, owned,
+token-marked operation directory and bind staged file bytes, owner/mode,
+operation identity, and the future mkarchiso PATH in evidence. The resource is
+included in the `usb_builder` package metadata. This remains an isolated
+software correction: `execute_build` is fail-closed, the patch is not
+installed over `/usr/bin/pacstrap`, and candidate publication remains disabled
+until the rootless execution path and successful build are validated. SOL
+reviewed the staging and failure-propagation design and accepted this disabled
+software slice.
+
+A separate VM-backed host-preflight check had stopped at `setpriv`: the prior
+contract incorrectly reused SHA-256
+`4806896cb95e1799b4a0f4754ebbd0665794e563fbc924eb73f3f4ba1828eacc` for all
+four util-linux executables. The pinned VM package is `util-linux 2.42.4-1`
+(package SHA-256 `95b7096bf4b45274645f6bb96f5b5508af6ea80e5fccba29244abaa53a341962`);
+the verified per-file hashes are now independently recorded for `setpriv`,
+`unshare`, `mount`, and `umount` in both the snapshot and executable contract.
+The correction has exact-lock and per-executable mismatch regressions. This
+fixes the incorrect tool identity mapping only: it does not validate the full
+rootless builder chain or enable candidate execution.
+
+Focused rootless/pacstrap tests on Arch WSL passed **30**, with 277 deselected.
+The Windows selection passed **30**, with 277 deselected; Windows mypy passed
+for all four `usb_builder` source files. Tests cover exact
+patch context/result hashes, changed/duplicate/missing source context,
+path/symlink rejection, operation-root ownership/mode/token binding, staged
+tampering, child success/nonzero/no-repository/signal status, timeout cleanup,
+cleanup failure, fake mkarchiso failure preventing publication, exact distinct
+util-linux binary pins and substitution rejection. These are synthetic tests;
+they do not reproduce the real pacstrap package operation.
+
+## Latest software and full-VM checks — 2026-10-16
+
+The final full Windows regression passed **658 tests, 40 skipped in 831.34s**.
+The final sequential Ubuntu 26.04 WSL regression passed **694 tests, 4 skipped
+in 506.73s**. A prior concurrent Ubuntu run exhausted `/tmp` and produced
+cascading setup errors; that run is discarded, its pytest scratch directories
+were removed, and it is not counted as validation. SOL accepted the four
+model-safety corrections and the Windows/Linux test adaptation. The Windows
+suite retains the platform-specific fail-closed durability check; Linux keeps
+the successful POSIX durability paths active. Full-project mypy
+(`autoloader usb_builder`) reported no issues in **105 source files** on Ubuntu
+WSL. Ubuntu top-level and `flash --help` passed; `git diff --check` passed
+(Git emitted only the recorded LF-to-CRLF notices). WSL is not native Linux.
+
+The disposable QEMU Arch VM's 2026-10-16 follow-up is recorded in
+[`archiso-vm-followup-20261016.txt`](evidence/rootless-archiso-vm-20261016/archiso-vm-followup-20261016.txt).
+The required rootless devtmpfs probe returned mount exit 32 (permission
+denied), with the VM's mount table unchanged. The exact pinned pacstrap source
+and staged status-preservation overlay returned 1 for the deliberately empty
+repository; direct `mkarchiso` integration with that incomplete profile also
+returned 1 and produced no ISO. These are negative failure-propagation
+observations only. The VM snapshot's `build_usb.py` and snapshot-lock hashes
+do not match the final working tree; only its `mount_probe.py` and staged
+pacstrap bytes match. This is not a successful production builder run, ROM
+build, or Live USB boot. At that earlier checkpoint, production candidate
+execution remained closed until the current source completed the supported
+rootless namespace/mount path, signed package install, full ISO build,
+target-root checks, and successful BIOS/UEFI app/service boot. The later
+online path wiring is recorded in the section below.
+
+No device was probed and no firmware or recovery operation was performed.
+T430 1vyrain, X200 Libreboot and X220 Coreboot hardware acceptance remain
+**HARDWARE PENDING**; V1 is not release complete.
+
+## Rootless Archiso `-N` mount-stack preflight — 2026-10-16
+
+The former devtmpfs denial was produced by a root-oriented mount probe and
+does not determine whether pinned Archiso 91-1 can use its non-root `-N`
+path. A separate preflight now mirrors the pinned `arch-install-scripts
+31-2` `arch-chroot -N` mount stack: private root bind, proc, recursive `/sys`
+bind, tmpfs `/dev`, six individually validated character-device binds
+(`/dev/full`, `null`, `random`, `tty`, `urandom`, `zero`), and tmpfs `/run`
+and `/tmp`. It verifies changed user/network/mount/PID namespace IDs, route-
+free child state before and after the mounts, private propagation, source
+device numbers/owners, cleanup, and unchanged child and host mount tables.
+
+This was the earlier software-only checkpoint. It is superseded by the
+rootless online execution integration below; its 23-test and 328-test counts
+are historical.
+
+## Rootless online Archiso execution integration — 2026-10-16
+
+Production `execute_build` now requires the pinned non-root host/helper
+preflight and the exact isolated route-free Archiso `-N` mount preflight
+before creating candidate work or output. Online mode then runs the pinned
+build commands directly as the same non-root caller, with a fixed sanitized
+environment and the operation-owned, hash-verified pacstrap status overlay
+first in `PATH`. The network isolation provenance labels this as online
+egress after the isolated preflight; it does not claim build commands remain
+inside the probe namespace. The system pacstrap executable is never modified.
+
+Offline mode is still rejected with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE` after the read-only probes and before
+work/output creation. No reviewed route-isolation launcher is compatible
+with the non-root Archiso `-N` path yet. No current-source package install or
+candidate ISO build was run in this implementation slice; the parent is
+handling the disposable-VM candidate gate. The previous b2 ISO remains the
+latest candidate and its BIOS/UEFI runs did not reach AutoLoader/service
+evidence.
+
+Focused rootless builder tests passed **70 tests, 269 deselected** in Ubuntu
+26.04 WSL. The narrower production route selection passed **7 tests, 332
+deselected**. Native and Windows-targeted `mypy usb_builder` each passed on
+**5 source files**. These are software/fake-runner checks, not a successful
+current-source VM build or native Linux validation. Offline ISO build,
+current-source online candidate build and BIOS/UEFI app/service boot remain
+open; all three hardware workflows remain **HARDWARE PENDING**.
+
+## Latest cross-platform software regression — 2026-10-16
+
+The full Windows suite passed **693 tests, 45 skipped** (738 collected) in
+737.64 seconds, exit 0. The full Ubuntu 26.04 WSL2 suite passed **734 tests,
+4 skipped** (738 collected) in 1510.50 seconds, exit 0. Windows skips are
+POSIX filesystem, process, Linux namespace/device, and host ownership checks;
+Ubuntu skips are two real-host Arch pacman ownership checks and two
+Windows-only checks. Full-project no-incremental mypy passed on **106 source
+files** on Windows and Ubuntu WSL. Ubuntu CLI help passed. Both JUnit reports,
+environment details, hashes, skip reasons, and the focused 21-test SPI safety
+fixture run are recorded in
+[`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
+`git diff --check` passed with only Windows LF-to-CRLF notices.
+
+The current Archiso v4 TCG guest was resumed without changing accelerators,
+then paused with HMP `stop` at 14:55:36 +01:00 before host free space fell
+below 2 GiB. It remains incomplete: the guest showed blocked `jbd2/vda-8` and
+`python` tasks, and host storage is constrained. Overlay growth and CPU
+activity were not proof of useful build progress. The guest and overlay remain
+preserved; no current-source ISO, target-root verification, or BIOS/UEFI
+AutoLoader/service boot is claimed.
+
+No physical hardware has been touched. The hardware workflows remain
+intentionally deferred and **HARDWARE PENDING**. V1 is not release complete.

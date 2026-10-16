@@ -1,9 +1,17 @@
 # Live USB build and operation runbook
 
 This profile is an in-development Archiso environment. The checked-in package
-snapshot and package list are fixed for **candidate** builds; release validation
-remains pending Linux build review and BIOS/UEFI QEMU boot evidence. Fake tests
-cannot advance either status.
+snapshot and package list are fixed for **candidate** builds. Candidate b2
+passed target-root validation. Its same-hash BIOS/UEFI QEMU runs and later
+direct-kernel diagnostics provide incomplete emulator evidence only. Direct-
+kernel run8 reached a tty9 debug shell and captured read-only unit, job, and
+journal state, but established no root cause and did not reach the AutoLoader
+app/service. The normal BIOS/UEFI captures did not reach an app/service
+session. Emulator exit code 0 after an explicit HMP quit is not guest boot
+success. No hardware or USB-media test has occurred. A separately pinned
+USB-only initramfs derivative omits only the `kms` hook; it does not establish
+that this caused or fixes the startup delay. Fake tests cannot advance these
+boot or hardware gates.
 
 ## Build contract
 
@@ -54,14 +62,28 @@ present must be enumerated, hash-pinned and valid. Every package archive in the
 dependency closure, including transitive packages, must have an enumerated
 detached signature. Offline pacman uses the staged pinned databases as the sole
 `Server` and the verified local package repository as `CacheServer`.
-Before creating the build work directory, offline mode probes a new network
-namespace and requires only loopback with no IPv4/IPv6 routes. Root builders use
-`unshare --net`; unprivileged builders use
-`unshare --user --map-root-user --net`. Every later build subprocess, including
-`mkarchiso` and its children, inherits the namespace command prefix. If the
-namespace cannot be established, the builder stops before creating work or
-output. If the repository, snapshot binding, signatures, or package inputs are
-absent, the build also stops before `mkarchiso`.
+Before creating the build work directory, offline mode resolves and verifies
+the canonical `unshare` and `ip` executables, including their exact pacman
+package owners, then probes a new user-mapped network namespace. Root and
+non-root builders both use `unshare --user --map-root-user --net`; bare root
+`unshare --net` is rejected because initial-user-namespace capabilities could
+allow returning to the host network namespace. Namespace-aware link, address,
+route and rule data must show loopback only and no routes. The exact child
+wrapper repeats those checks in the same namespace immediately before and
+after running the build command. It uses a sanitized environment, closes file
+descriptors, rejects subprocess controls outside the builder's fixed allowlist,
+and handles timeout/signal termination by killing the entire process group
+after a grace period, even if its leader exits first. This is process-group
+cleanup, not a guarantee against a descendant that deliberately calls
+`setsid()` and leaves that group. Such a descendant remains in the isolated
+network namespace, but it could outlive the command wrapper and continue local
+filesystem activity. For that reason this does not establish an offline build
+as safe or complete. A failed check stops the command or blocks candidate
+publication. This namespace probe has passed in Arch WSL; it does not yet
+establish native Linux or offline Archiso build support. Mount, loop, and
+chroot behavior inside this namespace remain to be validated. Missing
+repository, snapshot, signatures, or package inputs still block before
+`mkarchiso`.
 
 Example candidate build on a supported Linux host:
 
@@ -127,27 +149,43 @@ it produced no ISO and did not reach target-root validation. A fourth attempt
 on 2026-10-13 passed package validation and completed the Archiso build stages,
 then failed target-root validation because `/usr/sbin` inside `airootfs` is a
 usrmerge link to `/usr/bin`. The output directory remained empty and no ISO was
-published. An image-rooted symlink resolver now handles this path safely, but
-no later build has exercised it. Namespace, successful build, target-root,
-ISO, and QEMU evidence is still pending. An
+published. An image-rooted symlink resolver now handles this path safely. A
+later temporary pre-initramfs ISO passed target-root checks but failed both
+QEMU boot modes, as recorded below. An
 Ubuntu WSL2 shell by itself
 is not the pinned Archiso 91-1 build environment: the builder still
 requires the exact Arch package/tool ownership, pacman repositories and
 snapshot-signature validation, plus usable mount, loop, chroot, and network
 namespace capabilities. This checkout is currently dirty, so do not start a
 candidate build until a reviewed local commit provides a clean Git checkout.
-The offline network-namespace probe, successful candidate build, post-build
-`chroot` checks, BIOS/UEFI QEMU boot, and ISO production remain
-**NOT_PERFORMED**. No candidate ISO or Linux validation result is claimed.
+At that earlier checkpoint candidate build, post-build `chroot` checks,
+BIOS/UEFI QEMU boot, and ISO production were **NOT_PERFORMED**. The first
+namespace implementation was also **UNVALIDATED** because shared WSL sysfs
+exposed `eth0` and the IPv6 proc file contained kernel sentinel rows. The
+strict user-mapped probe now validates independent namespace-aware views and
+accepts only the exact pinned sentinel; see the current WSL evidence below.
+The later temporary ISO and its failed QEMU results remain recorded below; no
+passing boot or release validation is claimed.
 
-Latest focused software checks are Arch WSL `tests/test_usb_builder.py` — 68 passed, 2 skipped; Windows — 60 passed, 10 skipped; native `mypy usb_builder` on both hosts and
-`git diff --check` passed. The real Arch WSL namespace probe is
-**UNVALIDATED** because `unshare` still exposes `eth0`; offline isolation fails
-closed, and these focused software tests do not constitute offline builder
-validation. Online candidate build and BIOS/UEFI QEMU validation remain
-pending. SOL approved the target-root POSIX symlink resolver code; this runbook
-records the attempt and correction. No ISO rebuild has yet exercised the new
-resolver.
+On 2026-10-15, a separate production preflight from Ubuntu 26.04 WSL resolved
+`/usr/bin/unshare` but stopped because `pacman` is absent and the trusted
+`pacman -Qo` ownership check could not start. It returned
+`OFFLINE_NETWORK_ISOLATION_UNAVAILABLE` before namespace/mount checks; it did
+not test devtmpfs or create candidate-build work/output. This confirms that
+the Ubuntu WSL shell is not the pinned Archiso 91-1 build host. Exact evidence
+is in `docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`; the separate
+Arch WSL run at that checkpoint reached the then-current root-oriented mount
+probe and safely failed at devtmpfs. The new exact `-N` probe described below
+has not yet been run from this source in the disposable Arch VM.
+
+Historical resolver-focused checks were Arch WSL `tests/test_usb_builder.py` —
+68 passed, 2 skipped; Windows — 60 passed, 10 skipped. The later initramfs
+fragment guard passed 89 Arch tests with 2 skipped. These are historical
+counts; the current namespace validation and focused test results are recorded
+below. SOL approved the target-root POSIX symlink resolver and the staged
+initramfs-fragment integrity guard. The statement that the fragment had not
+been exercised was true at that earlier checkpoint; the later candidate
+includes it, with its failed QEMU evidence recorded below.
 
 The first real online candidate attempt stopped at preflight, before
 `mkarchiso`, because the package-list pin did not match the checked-in profile.
@@ -173,11 +211,349 @@ The target-root validator then exposed an in-image path case: the venv
 interpreter can resolve through `/usr/sbin/python`, where `/usr/sbin` is a
 usrmerge link to `/usr/bin`. The image-rooted resolver and regression tests now
 accept this internal chain and reject escapes, cycles, missing targets, and
-non-directory traversal. Latest focused USB tests: Arch WSL 68 passed, 2
-skipped; Windows 60 passed, 10 skipped. `mypy usb_builder` is clean on both
-hosts. SOL approved the resolver code; the documentation correction is incorporated. No candidate build
-retry has occurred; no ISO, target-root smoke result, or boot validation is
-claimed.
+non-directory traversal. Historical resolver-focused tests passed 68 Arch and 60 Windows cases (with 2 and 10 skipped respectively); the staged-fragment guard checkpoint passed 89 Arch tests with 2 skipped. The accepted hook-package correction passes 105 Arch tests with 2 skipped and 94 Windows tests with 13 skipped. `mypy usb_builder` is clean on both hosts. SOL approved the resolver and package-policy corrections.
+The statement that no candidate retry had occurred was accurate at that
+checkpoint. A later candidate built with the accepted staged initramfs fragment
+and its failed BIOS/UEFI emulator results are recorded below.
+
+## Prior temporary candidate and QEMU evidence
+
+A temporary candidate built before the accepted Archiso initramfs fragment was
+added had SHA-256
+`5a19235fbfa57c6d32a1d73f4c6868abae60e90b3b7be0d39e508e698e2cc478` and size
+897,921,024 bytes. BIOS QEMU failed at `Failed to start Switch Root`; UEFI QEMU
+timed out mounting `/dev/gpt-auto-root` and entered the initrd emergency path.
+Neither mode reached the application service or yielded usable second-TTY
+service/journal evidence. The build log contained a nonfatal mkinitcpio
+`failed to detect root filesystem` message. Investigation traced the failure
+to the absent `archiso` and `archiso_loop_mnt` initramfs hooks. This ISO is
+failed emulator evidence only, not a passing candidate.
+
+## Earlier candidate build and QEMU boot failure (before hook-package correction)
+
+On 2026-10-13, clean source snapshot `349e7961264131f69019ad1ab61cfa950af688a8`
+produced a temporary candidate ISO with SHA-256
+`9d6fd80e5757b2f5a075fd46f5d60548c782166cacf95378d6bde2ad3dee42fc` and size
+1,285,586,944 bytes. The bundle's build manifest SHA-256 is
+`e0fd030367e792bf39913f1145804fd3470a9357263cc141486b2bb7a8857689`. This is
+temporary emulator evidence, not a release-validated image.
+
+Both QEMU boots used that same ISO hash, QEMU 11.1.2, no network device and no
+write-capable firmware interface. BIOS initramfs reported missing `archiso`,
+`archiso_loop_mnt`, and PXE hooks, failed to mount the real root and dropped to
+`[rootfs~]#`. UEFI ran the udev and memdisk hooks, then also failed mounting the
+real root and dropped to `[rootfs~]#`. The BIOS VGA capture SHA-256 is
+`1fa299e8e5e4ca4d499bb9c900d15b7e7ca47d2c272cfed4ab28579ff967f848`; the UEFI
+capture is `0e76945cb5486cad5f3a7aab41833dcad3fef05561c421633ae8bd286a325ebe`.
+Both serial logs were empty. Neither boot reached the application or startup
+service, so no service/journal evidence exists and the app, service, and
+no-writer behavior were not observed in a booted guest.
+
+The pinned Archiso 91-1 releng package list and its `mkinitcpio-archiso` package
+show that the configured hooks require runtime packages missing from this
+profile. The exact locked 2026-09-29 core/extra database hashes were verified
+while checking that the required packages exist in the snapshot. The accepted
+package correction now pins the base and per-hook package map, includes the
+required packages in the profile and records them in build provenance. Its
+canonical LF package-list SHA-256 is
+`7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd`.
+Focused USB tests pass 105 on Arch (2 skipped) and 94 on Windows (13 skipped);
+`mypy usb_builder` is clean on both. No new build retry has run after this
+correction. SOL accepted the package policy; a fresh candidate and successful
+BIOS/UEFI app/service boot evidence remain pending. No USB media or physical
+hardware was accessed.
+
+## Current candidate boot investigation and KMS-only profile derivative
+
+On 2026-10-13, clean source snapshot `d87bc03a6b94bdde86ff3e3ebf89b24df0b4b275`
+(`0a433bfc6382c56e24b0b5c2bb766ef3d6ff246a`, clean) produced a candidate ISO
+of 1,339,064,320 bytes with SHA-256
+`b96f83ba84e67ab7e747c95296319d549b57d167010d1ce98a43be2d45c3e4a5`. Its
+build-provenance SHA-256 is
+`d1d74d087b8598e3b3ef86973dd2d6f5fa1b22154864ea37e98becbe5da082c3`; the
+build-time provenance correctly records QEMU as not performed. This candidate
+uses the original pinned Archiso 91 fragment, including `kms`.
+
+QEMU 11.1.2 ran without a network device or firmware-write interface. The
+multi-thread BIOS run used `-accel tcg,thread=multi -m 3072 -smp 4` and reached
+the Arch live-root shell after mounting the ISO and loop-backed root. It did
+not show the AutoLoader UI or service status. Attempts to switch to tty2 showed
+no usable console, and serial output was empty. The final VGA PPM is
+`C:\Users\Alex\AppData\Local\Temp\librecore-qemu-d87bc03\bios-multi\boot-screen.ppm`
+(SHA-256 `4d753bdb2c3b735f40d6f3bf4f015b1e9fc448827857302b2e4216acdf7e9975`).
+The run was stopped after its bounded interval; its QEMU process exit does not
+mean guest success.
+
+The multi-thread UEFI run used the same ISO with OVMF pflash, `-accel
+tcg,thread=multi -m 3072 -smp 4`, and a 300-second bound. It reached early udev
+and `archiso_pxe_nbd` hooks, then remained at event triggering without mounting
+the live root or reaching userspace. Serial output contained the firmware boot
+menu but no guest service/journal evidence. The VGA PPM is
+`C:\Users\Alex\AppData\Local\Temp\librecore-qemu-d87bc03\uefi-multi-pflash\boot-screen.ppm`
+(SHA-256 `17ec9c24a77850c2da9ed2c0d508be2fd2198f4bb98ed0dbbc7816189e8ee604`).
+The ISO hash matched before and after both completed runs. BIOS and UEFI app,
+service, journal and no-writer validation therefore remain **FAILED/NOT
+EVIDENCED**, not passed. An earlier UEFI command used an invalid `-bios`
+argument and exited before boot; it is not counted as a guest test.
+
+SOL accepted the software experiment that adds the separately named and
+SHA-256-pinned `zz-autoloader-usb.conf` derivative. It is byte-checked against
+the pinned Archiso fragment and removes exactly the `kms` hook. It preserves
+all other hook order, all PXE hooks, `COMPRESSION="xz"`, and
+`COMPRESSION_OPTIONS=(-9e)`; the package map is unchanged. The builder rechecks
+source and staged derivative bytes before and after `mkarchiso` and before
+publication, then records both hashes and retained-hook order. Windows focused
+validation passed 102 tests with 13 skipped; the derivative-specific subset
+passed 6 tests; `mypy usb_builder` and `git diff --check` passed. Candidate b2
+below exercised this derivative. Its initramfs composition was inspected, but
+the guest did not reach AutoLoader startup. Removing `kms` is a bounded
+experiment, not a proven cause of the prior delay. Physical display/keyboard
+checks on the three ThinkPads remain separate hardware gates.
+
+## Derivative candidate b2 (2026-10-14)
+
+The temporary candidate was built from clean USB-only snapshot commit
+`1197d9040a39d6da012f459b8bb1f45385ee0072`, tree
+`d2588ddff4f0c5d4115565f47360314553106d38`. This isolated snapshot did not
+include the concurrent X200 firmware-engine changes. The ISO is
+1,012,215,808 bytes, SHA-256
+`afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`; the
+build-provenance JSON SHA-256 is
+`c8ad6f6c1b04ed87626a4410566ed11e5d23893293a8945d4e865c28d63e481f`. The ISO
+remains in the local Arch WSL output directory and is not stored in Git. Target
+root installation and the packaged CLI runtime check passed. The build
+provenance correctly records both QEMU modes as `NOT_PERFORMED` at build time
+and overall release validation as `PENDING_LINUX_QEMU_REVIEW`.
+
+The extracted initramfs was inspected at 79 MiB with 2,005 CPIO paths. Its
+hooks were `base udev microcode modconf memdisk archiso archiso_loop_mnt
+archiso_pxe_common archiso_pxe_nbd archiso_pxe_http archiso_pxe_nfs block
+filesystems keyboard`; `kms` was absent. Loop/NBD, USB-storage and virtio
+support were present. No GSP firmware or Intel/AMD/NVIDIA display module was
+present; `virtio-gpu.ko.zst` and unrelated NVIDIA network/HID modules were
+present, and the root squashfs retains `linux-firmware`. The initramfs digest
+was abbreviated in the transient inspection notes and was not included in the
+build-provenance JSON, so this runbook does not claim a complete retained
+digest.
+
+The same ISO hash was used before and after each emulator run:
+
+| Mode | Emulator interval (UTC) | Guest observation | Result |
+|---|---|---|---|
+| BIOS | 2026-10-13 23:20:38–23:25:48 (310 seconds) | Systemd reached the live system and waited at `systemd-nsresourced.service` / Namespace Resource Manager startup. The app and service did not appear; the second TTY had no login prompt. | `REVIEWED_BOOT_INCOMPLETE`; no app/service pass |
+| UEFI | 2026-10-13 23:33:07–23:48:29 (922 seconds), OVMF code SHA-256 `2febd26c0b4cf95a636a941afa37d64a552723443ed9ac72f763f6840da98cb4` | At 300/600/900-second captures, systemd remained in early startup. It repeatedly failed `systemd-nsresourced.service`; the main TTY waited on `/dev` node setup, the second TTY had no login prompt, and serial stopped at the UEFI boot menu. | `REVIEWED_BOOT_INCOMPLETE`; no app/service pass |
+
+Both QEMU processes exited with code 0; this is emulator completion, not guest
+boot success. Preserved run records and PNG captures are in
+[`docs/v1/evidence/live-usb-b2/`](../docs/v1/evidence/live-usb-b2/), with a
+folder-local `SHA256SUMS`. BIOS/UEFI service state, guest journal, TTY login,
+and no-writer evidence were not obtained. The Live USB boot gate remains open.
+
+## Same-hash systemd diagnostic (2026-10-14)
+
+The original BIOS/UEFI captures and the baseline direct-kernel BIOS run2 are
+preserved in
+[`docs/v1/evidence/live-usb-b2-diagnostic-20261014/`](../docs/v1/evidence/live-usb-b2-diagnostic-20261014/).
+Every run used the b2 ISO SHA-256
+`afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`; the
+direct-kernel record confirms the same hash before and after. The QEMU
+emulator was version 11.1.2. The baseline direct-kernel run2 used
+`-accel tcg,thread=multi -m 3072 -smp 4 -nic none` and the ISO as CD-ROM. It
+extracted kernel and initramfs from that ISO; their SHA-256 values are in the
+evidence README and `boot-files.sha256`.
+
+The run2 direct-kernel command included
+`archisobasedir=arch archisosearchuuid=2026-10-13-22-51-40-00 console=tty0
+console=ttyS0,115200n8 systemd.log_level=debug systemd.log_target=console
+systemd.debug_shell=1`. The serial log confirms the Archiso hooks mounted
+`/dev/sr0` and `/dev/loop0`, then printed “Welcome to Arch Linux!”. It records
+`debug-shell.service` forking `/bin/sh` on `/dev/tty9` and entering running
+state. It also records `autoloader.service` receiving a start job that remained
+held until `basic.target`. The run did not capture `/proc/cmdline` output, and
+no `systemctl is-enabled`, `systemctl status`, `systemctl --failed`, or
+`journalctl` result was obtained. The VGA screendumps remained at early
+SeaBIOS text, so the attempted tty9 switch and read-only command entry did not
+yield usable shell evidence. Service state and cause remain unconfirmed.
+
+The serial log includes systemd preset messages that say
+`autoloader.service`, `debug-shell.service`, and
+`systemd-nsresourced.service` are disabled by preset. These messages show the
+default preset policy; they do not by themselves establish runtime enablement
+or explain the incomplete startup. Source inspection confirms the builder
+creates `/etc/systemd/system/multi-user.target.d/autoloader.conf` with
+`Wants=autoloader.service`, and the target-root customization hook checks that
+drop-in. The queued start job is consistent with the explicit Wants edge, so
+the preset output is not treated as the root cause and no source change was
+made from this evidence.
+
+In run2, the direct-kernel supervisor issued HMP `quit` at its 300-second bound; QEMU
+exited with code 0 after 307.5 seconds including shutdown handling. This is an
+emulator stop result, not guest success. The earlier BIOS run had an uncaptured
+exit code after its bounded stop; the earlier UEFI run exited 0 after HMP quit
+at 307.8 seconds. None of the earlier BIOS/UEFI runs or baseline run2 reached
+a verified AutoLoader app screen, active-service status, or guest-journal
+inspection. The boot and release gates remain open; the later tty9 diagnostic
+is recorded below.
+
+### Timed tty9 diagnostics (runs 3–8)
+
+These follow-ups are direct-kernel debugging, not normal BIOS/UEFI boot
+acceptance. The preserved commands and raw evidence are in the
+`direct-kernel/run3-emergency/` through `run8-vnc/` subdirectories. All use
+the same unchanged b2 ISO hash
+`afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`, extracted
+kernel hash `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`,
+and initramfs hash
+`c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090`. The
+fixed QEMU settings were `-accel tcg,thread=multi -m 3072 -smp 4 -nic none`,
+with loopback-only VNC and the ISO attached as CD-ROM. No writer or network
+device was attached.
+
+Run3 reached emergency mode, where sulogin reported the root account locked;
+no commands were entered. Run4 was a VNC-client construction failure before
+guest observation. Run5 reached the serial `debug-shell.service` running
+marker, but the screen stayed at firmware text. Run6's HMP socket disappeared
+at the 300-second bound before its helper could deliver a key. Run7 stopped at
+150.1 seconds because the mounted-Windows serial log briefly returned
+`OSError: [Errno 61] No data available`; it never reached the marker.
+
+Run8 kept HMP connected from launch and retried transient serial-file reads.
+At `2026-10-14T03:14:52Z`, 262.9 seconds after launch, serial reported
+`debug-shell.service: Changed dead -> running`. HMP sent `sendkey ctrl-alt-f9`
+and the VGA capture showed a tty9 shell prompt. A harmless `echo
+lc_tty9_marker` command printed visibly. `cat /proc/cmdline` visibly confirmed
+the direct-kernel command line. These records prove the debugging shell was
+reachable in this emulator run; they do not prove the normal ISO boot.
+
+At the captured run8 snapshots, `systemctl list-jobs --no-pager` showed 66
+jobs, including `systemd-nsresourced.service` running and `basic.target`
+waiting. `systemctl --failed --no-pager` returned zero loaded failed units at
+that moment. `autoloader.service` was loaded, disabled, inactive (dead), with
+Job 174. `systemd-nsresourced.service` was activating and triggered by its
+socket. `systemd-remount-fs.service` had succeeded while `basic.target` and
+`sysinit.target` were inactive. The journal screenshot shows nsresourced audit
+and watchdog messages; the later serial log records its start operation
+timing out and termination. This locates the incomplete startup path but does
+not establish its root cause. The read-only `systemctl is-active` command did
+not produce a retained result. `systemctl default --no-block` was not run.
+
+Run8 was explicitly stopped by the operator at 594.2 seconds; QEMU then exited
+0 after SIGTERM and shutdown handling, with the supervisor recording 604.4
+seconds total. The ISO hash remained unchanged. No AutoLoader UI or active
+service was reached, no root cause was confirmed, and no product image,
+profile, or root account was changed. These findings do not satisfy the BIOS
+or UEFI boot gate.
+
+The project's earlier real offline-namespace test was **UNVALIDATED** in Arch
+WSL. It used bare `unshare --net`; a read-only diagnostic changed the
+namespace ID, but shared `/sys/class/net` still exposed `eth0` and raw IPv6
+proc data contained the kernel's loopback sentinel rows. The strict probe has
+since been revised to require a user-mapped network namespace, independent
+namespace-aware iproute2/socket views, exact default rules, and either no
+IPv6 proc rows or exactly two copies of the pinned null/unreachable sentinel.
+The current production result and the separate Ubuntu inventory are recorded
+under `docs/v1/evidence/offline-namespace-arch-wsl-20261015/` and
+`docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`. No network traffic
+was sent during either probe.
+
+The production isolation gate's network probe passed in Arch WSL on
+2026-10-15. The exact canonical `/usr/bin/unshare` and `/usr/bin/ip`
+executables were verified by pacman as `util-linux 2.42.4-1` and `iproute2
+7.2.0-1`; the child had a different namespace ID and reported loopback only,
+zero IPv4/IPv6 netlink routes, expected rules, and two exact IPv6 sentinels.
+Historical pre-errno-correction run: the integrated preflight reported
+`ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` under a broad OSError classifier; its
+record is retained in
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/production-mount-preflight-20261015.txt`.
+The corrected production check initially returned
+`ARCHISO_MOUNT_PREFLIGHT_INTEGRITY_FAILURE` because the probe passed generic
+VFS options (`nosuid,nodev`) as tmpfs filesystem data, which yielded EINVAL.
+A disposable same-namespace comparison confirmed the plan defect: the old
+syscall failed, while split mount flags and the exact util-linux
+`mount(8)` options succeeded. The probe plan now maps VFS controls to
+`MS_NOSUID`, `MS_NODEV`, `MS_NOEXEC`, and `MS_STRICTATIME`, leaving only
+filesystem-specific `mode`/`gid` values in data. The current direct production
+preflight now reports `ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for `devtmpfs`;
+the route probe passes and host mountinfo is unchanged. It still stops before
+builder work/output. See
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/mount-errno-classification-20261015.txt`
+and `tmpfs-option-split-diagnostic-20261015.txt`. Native Linux behavior and
+the offline build remain pending.
+
+Mount syscall errors are classified narrowly. `EPERM` and `EACCES` are
+permission denials; `ENODEV` (filesystem type unavailable) and `EOPNOTSUPP`
+(filesystem-specific unsupported operation) count only for operations that
+mount an explicit filesystem type. Other errors, including `ENOENT`, `EFAULT`,
+`EBADF`, `EIO` and `EINVAL`, are integrity failures and cannot be reported as
+an unsupported host. Linux `mount(2)` documents `EINVAL` for bad flags/targets
+and for certain unprivileged nonrecursive binds that would expose hidden
+submounts. This probe supplies fixed flags and uses its own validated temporary
+tree with no source submounts, so `EINVAL` indicates an unexpected condition.
+The child report validator enforces the same operation-aware allowlist. See
+the [Linux `mount(2)` manual](https://man7.org/linux/man-pages/man2/mount.2.html).
+These errno regressions are synthetic tests; the archived WSL production
+exception did not include raw errno values.
+
+After the tmpfs argument-plan correction, focused USB tests passed 259/1
+skipped on Arch WSL and 244/16 on Windows. Native Arch and Win32-targeted
+`mypy autoloader usb_builder` passed on 104 source files. The production
+preflight regression separately captures the route-free child report and
+unchanged host mount snapshots. The direct production preflight now reports
+`ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for `devtmpfs` only. These checks
+validate behavior under WSL; native Linux mount behavior and a successful
+offline builder run remain pending. The complete test suite has not yet been
+rerun after this correction.
+
+The guarded subprocess closes inherited descriptors, sets stdin to `DEVNULL`,
+forces stderr to `STDOUT`, and accepts stdout only as `PIPE` or an already-open
+regular log file verified with `fstat`. Sockets, socket-backed streams, raw
+file descriptors, devices, FIFOs, caller stdin overrides and other subprocess
+controls are rejected before a child starts. On timeout the wrapper terminates
+the child process group and sends SIGKILL after the grace period even if its
+leader exits first. A descendant that calls `setsid()` can escape that process
+group; it remains in the restricted network namespace but could outlive the
+wrapper and continue local filesystem activity. This residual prevents claiming
+complete process-tree cleanup.
+
+### CRLF profile script build failure (2026-10-15)
+
+A clean temporary source snapshot reached `mkarchiso` and failed with
+`profiledef.sh: line 3: $'<CR>': command not found`; mkarchiso exited 127.
+`<CR>` denotes the carriage-return byte present in the profile script. No
+candidate image from that attempt was accepted or published. The checked-out
+profile also had CRLF in its systemd service, startup shell script and pacman
+configuration. Repository attributes pin the known Archiso text inputs and
+package list to LF; current text inputs are normalized to LF, and preflight plus staged-profile checks
+reject carriage returns before and after mkarchiso and at publication. Focused
+tests cover both source CRLF rejection and a staged script changed to CRLF by
+the fake builder. The safeguards and focused gates are complete; a new offline
+build attempt is required, and no successful image build is claimed.
+
+### WSL private-mount namespace capability probe (2026-10-15)
+
+To diagnose whether rootless Archiso setup could proceed without weakening the
+network boundary, the probe used the production user-mapped flags plus private
+mount/PID namespaces and a private proc mount:
+`unshare --user --map-root-user --net --mount --pid --fork --mount-proc`.
+The child had distinct PID, mount and network namespace IDs; namespace-aware
+`ip -j link` showed only `lo`. In that namespace, mounting `proc`, `sysfs` and
+`tmpfs` at temporary test paths succeeded. Mounting `devtmpfs` was denied;
+binding the host `/dev` and `/run` failed; `devpts` with Archiso's `gid=5`
+failed because that GID is unavailable in the mapped namespace. The temporary
+mount test used no builder and its owned directories were removed after the
+namespace exited. Exact output is in
+[`mount-probe-20261015.txt`](../docs/v1/evidence/offline-namespace-arch-wsl-20261015/mount-probe-20261015.txt).
+
+This resolves the earlier `/proc` mount limitation but does not provide the
+device and runtime mounts required by `arch-chroot`/`pacstrap`; therefore no
+offline candidate build was attempted. The WSL production network-isolation
+probe and focused tests still pass, but native Linux build support and a real
+offline build remain pending. No fallback to bare-root `unshare --net` was
+added.
+
+## Post-build package inventory guard
+
+Before candidate publication, the builder validates the target root and its `var/lib/pacman/local` database as contained, non-symlink directories and requires package records with regular `desc` files. It then runs the fixed query `pacman --config /dev/null --dbpath <airootfs>/var/lib/pacman -Q`, using merged stdout/stderr and the strict inventory parser. This uses only the image's local package database; it does not read the host pacman configuration or refresh a repository. Missing or unsafe database paths, a nonzero pacman exit, warnings, malformed or duplicate rows, or missing required packages block the build before atomic candidate publication. The fake-only regression suite passed 79 tests with 2 skipped; `mypy usb_builder` and `git diff --check` passed. SOL accepted this inventory correction. No ISO build or retry was run at that earlier checkpoint.
 
 ## Runtime storage and logs
 
@@ -192,3 +568,127 @@ persistent storage volumes, and the application must pass its existing
 capacity, filesystem, write/readback and distinct-volume checks. The Live USB
 is not a backup destination. No physical writes, restores, post-write reads,
 recovery actions, or media writes are enabled by this profile.
+
+### Direct-kernel retries (runs 9–12; 2026-10-15)
+
+The exact commands, serial/HMP logs, screenshots, launcher records, and before/after hashes are preserved under `docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/` through `run12-vnc/`. All runs used the same unchanged b2 ISO hash `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`, kernel hash `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`, and initramfs hash `c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090`. QEMU 11.1.2 ran with `-accel tcg,thread=multi -m 3072 -smp 4 -nic none`; loopback VNC was used and no firmware writer was attached.
+
+Run9 requested its first frames only seconds after Ctrl+Alt+F9 and sent an echo before visually confirming the complete frame. The screen showed early SeaBIOS/TDX text, not a prompt; no status query was sent. Run10 later captured complete frames that visibly showed `sh-5.3#`, but at about 362 seconds the short acknowledgement-file window expired before its launcher consumed the review decisions. Cleanup finished at 383.4 seconds. No guest text or status/journal command ran. Run11 reached `debug-shell.service` running in serial at 256.4s and sent the chord, then failed in its manual input gate with `NameError: sys is not defined` before any post-key frame or guest text.
+
+Run12 fixed the launcher and kept the 600-second hard cap independent of manual review. At 249.1s serial reported the debug-shell marker and HMP sent Ctrl+Alt+F9. Twenty-one complete VGA frames through 565.3s showed SeaBIOS/TDX early-startup text, with no visible tty9 prompt. One repeat chord was sent through a second local HMP connection; the client got no reply within 3s, and later frames did not change. No guest text, `systemctl`, journal, or service-status command was sent. The launcher ended at T+575 after no visible prompt was confirmed and stopped QEMU; its exit code 0 only records emulator shutdown. Neither run11 nor run12 reached a guest status/session, and none of runs9–12 proves app/service startup or root cause. All four are emulator diagnostics only; the normal BIOS/UEFI acceptance gate remains open.
+
+### Stock Arch Linux control (2026-10-15)
+
+To check whether the startup stall was unique to b2, the official Arch Linux 2026.10.01 x86_64 ISO was booted under the same Arch WSL2/QEMU 11.1.2 TCG environment. The release ISO SHA-256 was verified as `684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5` before and after each run. Its extracted kernel SHA-256 (`8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`) matches the b2 kernel; the stock initramfs SHA-256 is `35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52`. Exact commands, per-run results, captures and hash manifests are under `docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/`; see its README for the full evidence map.
+
+The stock normal BIOS run used `-accel tcg,thread=multi -m 3072 -smp 4`, no guest input, no NIC, no writable disk, and no firmware writer. It ran for the 600-second cap, reached systemd 262-1-arch, and displayed the same Namespace Resource Manager and static `/dev` node startup stalls. It did not reach a login prompt.
+
+A separate direct-kernel run used the exact stock kernel/initramfs and a visually gated tty9 shell. After a harmless echo was visibly confirmed, one serialized read-only command returned to the shell prompt. The captured `systemd-nsresourced.service` was activating as job 207 after about 40 seconds, with 38.267 seconds of CPU time, and its journal had no entries; `systemctl --failed` showed zero failed units at that point. A different longer run's serial log records the same unit timing out and being killed. Later screenshots from that longer run have unreliable command/file associations because its launcher sent further commands before the prompt returned, so they are excluded from analysis. No root cause has been established.
+
+The host exposes neither `/dev/kvm` nor `/dev/mshv`; QEMU's MSHV accelerator probe fails because the device node is unavailable. Thus this control weakens a b2-only profile explanation but does not distinguish guest/systemd behavior from the WSL/TCG environment. A native Linux/KVM control is still required. The Live USB BIOS/UEFI app/service and offline-isolation gates remain open. No product unit or profile was changed from this evidence.
+
+### Rootless Archiso host preflight implementation checkpoint (2026-10-16)
+
+The production builder now requires a non-root caller with matching real and
+effective identity, a private primary group, and no supplementary groups other
+than that primary GID. The process must have empty effective, permitted and
+ambient capability sets; `CAP_SYS_ADMIN` and `CAP_NET_ADMIN` must be absent
+from its bounding set, while `CAP_SETUID` and `CAP_SETGID` remain available to
+the pinned `-N` helper chain. `NoNewPrivs` must remain clear pending an exact
+`pacstrap -N`/`arch-chroot -N` proof. Both subuid and subgid files must provide
+one non-overlapping range of at least 65,536 IDs for the invoking UID.
+
+The helper contract is bound to Archiso 91-1, arch-install-scripts 31-2,
+shadow 4.20.0.arch1-1 and libcap 2.78-1. For the pinned shadow archive,
+`newuidmap` is a root-owned mode-0755 file with exactly
+`cap_setuid=ep`, and `newgidmap` is root-owned mode-0755 with exactly
+`cap_setgid=ep`; both binary hashes, package ownership and the `getcap`
+binary/hash/owner are pinned. The signed shadow and libcap package archives,
+signature hashes and helper hashes are recorded in `snapshot.lock.json`.
+
+The read-only helper/package provenance was verified against the locked
+2026-09-29 core database. The Arch WSL distro cannot satisfy the production
+preflight: it runs as UID 0, has no delegated subuid/subgid mappings, and its
+map helpers have no file capabilities. Production `execute_build` rejected
+root before command or output/work creation at that earlier checkpoint. No
+online or offline build mode was enabled then. The later non-root `-N` mount
+and online execution integration is described below. No package install,
+`mkarchiso`, candidate build, hardware, or media operation was performed for
+that historical checkpoint.
+
+### Pacstrap status-propagation correction (2026-10-16)
+
+The disposable Arch VM subsequently proved the pinned `arch-install-scripts
+31-2` `pacstrap -N` script can log a package-install error yet exit 0 because
+the script runs cleanup without preserving the child status. Exact evidence
+and the exit-7 control are linked at
+[`namespace-and-pacstrap-probes.txt`](../docs/v1/evidence/rootless-archiso-vm-20261016/namespace-and-pacstrap-probes.txt).
+
+The implementation now carries a hash-pinned, operation-owned patch resource
+that saves the child status before cleanup, returns cleanup failures, and
+preserves the child status after successful cleanup. Staging verifies the
+original system file and exact patch/result hashes, writes only inside a
+private token-marked operation directory, checks owner/mode and staged bytes,
+and records the future mkarchiso PATH and argv in provenance. The system
+`/usr/bin/pacstrap` is never modified. SOL accepted the overlay and its failure
+propagation checks. The current source wires it into the rootless online
+`execute_build` route after the pinned host and mount preflights; offline mode
+remains fail-closed until a compatible no-egress launcher is reviewed. A
+VM-backed host preflight had stopped at `setpriv` because the previous
+contract reused one unrelated SHA-256 for `setpriv`, `unshare`, `mount`, and
+`umount`. The pinned util-linux 2.42.4-1 VM package and each executable now
+have separate locked hashes, with exact-value and per-tool mismatch tests.
+Focused rootless/pacstrap checks passed 30 tests with 277 deselected on both
+Arch WSL and Windows; Windows mypy is clean on four USB-builder source files.
+This corrects the tool identity pin but does not validate the complete rootless
+chain or enable builds. No build, ISO, media, or hardware operation occurred.
+
+### Online candidate readiness check (2026-10-15)
+
+The post-tmpfs-correction production mount-capability preflight was invoked
+directly from the current shared checkout. It returned
+`ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for `devtmpfs`. This preflight is
+mandatory for both online and offline `execute_build` modes, before work/output
+creation. The candidate builder was not launched at that earlier checkpoint;
+there was no repository sync/download, package installation, `mkarchiso`
+invocation, or new ISO. Exact
+command and output are in
+`docs/v1/evidence/offline-namespace-arch-wsl-20261015/online-candidate-readiness-preflight-20261015.txt`.
+This is Arch WSL evidence only, not native Linux validation. Native Linux
+build, offline ISO, and successful BIOS/UEFI app/service boot remain pending.
+
+### Same-hash nsresourced mask experiment (2026-10-15)
+
+A bounded direct-kernel QEMU TCG run used the unchanged b2 ISO, kernel and initramfs and added only `systemd.mask=systemd-nsresourced.service` and `systemd.mask=systemd-nsresourced.socket`. Serial confirms both units were masked. It still showed `sysinit.target` waiting on `systemd-tmpfiles-setup-dev.service` at the 270-second checkpoint. The debug-shell service started on tty9, but no guest command was entered; no app/service readiness, normal boot pass or root cause was established. QEMU 11.1.2 ran for 282.40 seconds and exited 0 after HMP quit; its controller reported a monitor reset while reading the quit response after QEMU stopped. ISO/kernel/initramfs hashes were unchanged. This is oriented emulator evidence, not a release pass. Exact command, logs, frames, result and checksums are in `docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/`.
+
+Disposition: this experiment did not establish that masking either unit is necessary or safe. The default profile and target-root checks leave the pinned systemd service/socket behavior unchanged; only the AutoLoader `multi-user.target.wants` link is required for image acceptance.
+
+### Rootless Archiso `-N` mount-stack preflight implementation — 2026-10-16
+
+The earlier devtmpfs denial was from a root-oriented probe. A separate
+preflight now mirrors the pinned `arch-install-scripts 31-2`
+`arch-chroot -N` stack: private bind of the target root, proc, recursive
+`/sys`, tmpfs `/dev`, six individually validated device binds (`full`,
+`null`, `random`, `tty`, `urandom`, `zero`), and tmpfs `/run` and `/tmp`.
+The child verifies fresh user/network/mount/PID namespace identities and a
+route-free network before and after mounting, checks exact device types and
+numbers, then unmounts and proves its mount table is restored. The parent
+requires byte-identical host mountinfo before and after.
+
+The rootless mount probe and execution integration now have 70 focused tests
+passing (269 deselected) in Ubuntu 26.04 WSL. The production online path
+performs pinned host/helper checks and the exact isolated route-free `-N`
+mount preflight before creating build work or output, then runs as the same
+non-root caller with a fixed environment and operation-owned pacstrap status
+overlay. Egress is available to online package/build commands only after the
+isolated probes pass. A separate focused route selection passed 7 tests
+(332 deselected); native and Windows-targeted `mypy usb_builder` each passed
+on 5 source files.
+
+Offline mode remains fail-closed before work/output because there is no
+reviewed route-isolation launcher compatible with the non-root Archiso `-N`
+contract. No current-source package install or `mkarchiso` candidate build was
+run in this implementation slice; the parent is handling the disposable-VM
+build gate. The existing b2 ISO and its incomplete BIOS/UEFI app/service boot
+evidence remain historical and unchanged. WSL results are not native Linux
+validation, and all three hardware workflows remain pending.

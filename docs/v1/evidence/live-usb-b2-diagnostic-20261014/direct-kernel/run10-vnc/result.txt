@@ -1,0 +1,7 @@
+elapsed_seconds=383.4
+qemu_exit=0
+iso_before=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_after=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+network_device=none
+firmware_writer=none
+stop_reason=bounded emulator diagnostic; QEMU exit is not guest success

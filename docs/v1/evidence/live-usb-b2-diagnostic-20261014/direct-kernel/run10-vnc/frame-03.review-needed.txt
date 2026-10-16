@@ -1,0 +1,2 @@
+captured=2026-10-15T12:18:38Z elapsed=301.5s
+Review vga-after-f9-03.ppm; write frame-03.decision.txt containing PROMPT only if a visible sh-5.3# prompt is present; otherwise NOT_VISIBLE.

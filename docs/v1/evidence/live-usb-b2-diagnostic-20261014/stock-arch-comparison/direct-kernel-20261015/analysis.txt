@@ -1,0 +1,5 @@
+This was a direct-kernel diagnostic of the checksum-verified stock Arch Linux 2026.10.01 ISO, not a product acceptance run. The kernel and initramfs were extracted from that ISO and hashed before launch. The QEMU topology used TCG with four vCPUs, 3072 MiB, the ISO as CD-ROM, loopback-only VNC and no network device or firmware writer.
+
+The command line enabled the systemd debug shell and verbose serial logging. At the 400-second readiness boundary, the launcher had not observed `debug-shell.service: Changed dead -> running`, so it stopped QEMU in cleanup. No tty switch, prompt interaction or guest command occurred. QEMU's exit code 0 records host-side shutdown only.
+
+The serial log reached systemd unit-file discovery. The log reader recorded one transient `OSError(61, 'No data available')` while QEMU was writing the serial file through the Windows-mounted path; later reads resumed. The verified ISO SHA-256 was unchanged before and after. This attempt is incomplete and does not establish a root cause. A second diagnostic uses info-level systemd logging and writes the serial log to the WSL Linux filesystem during the run.

@@ -1,0 +1,3 @@
+afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd  /home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso
+8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901  /mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261014/direct/vmlinuz-linux
+c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090  /mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261014/direct/initramfs-linux.img

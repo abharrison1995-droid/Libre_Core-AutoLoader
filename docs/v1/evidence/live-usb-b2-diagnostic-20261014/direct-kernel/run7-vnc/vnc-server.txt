@@ -1,0 +1,4 @@
+connected=127.0.0.1:5902
+rfb_name=QEMU
+resolution=720x400
+auth=none; bound to loopback only

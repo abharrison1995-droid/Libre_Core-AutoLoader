@@ -1,0 +1,22 @@
+UID mapping observation - 2026-10-16
+
+Environment: disposable Arch Linux QEMU VM, host root console, toolchain root
+at /mnt/archv1/work/toolroot-20261016. This is a namespace semantics probe;
+it did not create mounts or access firmware hardware.
+
+Command run on the live VM host as UID/GID 1000:
+
+  setpriv --reuid 1000 --regid 1000 --clear-groups -- \
+    unshare --user --map-root-user stat /dev/null /sys
+
+The command succeeded. The child's stat output reported UID 65534 (nobody) and
+GID 65534 (nobody) for both `/dev/null` and `/sys`. `/dev/null` remained a
+character device with major/minor 1:3; `/sys` remained a directory. The parent
+root namespace reports these source owners as UID/GID 0.
+
+The same unshare check attempted from inside the toolchain chroot returned
+`Operation not permitted`; the live host check succeeded. This identifies
+chroot nesting as unsuitable for exercising the production rootless path.
+The mapped-owner observation does not prove the Archiso mount sequence or
+production preflight. No firmware writes, hardware recovery, or device mounts
+were performed.

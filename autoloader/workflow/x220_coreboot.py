@@ -460,7 +460,7 @@ class X220CorebootWorkflow:
         if result.recipe_id != X220_COREBOOT.recipe_id or result.status is not BuildStatus.COMPLETE:
             raise ValueError(f"ArtifactEngine did not return a COMPLETE pinned X220 result: {result.code}: {result.message}")
         manifest, manifest_path = result.manifest, result.manifest_path
-        if manifest is None or manifest_path is None or manifest.status != "complete" or manifest.schema_version != 1:
+        if manifest is None or manifest_path is None or manifest.status != "complete" or manifest.schema_version != 3:
             raise ValueError("X220 COMPLETE result is missing its versioned immutable manifest")
         if (
             manifest.recipe_id != X220_COREBOOT.recipe_id

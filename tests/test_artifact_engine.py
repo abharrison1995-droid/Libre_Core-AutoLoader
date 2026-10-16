@@ -29,6 +29,8 @@ from autoloader.rom_builder.artifact_engine import (
     PinnedFile,
     ReproducibilityRecord,
     SourcePin,
+    X200UBootDependencyEvidence,
+    X200GrubFontEvidence,
     compare_region_maps,
     derive_lbmk_output_path,
     _finalize_x220_operation_plan,
@@ -99,6 +101,18 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
     )
     assert {item.path: item.sha256 for item in LIBREBOOT_2601.files} == {
         "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
+        "include/get.sh": "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9",
+        "config/git/u-boot/pkg.cfg": "84088781b2b1630ffc95a5024945986f2ff8c83cc3cc86e474eef52a2f324ce0",
+        "config/u-boot/x86_64/target.cfg": "98d8b99e09fc64257aa6d2dfc2d470123e22d42bca718dd34aae107a09f71c9f",
+        "config/u-boot/amd64coreboot/target.cfg": "b7198cb054718c73194c3e7d193a758469c8dac64b0dc2bc5abd0fdb9746afde",
+        "config/u-boot/amd64coreboot/config/default": "16c6839809a9755a39d9674216b40b0b9f299c4869e7a3448ad755f3eec0ae6a",
+        "config/u-boot/x86_64/patches/0001-x86-serial-ns16550-Allow-the-UART-to-be-silently-dis.patch": "03b77b02eaf90bcb35e6fb0c5ba1afb749241a14a94be8a87606a1df9386fa85",
+        "config/u-boot/x86_64/patches/0002-x86-Avoid-clearing-the-VESA-display.patch": "f7bff931f1f0735d63eb86bfd4a53cd6e93c4fdaf25d04bee804c5c3f64b176e",
+        "config/u-boot/x86_64/patches/0003-x86-Avoid-clearing-the-VESA-display.patch": "e40b5e133de50befff9b1b1738e20420c0e86873668bed1ae3aec1b309bebf56",
+        "config/u-boot/x86_64/patches/0004-Support-auto-boot-timeout-delay-bootflow-menu.patch": "36b864aad951ecdb5680ca1d4d87bdf9dfbe82511be840664fbbd34ef8f67b53",
+        "config/u-boot/x86_64/patches/0005-Libreboot-branding-version-on-the-bootflow-menu.patch": "df7ff820dbe9ebea8b2b19ac7c7f48d2342c1a3e525bbe51644c35873c758081",
+        "config/u-boot/x86_64/patches/0006-i-made-it-purple.patch": "fdf1baab5844be0a6ed8068afeeb4589fc0e346d72850f2232dc42dd1b007471",
+        "config/u-boot/x86_64/patches/0008-scripts-dtc-pylibfdt-libfdt.i_shipped-Use-SWIG_Appen.patch": "91ad0bae21b0f459e49e4edebdbd17993af7efffabe379287fb1089d917f77d5",
         "config/coreboot/x200_4mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
         "config/coreboot/x200_4mb/config/libgfxinit_corebootfb": "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
         "config/coreboot/x200_4mb/config/libgfxinit_txtmode": "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65",
@@ -108,13 +122,621 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "config/coreboot/default/target.cfg": "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e",
         "config/git/coreboot/pkg.cfg": "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f",
         "include/lib.sh": "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a",
+        "config/git/grub/pkg.cfg": "6e8886854534db158f8560d7ec99e6eccd2f2c4ca6100aa0c9442c22558081c8",
+        "config/grub/default/target.cfg": "a23bb6648ce1f893504c19d957a53de9de8a861f92ae123ade094dade4e8f5a8",
+        "include/tree.sh": "de3c294c4401fcc5a6364e644364127e3ddb31d3f0d7b00050350516ae428876",
+        "config/grub/default/patches/0001-mitigate-grub-s-missing-characters-for-borders-arrow.patch": "049c385db82d971343e769520964bf557789f727ab0ab7d2d95ed2289c88aac0",
+        "config/grub/default/patches/0002-say-the-name-libreboot-in-the-grub-menu.patch": "93ba1fe44bb731049160fc7ab87641c544cada6741b81b1463f53cb7226fbeb1",
+        "config/grub/default/patches/0003-at_keyboard-coreboot-force-scancodes2-translate.patch": "40dd3c99aa16cea84e44dde75596545a566bf9ff9de08aec31b4f7ca0ac5e44c",
+        "config/grub/default/patches/0004-keylayouts-don-t-print-Unknown-key-message.patch": "1a0bacbfa5191540d3487e1ebac848e19424a1b15cff9c44e9d4526a8d9a4017",
+        "config/grub/default/patches/0005-don-t-print-missing-prefix-errors-on-the-screen.patch": "fdc6501d624697e4d8c2bfdb26cb5ebbecd1aeb566343e273a169f39dda5c8cd",
+        "config/grub/default/patches/0006-don-t-print-error-if-module-not-found.patch": "dacbcf7157605a95c1bf3f974aba41d6f6e70a9b52de4670688cf543bbd50799",
+        "config/grub/default/patches/0007-don-t-print-empty-error-messages.patch": "ee48e0449e968a28789da04904e7e2d6a58f698b66ff2b8864610a90848cd4df",
+        "config/grub/default/patches/0008-kern-coreboot-mmap-Map-to-reserved.patch": "203300078af56bfcc6b9e7958c0cdb24c3827873c3e1b0cd36eb9ce3db712504",
+        "config/grub/default/patches/0009-Revert-configure-Check-linker-for-image-base-support.patch": "71b838b5f9796954e156400100ef2503c04659f0cec04df172c20611a3cf9945",
+        "config/grub/default/patches/0010-Revert-configure-Print-a-more-helpful-error-if-autoc.patch": "4a00cc1ab2b3c04d0251a50f7309a4b82c9943a901ef92207f54baae346d46d6",
     }
     assert X200_4MB.expected_config_sha256 == "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c"
+
+
+def test_pinned_lbmk_cbfstool_path_matches_exact_26_01_source() -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    accepted = 'cbfstool="elf/coreboot/default/cbfstool"\n'
+    module.ArtifactEngine._validate_lbmk_cbfstool_path_selection(accepted)
+    for changed in (
+        'cbfstool="elf/coreboot/$tree/cbfstool"\n',
+        'cbfstool="elf/coreboot/other/cbfstool"\n',
+        'cbfstool="elf/coreboot/default/cbfstool"\ncbfstool="elf/coreboot/default/cbfstool"\n',
+        'cbfstool="elf/coreboot/default/cbfstool-extra"\n',
+    ):
+        with pytest.raises(ValueError, match="cbfstool path selection changed"):
+            module.ArtifactEngine._validate_lbmk_cbfstool_path_selection(changed)
+
+
+def test_x200_grub_font_pins_and_configure_handoff_are_exact(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    overlay = Path(module.__file__).parent / "patches" / module._X200_GRUB_FONT_OVERLAY_RESOURCE
+    assert overlay.is_file() and not overlay.is_symlink()
+    assert hashlib.sha256(overlay.read_bytes()).hexdigest() == module._X200_GRUB_FONT_OVERLAY_SHA256
+    assert module._X200_GRUB_CONFIGURE_AC_SHA256 == "48c4580fd364054b725eb6b66307b4f326d12471e43883596fdb1508fded8a33"
+
+    staged_font = tmp_path / "operation" / "inputs" / "unifont.otf"
+    argv = (
+        "./configure",
+        f"--with-unifont={staged_font.as_posix()}",
+        *module._X200_GRUB_CONFIGURE_FIXED_ARGS,
+    )
+    config_log = "configure invocation:\n  $ " + " ".join(argv) + "\n"
+    assert module._parse_grub_configure_argv(config_log, staged_font) == argv
+    with pytest.raises(ValueError, match="exact staged Unifont"):
+        module._parse_grub_configure_argv(
+            config_log.replace(staged_font.as_posix(), "/usr/share/fonts/unifont.otf"), staged_font
+        )
+    with pytest.raises(ValueError, match="exactly one"):
+        module._parse_grub_configure_argv(config_log + config_log, staged_font)
+
+
+def test_x200_grub_font_evidence_rejects_version_hash_and_source_mutations() -> None:
+    from autoloader.rom_builder.artifact_engine import X200GrubFontEvidence
+
+    import autoloader.rom_builder.artifact_engine as module
+
+    base = X200GrubFontEvidence(
+        source_font_path=module._X200_GRUB_FONT_SOURCE_PATH,
+        source_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+        source_package=module._X200_GRUB_FONT_PACKAGE,
+        source_package_version=module._X200_GRUB_FONT_PACKAGE_VERSION,
+        staged_font_relative_path=module._X200_GRUB_FONT_STAGED_RELATIVE_PATH,
+        staged_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+        overlay_resource_path=module._X200_GRUB_FONT_OVERLAY_PATH,
+        overlay_resource_sha256=module._X200_GRUB_FONT_OVERLAY_SHA256,
+        lbmk_tree_sh_sha256=module._X200_LBMK_TREE_SH_SHA256,
+        lbmk_tree_sh_patched_sha256=module._X200_LBMK_TREE_SH_PATCHED_SHA256,
+        grub_source_relative_path="work/lbmk/src/grub/default",
+        grub_repository_url=module._X200_GRUB_SOURCE_URL,
+        grub_cache_relative_path=module._X200_GRUB_CACHE_RELATIVE_PATH,
+        grub_base_revision=module._X200_GRUB_BASE_REVISION,
+        grub_base_tree_id=module._X200_GRUB_BASE_TREE,
+        grub_patch_inputs=module._X200_GRUB_PATCH_INPUTS,
+        grub_patch_commits=tuple(f"{index:040x}" for index in range(1, 11)),
+        grub_patch_tree_ids=module._X200_GRUB_PATCH_TREE_IDS,
+        grub_result_revision=f"{10:040x}",
+        grub_result_tree_id=module._X200_GRUB_PATCHED_TREE,
+        configure_log_relative_path=module._X200_GRUB_CONFIG_LOG_RELATIVE_PATH,
+        configure_log_sha256="a" * 64,
+        configure_argv=(
+            "./configure",
+            "--with-unifont=<operation-output-directory>/inputs/unifont.otf",
+            *module._X200_GRUB_CONFIGURE_FIXED_ARGS,
+        ),
+        generated_payload_relative_path=module._X200_GRUB_PAYLOAD_RELATIVE_PATH,
+        generated_payload_sha256="b" * 64,
+    )
+    assert base.source_package_version == "1:16.0.04-1build1"
+    with pytest.raises(ValueError, match="pinned lbmk/GRUB recipe"):
+        replace(base, source_package_version="1:16.0.05-1")
+    with pytest.raises(ValueError, match="pinned lbmk/GRUB recipe"):
+        replace(base, source_font_sha256="c" * 64)
+    with pytest.raises(ValueError, match="pinned lbmk/GRUB recipe"):
+        replace(base, grub_result_tree_id="d" * 40)
+    changed_inputs = list(module._X200_GRUB_PATCH_INPUTS)
+    changed_inputs[0] = (changed_inputs[0][0], "e" * 64)
+    with pytest.raises(ValueError, match="pinned lbmk/GRUB recipe"):
+        replace(base, grub_patch_inputs=tuple(changed_inputs))
+
+
+def test_x200_manifest_font_reopen_uses_portable_operation_copy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reopen validates the staged bytes without requiring Ubuntu's source path."""
+    import autoloader.rom_builder.artifact_engine as module
+    from tests.test_x200_libreboot_workflow import _synthetic_grub_font_evidence
+
+    font_bytes = b"Synthetic OTF fixture for manifest portability; no build is run.\n"
+    font_sha256 = hashlib.sha256(font_bytes).hexdigest()
+    absent_source = tmp_path / "build-host" / "usr" / "share" / "fonts" / "unifont.otf"
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_PATH", str(absent_source))
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_SHA256", font_sha256)
+
+    evidence = _synthetic_grub_font_evidence()
+    operation = tmp_path / "persisted-operation"
+    staged = operation / "inputs" / "unifont.otf"
+    staged.parent.mkdir(parents=True)
+    staged.write_bytes(font_bytes)
+    assert not absent_source.exists()
+
+    validated = module.ArtifactEngine._validate_x200_grub_font_staged_input(operation, evidence)
+    assert validated == staged
+    assert hashlib.sha256(validated.read_bytes()).hexdigest() == evidence.source_font_sha256
+
+    staged.unlink()
+    with pytest.raises(FileNotFoundError):
+        module.ArtifactEngine._validate_x200_grub_font_staged_input(operation, evidence)
+    staged.write_bytes(font_bytes + b"mutated")
+    with pytest.raises(ValueError, match="copy changed"):
+        module.ArtifactEngine._validate_x200_grub_font_staged_input(operation, evidence)
+
+
+def test_x200_grub_commit_ids_may_vary_when_pinned_patch_trees_match(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    git = shutil.which("git")
+    if git is None:
+        pytest.skip("UNVALIDATED: Git executable unavailable for generated commit-ID test")
+
+    def git_output(repository: Path, *args: str, env: dict[str, str] | None = None) -> str:
+        result = subprocess.run(
+            [git, "-C", str(repository), *args],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=env,
+        )
+        assert result.returncode == 0, result.stderr
+        return result.stdout.strip()
+
+    def create_chain(
+        repository: Path,
+        committer_year: int,
+        altered_patch_index: int | None = None,
+    ) -> tuple[str, str, tuple[str, ...], tuple[str, ...]]:
+        repository.mkdir()
+        subprocess.run([git, "init", str(repository)], check=True, capture_output=True, timeout=15)
+        base_env = os.environ.copy()
+        base_env.update({
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_AUTHOR_DATE": "2020-01-01T00:00:00+0000",
+            "GIT_COMMITTER_DATE": "2020-01-01T00:00:00+0000",
+        })
+        (repository / "state.txt").write_text("pinned base\n", encoding="utf-8", newline="\n")
+        git_output(repository, "add", "state.txt", env=base_env)
+        subprocess.run(
+            [git, "-C", str(repository), "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "-m", "base"],
+            check=True,
+            capture_output=True,
+            env=base_env,
+            timeout=15,
+        )
+        base_revision = git_output(repository, "rev-parse", "HEAD")
+        base_tree = git_output(repository, "rev-parse", "HEAD^{tree}")
+        commits: list[str] = []
+        trees: list[str] = []
+        for index in range(10):
+            state = f"patch {index}\n"
+            if index == altered_patch_index:
+                state = f"altered patch {index}\n"
+            (repository / "state.txt").write_text(state, encoding="utf-8", newline="\n")
+            env = base_env.copy()
+            env["GIT_AUTHOR_DATE"] = f"2020-01-02T00:00:{index:02d}+0000"
+            env["GIT_COMMITTER_DATE"] = f"{committer_year}-01-02T00:00:{index:02d}+0000"
+            git_output(repository, "add", "state.txt", env=env)
+            subprocess.run(
+                [git, "-C", str(repository), "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "-m", f"patch-{index}"],
+                check=True,
+                capture_output=True,
+                env=env,
+                timeout=15,
+            )
+            commits.append(git_output(repository, "rev-parse", "HEAD"))
+            trees.append(git_output(repository, "rev-parse", "HEAD^{tree}"))
+        return base_revision, base_tree, tuple(commits), tuple(trees)
+
+    base_a, tree_a, commits_a, trees_a = create_chain(tmp_path / "chain-a", 2021)
+    base_b, tree_b, commits_b, trees_b = create_chain(tmp_path / "chain-b", 2022)
+    base_c, tree_c, commits_c, trees_c = create_chain(tmp_path / "chain-altered", 2023, altered_patch_index=5)
+    assert base_a == base_b
+    assert tree_a == tree_b
+    assert base_a == base_c
+    assert tree_a == tree_c
+    assert commits_a != commits_b
+    assert trees_a == trees_b
+    assert trees_a != trees_c
+
+    monkeypatch.setattr(module, "_X200_GRUB_BASE_REVISION", base_a)
+    monkeypatch.setattr(module, "_X200_GRUB_BASE_TREE", tree_a)
+    monkeypatch.setattr(module, "_X200_GRUB_PATCH_TREE_IDS", trees_a)
+    monkeypatch.setattr(module, "_X200_GRUB_PATCHED_TREE", trees_a[-1])
+    engine = ArtifactEngine()
+    assert engine._read_x200_grub_patch_history(tmp_path / "chain-a") == (commits_a, trees_a)
+    assert engine._read_x200_grub_patch_history(tmp_path / "chain-b") == (commits_b, trees_b)
+    with pytest.raises(ValueError, match="per-patch source tree"):
+        engine._read_x200_grub_patch_history(tmp_path / "chain-altered")
+    base_evidence = X200GrubFontEvidence(
+        source_font_path=module._X200_GRUB_FONT_SOURCE_PATH,
+        source_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+        source_package=module._X200_GRUB_FONT_PACKAGE,
+        source_package_version=module._X200_GRUB_FONT_PACKAGE_VERSION,
+        staged_font_relative_path=module._X200_GRUB_FONT_STAGED_RELATIVE_PATH,
+        staged_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+        overlay_resource_path=module._X200_GRUB_FONT_OVERLAY_PATH,
+        overlay_resource_sha256=module._X200_GRUB_FONT_OVERLAY_SHA256,
+        lbmk_tree_sh_sha256=module._X200_LBMK_TREE_SH_SHA256,
+        lbmk_tree_sh_patched_sha256=module._X200_LBMK_TREE_SH_PATCHED_SHA256,
+        grub_source_relative_path="work/lbmk/src/grub/default",
+        grub_repository_url=module._X200_GRUB_SOURCE_URL,
+        grub_cache_relative_path=module._X200_GRUB_CACHE_RELATIVE_PATH,
+        grub_base_revision=base_a,
+        grub_base_tree_id=tree_a,
+        grub_patch_inputs=module._X200_GRUB_PATCH_INPUTS,
+        grub_patch_commits=commits_a,
+        grub_patch_tree_ids=trees_a,
+        grub_result_revision=commits_a[-1],
+        grub_result_tree_id=trees_a[-1],
+        configure_log_relative_path=module._X200_GRUB_CONFIG_LOG_RELATIVE_PATH,
+        configure_log_sha256="a" * 64,
+        configure_argv=(
+            "./configure",
+            "--with-unifont=<operation-output-directory>/inputs/unifont.otf",
+            *module._X200_GRUB_CONFIGURE_FIXED_ARGS,
+        ),
+        generated_payload_relative_path=module._X200_GRUB_PAYLOAD_RELATIVE_PATH,
+        generated_payload_sha256="b" * 64,
+    )
+    alternate_evidence = replace(
+        base_evidence,
+        grub_patch_commits=commits_b,
+        grub_result_revision=commits_b[-1],
+    )
+    assert base_evidence.grub_patch_tree_ids == alternate_evidence.grub_patch_tree_ids
+    assert base_evidence.grub_result_revision != alternate_evidence.grub_result_revision
+    with pytest.raises(ValueError, match="pinned lbmk/GRUB recipe"):
+        replace(base_evidence, grub_patch_tree_ids=("f" * 40, *trees_a[1:]))
+
+
+def test_x200_grub_patch_input_files_are_rechecked_by_exact_name_and_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    contents = {"0001-test.patch": b"fixture patch one\n", "0002-test.patch": b"fixture patch two\n"}
+    pins = tuple((name, hashlib.sha256(data).hexdigest()) for name, data in contents.items())
+    monkeypatch.setattr(module, "_X200_GRUB_PATCH_INPUTS", pins)
+    root = tmp_path / "lbmk"
+    patch_dir = root / "config" / "grub" / "default" / "patches"
+    patch_dir.mkdir(parents=True)
+    for name, data in contents.items():
+        (patch_dir / name).write_bytes(data)
+    ArtifactEngine._verify_x200_grub_patch_inputs(root)
+
+    (patch_dir / "0002-test.patch").write_bytes(b"altered patch content\n")
+    with pytest.raises(ValueError, match="patch input changed"):
+        ArtifactEngine._verify_x200_grub_patch_inputs(root)
+
+
+def test_prepare_x200_grub_font_stages_exact_input_and_applies_reviewed_overlay(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    font_bytes = b"Synthetic OTF fixture; this is not a font and no build is run.\n"
+    font_hash = hashlib.sha256(font_bytes).hexdigest()
+    source_font = tmp_path / "system" / "unifont.otf"
+    source_font.parent.mkdir()
+    source_font.write_bytes(font_bytes)
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_PATH", str(source_font.resolve()))
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_SHA256", font_hash)
+
+    original_tree = b"synthetic pinned include/tree.sh before overlay\n"
+    patched_tree = b"synthetic pinned include/tree.sh after overlay\n"
+    monkeypatch.setattr(module, "_X200_LBMK_TREE_SH_SHA256", hashlib.sha256(original_tree).hexdigest())
+    monkeypatch.setattr(module, "_X200_LBMK_TREE_SH_PATCHED_SHA256", hashlib.sha256(patched_tree).hexdigest())
+
+    operation = tmp_path / "operation"
+    source = operation / "work" / "lbmk"
+    tree_script = source / "include" / "tree.sh"
+    tree_script.parent.mkdir(parents=True)
+    tree_script.write_bytes(original_tree)
+    patch_contents = tuple(
+        (name, f"synthetic pinned fixture patch {index}\n".encode("ascii"))
+        for index, (name, _digest) in enumerate(module._X200_GRUB_PATCH_INPUTS)
+    )
+    fixture_patch_inputs = tuple((name, hashlib.sha256(data).hexdigest()) for name, data in patch_contents)
+    monkeypatch.setattr(module, "_X200_GRUB_PATCH_INPUTS", fixture_patch_inputs)
+    patch_directory = source / "config" / "grub" / "default" / "patches"
+    patch_directory.mkdir(parents=True)
+    for patch_name, patch_data in patch_contents:
+        (patch_directory / patch_name).write_bytes(patch_data)
+    logs = operation / "logs"
+    logs.mkdir(parents=True)
+    commands_seen: list[tuple[str, ...]] = []
+
+    def fake_readonly(argv, _cwd, _logs, _commands):
+        command = tuple(argv)
+        commands_seen.append(command)
+        if command[:2] == ("dpkg-query", "-S"):
+            return f"{module._X200_GRUB_FONT_PACKAGE}: {source_font}\n"
+        if command[:2] == ("dpkg-query", "-W"):
+            return f"{module._X200_GRUB_FONT_PACKAGE}\t{module._X200_GRUB_FONT_PACKAGE_VERSION}\n"
+        if command[:3] == ("git", "-C", str(source)):
+            return " M include/tree.sh\n"
+        raise AssertionError(f"Unexpected read-only command: {command!r}")
+
+    def fake_logged(argv, _cwd, _logs, _commands):
+        command = tuple(argv)
+        commands_seen.append(command)
+        if command[:3] == ("git", "-C", str(source)) and command[3:5] == ("apply", "--check"):
+            return None
+        if command[:3] == ("git", "-C", str(source)) and command[3] == "apply":
+            tree_script.write_bytes(patched_tree)
+            return None
+        raise AssertionError(f"Unexpected logged command: {command!r}")
+
+    engine = ArtifactEngine()
+    monkeypatch.setattr(engine, "_run_readonly", fake_readonly)
+    monkeypatch.setattr(engine, "_run_logged", fake_logged)
+    staged = engine._prepare_x200_grub_font(source, operation, logs, [])
+
+    assert staged == operation / "inputs" / "unifont.otf"
+    assert staged.read_bytes() == font_bytes
+    assert hashlib.sha256(staged.read_bytes()).hexdigest() == font_hash
+    assert hashlib.sha256(tree_script.read_bytes()).hexdigest() == module._X200_LBMK_TREE_SH_PATCHED_SHA256
+    assert any(command[3:5] == ("apply", "--check") for command in commands_seen if command[:2] == ("git", "-C"))
+    assert any(command[3] == "apply" for command in commands_seen if command[:2] == ("git", "-C"))
+
+
+def test_x200_unifont_source_hash_mismatch_blocks_before_package_or_git_commands(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    source_font = tmp_path / "unifont.otf"
+    source_font.write_bytes(b"unexpected source bytes")
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_PATH", str(source_font.resolve()))
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_SHA256", "0" * 64)
+    operation = tmp_path / "operation"
+    source = operation / "work" / "lbmk"
+    (source / "include").mkdir(parents=True)
+    (source / "include" / "tree.sh").write_bytes(b"not reached")
+    logs = operation / "logs"
+    logs.mkdir(parents=True)
+    invoked = []
+    engine = ArtifactEngine()
+    monkeypatch.setattr(engine, "_run_readonly", lambda *args, **kwargs: invoked.append(args) or "")
+    monkeypatch.setattr(engine, "_run_logged", lambda *args, **kwargs: invoked.append(args))
+    with pytest.raises(ValueError, match="source bytes differ from the pinned OTF"):
+        engine._prepare_x200_grub_font(source, operation, logs, [])
+    assert invoked == []
+    assert not (operation / "inputs").exists()
+
+
+@pytest.mark.parametrize("bad_field", ["owner", "version"])
+def test_x200_unifont_package_identity_mismatch_blocks_staging(
+    bad_field: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    font = tmp_path / "unifont.otf"
+    font.write_bytes(b"synthetic font bytes")
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    seen = []
+
+    def fake_readonly(argv, _cwd, _logs, _commands):
+        command = tuple(argv)
+        seen.append(command)
+        if command[:2] == ("dpkg-query", "-S"):
+            package = "other-package" if bad_field == "owner" else module._X200_GRUB_FONT_PACKAGE
+            return f"{package}: {font}\n"
+        if command[:2] == ("dpkg-query", "-W"):
+            version = "1:0-1" if bad_field == "version" else module._X200_GRUB_FONT_PACKAGE_VERSION
+            return f"{module._X200_GRUB_FONT_PACKAGE}\t{version}\n"
+        raise AssertionError(f"Unexpected package query: {command!r}")
+
+    engine = ArtifactEngine()
+    monkeypatch.setattr(engine, "_run_readonly", fake_readonly)
+    with pytest.raises(ValueError, match="expected Debian fonts-unifont package" if bad_field == "owner" else "package version"):
+        engine._verify_x200_unifont_package(font, logs, [])
+    assert len(seen) == 2
+
+
+def test_x200_build_command_receives_only_operation_staged_unifont(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    font_bytes = b"Synthetic OTF fixture; no GRUB build is run.\n"
+    monkeypatch.setattr(module, "_X200_GRUB_FONT_SOURCE_SHA256", hashlib.sha256(font_bytes).hexdigest())
+    operation = tmp_path / "operation"
+    logs = operation / "logs"
+    logs.mkdir(parents=True)
+    build_source = operation / "work" / "lbmk"
+    build_source.mkdir(parents=True)
+    font = operation / "inputs" / "unifont.otf"
+    font.parent.mkdir()
+    font.write_bytes(font_bytes)
+    _ensure_operation_git_config(operation)
+    observed: list[dict[str, str]] = []
+
+    def fake_run(argv, **kwargs):
+        observed.append(kwargs["env"])
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    ArtifactEngine()._run_logged(
+        X200_4MB.build_command,
+        build_source,
+        logs,
+        [],
+        x200_unifont_path=font,
+    )
+    assert observed[0]["LIBRECORE_UNIFONT_PATH"] == str(font)
+
+    with pytest.raises(ValueError, match="exact staged X200 Unifont"):
+        ArtifactEngine()._run_logged(
+            ("./mk", "-b", "coreboot", "x220"),
+            build_source,
+            logs,
+            [],
+            x200_unifont_path=font,
+        )
+    assert len(observed) == 1
     assert X200_8MB.expected_config_sha256 == "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4"
     assert tuple(item.sha256 for item in ONEVYRAIN_HANDOFF.source.files) == (
         "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e335b14e8c33a",
         "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a",
     )
+
+
+def test_x200_uboot_overlay_is_pinned_and_changes_only_the_x86_64_objcopy_target(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    patch_path = Path(module.__file__).parent / "patches" / module._X200_UBOOT_OVERLAY_INPUT[0]
+    assert hashlib.sha256(patch_path.read_bytes()).hexdigest() == module._X200_UBOOT_OVERLAY_SHA256
+    assert module._UBOOT_X86_64_BASE_REVISION == "f919c3a889f0ec7d63a48b5d0ed064386b0980bd"
+    assert module._UBOOT_X86_64_BASE_TREE == "66e7e696eeaa875250ff12d586db009bf8631056"
+    assert module._UBOOT_X86_64_PATCHED_TREE == "12e245c8ad4d68099c7127afd5c61a0e36992b1c"
+    assert tuple(name for name, _ in module._X200_UBOOT_PATCH_STACK) == tuple(sorted(name for name, _ in module._X200_UBOOT_PATCH_STACK))
+
+    repository = tmp_path / "u-boot-fixture"
+    config_path = repository / "arch" / "x86" / "config.mk"
+    config_path.parent.mkdir(parents=True)
+    config_path.write_text(
+        "header\n" * 128
+        + "ifdef CONFIG_X86_64\n"
+        + "EFI_TARGET := --target=efi-app-x86_64\n"
+        + "else\nEFI_TARGET := --target=efi-app-ia32\nendif\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(["git", *args], cwd=repository, check=True, capture_output=True, text=True)
+
+    git("init", "--quiet")
+    git("config", "user.name", "Synthetic Patch Test")
+    git("config", "user.email", "test@example.invalid")
+    git("add", "arch/x86/config.mk")
+    git("commit", "--quiet", "-m", "fixture base")
+    base = git("rev-parse", "HEAD").stdout.strip()
+    git("am", str(patch_path))
+    applied_commit = git("rev-parse", "HEAD").stdout.strip()
+    changed = config_path.read_text(encoding="utf-8")
+    assert changed.count("EFI_TARGET := --output-target=efi-app-x86_64") == 1
+    assert changed.count("EFI_TARGET := --target=efi-app-ia32") == 1
+    assert "EFI_TARGET := --target=efi-app-x86_64" not in changed
+    diff = git("diff", "--no-ext-diff", "--unified=0", f"{base}..HEAD", "--", "arch/x86/config.mk").stdout
+    assert diff.count("-EFI_TARGET := --target=efi-app-x86_64") == 1
+    assert diff.count("+EFI_TARGET := --output-target=efi-app-x86_64") == 1
+    assert "--target=efi-app-ia32" not in diff
+    engine = ArtifactEngine()
+    operation_dir = tmp_path / "patch-check-operation"
+    logs_dir = operation_dir / "logs"
+    logs_dir.mkdir(parents=True)
+    _ensure_operation_git_config(operation_dir)
+    command_records: list[CommandRecord] = []
+    assert engine._patch_file_produces_commit_tree(
+        repository, base, applied_commit, patch_path, logs_dir, command_records
+    )
+    assert len(command_records) == 5
+    assert all(record.exit_code == 0 for record in command_records)
+
+    altered_patch = tmp_path / "same-subject-altered-content.patch"
+    altered_bytes = patch_path.read_bytes().replace(
+        b"EFI_TARGET := --output-target=efi-app-x86_64",
+        b"EFI_TARGET := --output-target=efi-app-x86_64-altered",
+    )
+    altered_patch.write_bytes(altered_bytes)
+    assert module._email_patch_subject(altered_bytes) == module._email_patch_subject(patch_path.read_bytes())
+    assert not engine._patch_file_produces_commit_tree(
+        repository, base, applied_commit, altered_patch, logs_dir, command_records
+    )
+    assert command_records[-1].exit_code != 0 or "write-tree" in command_records[-1].argv
+
+
+def test_x200_uboot_cache_origin_binds_real_lbmk_local_cache_layout(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    root = tmp_path / "disposable-lbmk"
+    relative = "cache/clone/source.denx.de/u-boot/u-boot.git"
+    cache = root / Path(*relative.split("/"))
+    cache.mkdir(parents=True)
+    subprocess.run(["git", "init", "--quiet"], cwd=cache, check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", module._UBOOT_X86_64_SOURCE_URL],
+        cwd=cache,
+        check=True,
+    )
+    cache_remote = subprocess.run(
+        ["git", "-C", str(cache), "remote", "get-url", "origin"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    # lbmk's generated src/u-boot worktree uses the local cache directory as
+    # origin, while the cache's own origin remains the pinned HTTPS remote.
+    worktree_origin = str(cache)
+    cache_toplevel = str(cache.resolve())
+    cache_git_dir = str((cache / ".git").resolve())
+    assert module._validate_x200_uboot_cache_binding(
+        root,
+        worktree_origin,
+        cache_toplevel,
+        cache_git_dir,
+        cache_remote,
+        module._UBOOT_X86_64_BASE_REVISION,
+        module._UBOOT_X86_64_BASE_TREE,
+    ) == relative
+    with pytest.raises(ValueError, match="remote differs"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            worktree_origin,
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_BACKUP_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned in-root cache paths"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            str(tmp_path / "outside-cache.git"),
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_SOURCE_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned in-root cache paths"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            str(root / "cache" / "clone" / "untrusted.example" / "u-boot.git"),
+            cache_toplevel,
+            cache_git_dir,
+            cache_remote,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
+    with pytest.raises(ValueError, match="exact pinned base"):
+        module._validate_x200_uboot_cache_binding(
+            root,
+            worktree_origin,
+            cache_toplevel,
+            cache_git_dir,
+            module._UBOOT_X86_64_SOURCE_URL,
+            module._UBOOT_X86_64_BASE_REVISION,
+            "0" * 40,
+        )
+    linked_root = tmp_path / "linked-lbmk"
+    linked_root.mkdir()
+    linked_cache_parent = linked_root / "cache" / "clone" / "source.denx.de" / "u-boot"
+    linked_cache_parent.mkdir(parents=True)
+    try:
+        linked_cache_parent.joinpath("u-boot.git").symlink_to(cache, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip(f"Symlink creation is unavailable for this test host: {exc}")
+    with pytest.raises(ValueError, match="symlink component"):
+        module._validate_x200_uboot_cache_binding(
+            linked_root,
+            str(linked_cache_parent / "u-boot.git"),
+            cache_toplevel,
+            cache_git_dir,
+            cache_remote,
+            module._UBOOT_X86_64_BASE_REVISION,
+            module._UBOOT_X86_64_BASE_TREE,
+        )
 
 
 def test_coreboot_2609_source_hashes_match_reviewed_raw_blobs() -> None:
@@ -854,7 +1476,7 @@ def test_unknown_recipe_never_selects_a_firmware_family(tmp_path: Path) -> None:
 
 def test_manifest_is_immutable_and_hashes_canonical_content() -> None:
     manifest = ArtifactManifest(
-        schema_version=1,
+        schema_version=3,
         operation_id="operation-1",
         created_at_utc="2026-10-10T00:00:00+00:00",
         recipe_id="x220-coreboot-8mb-seabios",
@@ -1036,9 +1658,88 @@ def test_operation_git_config_mutation_during_artifact_postprocessing_never_publ
     monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("git.version", "fixture"),))
     monkeypatch.setattr(module, "validate_recipe_config", lambda _recipe, _config: "a" * 64)
 
+    objcopy = tmp_path / "fixture-objcopy"
+    objcopy.write_bytes(b"Synthetic GNU objcopy identity; not executed.\n")
+    commits = tuple(f"{index:x}" * 40 for index in range(1, 9))
+    dependency = module.X200UBootDependencyEvidence(
+        source_url=module._UBOOT_X86_64_SOURCE_URL,
+        backup_url=module._UBOOT_X86_64_BACKUP_URL,
+        package_config_sha256=module._UBOOT_PACKAGE_CFG_SHA256,
+        target_config_sha256=module._UBOOT_X86_64_TARGET_CFG_SHA256,
+        amd64_target_config_sha256=module._UBOOT_AMD64_TARGET_CFG_SHA256,
+        amd64_default_config_sha256=module._UBOOT_AMD64_DEFAULT_SHA256,
+        target_tree="x86_64",
+        base_revision=module._UBOOT_X86_64_BASE_REVISION,
+        base_tree_id=module._UBOOT_X86_64_BASE_TREE,
+        base_config_sha256=module._UBOOT_X86_64_BASE_CONFIG_SHA256,
+        overlay_path=module._X200_UBOOT_OVERLAY_PATH,
+        overlay_sha256=module._X200_UBOOT_OVERLAY_SHA256,
+        patched_config_sha256=module._UBOOT_X86_64_PATCHED_CONFIG_SHA256,
+        patch_inputs=module._X200_UBOOT_PATCH_STACK,
+        patch_commits=commits,
+        resulting_revision=commits[-1],
+        resulting_tree_id=module._UBOOT_X86_64_PATCHED_TREE,
+        cache_origin_relative_path=module._uboot_cache_relative_path(module._UBOOT_X86_64_SOURCE_URL),
+        resulting_origin_url=module._UBOOT_X86_64_SOURCE_URL,
+        base_ancestor_verified=True,
+        tracked_worktree_clean=True,
+        objcopy_path=str(objcopy.resolve()),
+        objcopy_sha256=hashlib.sha256(objcopy.read_bytes()).hexdigest(),
+        objcopy_version="GNU objcopy fixture; no tool run",
+    )
+    monkeypatch.setattr(engine, "_prepare_x200_lbmk_build_source", lambda _recipe, _source, _run, _logs, _commands: (source, dependency))
+    monkeypatch.setattr(
+        engine,
+        "_validate_x200_uboot_dependency_after_build",
+        lambda _recipe, _source, _run, _logs, _commands, previous: previous,
+    )
+
+    def fake_prepare_grub_font(_source, run_dir, _logs, _commands):
+        staged_font = run_dir / "inputs" / "unifont.otf"
+        staged_font.parent.mkdir()
+        staged_font.write_bytes(b"Synthetic pinned-font fixture; no build performed.\n")
+        return staged_font
+
+    def fake_collect_grub_font(_source, _run, _font, _logs, _commands):
+        return module.X200GrubFontEvidence(
+            source_font_path=module._X200_GRUB_FONT_SOURCE_PATH,
+            source_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+            source_package=module._X200_GRUB_FONT_PACKAGE,
+            source_package_version=module._X200_GRUB_FONT_PACKAGE_VERSION,
+            staged_font_relative_path=module._X200_GRUB_FONT_STAGED_RELATIVE_PATH,
+            staged_font_sha256=module._X200_GRUB_FONT_SOURCE_SHA256,
+            overlay_resource_path=module._X200_GRUB_FONT_OVERLAY_PATH,
+            overlay_resource_sha256=module._X200_GRUB_FONT_OVERLAY_SHA256,
+            lbmk_tree_sh_sha256=module._X200_LBMK_TREE_SH_SHA256,
+            lbmk_tree_sh_patched_sha256=module._X200_LBMK_TREE_SH_PATCHED_SHA256,
+            grub_source_relative_path="work/lbmk/src/grub/default",
+            grub_repository_url=module._X200_GRUB_SOURCE_URL,
+            grub_cache_relative_path=module._X200_GRUB_CACHE_RELATIVE_PATH,
+            grub_base_revision=module._X200_GRUB_BASE_REVISION,
+            grub_base_tree_id=module._X200_GRUB_BASE_TREE,
+            grub_patch_inputs=module._X200_GRUB_PATCH_INPUTS,
+            grub_patch_commits=tuple(f"{index:040x}" for index in range(1, 11)),
+            grub_patch_tree_ids=module._X200_GRUB_PATCH_TREE_IDS,
+            grub_result_revision=f"{10:040x}",
+            grub_result_tree_id=module._X200_GRUB_PATCHED_TREE,
+            configure_log_relative_path=module._X200_GRUB_CONFIG_LOG_RELATIVE_PATH,
+            configure_log_sha256="c" * 64,
+            configure_argv=(
+                "./configure",
+                "--with-unifont=<operation-output-directory>/inputs/unifont.otf",
+                *module._X200_GRUB_CONFIGURE_FIXED_ARGS,
+            ),
+            generated_payload_relative_path=module._X200_GRUB_PAYLOAD_RELATIVE_PATH,
+            generated_payload_sha256="d" * 64,
+        )
+
+    monkeypatch.setattr(engine, "_prepare_x200_grub_font", fake_prepare_grub_font)
+    monkeypatch.setattr(engine, "_collect_x200_grub_font_evidence", fake_collect_grub_font)
+    monkeypatch.setattr(engine, "_validate_x200_grub_font_evidence", lambda _operation, _evidence: None)
+
     selected_raw = source / module.PurePosixPath(recipe.output_relative_path)
 
-    def fake_build_command(argv, _cwd, logs_dir, commands):
+    def fake_build_command(argv, _cwd, logs_dir, commands, **_kwargs):
         build_log = logs_dir / "01-build.log"
         build_log.write_text("Synthetic build command; no compilation performed.\n", encoding="utf-8")
         commands.append(CommandRecord(
@@ -1083,7 +1784,7 @@ def test_operation_git_config_mutation_during_artifact_postprocessing_never_publ
     assert result.manifest is not None
     assert result.manifest.status == "failed"
     assert result.manifest.failure_code == "ARTIFACT_VALIDATION_FAILED"
-    assert "final publication validation" in (result.manifest.failure_detail or "")
+    assert "final artifact evidence validation" in (result.manifest.failure_detail or "").lower()
     assert result.artifacts == ()
 
 

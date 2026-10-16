@@ -133,6 +133,7 @@ class FilesystemStorageInspector:
         else:
             persistence_proved = (
                 persistence_confirmed
+                and not in_system_temp
                 and filesystem_type is not None
                 and filesystem_type not in _VOLATILE_FS
             )

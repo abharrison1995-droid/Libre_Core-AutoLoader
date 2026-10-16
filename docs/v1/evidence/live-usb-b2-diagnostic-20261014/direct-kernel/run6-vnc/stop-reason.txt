@@ -1,0 +1,1 @@
+QEMU reached 300-second hard bound at 300.0s; no guest success inferred.

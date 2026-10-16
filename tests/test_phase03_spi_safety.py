@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import tempfile
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
+from autoloader.flasher import backup_service
 from autoloader.flasher.backup_service import (
     BackupCaptureError,
     BackupManifestError,
@@ -55,7 +57,28 @@ def _hash(path: Path) -> str:
 
 
 def _payload(size: int, salt: int = 3) -> bytes:
-    return bytes((index * 37 + salt) % 251 for index in range(size))
+    if size <= 0:
+        return b""
+    # Adding 251 to index adds 37 * 251, which is zero modulo 251, so this
+    # exact 251-byte cycle reproduces the original formula for every salt.
+    cycle = bytes((index * 37 + salt) % 251 for index in range(251))
+    full_cycles, remainder = divmod(size, len(cycle))
+    return cycle * full_cycles + cycle[:remainder]
+
+
+def test_payload_cycle_matches_original_formula_for_boundaries_and_salts() -> None:
+    boundary_sizes = (-1, 0, 1, 249, 250, 251, 252, 500, 501, 502, 503, 504)
+    # Cover every salt residue repeatedly, including negative salts.
+    for salt in range(-251, 502):
+        for size in boundary_sizes:
+            expected = bytes((index * 37 + salt) % 251 for index in range(size))
+            assert _payload(size, salt) == expected
+
+    # Also compare a multi-megabyte value through the same original formula.
+    size = 4 * MIB + 7
+    salt = -999
+    expected = bytes((index * 37 + salt) % 251 for index in range(size))
+    assert _payload(size, salt) == expected
 
 
 class FakeStorageInspector:
@@ -585,4 +608,35 @@ def test_filesystem_storage_preflight_rejects_unknown_or_transient_storage(tmp_p
     )
     # The test temp area is not accepted as a durable recovery location.
     assert evidence.persistence_confirmed is False
+    assert evidence.usable is False
+
+
+def test_filesystem_storage_preflight_rejects_posix_system_temp_even_on_persistent_fs(tmp_path, monkeypatch):
+    system_temp = tmp_path / "system-temp"
+    destination = system_temp / "recovery"
+    destination.mkdir(parents=True)
+    monkeypatch.setattr(backup_service.tempfile, "gettempdir", lambda: str(system_temp))
+    real_os = backup_service.os
+
+    class PosixOSProxy:
+        name = "posix"
+
+        def __getattr__(self, name):
+            return getattr(real_os, name)
+
+    monkeypatch.setattr(backup_service, "os", PosixOSProxy())
+    monkeypatch.setattr(backup_service, "_mount_type", lambda _path: "ext4")
+
+    def scratch_readback_must_not_run(_directory):
+        pytest.fail("system-temp recovery path must be rejected before scratch writes")
+
+    monkeypatch.setattr(FilesystemStorageInspector, "_scratch_readback", staticmethod(scratch_readback_must_not_run))
+    evidence = FilesystemStorageInspector().inspect(
+        destination,
+        1024,
+        persistence_confirmed=True,
+    )
+    assert evidence.filesystem_type == "ext4"
+    assert evidence.persistence_confirmed is False
+    assert evidence.scratch_readback_verified is False
     assert evidence.usable is False

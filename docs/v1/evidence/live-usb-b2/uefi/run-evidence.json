@@ -1,0 +1,95 @@
+{
+  "mode": "UEFI",
+  "tcg_multi_threaded": true,
+  "status": "REVIEWED_BOOT_INCOMPLETE",
+  "started_utc": "2026-10-13T23:33:07.875373+00:00",
+  "ended_utc": "2026-10-13T23:48:29.437364+00:00",
+  "command_argv": [
+    "qemu-system-x86_64",
+    "-accel",
+    "tcg,thread=multi",
+    "-m",
+    "3072",
+    "-smp",
+    "4",
+    "-drive",
+    "if=pflash,format=raw,unit=0,readonly=on,file=/usr/share/edk2/x64/OVMF_CODE.4m.fd",
+    "-drive",
+    "if=pflash,format=raw,unit=1,file=/mnt/c/Users/Alex/AppData/Local/Temp/librecore-qemu-1197d904/uefi-multi-pflash-2/OVMF_VARS.4m.fd",
+    "-cdrom",
+    "/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso",
+    "-boot",
+    "d",
+    "-no-reboot",
+    "-no-shutdown",
+    "-display",
+    "none",
+    "-serial",
+    "file:/mnt/c/Users/Alex/AppData/Local/Temp/librecore-qemu-1197d904/uefi-multi-pflash-2/serial.log",
+    "-monitor",
+    "unix:/tmp/lc-qemu-uefi-f2d1ze7v/hmp.sock,server=on,wait=off",
+    "-nic",
+    "none"
+  ],
+  "qemu_version": "QEMU emulator version 11.1.2",
+  "ovmf_path": "/usr/share/edk2/x64/OVMF_CODE.4m.fd",
+  "ovmf_sha256": "2febd26c0b4cf95a636a941afa37d64a552723443ed9ac72f763f6840da98cb4",
+  "ovmf_vars_source": "/usr/share/edk2/x64/OVMF_VARS.4m.fd",
+  "ovmf_vars_source_sha256": "5d2ac383371b408398accee7ec27c8c09ea5b74a0de0ceea6513388b15be5d1e",
+  "ovmf_vars_copy": "/mnt/c/Users/Alex/AppData/Local/Temp/librecore-qemu-1197d904/uefi-multi-pflash-2/OVMF_VARS.4m.fd",
+  "iso_path": "/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso",
+  "iso_sha256_before": "afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd",
+  "iso_sha256_after": "afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd",
+  "iso_unchanged": true,
+  "qemu_exit_code": 0,
+  "monitor_greeting": "QEMU 11.1.2 monitor - type 'help' for more information\r\n(qemu) ",
+  "capture_files": {
+    "OVMF_VARS.4m.fd": {
+      "size": 540672,
+      "sha256": "116258a7862bf52ffc970f4248e48c1aed8c29cceff80f2394d1d832e5b12221"
+    },
+    "boot-screen-0300.png": {
+      "size": 28636,
+      "sha256": "0fcf36c02a078d32e715ecf1426738aabdbaf9cf5855ed0f2c07fe04f8b6b07b"
+    },
+    "boot-screen-0300.ppm": {
+      "size": 3072016,
+      "sha256": "b6ff36276834e088e413af2ecd13fe745ddbfddd9382afda00812db5086c6f56"
+    },
+    "boot-screen-0600.png": {
+      "size": 29116,
+      "sha256": "2c6ee0706426b7744383c72ca35323feb816d58a3011226e07f01d2ab5788d0d"
+    },
+    "boot-screen-0600.ppm": {
+      "size": 3072016,
+      "sha256": "e8d4658f33c2c7dbb3bfc5d64f3864a5e432b450d071ec92c73b7424efb76ef9"
+    },
+    "boot-screen-0900.ppm": {
+      "size": 3072016,
+      "sha256": "20cbdf740bd23ff34251f0d1ad46a10f8834d2390637fa403f87f1c830a7faad"
+    },
+    "boot-screen.ppm": {
+      "size": 3072016,
+      "sha256": "20cbdf740bd23ff34251f0d1ad46a10f8834d2390637fa403f87f1c830a7faad"
+    },
+    "qemu-host.log": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "serial.log": {
+      "size": 6021,
+      "sha256": "bb8c9d0db39be584a551ec8702f3c082623bdbf464d0737d753a4faae6f25041"
+    },
+    "tty2-after-login-attempt.ppm": {
+      "size": 3072016,
+      "sha256": "da628909f4891f6e4c5d9aaf79e1a3446a38ff7c29a083df8369aad0530da214"
+    },
+    "tty2-before-login.ppm": {
+      "size": 3072016,
+      "sha256": "e20ea6789559f8d610dc566d69f7a0a300da1605de4c8d9c821373eb477ae13d"
+    }
+  },
+  "reviewed_by": "GPT SOL 6 LOW",
+  "reviewed_at_utc": "2026-10-14T00:01:12Z",
+  "review_note": "Evidence review complete; guest did not demonstrate AutoLoader or service startup."
+}

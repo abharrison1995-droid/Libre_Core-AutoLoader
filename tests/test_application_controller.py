@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import sys
 
 import pytest
 
@@ -437,6 +438,10 @@ def test_tui_flash_request_stays_blocked_even_with_candidate_document(tmp_path, 
     assert calls == []
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="positive approval persistence requires POSIX directory fsync; production remains fail-closed on Windows",
+)
 def test_controller_cli_write_route_reopens_staged_plan_and_uses_fake_service(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
@@ -513,6 +518,13 @@ def test_controller_cli_write_route_reopens_staged_plan_and_uses_fake_service(tm
         chip_voltage_mv=3300,
         interface_verified=True,
         wiring_verified=True,
+        target_powered_off=True,
+        ac_disconnected=True,
+        removable_battery_removed=True,
+        chip_pin1_orientation_verified=True,
+        programmer_disconnect_before_repower=True,
+        ec_update_decision="waived",
+        ec_waiver_reason="Operator accepts loss of later OEM EC update route.",
     )
 
     result = controller.request_action(
@@ -539,6 +551,10 @@ def test_controller_cli_write_route_reopens_staged_plan_and_uses_fake_service(tm
         (OperationState.WRITE_VERIFIED, ApplicationStatus.WRITE_VERIFIED, "WRITE_VERIFIED"),
         (OperationState.WRITE_STARTED, ApplicationStatus.WRITE_UNCERTAIN, "WRITE_STARTED"),
     ],
+)
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="durable operation-journal success fixtures require POSIX directory fsync; production remains fail-closed on Windows",
 )
 def test_controller_preserves_durable_write_outcome_if_service_throws_after_journaling(
     tmp_path, monkeypatch, terminal_state, expected_status, expected_code
@@ -635,6 +651,13 @@ def test_controller_preserves_durable_write_outcome_if_service_throws_after_jour
         chip_voltage_mv=3300,
         interface_verified=True,
         wiring_verified=True,
+        target_powered_off=True,
+        ac_disconnected=True,
+        removable_battery_removed=True,
+        chip_pin1_orientation_verified=True,
+        programmer_disconnect_before_repower=True,
+        ec_update_decision="waived",
+        ec_waiver_reason="Operator accepts loss of later OEM EC update route.",
     )
 
     result = controller.request_action(

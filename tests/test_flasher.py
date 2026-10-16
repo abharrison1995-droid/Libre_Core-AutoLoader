@@ -186,6 +186,24 @@ def test_is_admin_check():
     assert isinstance(res, bool)
 
 
+def test_is_admin_windows_lookup_is_guarded_and_preserves_result(monkeypatch):
+    from types import SimpleNamespace
+
+    import autoloader.utils as utils
+
+    monkeypatch.setattr(utils.os, "name", "nt")
+    monkeypatch.setattr(
+        utils.ctypes,
+        "windll",
+        SimpleNamespace(shell32=SimpleNamespace(IsUserAnAdmin=lambda: 1)),
+        raising=False,
+    )
+    assert utils.is_admin() is True
+
+    monkeypatch.delattr(utils.ctypes, "windll", raising=False)
+    assert utils.is_admin() is False
+
+
 def test_internal_flasher_check_prerequisites(monkeypatch):
     from autoloader.flasher.internal import InternalFlasher
 

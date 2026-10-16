@@ -1,0 +1,1 @@
+run10 same-hash direct-kernel/VNC; started=2026-10-15T12:13:49Z; cap=600s; no NIC/writer

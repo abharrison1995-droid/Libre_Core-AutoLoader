@@ -1,0 +1,24 @@
+host_utc=2026-10-15T13:54:51Z
+host_uid=uid=1000(alex) gid=1000(alex) groups=1000(alex),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users)
+kernel=Linux DESKTOP-RUNVSTR 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 GNU/Linux
+host_netns=net:[4026531833]
+unshare=unshare from util-linux 2.41.3
+iproute2=ip utility, iproute2-6.19.0, libbpf 1.6.3
+sysfs_mount=/sys sysfs sysfs rw,nosuid,nodev,noexec,noatime
+
+--- user-mapped network namespace ---
+child_netns=net:[4026532217]
+sys_class_net=['eth0', 'lo']
+socket_if_nameindex=[(1, 'lo')]
+ip_link_json=[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","linkmode":"DEFAULT","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00"}]
+ip_addr_json=[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00","addr_info":[]}]
+ip_v4_routes_json=[]
+ip_v6_routes_json=[]
+ip_v4_rules_json=[{"priority":0,"src":"all","table":"local"},{"priority":32766,"src":"all","table":"main"},{"priority":32767,"src":"all","table":"default"}]
+ip_v6_rules_json=[{"priority":0,"src":"all","table":"local"},{"priority":32766,"src":"all","table":"main"}]
+proc_dev=Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+proc_route=proc_ipv6_route=00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo
+00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo
+proc_if_inet6=

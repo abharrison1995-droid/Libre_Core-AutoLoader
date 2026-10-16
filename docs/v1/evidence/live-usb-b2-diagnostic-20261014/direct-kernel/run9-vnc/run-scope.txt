@@ -1,0 +1,1 @@
+direct-kernel same-hash run9; ISO=/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso; no NIC; no firmware writer; cap=600s; started=2026-10-15T12:02:48Z

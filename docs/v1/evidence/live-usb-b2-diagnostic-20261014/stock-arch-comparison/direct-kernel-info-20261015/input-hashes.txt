@@ -1,0 +1,3 @@
+684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5  /home/alex/archlinux-2026.10.01-x86_64.iso
+8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901  /home/alex/stock-arch-direct-20261015/vmlinuz-linux
+35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52  /home/alex/stock-arch-direct-20261015/initramfs-linux.img

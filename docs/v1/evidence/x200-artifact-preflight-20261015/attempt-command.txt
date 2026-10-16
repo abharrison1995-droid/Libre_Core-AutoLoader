@@ -1,0 +1,30 @@
+Host invocation:
+  wsl.exe -d Ubuntu -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && /home/alex/librecore-v1-test-venv/bin/python -'
+
+The Python heredoc imported the repository's ArtifactEngine, X200_4MB recipe,
+X200LibrebootWorkflow, CompatibilityValidator and immutable workflow evidence
+types. It first called ArtifactEngine.inspect_source("x200-libreboot-4mb",
+Path("/home/alex/librecore-lbmk-x200")), then constructed a BuildIntentEvidence
+with DeviceEvidence() empty, ChipTopology(observed=False, chips=()), and
+ProgrammerEvidence(kind=EXTERNAL_SPI, observed=False). The pinned recipe URL,
+commit, tree, configuration hash and expected size were copied from X200_4MB;
+the expected size was expressly not an observed chip measurement.
+
+It called X200LibrebootWorkflow.validate_build_intent(), then
+ArtifactEngine.build(BuildRequest(
+  recipe_id="x200-libreboot-4mb",
+  source_dir=Path("/home/alex/librecore-lbmk-x200"),
+  output_root=Path("/home/alex/librecore-x200-artifact-attempt-20261015T133512Z-1d12e198/artifact-output"),
+  observed_chip_capacity_bytes=None,
+  build_intent=<the unknown-evidence BuildIntentEvidence>,
+  cpu_count=4,
+)). A local guard would raise if the engine reached a build/read-only artifact
+subprocess hook. No hook was called. Finally,
+X200LibrebootWorkflow.build_and_stage() was called; it rejected the workflow
+because recovery readiness had not been established from a verified backup.
+
+Outcome: `ARTIFACT_BUILD_BLOCKED`; zero build-command hook calls; no output,
+artifact, manifest, or COMPLETE/reopen result. The measured Python execution
+interval was 0.112 seconds (2026-10-15T13:35:12.805896Z to
+2026-10-15T13:35:12.917524Z). The outer WSL command call took about 14.7
+seconds including WSL/Python startup and pinned-source audit.

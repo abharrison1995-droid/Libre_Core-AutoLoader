@@ -1,0 +1,19 @@
+HOST_KERNEL Linux 6.18.54.1-microsoft-standard-WSL2 x86_64 GNU/Linux
+UNSHARE_FLAGS --user --map-root-user --net --mount --pid --fork --mount-proc
+CHILD_KERNEL Linux 6.18.54.1-microsoft-standard-WSL2 x86_64 GNU/Linux
+CHILD_PIDNS pid:[4026532222]
+CHILD_MNTNS mnt:[4026532220]
+CHILD_NETNS net:[4026532223]
+PROC_MOUNT proc
+proc
+NET_LINKS [{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","linkmode":"DEFAULT","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00"}]
+MOUNT proc rc=0 output=
+MOUNT sysfs rc=0 output=
+MOUNT devtmpfs rc=32 output=mount: /tmp/autoloader-mount-capability.Tnq4Kx/dev: permission denied.        dmesg(1) may have more information after failed mount system call.
+MOUNT bind-dev rc=32 output=mount: /tmp/autoloader-mount-capability.Tnq4Kx/dev: wrong fs type, bad option, bad superblock on /dev, missing codepage or helper program, or other error.        dmesg(1) may have more information after failed mount system call.
+MOUNT devpts rc=32 output=mount: /tmp/autoloader-mount-capability.Tnq4Kx/devpts: fsconfig() failed: devpts: Invalid gid '5'.        dmesg(1) may have more information after failed mount system call.
+MOUNT tmpfs-shm rc=0 output=
+MOUNT bind-run rc=32 output=mount: /tmp/autoloader-mount-capability.Tnq4Kx/run: wrong fs type, bad option, bad superblock on /run, missing codepage or helper program, or other error.        dmesg(1) may have more information after failed mount system call.
+MOUNT tmpfs-run rc=0 output=
+MOUNT tmpfs-tmp rc=0 output=
+EXIT=0

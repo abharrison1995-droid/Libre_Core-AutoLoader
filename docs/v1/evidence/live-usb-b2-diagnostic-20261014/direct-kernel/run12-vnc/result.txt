@@ -1,0 +1,15 @@
+run=12
+elapsed_seconds=580.3
+qemu_pid=246
+qemu_exit=0
+iso_before=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_after=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+kernel_sha256=8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+initramfs_sha256=c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090
+network_device=none
+firmware_writer=none
+stop_reason=no manually confirmed tty9 prompt by T+575s; launcher raised and terminated QEMU via SIGTERM; QEMU exit 0 is not guest success
+screen=21 complete 720x400 post-chord VGA frames, all visually showed SeaBIOS/TDX early-boot text and no sh-5.3# prompt
+commands_sent_after_boot=none
+status_or_journal_queries=none
+secondary_hmp_resend=sendkey ctrl-alt-f9 sent over a second local HMP connection; connect/send succeeded, no reply bytes within 3s; delivery unacknowledged; later frames unchanged

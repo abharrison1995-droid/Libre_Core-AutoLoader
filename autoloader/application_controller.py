@@ -32,6 +32,7 @@ from autoloader.reversion.t430_handoff import (
     T430DetectionCapture,
     T430HandoffSession,
     T430HandoffStage,
+    ONEVYRAIN_REV5_MEDIA_URL,
     assess_t430_handoff,
 )
 from autoloader.workflow.compatibility import CompatibilityValidator
@@ -489,11 +490,18 @@ class ApplicationController:
                     raise ValueError("The supplied checkpoint is not awaiting a 1vyrain return")
                 capture = self._capture_for_t430_stage()
                 returned = value["return_attestation"]
-                expected = {
-                    "handoff_complete", "successful_reboot", "boot_test_passed", "onevyrain_validation_passed"
+                required_return = {
+                    "handoff_complete", "successful_reboot", "boot_test_passed", "onevyrain_validation_passed",
+                    "advanced_bios_menu_observed", "advanced_bios_evidence_ref", "advanced_bios_observed_at",
+                    "selected_option", "selected_option_evidence_ref", "selected_option_observed_at",
+                    "successful_reboot_evidence_ref", "successful_reboot_observed_at",
                 }
-                returned = self._require_exact_keys(returned, expected, expected)
-                if any(type(returned[key]) is not bool for key in expected):
+                allowed_return = required_return | {"flash_command_evidence_ref", "flash_command_result"}
+                returned = self._require_exact_keys(returned, required_return, allowed_return)
+                if any(type(returned[key]) is not bool for key in (
+                    "handoff_complete", "successful_reboot", "boot_test_passed", "onevyrain_validation_passed",
+                    "advanced_bios_menu_observed",
+                )):
                     raise ValueError("Every post-install return attestation must be an explicit boolean")
                 report = session.record_post_install_return(
                     capture,
@@ -502,12 +510,43 @@ class ApplicationController:
                     user_reported_successful_reboot=returned["successful_reboot"],
                     user_reported_boot_test_passed=returned["boot_test_passed"],
                     user_reported_1vyrain_validation_passed=returned["onevyrain_validation_passed"],
+                    selected_option=self._required_text(returned["selected_option"], "observed 1vyrain option"),
+                    selected_option_evidence_ref=self._required_text(
+                        returned["selected_option_evidence_ref"], "observed option selection evidence reference"
+                    ),
+                    selected_option_observed_at=self._parse_attestation_time(
+                        returned["selected_option_observed_at"], "observed option selection time"
+                    ),
+                    successful_reboot_evidence_ref=self._required_text(
+                        returned["successful_reboot_evidence_ref"], "successful reboot evidence reference"
+                    ),
+                    successful_reboot_observed_at=self._parse_attestation_time(
+                        returned["successful_reboot_observed_at"], "successful reboot time"
+                    ),
+                    advanced_bios_menu_observed=returned["advanced_bios_menu_observed"],
+                    advanced_bios_evidence_ref=self._required_text(
+                        returned["advanced_bios_evidence_ref"], "Advanced BIOS evidence reference"
+                    ),
+                    advanced_bios_observed_at=self._parse_attestation_time(
+                        returned["advanced_bios_observed_at"], "Advanced BIOS observation time"
+                    ),
+                    flash_command_evidence_ref=(
+                        self._required_text(returned["flash_command_evidence_ref"], "flash command evidence reference")
+                        if returned.get("flash_command_evidence_ref") is not None else None
+                    ),
+                    flash_command_result=(
+                        self._required_text(returned["flash_command_result"], "flash command result")
+                        if returned.get("flash_command_result") is not None else None
+                    ),
                 )
                 self._remember_t430_capture(capture)
                 return self._t430_handoff_result(
                     ApplicationAction.T430_HANDOFF_STEP,
                     "T430_POST_INSTALL_EVIDENCE_PENDING_ACCEPTANCE",
-                    f"Return evidence was recorded at {report.observed_at.isoformat()} and remains pending review. This does not certify installation, boot, or hardware success.",
+                    f"Return evidence was recorded at {report.observed_at.isoformat()} and remains pending review. "
+                    f"Observed upstream choice: {report.selected_option}; 1vyrain flash status: {report.flash_status}; "
+                    "Advanced BIOS evidence is user-reported and timestamped after the reported reboot. "
+                    "This does not certify installation or hardware success.",
                     f"dmi-capture:{capture.capture_id}",
                 )
 
@@ -648,7 +687,7 @@ class ApplicationController:
     def _record_t430_media(self, value: object, actor: str) -> None:
         keys = {
             "user_reported_image_sha256", "user_reported_image_md5", "image_size_bytes",
-            "image_source_url", "user_reported_media_fingerprint_sha256", "written_in_dd_mode", "selected_at",
+            "user_reported_media_fingerprint_sha256", "written_in_dd_mode", "selected_at",
         }
         data = self._require_exact_keys(value, keys, keys)
         assert self.capture is not None and self.t430_session is not None
@@ -664,7 +703,7 @@ class ApplicationController:
             user_reported_image_sha256=self._required_text(data["user_reported_image_sha256"], "image SHA-256"),
             user_reported_image_md5=data["user_reported_image_md5"],
             image_size_bytes=data["image_size_bytes"],
-            image_source_url=self._required_text(data["image_source_url"], "image source URL"),
+            image_source_url=ONEVYRAIN_REV5_MEDIA_URL,
             user_reported_media_fingerprint_sha256=self._required_text(
                 data["user_reported_media_fingerprint_sha256"], "media SHA-256 fingerprint"
             ),

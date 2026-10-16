@@ -43,6 +43,7 @@ from autoloader.workflow.types import (
 )
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_MAC_ADDRESS = re.compile(r"^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$")
 _APPROVAL_SCHEMA = 1
 _CAPTURE_MAX_AGE = timedelta(minutes=5)
 _CURRENT_EVIDENCE_MAX_AGE = timedelta(minutes=2)
@@ -166,6 +167,13 @@ class WriteIntent:
     command: FixedWriteCommand
     created_at_utc: str
     intent_sha256: str
+    mac_policy: str = "not-applicable"
+    mac_source_artifact_sha256: str | None = None
+    mac_preservation_manifest_path: str | None = None
+    mac_preservation_manifest_sha256: str | None = None
+    original_mac: str | None = None
+    selected_mac_before: str | None = None
+    final_mac: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "artifact_regions", tuple(self.artifact_regions))
@@ -215,6 +223,23 @@ class WriteApprovalChallenge:
     setup_measured_at_utc: str
     interface_verified: bool
     wiring_verified: bool
+    target_powered_off: bool
+    ac_disconnected: bool
+    removable_battery_removed: bool
+    chip_pin1_orientation_verified: bool
+    programmer_disconnect_before_repower: bool
+    ec_version: str
+    ec_evidence_ref: str
+    ec_observed_at_utc: str
+    ec_update_decision: str
+    ec_waiver_reason: str
+    mac_policy: str
+    mac_source_artifact_sha256: str | None
+    mac_preservation_manifest_path: str | None
+    mac_preservation_manifest_sha256: str | None
+    original_mac: str | None
+    selected_mac_before: str | None
+    final_mac: str | None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "argv", tuple(self.argv))
@@ -614,11 +639,34 @@ class WriteIntentFactory:
         artifact_sha = _hash_file(artifact_path)
         if artifact_sha != plan.artifact.expected_sha256:
             raise WriteApprovalError("staged firmware artifact changed after validation")
+        write_artifact_path = artifact_path
+        write_artifact_sha = artifact_sha
+        write_artifact_size = artifact_path.stat().st_size
+        mac_evidence = None
+        if plan.profile_id == "x200-libreboot":
+            from autoloader.workflow.x200_mac import prepare_x200_preserved_mac_image
+
+            chip_backup = reopened.chips[0]
+            try:
+                mac_evidence = prepare_x200_preserved_mac_image(
+                    operation_id=operation_id,
+                    selected_artifact_path=artifact_path,
+                    selected_artifact_sha256=artifact_sha,
+                    backup_first_path=chip_backup.first_path,
+                    backup_first_sha256=chip_backup.first_sha256,
+                    backup_second_path=chip_backup.second_path,
+                    backup_second_sha256=chip_backup.second_sha256,
+                )
+            except Exception as exc:
+                raise WriteApprovalError(f"X200 original GbE MAC could not be safely preserved: {exc}") from exc
+            write_artifact_path = Path(mac_evidence.write_artifact_path)
+            write_artifact_sha = mac_evidence.write_artifact_sha256
+            write_artifact_size = mac_evidence.write_artifact_size_bytes
         tool_sha = _hash_file(tool_path)
         expected_argv = (
             "-p", probe.programmer.value,
             "-c", probe.chip_name,
-            "-w", str(artifact_path),
+            "-w", str(write_artifact_path),
         )
         command = FixedWriteCommand(
             executable=str(tool_path),
@@ -661,9 +709,9 @@ class WriteIntentFactory:
             voltage_attested_at_utc=plan.programmer.attested_at or "",
             voltage_instrument_id=plan.programmer.instrument_id or "",
             voltage_test_point=plan.programmer.measurement_test_point or "",
-            artifact_path=str(artifact_path),
-            artifact_sha256=artifact_sha,
-            artifact_size_bytes=artifact_path.stat().st_size,
+            artifact_path=str(write_artifact_path),
+            artifact_sha256=write_artifact_sha,
+            artifact_size_bytes=write_artifact_size,
             artifact_regions=plan.artifact.regions,
             artifact_manifest_path=normalized_path(str(artifact_result.manifest_path.resolve(strict=True))),
             artifact_manifest_sha256=_hash_file(artifact_result.manifest_path),
@@ -695,6 +743,13 @@ class WriteIntentFactory:
             command=command,
             created_at_utc=now.isoformat(),
             intent_sha256="",
+            mac_policy=mac_evidence.policy if mac_evidence is not None else "not-applicable",
+            mac_source_artifact_sha256=mac_evidence.source_artifact_sha256 if mac_evidence is not None else None,
+            mac_preservation_manifest_path=mac_evidence.manifest_path if mac_evidence is not None else None,
+            mac_preservation_manifest_sha256=mac_evidence.manifest_sha256 if mac_evidence is not None else None,
+            original_mac=mac_evidence.original_mac if mac_evidence is not None else None,
+            selected_mac_before=mac_evidence.selected_mac_before if mac_evidence is not None else None,
+            final_mac=mac_evidence.selected_mac_after if mac_evidence is not None else None,
         )
         intent = _with_intent_checksum(intent)
         intent.validate_integrity()
@@ -841,6 +896,8 @@ class WriteApprovalLedger:
     ) -> WriteApprovalToken:
         if type(intent) is not WriteIntent or type(confirmation) is not HumanActionConfirmation:
             raise WriteApprovalError("a typed write intent and frontend human-confirmation record are required")
+        if challenge is None or type(challenge) is not WriteApprovalChallenge:
+            raise WriteApprovalError("the exact displayed write challenge must be supplied to issue approval")
         if confirmation.channel not in {ConfirmationChannel.CLI_TTY, ConfirmationChannel.TUI_EXPLICIT_ACTION}:
             raise WriteApprovalError("write approval requires a reviewed interactive frontend receipt")
         _require_factory_intent(intent)
@@ -852,7 +909,7 @@ class WriteApprovalLedger:
         now = datetime.now(timezone.utc)
         if intent_time > now + timedelta(seconds=30) or now - intent_time > _APPROVAL_MAX_AGE:
             raise WriteApprovalError("write intent is future-dated or expired")
-        selected_challenge = challenge or create_write_approval_challenge(intent)
+        selected_challenge = challenge
         _validate_challenge_against_intent(intent, selected_challenge)
         if (
             confirmation.challenge_sha256 != selected_challenge.challenge_sha256
@@ -974,6 +1031,16 @@ def create_write_approval_challenge(intent: WriteIntent, *, setup_attestation: A
         setup_measured_at_utc = intent.voltage_attested_at_utc
         interface_verified = True
         wiring_verified = True
+        target_powered_off = False
+        ac_disconnected = False
+        removable_battery_removed = False
+        chip_pin1_orientation_verified = False
+        programmer_disconnect_before_repower = False
+        ec_version = ""
+        ec_evidence_ref = ""
+        ec_observed_at_utc = ""
+        ec_update_decision = ""
+        ec_waiver_reason = ""
     else:
         setup_actor = setup_attestation.actor
         setup_instrument_id = setup_attestation.instrument_id
@@ -983,6 +1050,16 @@ def create_write_approval_challenge(intent: WriteIntent, *, setup_attestation: A
         setup_measured_at_utc = setup_attestation.measured_at_utc
         interface_verified = setup_attestation.interface_verified
         wiring_verified = setup_attestation.wiring_verified
+    target_powered_off = bool(getattr(setup_attestation, "target_powered_off", False))
+    ac_disconnected = bool(getattr(setup_attestation, "ac_disconnected", False))
+    removable_battery_removed = bool(getattr(setup_attestation, "removable_battery_removed", False))
+    chip_pin1_orientation_verified = bool(getattr(setup_attestation, "chip_pin1_orientation_verified", False))
+    programmer_disconnect_before_repower = bool(getattr(setup_attestation, "programmer_disconnect_before_repower", False))
+    ec_version = str(getattr(setup_attestation, "ec_version", ""))
+    ec_evidence_ref = str(getattr(setup_attestation, "ec_evidence_ref", ""))
+    ec_observed_at_utc = str(getattr(setup_attestation, "ec_observed_at_utc", ""))
+    ec_update_decision = str(getattr(setup_attestation, "ec_update_decision", ""))
+    ec_waiver_reason = str(getattr(setup_attestation, "ec_waiver_reason", ""))
     backup_copy_paths: tuple[str, ...] = tuple(
         path for copy in intent.backup_copies for path in (copy.first_path, copy.second_path)
     )
@@ -1017,6 +1094,23 @@ def create_write_approval_challenge(intent: WriteIntent, *, setup_attestation: A
         "setup_measured_at_utc": setup_measured_at_utc,
         "interface_verified": interface_verified,
         "wiring_verified": wiring_verified,
+        "target_powered_off": target_powered_off,
+        "ac_disconnected": ac_disconnected,
+        "removable_battery_removed": removable_battery_removed,
+        "chip_pin1_orientation_verified": chip_pin1_orientation_verified,
+        "programmer_disconnect_before_repower": programmer_disconnect_before_repower,
+        "ec_version": ec_version,
+        "ec_evidence_ref": ec_evidence_ref,
+        "ec_observed_at_utc": ec_observed_at_utc,
+        "ec_update_decision": ec_update_decision,
+        "ec_waiver_reason": ec_waiver_reason,
+        "mac_policy": intent.mac_policy,
+        "mac_source_artifact_sha256": intent.mac_source_artifact_sha256,
+        "mac_preservation_manifest_path": intent.mac_preservation_manifest_path,
+        "mac_preservation_manifest_sha256": intent.mac_preservation_manifest_sha256,
+        "original_mac": intent.original_mac,
+        "selected_mac_before": intent.selected_mac_before,
+        "final_mac": intent.final_mac,
     }
     challenge_sha = _sha256(_json_bytes(challenge_data))
     return WriteApprovalChallenge(
@@ -1048,6 +1142,23 @@ def create_write_approval_challenge(intent: WriteIntent, *, setup_attestation: A
         setup_measured_at_utc=setup_measured_at_utc,
         interface_verified=interface_verified,
         wiring_verified=wiring_verified,
+        target_powered_off=target_powered_off,
+        ac_disconnected=ac_disconnected,
+        removable_battery_removed=removable_battery_removed,
+        chip_pin1_orientation_verified=chip_pin1_orientation_verified,
+        programmer_disconnect_before_repower=programmer_disconnect_before_repower,
+        ec_version=ec_version,
+        ec_evidence_ref=ec_evidence_ref,
+        ec_observed_at_utc=ec_observed_at_utc,
+        ec_update_decision=ec_update_decision,
+        ec_waiver_reason=ec_waiver_reason,
+        mac_policy=intent.mac_policy,
+        mac_source_artifact_sha256=intent.mac_source_artifact_sha256,
+        mac_preservation_manifest_path=intent.mac_preservation_manifest_path,
+        mac_preservation_manifest_sha256=intent.mac_preservation_manifest_sha256,
+        original_mac=intent.original_mac,
+        selected_mac_before=intent.selected_mac_before,
+        final_mac=intent.final_mac,
     )
 
 
@@ -1075,11 +1186,26 @@ def collect_cli_confirmation(
     if not os.isatty(output_fd):
         raise WriteApprovalError("interactive OS TTY output is required to display the irreversible action")
     _validate_challenge(challenge)
+    mac_line = (
+        f"X200 GbE MAC: source artifact SHA-256={challenge.mac_source_artifact_sha256}; "
+        f"original={challenge.original_mac}; selected ROM before preservation={challenge.selected_mac_before}; "
+        f"approved final={challenge.final_mac}; preservation manifest={challenge.mac_preservation_manifest_path} "
+        f"(SHA-256 {challenge.mac_preservation_manifest_sha256}).\n"
+        if challenge.model_id == "x200" else ""
+    )
     selected_output.write(
         "PHYSICAL FIRMWARE WRITE: "
         f"{challenge.model_id.upper()} chip {challenge.chip_name} ({challenge.capacity_bytes} bytes), "
         f"operation {challenge.operation_id}, artifact SHA-256 {challenge.artifact_sha256}.\n"
-        f"Type exactly: {challenge.exact_phrase}\n> "
+        f"Power/setup attestations: target off={challenge.target_powered_off}, AC disconnected={challenge.ac_disconnected}, "
+        f"removable battery removed={challenge.removable_battery_removed}, pin-1 checked={challenge.chip_pin1_orientation_verified}, "
+        f"programmer disconnect before repower={challenge.programmer_disconnect_before_repower}.\n"
+        f"EC decision={challenge.ec_update_decision}; version={challenge.ec_version or 'not supplied'}; "
+        f"evidence={challenge.ec_evidence_ref or 'not supplied'}; observed={challenge.ec_observed_at_utc or 'n/a'}; "
+        f"waiver={challenge.ec_waiver_reason or 'none'}; waiver recorded at setup time {challenge.setup_measured_at_utc}. "
+        "EC updates are not automated.\n"
+        + mac_line
+        + f"Type exactly: {challenge.exact_phrase}\n> "
     )
     selected_output.flush()
     typed = selected_input.readline().rstrip("\r\n")
@@ -1275,14 +1401,80 @@ def _validate_challenge(challenge: WriteApprovalChallenge) -> None:
         or not _SHA256.fullmatch(challenge.artifact_sha256)
         or len(challenge.backup_copy_paths) != len(challenge.backup_copy_sha256)
         or not all(_SHA256.fullmatch(item) for item in challenge.backup_copy_sha256)
+        or not challenge.setup_actor.strip()
+        or not challenge.setup_instrument_id.strip()
+        or not challenge.setup_test_point.strip()
+        or type(challenge.programmer_voltage_mv) is not int
+        or type(challenge.chip_voltage_mv) is not int
+        or challenge.programmer_voltage_mv <= 0
+        or challenge.chip_voltage_mv <= 0
         or challenge.interface_verified is not True
         or challenge.wiring_verified is not True
+        or challenge.target_powered_off is not True
+        or challenge.ac_disconnected is not True
+        or challenge.removable_battery_removed is not True
+        or challenge.chip_pin1_orientation_verified is not True
+        or challenge.programmer_disconnect_before_repower is not True
     ):
         raise WriteApprovalError("write challenge is malformed or does not bind an exact flash action")
     observed = _parse_utc(challenge.setup_measured_at_utc, "challenge hardware setup time")
     now = datetime.now(timezone.utc)
     if observed > now + timedelta(seconds=30) or now - observed > _CURRENT_EVIDENCE_MAX_AGE:
         raise WriteApprovalError("challenge hardware setup attestation is stale or future-dated")
+    ec_version_fields = (
+        challenge.ec_version.strip(),
+        challenge.ec_evidence_ref.strip(),
+        challenge.ec_observed_at_utc.strip(),
+    )
+    has_any_ec_version_field = any(ec_version_fields)
+    has_ec_version = all(ec_version_fields)
+    has_waiver = bool(challenge.ec_waiver_reason.strip())
+    if has_any_ec_version_field and not has_ec_version:
+        raise WriteApprovalError("challenge EC version, evidence reference, and observation time must be complete together")
+    if has_ec_version and has_waiver:
+        raise WriteApprovalError("challenge must bind observed EC evidence or one explicit waiver, not both")
+    if has_ec_version:
+        if challenge.ec_update_decision not in {"already-current", "updated-before-replacement"}:
+            raise WriteApprovalError("challenge must bind the observed EC version update/current decision")
+        ec_observed = _parse_utc(challenge.ec_observed_at_utc, "challenge EC evidence time")
+        if ec_observed > now + timedelta(seconds=30) or now - ec_observed > _CURRENT_EVIDENCE_MAX_AGE:
+            raise WriteApprovalError("challenge EC evidence is stale or future-dated")
+    else:
+        if challenge.ec_update_decision != "waived":
+            raise WriteApprovalError("challenge EC waiver must bind the explicit waived decision")
+        if (
+            len(challenge.ec_waiver_reason.strip()) < 20
+            or "oem" not in challenge.ec_waiver_reason.casefold()
+            or "update" not in challenge.ec_waiver_reason.casefold()
+            or not challenge.setup_actor.strip()
+        ):
+            raise WriteApprovalError("challenge EC waiver must name its actor and explain the lost OEM-update route")
+    if challenge.model_id == "x200":
+        if (
+            challenge.mac_policy != "preserve-original-gbe-region"
+            or challenge.original_mac is None
+            or not _MAC_ADDRESS.fullmatch(challenge.original_mac.casefold())
+            or challenge.selected_mac_before is None
+            or not _MAC_ADDRESS.fullmatch(challenge.selected_mac_before.casefold())
+            or challenge.final_mac != challenge.original_mac
+            or challenge.mac_source_artifact_sha256 is None
+            or not _SHA256.fullmatch(challenge.mac_source_artifact_sha256)
+            or challenge.mac_preservation_manifest_path is None
+            or not Path(challenge.mac_preservation_manifest_path).is_absolute()
+            or challenge.mac_preservation_manifest_sha256 is None
+            or not _SHA256.fullmatch(challenge.mac_preservation_manifest_sha256)
+        ):
+            raise WriteApprovalError("X200 write challenge lacks verified original GbE MAC preservation evidence")
+    elif any((
+        challenge.mac_policy != "not-applicable",
+        challenge.mac_source_artifact_sha256 is not None,
+        challenge.mac_preservation_manifest_path is not None,
+        challenge.mac_preservation_manifest_sha256 is not None,
+        challenge.original_mac is not None,
+        challenge.selected_mac_before is not None,
+        challenge.final_mac is not None,
+    )):
+        raise WriteApprovalError("X220 write challenge must not carry X200 GbE MAC preservation claims")
 
 
 def _challenge_checksum(challenge: WriteApprovalChallenge) -> str:
@@ -1304,6 +1496,8 @@ def _validate_challenge_against_intent(intent: WriteIntent, challenge: WriteAppr
         "primary_manifest_sha256", "recovery_manifest_path", "recovery_manifest_sha256",
         "backup_copy_paths", "backup_copy_sha256", "setup_actor", "setup_instrument_id",
         "setup_test_point", "programmer_voltage_mv", "chip_voltage_mv",
+        "mac_policy", "mac_source_artifact_sha256", "mac_preservation_manifest_path",
+        "mac_preservation_manifest_sha256", "original_mac", "selected_mac_before", "final_mac",
     )
     if any(getattr(challenge, name) != getattr(expected, name) for name in compared):
         raise WriteApprovalError("displayed challenge differs from the immutable staged write intent")
@@ -1380,6 +1574,84 @@ def _validate_intent_policy(intent: WriteIntent) -> None:
         or intent.chip_voltage_mv != intent.programmer_voltage_mv
     ):
         raise WriteApprovalError("write intent chip size or voltage is outside the model-specific V1 profile")
+    if not intent.backup_copies or len(intent.backup_copies) != 1:
+        raise WriteApprovalError("write intent must bind exactly one complete dual-read chip backup")
+    if intent.profile_id == "x200-libreboot":
+        if (
+            intent.mac_policy != "preserve-original-gbe-region"
+            or intent.mac_preservation_manifest_path is None
+            or intent.mac_preservation_manifest_sha256 is None
+            or not _SHA256.fullmatch(intent.mac_source_artifact_sha256 or "")
+            or not _SHA256.fullmatch(intent.mac_preservation_manifest_sha256)
+            or not Path(intent.mac_preservation_manifest_path).is_absolute()
+            or intent.original_mac is None
+            or not _MAC_ADDRESS.fullmatch(intent.original_mac.casefold())
+            or intent.selected_mac_before is None
+            or not _MAC_ADDRESS.fullmatch(intent.selected_mac_before.casefold())
+            or intent.final_mac != intent.original_mac
+        ):
+            raise WriteApprovalError("X200 write intent must bind original and final MACs to a preservation manifest")
+        artifact_manifest_path = Path(intent.artifact_manifest_path)
+        if _has_link_component(artifact_manifest_path) or not artifact_manifest_path.is_file():
+            raise WriteApprovalError("X200 source artifact manifest is missing or unsafe")
+        try:
+            raw_artifact_manifest = artifact_manifest_path.read_bytes()
+            artifact_manifest = json.loads(raw_artifact_manifest)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise WriteApprovalError("X200 source artifact manifest is unreadable") from exc
+        if (
+            _sha256(raw_artifact_manifest) != intent.artifact_manifest_sha256
+            or not isinstance(artifact_manifest, dict)
+            or artifact_manifest.get("status") != "complete"
+            or artifact_manifest.get("selected_artifact_relative_path") != intent.artifact_selected_relative_path
+            or artifact_manifest.get("selected_artifact_sha256") != intent.mac_source_artifact_sha256
+        ):
+            raise WriteApprovalError("X200 MAC source digest is not bound to the exact COMPLETE selected artifact")
+        source_relative = PurePosixPath(intent.artifact_selected_relative_path)
+        if source_relative.is_absolute() or ".." in source_relative.parts:
+            raise WriteApprovalError("X200 selected source artifact path is unsafe")
+        source_artifact_path = artifact_manifest_path.parent.joinpath(*source_relative.parts)
+        if (
+            _has_link_component(source_artifact_path)
+            or not source_artifact_path.is_file()
+            or _hash_file(source_artifact_path) != intent.mac_source_artifact_sha256
+        ):
+            raise WriteApprovalError("X200 selected source artifact changed after GbE MAC inspection")
+        mac_manifest_path = Path(intent.mac_preservation_manifest_path)
+        if _has_link_component(mac_manifest_path) or not mac_manifest_path.is_file():
+            raise WriteApprovalError("X200 MAC preservation manifest is missing or unsafe")
+        try:
+            raw_mac_manifest = mac_manifest_path.read_bytes()
+            mac_manifest = json.loads(raw_mac_manifest)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise WriteApprovalError("X200 MAC preservation manifest is unreadable") from exc
+        if (
+            _sha256(raw_mac_manifest) != intent.mac_preservation_manifest_sha256
+            or not isinstance(mac_manifest, dict)
+            or mac_manifest.get("operation_id") != intent.operation_id
+            or mac_manifest.get("policy") != intent.mac_policy
+            or mac_manifest.get("source_artifact_path") != normalized_path(str(source_artifact_path.resolve(strict=True)))
+            or mac_manifest.get("source_artifact_sha256") != intent.mac_source_artifact_sha256
+            or mac_manifest.get("write_artifact_path") != intent.artifact_path
+            or mac_manifest.get("write_artifact_sha256") != intent.artifact_sha256
+            or mac_manifest.get("write_artifact_size_bytes") != intent.artifact_size_bytes
+            or mac_manifest.get("original_mac") != intent.original_mac
+            or mac_manifest.get("selected_mac_before") != intent.selected_mac_before
+            or mac_manifest.get("selected_mac_after") != intent.final_mac
+            or mac_manifest.get("original_backup_sha256") != intent.backup_copies[0].first_sha256
+            or mac_manifest.get("independent_backup_sha256") != intent.backup_copies[0].second_sha256
+        ):
+            raise WriteApprovalError("X200 MAC preservation manifest differs from the approved intent or backups")
+    elif any((
+        intent.mac_policy != "not-applicable",
+        intent.mac_source_artifact_sha256 is not None,
+        intent.mac_preservation_manifest_path is not None,
+        intent.mac_preservation_manifest_sha256 is not None,
+        intent.original_mac is not None,
+        intent.selected_mac_before is not None,
+        intent.final_mac is not None,
+    )):
+        raise WriteApprovalError("X220 write intent cannot claim X200 MAC preservation")
     if not intent.backup_copies or len(intent.backup_copies) != 1:
         raise WriteApprovalError("write intent must bind exactly one complete dual-read chip backup")
     backup = intent.backup_copies[0]

@@ -1,0 +1,22 @@
+Recorded: 2026-10-15 14:29 UTC (minute precision).
+Environment: Arch Linux WSL2, x86_64, kernel 6.18.54.1-microsoft-standard-WSL2
+Invocation was read-only. It created and inspected a user-mapped network namespace; it did not start mkarchiso or another build.
+
+Command:
+wsl -d archlinux -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && uname -a && pacman -Q archiso util-linux iproute2 && pacman -Qo /usr/bin/unshare /usr/bin/ip && python3 -c "import dataclasses, subprocess; from usb_builder.build_usb import _establish_offline_network_isolation; print(dataclasses.asdict(_establish_offline_network_isolation(subprocess.run)))"'
+
+Output:
+Linux DESKTOP-RUNVSTR 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct 6 19:13:07 UTC 2026 x86_64 GNU/Linux
+archiso 91-1
+util-linux 2.42.4-1
+iproute2 7.2.0-1
+/usr/bin/unshare is owned by util-linux 2.42.4-1
+/usr/bin/ip is owned by iproute2 7.2.0-1
+{'mode': 'linux-network-namespace', 'command_prefix': ('/usr/bin/unshare', '--user', '--map-root-user', '--net', '--', '/usr/sbin/python3', '-m', 'usb_builder.network_probe', '--run', 'net:[4026531833]', '/usr/bin/ip'), 'privilege_mode': 'user-mapped-root', 'unshare_path': '/usr/bin/unshare', 'unshare_sha256': 'e4e385ae4accf4af5302c4bb32859355b1c640315bef56ce73d31b8b1f97fdc0', 'unshare_package_owner_output': '/usr/bin/unshare is owned by util-linux 2.42.4-1', 'iproute_path': '/usr/bin/ip', 'iproute_sha256': '26e8002e210e7a827a66602ca220453b5a429b7c3d920bacbe605d80099a7bb8', 'iproute_package_owner_output': '/usr/bin/ip is owned by iproute2 7.2.0-1', 'host_namespace_identity': 'net:[4026531833]', 'probe_command': ('/usr/bin/unshare', '--user', '--map-root-user', '--net', '--', '/usr/sbin/python3', '-m', 'usb_builder.network_probe', 'net:[4026531833]', '/usr/bin/ip'), 'probe_output': 'AUTOLOADER_NETNS_ISOLATION_OK\n{"ipv4_netlink_route_count":0,"ipv4_rule_priorities":[0,32766,32767],"ipv6_netlink_route_count":0,"ipv6_null_unreachable_proc_rows":2,"ipv6_rule_priorities":[0,32766],"namespace_id":"net:[4026532220]","namespace_interfaces":["lo"],"sysfs_interfaces_observed":["eth0","lo"]}'}
+
+Interpretation:
+- The child network namespace differs from the host namespace.
+- The namespace-aware report lists only loopback, zero IPv4/IPv6 routes, and the expected default rules. Procfs contains exactly the two pinned IPv6 null/unreachable sentinel rows.
+- Shared WSL sysfs still reports eth0; that view is recorded but is not used as namespace evidence. Other independent namespace-aware and procfs checks pass.
+- Both executable paths were canonical and pacman-owned by the expected packages at the recorded versions; their SHA-256 digests are in the output above.
+- This is Arch WSL evidence only. It does not validate native Linux behavior, Archiso mount/loop/chroot behavior inside the namespace, an offline build, or a bootable image.

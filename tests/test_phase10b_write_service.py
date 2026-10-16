@@ -36,6 +36,7 @@ from autoloader.workflow.write_service import (
 )
 from tests.test_phase03_spi_safety import MIB
 from tests.test_phase10a_write_approval import (
+    _write_intent_factory,
     _prepared_write,
     _prepared_x220_write,
     _iso_now,
@@ -90,6 +91,13 @@ class _QueueEvidence:
             chip_voltage_mv=self.plan.topology.chips[0].voltage_mv or 0,
             interface_verified=True,
             wiring_verified=True,
+            target_powered_off=True,
+            ac_disconnected=True,
+            removable_battery_removed=True,
+            chip_pin1_orientation_verified=True,
+            programmer_disconnect_before_repower=True,
+            ec_update_decision="waived",
+            ec_waiver_reason="Operator accepts loss of later OEM EC update route.",
         )
         return FreshWriteEvidence(capture, probe, setup)
 
@@ -205,7 +213,7 @@ def _service_request(
     monkeypatch.setattr(write_service_module, "collect_cli_confirmation", _real_cli_confirmation(monkeypatch))
     ledger = WriteApprovalLedger(tmp_path / "approval-ledger")
     service = ExternalSPIWriteService(
-        intent_factory=WriteIntentFactory(backup_service),
+        intent_factory=_write_intent_factory(backup_service),
         approval_ledger=ledger,
         evidence_provider=evidence,
         read_transport=fake_readback,
@@ -234,10 +242,12 @@ def test_x200_write_journals_before_one_fixed_call_then_exact_full_chip_readback
     assert len(writer.calls) == 1
     executable, argv, timeout = writer.calls[0]
     assert Path(executable).is_file()
-    assert argv == (
-        "-p", "ch341a_spi",
-        "-c", "W25Q32.V", "-w", request.plan.artifact.path,
-    )
+    assert argv[:4] == ("-p", "ch341a_spi", "-c", "W25Q32.V")
+    assert argv[4] == "-w" and len(argv) == 6
+    assert Path(argv[-1]).parent.name == "x200-write-ready"
+    written_sha256 = hashlib.sha256(writer.image or b"").hexdigest()
+    assert written_sha256 != request.plan.artifact.expected_sha256
+    assert written_sha256 == result.artifact_sha256
     assert timeout > 0
     assert len(readback.calls) == 1
     journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
@@ -245,13 +255,103 @@ def test_x200_write_journals_before_one_fixed_call_then_exact_full_chip_readback
     start = next(entry for entry in journal.entries if entry.to_state is OperationState.WRITE_STARTED)
     assert "approval_id" in start.message
     assert "fixed_command_sha256" in start.message
+    start_payload = json.loads(start.message)
+    assert start_payload["human_setup_attestations"]["semantics"] == "human-reported attestations; not measured by AutoLoader"
+    assert start_payload["ec_readiness"]["automatic_update_performed"] is False
+    assert start_payload["x200_mac_preservation"]["original_mac"] == "00:26:2d:12:34:56"
+    assert start_payload["x200_mac_preservation"]["selected_mac_before"] == "02:00:00:00:00:01"
     verified = next(entry for entry in journal.entries if entry.to_state is OperationState.WRITE_VERIFIED)
     verified_payload = json.loads(verified.message)
-    assert verified_payload["artifact_sha256"] == request.plan.artifact.expected_sha256
-    assert verified_payload["readback_sha256"] == request.plan.artifact.expected_sha256
-    assert result.readback_sha256 == request.plan.artifact.expected_sha256
-    with pytest.raises(Exception):
-        WorkflowSession.resume(request.plan, request.operation_journal_path)
+    assert verified_payload["artifact_sha256"] == written_sha256
+    assert verified_payload["readback_sha256"] == written_sha256
+    assert result.readback_sha256 == written_sha256
+    assert "x200_mac_preservation" in start.message
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "target_powered_off",
+        "ac_disconnected",
+        "removable_battery_removed",
+        "chip_pin1_orientation_verified",
+        "programmer_disconnect_before_repower",
+    ],
+)
+def test_missing_physical_setup_attestation_blocks_before_confirmation_or_writer(tmp_path, monkeypatch, field):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    original_provider = service.evidence_provider
+
+    class MissingAttestation:
+        def collect(self, plan):
+            evidence = original_provider.collect(plan)
+            return replace(evidence, setup=replace(evidence.setup, **{field: False}))
+
+    service.evidence_provider = MissingAttestation()
+    with pytest.raises(write_service_module.WriteExecutionError, match="human setup attestation"):
+        service.execute(request)
+    assert writer.calls == []
+    assert readback.calls == []
+
+
+@pytest.mark.parametrize(
+    ("ec_version", "ec_ref", "ec_time", "decision", "waiver", "valid"),
+    [
+        ("", "", "", "", "", False),
+        ("1.2", "ec-observation:1", _iso_now(), "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("1.2", "", "", "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("", "ec-observation:1", "", "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("", "", _iso_now(), "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("1.2", "ec-observation:1", "", "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("1.2", "", _iso_now(), "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("", "ec-observation:1", _iso_now(), "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("1.2", "", _iso_now(), "", "", False),
+        ("", "ec-observation:1", "", "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("", "", _iso_now(), "waived", "Operator waives possible loss of later OEM EC updates.", False),
+        ("1.2", "ec-observation:1", _iso_now(), "", "", False),
+        ("1.2", "ec-observation:1", _iso_now(), "already-current", "", True),
+        ("", "", "", "waived", "Operator waives possible loss of later OEM EC updates.", True),
+    ],
+)
+def test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer(
+    tmp_path, monkeypatch, ec_version, ec_ref, ec_time, decision, waiver, valid
+):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    if valid and ec_version:
+        # Freshness is evaluated at test execution, not collection time.
+        ec_time = _iso_now()
+    original_provider = service.evidence_provider
+
+    class ECProvider:
+        def collect(self, plan):
+            evidence = original_provider.collect(plan)
+            return replace(
+                evidence,
+                setup=replace(
+                    evidence.setup,
+                    ec_version=ec_version,
+                    ec_evidence_ref=ec_ref,
+                    ec_observed_at_utc=ec_time,
+                    ec_update_decision=decision,
+                    ec_waiver_reason=waiver,
+                ),
+            )
+
+    service.evidence_provider = ECProvider()
+    if valid:
+        result = service.execute(request)
+        assert result.status is WriteExecutionStatus.WRITE_VERIFIED
+        assert len(writer.calls) == 1
+    else:
+        with pytest.raises(write_service_module.WriteExecutionError):
+            service.execute(request)
+        assert writer.calls == []
+        assert readback.calls == []
+    if valid:
+        with pytest.raises(Exception):
+            WorkflowSession.resume(request.plan, request.operation_journal_path)
+    else:
+        assert WorkflowSession.resume(request.plan, request.operation_journal_path).state is OperationState.BACKUP_VERIFIED
 
 
 def test_x220_write_uses_same_service_profile_allowlist_and_full_chip_readback(tmp_path, monkeypatch):

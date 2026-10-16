@@ -25,6 +25,30 @@ test -f /etc/systemd/system/autoloader.service
 test -f /etc/systemd/system/multi-user.target.d/autoloader.conf
 grep -Fxq 'Wants=autoloader.service' /etc/systemd/system/multi-user.target.d/autoloader.conf
 
+systemd_dir="/etc/systemd/system"
+ensure_systemd_link() {
+    local target="$1"
+    local link="$2"
+    local current
+    if [[ -L "$link" ]]; then
+        current="$(readlink -- "$link")"
+        if [[ "$current" != "$target" ]]; then
+            printf 'ERROR: unexpected systemd link %s -> %s (expected %s)\n' "$link" "$current" "$target" >&2
+            exit 72
+        fi
+    elif [[ -e "$link" ]]; then
+        printf 'ERROR: refusing to replace non-link systemd path %s\n' "$link" >&2
+        exit 72
+    else
+        ln -s -- "$target" "$link"
+    fi
+}
+
+mkdir -p "$systemd_dir/multi-user.target.wants"
+ensure_systemd_link "../autoloader.service" "$systemd_dir/multi-user.target.wants/autoloader.service"
+test -L "$systemd_dir/multi-user.target.wants/autoloader.service"
+test "$(readlink -- "$systemd_dir/multi-user.target.wants/autoloader.service")" = "../autoloader.service"
+
 /opt/autoloader/venv/bin/autoloader --help >/dev/null
 /opt/autoloader/venv/bin/python - "${wheels[0]}" <<'PY'
 import hashlib

@@ -1,0 +1,115 @@
+Rootless Archiso VM no-build probes — 2026-10-16
+================================================
+
+Scope
+-----
+
+Disposable full QEMU VM only; no ROM/ISO build, media write, SPI operation, or
+physical hardware action occurred. QEMU 11.1.2 ran Arch Linux live media with
+archiso 91-1, arch-install-scripts 31-2, shadow 4.20.0.arch1-1, and libcap
+2.78-1. A scratch ext4 volume at /mnt/archv1 was used for fixture roots.
+
+The test account was fwbuild UID/GID 1000, only its private primary group,
+with these subordinate ranges:
+
+    /etc/subuid: fwbuild:100000:65536
+    /etc/subgid: 1000:100000:65536
+
+The exact privilege drop used for rootless commands was:
+
+    setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- COMMAND
+
+Observed parent state: UID/GID 1000, groups only 1000, CapBnd
+00000000000000c0 (CAP_SETUID|CAP_SETGID), CapEff/CapPrm/CapAmb all zero,
+NoNewPrivs 0. This launch was initiated by root only inside the disposable VM.
+The initially observed `runuser -u fwbuild` state had a broad CapBnd and is not
+accepted as qualifying evidence.
+
+Network-only namespace
+----------------------
+
+A root-created outer network namespace was entered with `unshare --net
+--fork -- bash`. It was not an outer user or mount namespace. The observed
+namespace identity was `net:[4026532219]`; `ip -j route show` returned `[]`.
+The original host network namespace identity was `net:[4026531840]`.
+
+The disposable host mount table SHA-256 before and after all probes was
+`7f0fe2fc7a05032c8b5ff61061905eeed3fcc57b716f88f5267a0ea401ce359c`.
+No UID-1000 processes remained after the probes.
+
+Archiso `_unshare` mapping shape
+-------------------------------
+
+The pinned Archiso helper uses `unshare --map-auto --map-root-user --
+COMMAND` for non-root operations. The corresponding no-write command under
+the exact privilege drop and route-free namespace was:
+
+    setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- unshare --map-auto --map-root-user -- sh -c 'id; cat /proc/self/uid_map; cat /proc/self/gid_map; grep -E "CapEff|CapPrm|CapBnd|CapAmb|NoNewPrivs" /proc/self/status; ip -j route show'
+
+It exited zero and reported UID/GID 0 inside the new namespace, maps
+`0 1000 1` and `1 100000 65536`, no routes, and NoNewPrivs 0. The elevated
+capability sets in that child are scoped to its user namespace. This confirms
+the mapping shape only; it is not an ISO build result.
+
+`arch-chroot -N` mapping, mounts, cleanup, and route inheritance
+---------------------------------------------------------------
+
+A minimal scratch root was prepared with `/usr/bin/true`, `/usr/bin/bash`,
+`/usr/bin/readlink`, `/usr/bin/ip`, and their runtime libraries. The exact
+command shape was:
+
+    setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- /usr/bin/arch-chroot -N /mnt/archv1/work/chroot-test /usr/bin/bash -c '/usr/bin/readlink /proc/self/ns/net; /usr/bin/ip -j route show'
+
+The warning that the fixture directory was not initially a mountpoint was
+expected; arch-chroot's setup self-binds it. The child reported
+`net:[4026532219]` and `[]`, then exited 0. A preceding and following
+mountinfo hash matched exactly. The fixture's `/dev`, `/proc`, `/sys`, `/run`,
+and `/tmp` mount targets had no remaining children after the command, and no
+UID-1000 processes remained. A first earlier attempt before adding the
+`/usr/bin/true` fixture reached chroot execution but exited 127 because that
+binary was absent; it is superseded by the successful run above.
+
+An artificial second `unshare --fork --pid --mount --map-auto ...` invoked
+inside an outer PID+user namespace failed opening `/proc/1/uid_map`. This is
+not evidence against the pinned execution path: Archiso's helper operations,
+`pacstrap -N`, and `arch-chroot -N` are launched as sibling one-level user
+namespaces when the trusted outer launcher creates only a network namespace.
+
+`pacstrap -N` false-success defect
+----------------------------------
+
+The exact installed `/usr/bin/pacstrap` belongs to arch-install-scripts
+31-2 and has SHA-256
+`c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207`.
+The generated script has no `set -e`; lines 295–305 run the `-N` unshare child
+and then run an unconditional `rm "$tmpfile"`.
+
+In the route-free namespace, a deliberate no-repository/no-package probe ran
+with stdout and stderr redirected to a regular log file, then captured the
+command's status immediately (no pipeline):
+
+    setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- /usr/bin/pacstrap -N -C /dev/null -M -G /mnt/archv1/work/pacstrap-probe-final autoloader-no-install-probe >/tmp/pacstrap-probe.log 2>&1
+    result=$?
+
+Observed `result` was `0`, while the log contained:
+
+    error: no usable package repositories configured.
+    ==> ERROR: Failed to install packages to new root
+
+The target contained no local package records. The host mount table stayed at
+the hash above, the disposable mount targets had no residual children, and no
+UID-1000 process remained.
+
+As a status-propagation control, the same exact privilege drop ran:
+
+    setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- unshare --fork --pid --mount --map-auto --map-root-user --setuid 0 --setgid 0 -- bash -c 'exit 7'
+
+The immediate return status was 7. Thus the observed zero is specific to the
+generated pacstrap 31-2 script's error path, not util-linux unshare generally.
+This is a release-blocking false-success condition. Production builds remain
+closed until a hash-verified operation-owned pacstrap overlay preserves the
+child status and passes its negative-exit, cleanup, and mkarchiso integration
+tests, or an independently verified corrected upstream pin is available.
+
+No `mkarchiso`, candidate ISO, QEMU boot, or physical workflow was run for
+these probes. Hardware validation remains pending.

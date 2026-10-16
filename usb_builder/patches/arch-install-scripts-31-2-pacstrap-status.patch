@@ -1,0 +1,18 @@
+--- a/usr/bin/pacstrap
++++ b/usr/bin/pacstrap
+@@ -295,11 +295,14 @@
+ if (( unshare )); then
+   setup=unshare_setup
+   $mount_unshare bash -c "$(declare_all); pacstrap"
++  result=$?
+ else
+   setup=chroot_setup
+   pacstrap
++  result=$?
+ fi
+ 
+ # TODO: There is a trap check on exit. Need to rework the trap handling with
+ # hook-ins/callbacks to remove aux files
+-rm "$tmpfile"
++rm "$tmpfile" || exit 1
++exit "$result"

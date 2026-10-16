@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261015/direct/run12.py", line 155, in <module>
+    if not prompt: raise RuntimeError('no manual visual confirmation of tty9 shell before hard cap; no guest command sent')
+RuntimeError: no manual visual confirmation of tty9 shell before hard cap; no guest command sent

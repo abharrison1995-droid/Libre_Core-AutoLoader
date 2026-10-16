@@ -11,7 +11,7 @@ import json
 import os
 import re
 from dataclasses import asdict, dataclass, fields
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from uuid import uuid4
@@ -35,6 +35,7 @@ ONEVYRAIN_README_SHA256 = "5af0f463e56e8fcfbc6d3b57224859e755e701d4e04087167c9e3
 ONEVYRAIN_START_SHA256 = "d00089253cb56a8967e242a9e73496c413a7c3d378044968acbc6278b31e873a"
 ONEVYRAIN_REV5_MEDIA_URL = "https://drive.google.com/open?id=1yusq98ja6NmI4G4txKVueFqY_ZEwaZvO"
 ONEVYRAIN_REV5_MD5 = "dd30313a8665e870360920b00cec55c4"
+ONEVYRAIN_OPTION = "option-1-default-modified-lenovo-bios"
 _MD5 = re.compile(r"^[0-9a-f]{32}$", re.I)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$", re.I)
 
@@ -176,12 +177,14 @@ class OnevyRainHandoffDescriptor:
     user_reported_image_source_url: str
     user_reported_media_fingerprint_sha256: str
     user_reported_image_md5: str
+    selected_option: str = ONEVYRAIN_OPTION
     upstream_rev5_media_url: str = ONEVYRAIN_REV5_MEDIA_URL
     upstream_rev5_published_md5: str = ONEVYRAIN_REV5_MD5
     md5_integrity_claim: str = "user-reported MD5 matches the pinned README's legacy checksum; weak checksum, not authentication"
     image_authenticated: bool = False
     written_in_dd_mode: bool = True
     instructions: tuple[str, ...] = (
+        "Use upstream 1vyrain option 1 only: the default modified Lenovo BIOS path; custom BIOS URLs are not supported.",
         "Use UEFI boot mode and disable Secure Boot before starting.",
         "Boot the media from a direct onboard USB port; do not use a dock, ultrabase, or external USB hub.",
         "Write the upstream image to the selected media in DD mode.",
@@ -197,6 +200,12 @@ class OnevyRainHandoffDescriptor:
     executes_anything: bool = False
     writes_firmware: bool = False
 
+    def __post_init__(self) -> None:
+        if self.model != "t430" or self.selected_option != ONEVYRAIN_OPTION:
+            raise ValueError("V1 T430 supports only upstream 1vyrain option 1/default modified Lenovo BIOS")
+        if self.user_reported_image_source_url != ONEVYRAIN_REV5_MEDIA_URL:
+            raise ValueError("V1 T430 handoff is bound to the pinned upstream Rev 5 source URL")
+
 
 @dataclass(frozen=True)
 class T430PostInstallReport:
@@ -211,6 +220,17 @@ class T430PostInstallReport:
     user_reported_successful_reboot: bool
     user_reported_boot_test_passed: bool
     user_reported_1vyrain_validation_passed: bool
+    selected_option: str
+    selected_option_evidence_ref: str
+    selected_option_observed_at: datetime
+    successful_reboot_evidence_ref: str
+    successful_reboot_observed_at: datetime
+    flash_status: str = "UNKNOWN"
+    flash_command_evidence_ref: str | None = None
+    flash_command_result: str | None = None
+    advanced_bios_menu_observed: bool = False
+    advanced_bios_evidence_ref: str = ""
+    advanced_bios_observed_at: datetime | None = None
     status: T430HandoffStage = T430HandoffStage.POST_INSTALL_EVIDENCE_PENDING_ACCEPTANCE
 
 
@@ -738,6 +758,16 @@ class T430HandoffSession:
         user_reported_successful_reboot: bool,
         user_reported_boot_test_passed: bool,
         user_reported_1vyrain_validation_passed: bool,
+        selected_option: str = "",
+        selected_option_evidence_ref: str = "",
+        selected_option_observed_at: datetime | None = None,
+        successful_reboot_evidence_ref: str = "",
+        successful_reboot_observed_at: datetime | None = None,
+        advanced_bios_menu_observed: bool = False,
+        advanced_bios_evidence_ref: str = "",
+        advanced_bios_observed_at: datetime | None = None,
+        flash_command_evidence_ref: str | None = None,
+        flash_command_result: str | None = None,
     ) -> T430PostInstallReport:
         if self.stage is not T430HandoffStage.AWAITING_POST_INSTALL_REDETECTION or not self._handoff_approved:
             raise BIOSReversionError("No approved 1vyrain handoff is awaiting post-install re-detection")
@@ -746,6 +776,9 @@ class T430HandoffSession:
             raise SafetyError("Post-install evidence must be reported by the approving human")
         if not user_reported_handoff_complete or not user_reported_successful_reboot:
             raise SafetyError("Explicit handoff and successful reboot evidence are required")
+        approval_time = self._approval_timestamp
+        if approval_time is None:
+            raise SafetyError("The approved 1vyrain handoff timestamp is missing")
         device = capture.device
         identity = self.validator.validate_t430_handoff_identity(device)
         if identity.decision is not CompatibilityDecision.ALLOWED:
@@ -796,9 +829,48 @@ class T430HandoffSession:
             raise BIOSReversionError("Post-install BIOS evidence is missing")
         if not user_reported_boot_test_passed or not user_reported_1vyrain_validation_passed:
             raise BIOSReversionError("Post-install boot and 1vyrain validation evidence are incomplete")
+        if selected_option != ONEVYRAIN_OPTION:
+            raise SafetyError("Post-install return must attest the actual upstream option 1/default selection")
+        if not selected_option_evidence_ref.strip():
+            raise SafetyError("Observed upstream option 1 selection requires a named evidence reference")
+        if selected_option_observed_at is None:
+            raise SafetyError("Observed upstream option 1 selection requires its observation time")
+        option_at = self._require_utc(selected_option_observed_at)
+        if option_at <= approval_time:
+            raise SafetyError("Observed upstream option 1 selection must occur after the approved handoff")
+        if option_at > capture.observed_at + timedelta(seconds=30):
+            raise SafetyError("Option selection evidence cannot be future-dated after the return identity capture")
+        if not successful_reboot_evidence_ref.strip():
+            raise SafetyError("Operator-reported successful reboot requires a named evidence reference")
+        if successful_reboot_observed_at is None:
+            raise SafetyError("Operator-reported successful reboot requires its observation time")
+        reboot_at = self._require_utc(successful_reboot_observed_at)
+        if reboot_at <= option_at or reboot_at <= approval_time:
+            raise SafetyError("Successful reboot evidence must follow the approved option selection and handoff")
+        if reboot_at > capture.observed_at + timedelta(seconds=30):
+            raise SafetyError("Successful reboot evidence cannot be future-dated after the return identity capture")
+        if advanced_bios_menu_observed is not True or not advanced_bios_evidence_ref.strip():
+            raise BIOSReversionError("A directly observed Advanced BIOS menu feature and evidence reference are required")
+        if advanced_bios_observed_at is None:
+            raise BIOSReversionError("Advanced BIOS observation must include its timestamp")
+        feature_at = self._require_utc(advanced_bios_observed_at)
+        if feature_at < reboot_at:
+            raise BIOSReversionError("Advanced BIOS evidence must be observed after the operator-reported successful reboot")
+        if feature_at <= approval_time:
+            raise BIOSReversionError("Advanced BIOS observation must follow the approved 1vyrain handoff")
+        if feature_at > capture.observed_at + timedelta(seconds=30):
+            raise BIOSReversionError("Advanced BIOS observation must precede the fresh post-install identity capture")
+        if (capture.observed_at - feature_at).total_seconds() > 30 * 60:
+            raise BIOSReversionError("Advanced BIOS evidence is too old for the current post-install identity capture")
+        if (flash_command_evidence_ref is None) != (flash_command_result is None):
+            raise BIOSReversionError("Captured flash command evidence requires both a reference and the observed result")
+        if flash_command_evidence_ref is not None and (
+            not flash_command_evidence_ref.strip() or not flash_command_result or not flash_command_result.strip()
+        ):
+            raise BIOSReversionError("Captured flash command evidence reference/result must be non-empty")
+        flash_status = "UNKNOWN" if flash_command_evidence_ref is None else "USER_REPORTED_CAPTURE"
         preflight = self._preflight
         media = self._media
-        approval_time = self._approval_timestamp
         if preflight is None or media is None or approval_time is None:
             raise SafetyError("Preflight, media, and approval evidence are required for the post-install record")
         T430HandoffCheckpointStore.consume(
@@ -811,6 +883,17 @@ class T430HandoffSession:
                 "user_reported_successful_reboot": user_reported_successful_reboot,
                 "user_reported_boot_test_passed": user_reported_boot_test_passed,
                 "user_reported_1vyrain_validation_passed": user_reported_1vyrain_validation_passed,
+                "selected_option": selected_option,
+                "selected_option_evidence_ref": selected_option_evidence_ref,
+                "selected_option_observed_at": option_at.isoformat(),
+                "successful_reboot_evidence_ref": successful_reboot_evidence_ref,
+                "successful_reboot_observed_at": reboot_at.isoformat(),
+                "flash_status": flash_status,
+                "flash_command_evidence_ref": flash_command_evidence_ref,
+                "flash_command_result": flash_command_result,
+                "advanced_bios_menu_observed": advanced_bios_menu_observed,
+                "advanced_bios_evidence_ref": advanced_bios_evidence_ref,
+                "advanced_bios_observed_at": feature_at.isoformat(),
             },
         )
         self._used_capture_ids.add(new_capture_id)
@@ -832,6 +915,17 @@ class T430HandoffSession:
             user_reported_successful_reboot=user_reported_successful_reboot,
             user_reported_boot_test_passed=user_reported_boot_test_passed,
             user_reported_1vyrain_validation_passed=user_reported_1vyrain_validation_passed,
+            selected_option=selected_option,
+            selected_option_evidence_ref=selected_option_evidence_ref,
+            selected_option_observed_at=option_at,
+            successful_reboot_evidence_ref=successful_reboot_evidence_ref,
+            successful_reboot_observed_at=reboot_at,
+            flash_status=flash_status,
+            flash_command_evidence_ref=flash_command_evidence_ref,
+            flash_command_result=flash_command_result,
+            advanced_bios_menu_observed=advanced_bios_menu_observed,
+            advanced_bios_evidence_ref=advanced_bios_evidence_ref,
+            advanced_bios_observed_at=feature_at,
         )
 
     def _require_preflight(self, actor: str, *, require_uefi: bool) -> T430PreflightEvidence:

@@ -1,0 +1,2 @@
+utc=2026-10-15T13:26:12Z
+systemd-analyze critical-chain

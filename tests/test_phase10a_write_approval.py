@@ -6,15 +6,19 @@ import io
 import json
 import pickle
 import subprocess
+import sys
 import threading
 import uuid
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 import autoloader.workflow.write_approval as approval_module
+
+_REAL_DIRECTORY_FSYNC_SUPPORTED = approval_module._directory_fsync_supported
 from autoloader.flasher.flashrom import ProgrammerType
 from autoloader.flasher.recovery import RecoveryReadinessService
 from autoloader.workflow.authorization import AuthorizationReusedError, AuthorizationStaleError
@@ -55,6 +59,62 @@ def _iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+class _SyntheticArtifactLoader:
+    """Test adapter for workflow/write-policy fixtures, never a build validator.
+
+    ArtifactEngine's production integrity and provenance checks are exercised
+    in ``tests/test_artifact_engine.py``. These approval tests need a typed
+    COMPLETE fixture to exercise the independent journal/backup/approval
+    boundaries, so this adapter checks only fixture serialization, sidecar,
+    selected-file containment, size, and digest before returning it.
+    """
+
+    def load_completed_result(self, manifest_path: str | Path):
+        from autoloader.rom_builder.artifact_engine import (
+            ArtifactBuildResult,
+            BuildStatus,
+            _artifact_manifest_from_mapping,
+        )
+
+        path = Path(manifest_path)
+        raw = path.read_bytes()
+        sidecar = path.with_name("manifest.sha256").read_text(encoding="ascii").strip().split()
+        if len(sidecar) != 2 or sidecar != [hashlib.sha256(raw).hexdigest(), "manifest.json"]:
+            raise ValueError("synthetic fixture manifest sidecar mismatch")
+        manifest = _artifact_manifest_from_mapping(json.loads(raw))
+        if manifest.status != "complete" or manifest.selected_artifact_relative_path is None:
+            raise ValueError("synthetic fixture is not a COMPLETE artifact")
+        selected = path.parent.joinpath(*Path(manifest.selected_artifact_relative_path).parts)
+        if selected.is_symlink() or not selected.is_file():
+            raise ValueError("synthetic selected artifact is missing or linked")
+        selected.resolve(strict=True).relative_to(path.parent.resolve(strict=True))
+        record = [
+            item for item in manifest.artifacts
+            if item.relative_path == manifest.selected_artifact_relative_path
+            and item.sha256 == manifest.selected_artifact_sha256
+        ]
+        if (
+            len(record) != 1
+            or selected.stat().st_size != record[0].size_bytes
+            or hashlib.sha256(selected.read_bytes()).hexdigest() != record[0].sha256
+        ):
+            raise ValueError("synthetic selected artifact fixture mismatch")
+        return ArtifactBuildResult(
+            BuildStatus.COMPLETE,
+            "SYNTHETIC_FIXTURE_REOPENED",
+            "Synthetic artifact fixture only; no build was performed.",
+            manifest.recipe_id,
+            (selected,),
+            manifest,
+            path,
+        )
+
+
+def _write_intent_factory(backup_service):
+    """Use fixture deserialization only in these non-integrity policy tests."""
+    return WriteIntentFactory(backup_service, artifact_engine=_SyntheticArtifactLoader())
+
+
 def _prepared_write(tmp_path: Path):
     """Create synthetic local evidence; all SPI reads use a fake transport."""
     tmp_path.mkdir(parents=True, exist_ok=True)
@@ -77,7 +137,11 @@ def _prepared_write(tmp_path: Path):
         measurement_test_point="programmer VCC test point",
     )
     topology = replace(base.topology, chips=(chip,))
-    payload = _payload(4 * MIB, 47)
+    from tests.test_x200_mac import _rom
+
+    # Synthetic images carry a valid test-only IFD/GbE layout so MAC policy
+    # tests exercise the production validator without touching real firmware.
+    payload = _rom(bytes.fromhex("00262d123456"))
     transport = FakeTransport(
         ['Found Winbond flash chip "W25Q32.V" (4096 kB, SPI) on ch341a_spi.\n'],
         {4 * MIB: payload},
@@ -102,7 +166,9 @@ def _prepared_write(tmp_path: Path):
     loaded = workflow.backup_set
     readiness = workflow.recovery_readiness
     assert loaded is not None and readiness is not None and readiness.status == "ready"
-    synthetic_artifact = _fake_complete_result(tmp_path / "artifact", workflow.intent)
+    synthetic_artifact = _fake_complete_result(
+        tmp_path / "artifact", workflow.intent, artifact_bytes=_rom(bytes.fromhex("020000000001"))
+    )
     staged = workflow.accept_artifact_result(synthetic_artifact)
     assert staged.status == "STAGED/HARDWARE_PENDING", staged.reasons
     assert staged.operation_plan is not None and staged.proposed_external_spi_plan is not None
@@ -117,7 +183,7 @@ def _prepared_write(tmp_path: Path):
         observed_at_utc=_iso_now(),
         device=bound_plan.device,
     )
-    intent = WriteIntentFactory(backup_service).create(
+    intent = _write_intent_factory(backup_service).create(
         bound_plan,
         operation_id=operation_id,
         capture=capture,
@@ -204,7 +270,7 @@ def _prepared_x220_write(tmp_path: Path, monkeypatch):
         "artifact_manifest_path": staged.proposed_external_spi_plan.artifact_manifest_path,
     }
     capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), bound_plan.device)
-    intent = WriteIntentFactory(service).create(
+    intent = _write_intent_factory(service).create(
         bound_plan,
         operation_id=operation_id,
         capture=capture,
@@ -233,7 +299,7 @@ class _TTYOutput(io.StringIO):
 
 
 def _confirmation(intent):
-    challenge = create_write_approval_challenge(intent)
+    challenge = create_write_approval_challenge(intent, setup_attestation=_setup_for_intent(intent))
     typed = _TTYInput(challenge.exact_phrase + "\n")
     displayed = _TTYOutput()
     with pytest.MonkeyPatch.context() as patch:
@@ -251,8 +317,35 @@ def _confirmation(intent):
     return challenge, evidence, displayed.getvalue()
 
 
+def _setup_for_intent(intent):
+    return SimpleNamespace(
+        actor=intent.voltage_attested_by,
+        instrument_id=intent.voltage_instrument_id,
+        test_point=intent.voltage_test_point,
+        measured_at_utc=_iso_now(),
+        programmer_voltage_mv=intent.programmer_voltage_mv,
+        chip_voltage_mv=intent.chip_voltage_mv,
+        interface_verified=True,
+        wiring_verified=True,
+        target_powered_off=True,
+        ac_disconnected=True,
+        removable_battery_removed=True,
+        chip_pin1_orientation_verified=True,
+        programmer_disconnect_before_repower=True,
+        ec_version="",
+        ec_evidence_ref="",
+        ec_observed_at_utc="",
+        ec_update_decision="waived",
+        ec_waiver_reason="Operator accepts loss of later OEM EC update route.",
+    )
+
+
 def test_x200_intent_binds_fresh_probe_artifact_backup_recovery_and_fixed_command(tmp_path):
-    plan, intent, _service, probe, backup, readiness, _transport, _paths, _operation_id = _prepared_write(tmp_path)
+    # A parent path containing the writer option must not be mistaken for
+    # the executable itself when checking the fixed command boundary.
+    command_path = tmp_path / "parent-w-option"
+    command_path.mkdir()
+    plan, intent, _service, probe, backup, readiness, _transport, _paths, _operation_id = _prepared_write(command_path)
     intent.validate_integrity()
     assert intent.action is WriteAction.FLASH
     assert intent.profile_id == "x200-libreboot"
@@ -260,7 +353,11 @@ def test_x200_intent_binds_fresh_probe_artifact_backup_recovery_and_fixed_comman
     assert intent.probe_id == probe.probe_id
     assert intent.chip_name == "W25Q32.V"
     assert intent.chip_capacity_bytes == 4 * MIB
-    assert intent.artifact_sha256 == plan.artifact.expected_sha256
+    assert intent.mac_source_artifact_sha256 == plan.artifact.expected_sha256
+    assert intent.artifact_sha256 != plan.artifact.expected_sha256
+    assert intent.original_mac == intent.final_mac == "00:26:2d:12:34:56"
+    assert intent.selected_mac_before == "02:00:00:00:00:01"
+    assert intent.mac_preservation_manifest_path is not None
     assert intent.backup_operation_id == backup.operation_id
     assert intent.primary_manifest_sha256 == backup.primary_manifest_sha256
     assert intent.recovery_manifest_sha256 == backup.recovery_manifest_sha256
@@ -268,7 +365,8 @@ def test_x200_intent_binds_fresh_probe_artifact_backup_recovery_and_fixed_comman
     assert intent.command.argv == (
         "-p", ProgrammerType.CH341A.value, "-c", "W25Q32.V", "-w", intent.artifact_path,
     )
-    assert "-w" not in intent.command.executable
+    assert Path(intent.command.argv[-1]).name == f"{_operation_id}.rom"
+    assert "-w" not in Path(intent.command.executable).name
     assert intent.command.executable_sha256 == hashlib.sha256(Path(intent.command.executable).read_bytes()).hexdigest()
 
 
@@ -289,7 +387,7 @@ def test_x220_intent_binds_full_chip_coreboot_regions_and_backup(tmp_path, monke
 
 def test_cli_confirmation_requires_real_os_tty_and_exact_phrase(tmp_path, monkeypatch):
     _plan, intent, *_ = _prepared_write(tmp_path)
-    challenge = create_write_approval_challenge(intent)
+    challenge = create_write_approval_challenge(intent, setup_attestation=_setup_for_intent(intent))
     with pytest.raises(WriteApprovalError, match="real process stdin/stdout"):
         collect_cli_confirmation(
             challenge, actor="Operator", input_stream=_TTYInput(challenge.exact_phrase), output_stream=_TTYOutput()
@@ -313,14 +411,68 @@ def test_cli_confirmation_requires_real_os_tty_and_exact_phrase(tmp_path, monkey
     monkeypatch.setattr(approval_module.sys, "stdin", _TTYInput(challenge.exact_phrase + "\n"))
     evidence = collect_cli_confirmation(challenge, actor="Operator")
     assert evidence.channel is ConfirmationChannel.CLI_TTY
-    assert challenge.exact_phrase in create_write_approval_challenge(intent).exact_phrase
+    assert challenge.exact_phrase in create_write_approval_challenge(intent, setup_attestation=_setup_for_intent(intent)).exact_phrase
+
+
+def test_write_challenge_digest_binds_spi_safety_and_ec_readiness(tmp_path):
+    _plan, intent, *_ = _prepared_write(tmp_path)
+    setup = _setup_for_intent(intent)
+    challenge = create_write_approval_challenge(intent, setup_attestation=setup)
+    changed_setup = SimpleNamespace(**{**vars(setup), "chip_pin1_orientation_verified": False})
+    changed = create_write_approval_challenge(intent, setup_attestation=changed_setup)
+    assert challenge.challenge_sha256 != changed.challenge_sha256
+    with pytest.raises(WriteApprovalError, match="malformed"):
+        approval_module._validate_challenge(changed)
+
+    changed_mac = replace(challenge, selected_mac_before="02:00:00:00:00:02", challenge_sha256="")
+    changed_mac = replace(
+        changed_mac, challenge_sha256=approval_module._challenge_checksum(changed_mac)
+    )
+    with pytest.raises(WriteApprovalError, match="differs from the immutable staged write intent"):
+        approval_module._validate_challenge_against_intent(intent, changed_mac)
+
+    version_setup = SimpleNamespace(**{
+        **vars(setup),
+        "ec_version": "1.2.3",
+        "ec_evidence_ref": "ec-observation:123",
+        "ec_observed_at_utc": _iso_now(),
+        "ec_update_decision": "already-current",
+        "ec_waiver_reason": "",
+    })
+    version_challenge = create_write_approval_challenge(intent, setup_attestation=version_setup)
+    assert version_challenge.challenge_sha256 != challenge.challenge_sha256
+    approval_module._validate_challenge(version_challenge)
+    updated_setup = SimpleNamespace(**{
+        **vars(version_setup),
+        "ec_update_decision": "updated-before-replacement",
+    })
+    updated_challenge = create_write_approval_challenge(intent, setup_attestation=updated_setup)
+    assert updated_challenge.challenge_sha256 != version_challenge.challenge_sha256
+    approval_module._validate_challenge(updated_challenge)
+
+    for partial_fields in (
+        {"ec_version": "1.2.3"},
+        {"ec_evidence_ref": "ec-observation:123"},
+        {"ec_observed_at_utc": _iso_now()},
+        {"ec_version": "1.2.3", "ec_evidence_ref": "ec-observation:123"},
+        {"ec_version": "1.2.3", "ec_observed_at_utc": _iso_now()},
+        {"ec_evidence_ref": "ec-observation:123", "ec_observed_at_utc": _iso_now()},
+    ):
+        malformed_setup = SimpleNamespace(**{**vars(setup), **partial_fields})
+        malformed_challenge = create_write_approval_challenge(intent, setup_attestation=malformed_setup)
+        with pytest.raises(WriteApprovalError, match="must be complete together"):
+            approval_module._validate_challenge(malformed_challenge)
+
+    no_setup_challenge = create_write_approval_challenge(intent)
+    with pytest.raises(WriteApprovalError, match="malformed"):
+        approval_module._validate_challenge(no_setup_challenge)
 
 
 def test_programmatic_boolean_json_and_fabricated_confirmation_cannot_issue(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")
     with pytest.raises(WriteApprovalError, match="not produced"):
-        create_write_approval_challenge(replace(intent))
+        create_write_approval_challenge(replace(intent), setup_attestation=_setup_for_intent(intent))
     with pytest.raises(WriteApprovalError, match="confirmation evidence"):
         HumanActionConfirmation(  # type: ignore[call-arg]
             challenge_sha256="0" * 64,
@@ -341,7 +493,13 @@ def test_approval_is_one_use_durable_and_does_not_call_writer_or_process(tmp_pat
     challenge, confirmation, display = _confirmation(intent)
     assert "PHYSICAL FIRMWARE WRITE" in display
     assert intent.chip_name in display
-    token = ledger.issue(intent, confirmation)
+    assert f"original={intent.original_mac}" in display
+    assert f"selected ROM before preservation={intent.selected_mac_before}" in display
+    assert f"approved final={intent.final_mac}" in display
+    assert "target off=True" in display and "pin-1 checked=True" in display
+    assert "EC decision=waived" in display and "loss of later OEM EC update route" in display
+    assert challenge.setup_measured_at_utc in display
+    token = ledger.issue(intent, confirmation, challenge=challenge)
 
     def no_process(*args, **kwargs):
         pytest.fail("Phase 10A approval must not spawn a process")
@@ -363,16 +521,16 @@ def test_approval_is_one_use_durable_and_does_not_call_writer_or_process(tmp_pat
     with pytest.raises(TypeError, match="cannot be serialized"):
         pickle.dumps(token)
     with pytest.raises(WriteApprovalError, match="already used"):
-        ledger.issue(intent, confirmation)
+        ledger.issue(intent, confirmation, challenge=challenge)
     assert challenge.intent_sha256 == intent.intent_sha256
 
 
 def test_stale_intent_is_consumed_and_cannot_be_replayed(tmp_path):
     plan, intent, service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")
-    _challenge, confirmation, _display = _confirmation(intent)
-    token = ledger.issue(intent, confirmation)
-    changed = WriteIntentFactory(service).create(
+    challenge, confirmation, _display = _confirmation(intent)
+    token = ledger.issue(intent, confirmation, challenge=challenge)
+    changed = _write_intent_factory(service).create(
         plan,
         operation_id=operation_id,
         capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
@@ -390,8 +548,8 @@ def test_stale_intent_is_consumed_and_cannot_be_replayed(tmp_path):
 def test_expired_approval_is_consumed_and_cannot_be_replayed(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")
-    _challenge, confirmation, _display = _confirmation(intent)
-    token = ledger.issue(intent, confirmation)
+    challenge, confirmation, _display = _confirmation(intent)
+    token = ledger.issue(intent, confirmation, challenge=challenge)
     expired_at = (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()
     record_path = tmp_path / "approvals" / f"{token.approval_id}.approval.json"
     document = json.loads(record_path.read_text(encoding="utf-8"))
@@ -411,8 +569,8 @@ def test_atomic_consumption_allows_only_one_concurrent_consumer(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")
     second_ledger = WriteApprovalLedger(tmp_path / "approvals")
-    _challenge, confirmation, _display = _confirmation(intent)
-    token = ledger.issue(intent, confirmation)
+    challenge, confirmation, _display = _confirmation(intent)
+    token = ledger.issue(intent, confirmation, challenge=challenge)
     barrier = threading.Barrier(3)
     outcomes: list[str] = []
 
@@ -444,7 +602,7 @@ def test_t430_candidate_and_internal_programmer_are_rejected_before_approval(tmp
     candidate = replace(plan, device=replace(plan.device, manual_model_candidate="x200"))
     capture = DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), candidate.device)
     with pytest.raises(WriteApprovalError, match="candidate-only"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             candidate,
             operation_id=operation_id, capture=capture, probe=probe,
             backup_set=backup, recovery_readiness=readiness,
@@ -456,7 +614,7 @@ def test_stale_probe_or_wrong_chip_capacity_blocks_intent(tmp_path):
     plan, _intent, service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
     old_probe = replace(probe, observed_at_utc=(datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat())
     with pytest.raises(WriteApprovalError, match="stale"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
@@ -475,7 +633,7 @@ def test_stale_probe_or_wrong_chip_capacity_blocks_intent(tmp_path):
         reported_programmer="ch341a_spi",
     )
     with pytest.raises(WriteApprovalError, match="capacity"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
@@ -502,7 +660,7 @@ def test_factory_reopens_only_accepted_journal_and_pinned_artifact_manifest(tmp_
         message="Synthetic invalid pre-write checkpoint fixture.",
     )
     with pytest.raises(WriteApprovalError, match="checkpoint"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
@@ -525,7 +683,7 @@ def test_factory_reopens_only_accepted_journal_and_pinned_artifact_manifest(tmp_
         f"{hashlib.sha256(manifest_bytes).hexdigest()}  manifest.json\n", encoding="ascii"
     )
     with pytest.raises(WriteApprovalError, match="artifact evidence failed revalidation"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             plan,
             operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device),
@@ -540,7 +698,7 @@ def test_unknown_or_changed_voltage_provenance_blocks_intent(tmp_path):
     plan, _intent, service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
     unknown = replace(plan, topology=replace(plan.topology, chips=(replace(plan.topology.chips[0], voltage_mv=None),)))
     with pytest.raises(WriteApprovalError, match="3300 mV"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             unknown, operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), unknown.device), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
@@ -551,7 +709,7 @@ def test_unknown_or_changed_voltage_provenance_blocks_intent(tmp_path):
         programmer=replace(plan.programmer, attested_by="Other Operator"),
     )
     with pytest.raises(WriteApprovalError, match="same operator"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             changed_provenance, operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), changed_provenance.device), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
@@ -563,7 +721,7 @@ def test_backup_tamper_and_recovery_mismatch_block_intent(tmp_path):
     plan, _intent, service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
     Path(backup.chips[0].first_path).write_bytes(b"tampered")
     with pytest.raises(WriteApprovalError, match="backup"):
-        WriteIntentFactory(service).create(
+        _write_intent_factory(service).create(
             plan, operation_id=operation_id,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan.device), probe=probe,
             backup_set=backup, recovery_readiness=readiness,
@@ -575,7 +733,7 @@ def test_backup_tamper_and_recovery_mismatch_block_intent(tmp_path):
     plan2, _intent2, service2, probe2, backup2, readiness2, _transport2, paths2, operation_id2 = _prepared_write(tmp_path / "second")
     forged_readiness = replace(readiness2, primary_volume_id=readiness2.recovery_volume_id)
     with pytest.raises(WriteApprovalError, match="readiness evidence changed"):
-        WriteIntentFactory(service2).create(
+        _write_intent_factory(service2).create(
             plan2, operation_id=operation_id2,
             capture=DeviceCaptureEvidence(str(uuid.uuid4()), _iso_now(), plan2.device), probe=probe2,
             backup_set=backup2, recovery_readiness=forged_readiness,
@@ -586,8 +744,8 @@ def test_backup_tamper_and_recovery_mismatch_block_intent(tmp_path):
 def test_approval_ledger_corruption_and_restore_are_fail_closed(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")
-    _challenge, confirmation, _display = _confirmation(intent)
-    token = ledger.issue(intent, confirmation)
+    challenge, confirmation, _display = _confirmation(intent)
+    token = ledger.issue(intent, confirmation, challenge=challenge)
     record = tmp_path / "approvals" / f"{token.approval_id}.approval.json"
     document = json.loads(record.read_text(encoding="utf-8"))
     document["intent_sha256"] = "0" * 64
@@ -616,12 +774,12 @@ def test_command_argv_or_artifact_path_tamper_is_rejected(tmp_path):
     )
     changed_path = _with_intent_checksum(changed_path)
     with pytest.raises(WriteApprovalError, match="not produced by"):
-        create_write_approval_challenge(changed_path)
+        create_write_approval_challenge(changed_path, setup_attestation=_setup_for_intent(changed_path))
 
 
 def test_tui_confirmation_requires_the_matching_explicit_action(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
-    challenge = create_write_approval_challenge(intent)
+    challenge = create_write_approval_challenge(intent, setup_attestation=_setup_for_intent(intent))
     bad = TUIConfirmationEvent("pathway", "confirm-write", str(uuid.uuid4()), challenge.challenge_sha256, _iso_now())
     with pytest.raises(WriteApprovalError, match="live dedicated screen bridge"):
         accept_tui_confirmation(challenge, actor="Operator", event=bad)
@@ -636,7 +794,7 @@ def test_tui_confirmation_requires_the_matching_explicit_action(tmp_path):
     object.__setattr__(forged, "confirmed_at_utc", _iso_now())
     object.__setattr__(forged, "channel", ConfirmationChannel.TUI_EXPLICIT_ACTION)
     with pytest.raises(WriteApprovalError, match="fabricated, expired, revoked, or already used"):
-        WriteApprovalLedger(tmp_path / "approvals").issue(intent, forged)
+        WriteApprovalLedger(tmp_path / "approvals").issue(intent, forged, challenge=challenge)
 
 
 def test_approval_fails_closed_when_directory_fsync_fails(tmp_path, monkeypatch):
@@ -649,7 +807,7 @@ def test_approval_fails_closed_when_directory_fsync_fails(tmp_path, monkeypatch)
 
     monkeypatch.setattr(approval_module, "_sync_directory", fail_directory_sync)
     with pytest.raises(WriteApprovalError, match="parent directory could not be durably synced"):
-        ledger.issue(intent, confirmation)
+        ledger.issue(intent, confirmation, challenge=challenge)
     assert not list((tmp_path / "approvals").glob("*.approval.json"))
     assert challenge.challenge_sha256 in next((tmp_path / "approvals").glob("*.confirmed")).name
 
@@ -658,4 +816,19 @@ def test_approval_platform_without_directory_fsync_is_unavailable(tmp_path, monk
     monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: False)
     with pytest.raises(WriteApprovalError, match="directory fsync is unsupported"):
         WriteApprovalLedger(tmp_path / "approvals")
+    assert not (tmp_path / "approvals").exists()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific production durability policy")
+def test_windows_directory_fsync_policy_keeps_approval_closed(tmp_path, monkeypatch):
+    _plan, intent, *_ = _prepared_write(tmp_path)
+    challenge, confirmation, _display = _confirmation(intent)
+    monkeypatch.setattr(
+        approval_module, "_directory_fsync_supported", _REAL_DIRECTORY_FSYNC_SUPPORTED
+    )
+    assert approval_module._directory_fsync_supported() is False
+    with pytest.raises(WriteApprovalError, match="directory fsync is unsupported"):
+        WriteApprovalLedger(tmp_path / "approvals").issue(
+            intent, confirmation, challenge=challenge
+        )
     assert not (tmp_path / "approvals").exists()

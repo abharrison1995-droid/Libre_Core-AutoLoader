@@ -115,6 +115,21 @@ class WriteConfirmationScreen(ControllerScreen):
                 yield Input(placeholder="Observed chip voltage in mV", id="write-chip-mv", type="integer")
                 yield Checkbox("I verified the programmer interface", id="write-interface-verified")
                 yield Checkbox("I verified voltage/wiring at the chip", id="write-wiring-verified")
+                yield Checkbox("Target is powered off before connecting the programmer", id="write-target-off")
+                yield Checkbox("AC power is disconnected", id="write-ac-disconnected")
+                yield Checkbox("Removable battery is removed", id="write-battery-removed")
+                yield Checkbox("Chip pin-1 orientation was checked for this exact setup", id="write-pin1-verified")
+                yield Checkbox("Programmer will be disconnected before repowering", id="write-disconnect-before-repower")
+                yield Static(
+                    "These are operator attestations, not measurements by AutoLoader. EC updates are never automated. "
+                    "Record the observed EC version, evidence and whether it is already current or was updated before replacement; "
+                    "or record a timestamped waiver of the later OEM EC update route.",
+                    classes="warning",
+                )
+                yield Input(placeholder="Observed EC version (or leave blank for waiver)", id="write-ec-version")
+                yield Input(placeholder="EC version evidence reference", id="write-ec-evidence")
+                yield Input(placeholder="EC decision: already-current or updated-before-replacement", id="write-ec-decision")
+                yield Input(placeholder="EC waiver reason, including possible loss of later OEM EC updates", id="write-ec-waiver")
                 yield Static(
                     "The challenge below is generated from the reopened plan, selected ROM, fixed command, and verified backup/recovery evidence. "
                     "Any changed evidence requires a new challenge.",
@@ -202,6 +217,45 @@ class WriteConfirmationScreen(ControllerScreen):
         if not self.query_one("#write-interface-verified", Checkbox).value or not self.query_one("#write-wiring-verified", Checkbox).value:
             self.query_one("#write-screen-status", Static).update("Both interface and wiring attestations are required before requesting a challenge.")
             return
+        safety_checks = {
+            "#write-target-off": "target powered off",
+            "#write-ac-disconnected": "AC disconnected",
+            "#write-battery-removed": "removable battery removed",
+            "#write-pin1-verified": "chip pin-1 orientation verified",
+            "#write-disconnect-before-repower": "programmer disconnect before repowering",
+        }
+        missing = [label for widget_id, label in safety_checks.items() if not self.query_one(widget_id, Checkbox).value]
+        if missing:
+            self.query_one("#write-screen-status", Static).update(
+                "Required human setup attestations are missing: " + ", ".join(missing) + "."
+            )
+            return
+        ec_version = self.query_one("#write-ec-version", Input).value.strip()
+        ec_evidence = self.query_one("#write-ec-evidence", Input).value.strip()
+        ec_decision = self.query_one("#write-ec-decision", Input).value.strip()
+        ec_waiver = self.query_one("#write-ec-waiver", Input).value.strip()
+        has_any_version_field = bool(ec_version or ec_evidence)
+        has_complete_version = bool(ec_version and ec_evidence)
+        if has_any_version_field and not has_complete_version:
+            self.query_one("#write-screen-status", Static).update(
+                "EC version and evidence reference must be entered together; a waiver cannot contain partial version fields."
+            )
+            return
+        if has_complete_version == bool(ec_waiver):
+            self.query_one("#write-screen-status", Static).update(
+                "Enter an observed EC version and evidence reference, or one explicit EC waiver; choose exactly one."
+            )
+            return
+        if has_complete_version and ec_decision not in {"already-current", "updated-before-replacement"}:
+            self.query_one("#write-screen-status", Static).update(
+                "Record whether the observed EC version is already current or was updated before replacement."
+            )
+            return
+        if ec_waiver and ec_decision not in {"", "waived"}:
+            self.query_one("#write-screen-status", Static).update("An EC waiver cannot also claim an observed-version decision.")
+            return
+        if ec_waiver:
+            ec_decision = "waived"
         setup = HardwareSetupAttestation(
             actor=actor,
             instrument_id=instrument,
@@ -211,6 +265,16 @@ class WriteConfirmationScreen(ControllerScreen):
             chip_voltage_mv=int(chip_mv),
             interface_verified=True,
             wiring_verified=True,
+            target_powered_off=True,
+            ac_disconnected=True,
+            removable_battery_removed=True,
+            chip_pin1_orientation_verified=True,
+            programmer_disconnect_before_repower=True,
+            ec_version=ec_version,
+            ec_evidence_ref=ec_evidence,
+            ec_observed_at_utc=datetime.now(timezone.utc).isoformat() if ec_version else "",
+            ec_update_decision=ec_decision,
+            ec_waiver_reason=ec_waiver,
         )
         self._operation_active = True
         self._submitted_once = True
@@ -221,6 +285,9 @@ class WriteConfirmationScreen(ControllerScreen):
             "#write-checkpoint", "#write-request", "#write-actor", "#write-instrument",
             "#write-test-point", "#write-programmer-mv", "#write-chip-mv",
             "#write-interface-verified", "#write-wiring-verified",
+            "#write-target-off", "#write-ac-disconnected", "#write-battery-removed",
+            "#write-pin1-verified", "#write-disconnect-before-repower",
+            "#write-ec-version", "#write-ec-evidence", "#write-ec-decision", "#write-ec-waiver",
         ):
             self.query_one(widget_id).disabled = True
         self.query_one("#write-screen-status", Static).update(
@@ -278,6 +345,19 @@ class WriteConfirmationScreen(ControllerScreen):
             f"test point {challenge.setup_test_point} · programmer {challenge.programmer_voltage_mv} mV · "
             f"chip {challenge.chip_voltage_mv} mV · interface verified {challenge.interface_verified} · "
             f"wiring verified {challenge.wiring_verified} · measured {challenge.setup_measured_at_utc}\n"
+            f"Human setup attestations: target off={challenge.target_powered_off}; AC disconnected={challenge.ac_disconnected}; "
+            f"removable battery removed={challenge.removable_battery_removed}; pin-1 orientation verified={challenge.chip_pin1_orientation_verified}; "
+            f"programmer disconnected before repower={challenge.programmer_disconnect_before_repower}\n"
+            f"EC decision={challenge.ec_update_decision}; version={challenge.ec_version or 'not supplied'}; "
+            f"evidence={challenge.ec_evidence_ref or 'not supplied'}; observed={challenge.ec_observed_at_utc or 'n/a'}; "
+            f"waiver={challenge.ec_waiver_reason or 'none'}; waiver recorded at setup time {challenge.setup_measured_at_utc}\n"
+            + (
+                f"X200 GbE MAC preservation: original={challenge.original_mac}; selected ROM before preservation="
+                f"{challenge.selected_mac_before}; approved final={challenge.final_mac}; policy={challenge.mac_policy}; "
+                f"source artifact SHA-256={challenge.mac_source_artifact_sha256}; "
+                f"manifest={challenge.mac_preservation_manifest_path} · SHA-256 {challenge.mac_preservation_manifest_sha256}\n"
+                if challenge.model_id == "x200" else ""
+            )
             + "\n".join(backup_lines)
             + f"\n\nType exactly: {challenge.exact_phrase}"
         )

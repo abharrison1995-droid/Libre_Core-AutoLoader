@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Libre Core AutoLoader <firmware-build@localhost.invalid>
+Date: Tue, 1 Jan 2030 00:00:00 +0000
+Subject: [PATCH] x86: use output-target for the x86_64 EFI application
+
+The pinned U-Boot v2024.10 source has GNU objcopy's input/output option in
+the wrong position for its x86_64 EFI application conversion. Keep the ia32
+target unchanged and use the documented output-target spelling for x86_64.
+
+---
+ arch/x86/config.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/config.mk b/arch/x86/config.mk
+--- a/arch/x86/config.mk
++++ b/arch/x86/config.mk
+@@ -129,3 +129,3 @@
+ ifdef CONFIG_X86_64
+-EFI_TARGET := --target=efi-app-x86_64
++EFI_TARGET := --output-target=efi-app-x86_64
+ else
+-- 
+2.0.0

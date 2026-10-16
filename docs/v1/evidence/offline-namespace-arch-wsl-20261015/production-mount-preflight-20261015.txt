@@ -1,0 +1,24 @@
+HISTORICAL PRE-ERRNO-CORRECTION RUN — retained as evidence of the earlier broad OSError classifier.
+The ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE outcome below is superseded; see mount-errno-classification-20261015.txt for the current production result.
+
+Production Archiso mount-capability preflight — WSL only
+Recorded: 2026-10-15 15:53 UTC
+Environment: Arch Linux WSL2, x86_64, Linux 6.18.54.1-microsoft-standard-WSL2
+
+Invocation:
+PowerShell piped a short Python script to:
+wsl -d archlinux -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && python3 -'
+The script called the production function `_establish_offline_network_isolation(subprocess.run)` and printed the result or exception. It did not call `execute_build`, mkarchiso, pacman sync/install, or create a builder work/output directory.
+
+Output:
+RESULT=ERROR BuildContractError: ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE: exact Archiso chroot mount set is unavailable in this namespace: devtmpfs, tmpfs-run, tmpfs-tmp
+
+The production preflight reached this mode-neutral mount-capability result, rather than an OFFLINE_NETWORK_ISOLATION_UNAVAILABLE or mount-integrity error. The code validates the real user-mapped network namespace report before launching the mount probe, then compares the host mount table after the probe before returning this capability error. The dedicated Arch WSL regression captures the real route-free child report and confirms the host mount-table snapshots match; it passed with the current focused USB suite. The production exception lists only denied operation names, not the complete child report; see `mount-probe-20261015.txt` for the earlier direct mount inventory.
+
+Current focused results after the mount preflight integration:
+- Arch WSL: `python3 -m pytest -q tests/test_usb_builder.py` — 234 passed, 1 skipped in 22.54s.
+- Windows: `.venv\\Scripts\\python.exe -m pytest -q tests/test_usb_builder.py` — 219 passed, 16 skipped (independent run).
+- `mypy usb_builder`: clean on 4 files in Arch WSL; `mypy --platform win32 usb_builder`: clean on 4 files on Windows.
+- `git diff --check`: passed on Windows.
+
+This is WSL and software test evidence only. Required devtmpfs and tmpfs mounts were denied in the production probe, so the builder correctly stops before work/output creation. No ISO build, package installation/download, hardware, or media action occurred. Native Linux mount behavior remains unvalidated.

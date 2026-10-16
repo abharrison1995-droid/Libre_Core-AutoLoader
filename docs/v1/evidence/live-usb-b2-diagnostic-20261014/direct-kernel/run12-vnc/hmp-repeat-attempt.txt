@@ -1,0 +1,5 @@
+Command: sendkey ctrl-alt-f9
+Channel: temporary second HMP client connected to /tmp/lc-b2-run12-hmp.sock while the primary launcher HMP connection remained open
+Timing: after complete frame 14 at 2026-10-15T12:40:55Z and before complete frame 15 at 2026-10-15T12:41:09Z; exact send instant was not captured by the helper.
+Transport result: AF_UNIX connect and sendall succeeded; no reply bytes arrived within the 3-second client read timeout (TimeoutError). Treat key delivery as unacknowledged.
+Visual result: complete frames 15 and 16 remained SeaBIOS/TDX startup text; no tty9 shell visible. No guest text or status command sent.

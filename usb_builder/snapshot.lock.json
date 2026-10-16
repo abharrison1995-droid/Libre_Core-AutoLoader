@@ -6,8 +6,186 @@
   "repository_base": "https://archive.archlinux.org/repos/2026/09/29",
   "archiso_package": "archiso",
   "archiso_version": "91-1",
+  "rootless_builder": {
+    "arch_install_scripts_package": "arch-install-scripts",
+    "arch_install_scripts_version": "31-2",
+    "arch_install_scripts_package_sha256": "21844567f7811bb957cb57982c697ff6a466a13ea3c8ad2cd159a7603c83608e",
+    "arch_install_scripts_signature_sha256": "1ea8adf9657c03ffa11af114babce8dee8269abb166a19ed8aa43b0892fbb00f",
+    "pacman_package": "pacman",
+    "pacman_version": "7.1.0.r9.g54d9411-2",
+    "pacman_package_sha256": "2092ec7a0391416e4a1757c455bc071d7b58a124cedc83f582cb7d37d52f211b",
+    "pacman_signature_sha256": "3e31debd8c57ac1c84c9586e57611e95e8a2ff7dfb8f3b54be95028ee36644e2",
+    "pacman_sha256": "bef41dfdb55bf620aa6d5b50a657b6d04b894d1b48da7d447a9d23a29ff66478",
+    "pacstrap_sha256": "c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207",
+    "pacstrap_status_overlay": {
+      "id": "arch-install-scripts-31-2-pacstrap-preserve-child-status-v1",
+      "source_path": "/usr/bin/pacstrap",
+      "source_sha256": "c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207",
+      "patch_path": "usb_builder/patches/arch-install-scripts-31-2-pacstrap-status.patch",
+      "patch_sha256": "11394f8b901364236d449c35a84170eda29818bc9d41cbadd9677a04fddbceaa",
+      "patched_sha256": "3964ed5b509f791e9f98cda494c4af5febe6daf0174df75b9bb10a7af3f2c04c",
+      "path_policy": "operation-owned pacstrap directory first, then /usr/bin:/usr/sbin"
+    },
+    "arch_chroot_sha256": "56c50ac2f6d58325d4f5eaa0a0e359ca3019bffe08b7b37468de3bddae09e8d5",
+    "arch_install_scripts_shared_runtime_files": [],
+    "util_linux_package": "util-linux",
+    "util_linux_version": "2.42.4-1",
+    "util_linux_package_sha256": "95b7096bf4b45274645f6bb96f5b5508af6ea80e5fccba29244abaa53a341962",
+    "util_linux_signature_sha256": "3fbd1ba4d323e2bb047e39d1f3642744a86582d11ef502c3cc31469846e4c453",
+    "util_linux_tools_sha256": {
+      "setpriv": "d12c6ed1085a2997b791ff40a4b9a3d4f3d865b67af3051b62a64112bbf8cb53",
+      "unshare": "e4e385ae4accf4af5302c4bb32859355b1c640315bef56ce73d31b8b1f97fdc0",
+      "mount": "ca6c26aa2b11a8431481d39ee562bc07a88984f3294f34846d3257ec28ae9c91",
+      "umount": "b8f6dcb0b8b7a790a431c954beebcb3db5931d8db81b02e09baa1e92beeaafac"
+    },
+    "bash_package": "bash",
+    "bash_version": "5.3.20-1",
+    "bash_package_sha256": "73a67dc509ed4a6dd64e4c7eca2895643f48083940f49431782ce78c4d4619e1",
+    "bash_signature_sha256": "3f9eeacf7bff152be34b6181bc8dcb656c4fef6bf2b576b842a63dfd877871d7",
+    "bash_sha256": "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d",
+    "trusted_tool_contract": {
+      "pacman": {
+        "path": "/usr/bin/pacman",
+        "package": "pacman",
+        "sha256": "bef41dfdb55bf620aa6d5b50a657b6d04b894d1b48da7d447a9d23a29ff66478",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "newuidmap": {
+        "path": "/usr/bin/newuidmap",
+        "package": "shadow",
+        "sha256": "85099fcbafde31fe5f27dbca529e3da1531f9b97f899db84758132313445af36",
+        "mode": 493,
+        "file_capabilities": "cap_setuid=ep"
+      },
+      "newgidmap": {
+        "path": "/usr/bin/newgidmap",
+        "package": "shadow",
+        "sha256": "326370106ae7d202a21216d75eb74dfc38ba93ac81d0fe9dc3ddd19bd68efa2f",
+        "mode": 493,
+        "file_capabilities": "cap_setgid=ep"
+      },
+      "getcap": {
+        "path": "/usr/bin/getcap",
+        "package": "libcap",
+        "sha256": "3d8bc2191227c1ee2fad5d83c025e8b62e283338673a1630babe6b81ee232814",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "pacstrap": {
+        "path": "/usr/bin/pacstrap",
+        "package": "arch-install-scripts",
+        "sha256": "c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "arch-chroot": {
+        "path": "/usr/bin/arch-chroot",
+        "package": "arch-install-scripts",
+        "sha256": "56c50ac2f6d58325d4f5eaa0a0e359ca3019bffe08b7b37468de3bddae09e8d5",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "setpriv": {
+        "path": "/usr/bin/setpriv",
+        "package": "util-linux",
+        "sha256": "d12c6ed1085a2997b791ff40a4b9a3d4f3d865b67af3051b62a64112bbf8cb53",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "unshare": {
+        "path": "/usr/bin/unshare",
+        "package": "util-linux",
+        "sha256": "e4e385ae4accf4af5302c4bb32859355b1c640315bef56ce73d31b8b1f97fdc0",
+        "mode": 493,
+        "file_capabilities": ""
+      },
+      "mount": {
+        "path": "/usr/bin/mount",
+        "package": "util-linux",
+        "sha256": "ca6c26aa2b11a8431481d39ee562bc07a88984f3294f34846d3257ec28ae9c91",
+        "mode": 2541,
+        "file_capabilities": ""
+      },
+      "umount": {
+        "path": "/usr/bin/umount",
+        "package": "util-linux",
+        "sha256": "b8f6dcb0b8b7a790a431c954beebcb3db5931d8db81b02e09baa1e92beeaafac",
+        "mode": 2541,
+        "file_capabilities": ""
+      },
+      "bash": {
+        "path": "/usr/bin/bash",
+        "package": "bash",
+        "sha256": "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d",
+        "mode": 493,
+        "file_capabilities": ""
+      }
+    },
+    "subid_range_minimum": 65536,
+    "map_helper_package": "shadow",
+    "map_helper_package_version": "4.20.0.arch1-1",
+    "map_helper_package_sha256": "615c819eb2d3e22158289f3cc2447f81ae981a6d11b3418da30b6085306b3e77",
+    "map_helper_signature_sha256": "4b2c1845cb09de397536097b15c4d9b5a3282fe051a21e20c43efe4bd584c95a",
+    "newuidmap_sha256": "85099fcbafde31fe5f27dbca529e3da1531f9b97f899db84758132313445af36",
+    "newgidmap_sha256": "326370106ae7d202a21216d75eb74dfc38ba93ac81d0fe9dc3ddd19bd68efa2f",
+    "required_helper_mode": "0755",
+    "required_helper_capabilities": {
+      "newuidmap": "cap_setuid=ep",
+      "newgidmap": "cap_setgid=ep"
+    },
+    "libcap_package": "libcap",
+    "libcap_version": "2.78-1",
+    "libcap_package_sha256": "3e984fe1d323b1c5a5fc60fef005776a4882fbca913d6fe3c41ad11128929ed1",
+    "libcap_signature_sha256": "ea04b0e2c6ed14aa62978b0048b17e01d55ace6959ab088edf006af209ebb6ee",
+    "getcap_sha256": "3d8bc2191227c1ee2fad5d83c025e8b62e283338673a1630babe6b81ee232814"
+  },
   "archiso_source_commit": "723da192226e1c9d5def9168f13332793c82a85e",
-  "packages_x86_64_sha256": "520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329",
+  "archiso_initramfs_config_sha256": "cd1d328d0b343719c5975729bf7c8c5a227542beb396574ff4adeac30381db0b",
+  "archiso_usb_initramfs_derivative": {
+    "id": "archiso-91-usb-remove-kms-v1",
+    "source_path": "usb_builder/archiso_profile/airootfs/etc/mkinitcpio.conf.d/zz-autoloader-usb.conf",
+    "profile_path": "airootfs/etc/mkinitcpio.conf.d/zz-autoloader-usb.conf",
+    "sha256": "ad143618ba35dd8ff00fab585cb6e6324fdccd6e19d7ca59c4abc69a610a1491",
+    "removed_hook": "kms"
+  },
+  "archiso_initramfs_base_packages": [
+    "bash",
+    "coreutils",
+    "device-mapper",
+    "mkinitcpio",
+    "util-linux"
+  ],
+  "archiso_initramfs_hook_packages": {
+    "archiso": [
+      "mkinitcpio-archiso",
+      "mkinitcpio",
+      "pv"
+    ],
+    "archiso_loop_mnt": [
+      "mkinitcpio-archiso"
+    ],
+    "archiso_pxe_common": [
+      "mkinitcpio-archiso",
+      "gnupg",
+      "openssl"
+    ],
+    "archiso_pxe_nbd": [
+      "mkinitcpio-archiso",
+      "nbd"
+    ],
+    "archiso_pxe_http": [
+      "mkinitcpio-archiso",
+      "curl",
+      "ca-certificates-utils"
+    ],
+    "archiso_pxe_nfs": [
+      "mkinitcpio-archiso",
+      "mkinitcpio-nfs-utils",
+      "nfs-utils"
+    ]
+  },
+  "packages_x86_64_sha256": "7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd",
   "repository_database_sha256": {
     "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
     "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1"
@@ -27,5 +205,5 @@
   ],
   "snapshot_pin_status": "fixed-candidate",
   "release_validation_status": "pending-linux-build-and-qemu",
-  "notes": "The dated official package source, exact core.db and extra.db bytes, and profile package list are fixed for candidate builds. Pacman must verify every package archive signature. Database signatures are optional only because the dated archive currently publishes no core.db.sig or extra.db.sig; when present they must verify, and database bytes must match these SHA-256 pins before and after use. Installed versions are recorded in build provenance. A candidate ISO is not release validated until BIOS and UEFI Linux/QEMU evidence is reviewed."
+  "notes": "The dated official package source, exact core.db and extra.db bytes, and profile package list are fixed for candidate builds. Pacman must verify every package archive signature. Database signatures are optional only because the dated archive currently publishes no core.db.sig or extra.db.sig; when present they must verify, and database bytes must match these SHA-256 pins before and after use. Installed versions are recorded in build provenance. The separately pinned USB initramfs derivative removes only the kms hook; PXE hooks, order, xz compression, and compression options are preserved. The measured KMS-free initramfs and both BIOS/UEFI app/service boots remain release gates. A candidate ISO is not release validated until BIOS and UEFI Linux/QEMU evidence is reviewed."
 }

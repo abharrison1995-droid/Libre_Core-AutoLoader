@@ -1,0 +1,14 @@
+mode=direct-kernel-vnc-tty9
+status=LAUNCHER_CLIENT_FAILURE; guest_diagnostic_not_started
+qemu_exit=0
+elapsed_seconds=7.6
+iso_sha256_before=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_sha256_after=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_unchanged=True
+vnc_loopback=connected; RFB 003.008 handshake completed
+client_failure=malformed framebuffer update request in temporary diagnostic client; no framebuffer requested or captured
+serial_bytes=0
+guest_state=NOT_OBSERVED
+stop_reason=QEMU terminated by SIGTERM after client error at 7.6 seconds; emulator exit 0 is not guest success
+network_device=none
+firmware_writer=none

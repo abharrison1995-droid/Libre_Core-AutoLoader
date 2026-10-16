@@ -1,0 +1,22 @@
+Run9 same-hash direct-kernel diagnostic (incomplete)
+
+Scope and inputs
+- Exact b2 ISO: `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd` before and after.
+- Kernel: `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`.
+- Initramfs: `c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090`.
+- QEMU 11.1.2, `-accel tcg,thread=multi -m 3072 -smp 4`, exact command in `command.txt`, no NIC, no firmware writer. HMP was connected at launch; VNC was loopback-only.
+- Kernel arguments matched run8, including `systemd.debug_shell=1` and serial console/debug logging.
+
+Observed sequence (UTC, from `launcher.log`)
+- 12:02:55: QEMU started with the expected ISO hash.
+- 12:06:41 (247.7 s): serial contained `debug-shell.service: Changed dead -> running`; the launcher sent HMP `sendkey ctrl-alt-f9`.
+- 12:06:43–12:06:45 (249.7–251.6 s): two HMP `screendump` requests were issued. The monitor returned to its `(qemu)` prompt. The initial size checks saw files still being written; both complete PPMs later reached the expected 864,015 bytes.
+- The complete `tty9-before-marker.png` and `marker-visible.png` frames show SeaBIOS startup text, not a tty9 prompt. The launcher also sent `echo lc_run9_marker` before the complete frame had been visually reviewed; the final frame does not show a prompt or marker. This was premature, non-destructive input and is recorded as a process deviation. No status or journal command was sent.
+- A separate second-client RFB probe was refused while the run’s VNC connection was open; see `grab.py` and the launcher attempt. It produced no guest input or framebuffer capture.
+- At 334.7 seconds the launcher timed out waiting for the review continuation and issued QEMU `quit`; host QEMU logged termination by SIGTERM. QEMU returned 0 after operator shutdown handling. This is not guest success and is below the 600 s cap.
+
+Comparison to run8
+Run8 used the same HMP chord. Its first frame about three seconds later was black; the usable tty9 prompt/marker frame appears roughly 108 seconds after the chord. Run9’s two captures were requested only about two and four seconds after the chord. Thus run9 did not wait long enough to establish whether tty9 became visible. The captured frames are complete, but do not show the shell. Run10 was authorized to repeat the same-hash diagnostic with frames about every 15 seconds for up to 120 seconds and with all guest typing gated on a visually confirmed prompt.
+
+Result
+This is an incomplete emulator diagnostic only. No requested `systemctl`, journal, process, module, or critical-chain collection was performed. No application/service success or root cause is established. The ISO, kernel, and initramfs hashes match before and after; no product files/profile or guest filesystem were changed by this run.

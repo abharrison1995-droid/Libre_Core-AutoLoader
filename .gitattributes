@@ -1,0 +1,12 @@
+# Archiso evaluates these shell/config inputs directly and requires LF endings.
+/usb_builder/archiso_profile/profiledef.sh text eol=lf
+/usb_builder/archiso_profile/pacman.conf text eol=lf
+/usb_builder/archiso_profile/syslinux/*.cfg text eol=lf
+/usb_builder/archiso_profile/efiboot/loader/loader.conf text eol=lf
+/usb_builder/archiso_profile/efiboot/loader/entries/*.conf text eol=lf
+/usb_builder/archiso_profile/airootfs/root/customize_airootfs.sh text eol=lf
+/usb_builder/archiso_profile/airootfs/opt/autoloader/start.sh text eol=lf
+/usb_builder/archiso_profile/airootfs/etc/systemd/system/*.service text eol=lf
+/usb_builder/archiso_profile/airootfs/etc/mkinitcpio.conf.d/*.conf text eol=lf
+/usb_builder/archiso_profile/packages.x86_64 text eol=lf
+/usb_builder/archiso_profile/airootfs/etc/motd text eol=lf

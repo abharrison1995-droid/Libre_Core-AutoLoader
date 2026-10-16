@@ -1,4 +1,7 @@
 base
+bash
+coreutils
+device-mapper
 linux
 linux-firmware
 python
@@ -13,3 +16,14 @@ python-psutil
 usbutils
 pciutils
 syslinux
+ca-certificates-utils
+curl
+gnupg
+mkinitcpio
+mkinitcpio-archiso
+mkinitcpio-nfs-utils
+nbd
+nfs-utils
+openssl
+pv
+util-linux

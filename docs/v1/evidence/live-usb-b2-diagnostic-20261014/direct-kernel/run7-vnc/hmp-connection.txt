@@ -1,0 +1,3 @@
+connected_at_monotonic=27.780
+socket=/tmp/lc-b2-vnc-run7-hmp.sock
+connection=kept open from launch through run

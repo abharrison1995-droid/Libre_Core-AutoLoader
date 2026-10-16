@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-vnc-run7.py", line 178, in <module>
+    data=(RUN/'serial.log').read_bytes()
+OSError: [Errno 61] No data available
+The launcher stopped at about 150.1 seconds before detecting the debug-shell marker. Its finally block terminated QEMU; no HMP key was sent and no guest command was entered. This is a diagnostic harness failure, not a guest result.

@@ -1,0 +1,2 @@
+utc=2026-10-15T13:26:04Z
+journalctl -b -u systemd-pcrphase-sysinit.service --no-pager -n 15

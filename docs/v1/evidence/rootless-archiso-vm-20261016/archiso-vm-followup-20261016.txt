@@ -1,0 +1,92 @@
+Disposable Arch VM follow-up — 2026-10-16
+========================================
+
+Scope
+-----
+
+This is failure-path evidence only from the disposable QEMU Arch VM. It is not
+a successful Archiso build, Live USB boot, ROM build, hardware test, or media
+write. The VM ran kernel `6.15.8-arch1-2` with `archiso 91-1`,
+`arch-install-scripts 31-2`, `shadow 4.20.0.arch1-1`, and `libcap 2.78-1`.
+The rootless build account was UID/GID 1000 with only its private primary
+group and subordinate UID/GID ranges `100000:65536`.
+
+Rootless devtmpfs capability
+----------------------------
+
+The disposable VM's parent mount table SHA-256 was
+`7f0fe2fc7a05032c8b5ff61061905eeed3fcc57b716f88f5267a0ea401ce359c` both
+before and after the probe. The probe created a route-free network namespace,
+dropped to `fwbuild`, then entered a mapped mount namespace. The command shape
+was:
+
+    unshare --net --fork -- setpriv --bounding-set=-all,+setuid,+setgid --reuid=1000 --regid=1000 --clear-groups -- unshare --map-auto --map-root-user --mount --fork -- sh -c 'id; cat /proc/self/uid_map; ip -j route show; mkdir -p /tmp/lc-devtmpfs-probe-20261016/dev; mount -t devtmpfs -o nosuid,mode=0755 devtmpfs /tmp/lc-devtmpfs-probe-20261016/dev; result=$?; echo DEVTMPS_MOUNT_RC=$result; exit $result'
+
+Observed UID map:
+
+    0       1000          1
+    1     100000      65536
+
+`ip -j route show` returned `[]`. The devtmpfs mount command returned status
+32 and printed `permission denied`; the rootless command also returned 32.
+The mount table hash remained the same before and after, so the denied attempt
+left no mount in place. This confirms the `devtmpfs` preflight blocker in this
+VM; it does not test a successful rootless Archiso execution path.
+
+Pinned pacstrap status propagation
+----------------------------------
+
+The VM's installed `/usr/bin/pacstrap` source hash was
+`c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207`. The
+staged patch hash was
+`11394f8b901364236d449c35a84170eda29818bc9d41cbadd9677a04fddbceaa`, and the
+resulting staged executable hash was
+`3964ed5b509f791e9f98cda494c4af5febe6daf0174df75b9bb10a7af3f2c04c`. The
+staged executable was first in the child `PATH` and was invoked as:
+
+    /mnt/archv1/work/rc-snapshot/librecore-autoloader-vmproof/rootless-tools/pacstrap -N -C /dev/null -M -G /mnt/archv1/work/rc-snapshot/librecore-autoloader-vmproof/target autoloader-no-install-probe
+
+It returned **1**. Its log stated:
+
+    error: no usable package repositories configured.
+    ==> ERROR: Failed to install packages to new root
+
+The target only contained the expected pacstrap directory skeleton and a
+`pacman.log`; it had no installed package records. The resulting JSON report
+was `pacstrap-overlay-vm-report.json` in the VM operation directory.
+
+Incomplete-profile mkarchiso integration
+-----------------------------------------
+
+With `/dev/null` as the pacman configuration and the staged pacstrap overlay
+first in `PATH`, the direct command was:
+
+    /usr/bin/mkarchiso -v -C /dev/null -w /mnt/archv1/work/rc-snapshot/librecore-autoloader-mkarchiso2-vmproof/work -o /mnt/archv1/work/rc-snapshot/librecore-autoloader-mkarchiso2-vmproof/output /mnt/archv1/work/rc-snapshot/Libre_Core-AutoLoader/usb_builder/archiso_profile
+
+It returned **1** during package installation. The log contained both
+`no usable package repositories configured` and
+`Failed to install packages to new root`; the report listed no `.iso` output
+and status `EXPECTED_FAILURE_NO_ISO`. This proves the tested failure path exits
+nonzero and does not publish an ISO. It does not prove a successful package
+inventory, signature verification, build, or staged-pacstrap lookup across a
+successful mkarchiso run.
+
+Source identity limitation
+-------------------------
+
+The VM snapshot had `build_usb.py` SHA-256
+`a301a034b2ef697b85e22d46d41c3cbe9ca1448c90b8cd5e3c85ef45c3ff780b` and
+`snapshot.lock.json` SHA-256
+`34e248ff930e6a965d96e5bd48bfcf5edca81e45321527bb4e84351d438c2dc3`. The
+final working-tree files at the time of this record were respectively
+`3f22ff0551114cc0ece6cf1b8846846a4235d172c0ad2bf27fcab8560fe595b6` and
+`3b73f6f1fc123c223abc93f58cef9bb5d2590d4ce5cdf219c6209ba432291f8e`.
+`mount_probe.py` matched at
+`fbc25ee4d0be65f1d71080e34ea3f135e38e07320df681dbbb8b1acadd1c8de0`, and
+the staged pacstrap bytes matched the current pinned expected hash above. The
+VM probe is therefore limited to the observed mount capability and that exact
+pacstrap failure-propagation artifact; it is not current-source builder
+acceptance. The production `execute_build` gate remains closed.
+
+No ISO was built, no USB media was written, and no physical hardware or
+firmware recovery operation was performed.

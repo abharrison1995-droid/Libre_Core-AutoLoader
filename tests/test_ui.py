@@ -1,6 +1,7 @@
 """Unit and parity tests for the controller-driven CLI and Textual interface."""
 import asyncio
 import json
+import sys
 import threading
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -540,7 +541,10 @@ def test_cli_flash_collects_live_tty_fields_and_routes_through_controller(tmp_pa
     monkeypatch.setattr(entrypoint, "ApplicationController", FakeController)
     result = CliRunner().invoke(cli, [
         "flash", "--profile", "x200-libreboot", "--checkpoint", str(checkpoint), "--request", str(request_path),
-    ], input="Test Operator\nDMM-1\nboard VCC test point\n3300\n3300\ny\ny\n")
+    ], input=(
+        "Test Operator\nDMM-1\nboard VCC test point\n3300\n3300\n"
+        "y\ny\ny\ny\ny\ny\ny\n\nOperator accepts loss of later OEM EC update route.\n"
+    ))
 
     assert result.exit_code == 0, result.output
     assert "synthetic-journal" in result.output
@@ -654,6 +658,10 @@ def test_app_profile_selection_routes_through_controller_and_rejects_non_v1():
         raise AssertionError("non-V1 model selection should fail")
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="positive approval/journal persistence requires POSIX directory fsync; production remains fail-closed on Windows",
+)
 def test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared_controller(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
@@ -664,10 +672,10 @@ def test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared
     from autoloader.workflow.write_service import WriteExecutionResult, WriteExecutionStatus
     from autoloader.workflow.x200_libreboot import X200ExternalSPIPlan
     from autoloader.workflow.types import CompatibilityDecision, OperationState, ProgrammerKind, VerificationStatus
-    from tests.test_phase10a_write_approval import _prepared_write
+    from tests.test_phase10a_write_approval import _prepared_write, _setup_for_intent
 
     plan, intent, _backup_service, _probe, backup, recovery, _transport, paths, operation_id = _prepared_write(tmp_path / "prepared")
-    challenge = create_write_approval_challenge(intent)
+    challenge = create_write_approval_challenge(intent, setup_attestation=_setup_for_intent(intent))
     checkpoint = tmp_path / "workflow.json"
     checkpoint.write_text("synthetic test workflow checkpoint", encoding="utf-8")
     proposal = X200ExternalSPIPlan(
@@ -784,6 +792,12 @@ def test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared
             screen.query_one("#write-chip-mv", Input).value = "3300"
             screen.query_one("#write-interface-verified", Checkbox).value = True
             screen.query_one("#write-wiring-verified", Checkbox).value = True
+            screen.query_one("#write-target-off", Checkbox).value = True
+            screen.query_one("#write-ac-disconnected", Checkbox).value = True
+            screen.query_one("#write-battery-removed", Checkbox).value = True
+            screen.query_one("#write-pin1-verified", Checkbox).value = True
+            screen.query_one("#write-disconnect-before-repower", Checkbox).value = True
+            screen.query_one("#write-ec-waiver", Input).value = "Operator accepts loss of later OEM EC update route."
             await pilot.click("#write-submit")
             for _ in range(80):
                 await pilot.pause(0.05)
@@ -800,6 +814,8 @@ def test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared
             assert challenge.setup_actor in preview
             assert challenge.setup_instrument_id in preview
             assert challenge.setup_test_point in preview
+            assert f"EC decision={challenge.ec_update_decision}" in preview
+            assert "waiver recorded at setup time" in preview
             assert f"programmer {challenge.programmer_voltage_mv} mV" in preview
             assert f"chip {challenge.chip_voltage_mv} mV" in preview
             assert f"interface verified {challenge.interface_verified}" in preview

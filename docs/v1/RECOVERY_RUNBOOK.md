@@ -1,6 +1,6 @@
 # V1 firmware recovery runbook
 
-This runbook describes recovery readiness and the evidence to collect for the three V1 targets. It is not a recovery authorization and does not claim that any procedure has been tested on hardware. The application has no firmware writer or restore command enabled.
+This runbook describes recovery readiness and the evidence to collect for the three V1 targets. It is not a recovery authorization and does not claim that any procedure has been tested on hardware. Phase 10B includes a guarded X200/X220 external SPI write/read-back path; raw restore and recovery writes remain blocked. This runbook grants no authorization to invoke either the normal write path or a recovery operation.
 
 ## Stop and preserve evidence
 

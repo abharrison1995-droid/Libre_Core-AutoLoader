@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261015/direct/run11.py", line 142, in <module>
+    ready, _, _ = select.select([sys.stdin], [], [], ...)
+NameError: name 'sys' is not defined

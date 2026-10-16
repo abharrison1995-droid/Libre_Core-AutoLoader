@@ -1,0 +1,328 @@
+[2026-10-15T17:35:14.248110+00:00] elapsed=45.1s process=None serial_bytes=230
+serial_tail_begin
+[    2.084197] virt/tdx: TDX not supported by the host platform
+:: running early hook [udev]
+Starting systemd-udevd version 262-1-arch
+:: running early hook [archiso_pxe_nbd]
+:: running hook [udev]
+:: Triggering uevents...
+
+serial_tail_end
+[2026-10-15T17:35:59.347814+00:00] elapsed=90.2s process=None serial_bytes=14060
+serial_tail_begin
+cessfully forked off '(exec-inner)' as PID 410.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-getty-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 411.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-gpt-auto-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 412.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-hibernate-resume-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 413.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-imds-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 414.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-import-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 415.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-integritysetup-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 416.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-run-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 417.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-ssh-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 418.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-system-update-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 419.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-tpm2-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 420.[0m
+[0;90m[0;38:5:245mAbout to execute /usr/lib/systemd/system-generators/systemd-veritysetup-generator[0m
+[0;90m[0;38:5:245mSuccessfully forked off '(exec-inner)' as PID 421.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-fstab-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-system-update-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-debug-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-ssh-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/nfsroot-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-bless-boot-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-imds-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-run-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-veritysetup-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-getty-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-hibernate-resume-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-factory-reset-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-cryptsetup-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/nfs-server-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-clonesetup-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/rpc-pipefs-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-integritysetup-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-gpt-auto-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-import-generator' succeeded.[0m
+[0;90m[0;38:5:245m'/usr/lib/systemd/system-generators/systemd-tpm2-generator' succeeded.[0m
+[0;90m[0;38:5:245m'(generators)' succeeded.[0m
+[0;90m[0;38:5:245m'(sd-gens)' succeeded.[0m
+Applying preset policy.
+[0;90m[0;38:5:245mLinked unit file: /run/systemd/generator.early/systemd-nsresourced.socket → /dev/null[0m
+[0;90m[0;38:5:245mPreset files say enable systemd-nsresourced.socket.[0m
+[0;90m[0;38:5:245mLinked unit file: /run/systemd/generator.early/systemd-nsresourced.socket → /dev/null[0m
+[0;90m[0;38:5:245mLinked unit file: /run/systemd/generator.early/systemd-nsresourced.service → /dev/null[0m
+[0;90m[0;38:5:245mPreset files say disable systemd-nsresourced.service.[0m
+[0;90m[0;38:5:245mLinked unit file: /run/systemd/generator.early/systemd-nsresourced.service → /dev/null[0m
+[0;90m[0;38:5:245mPreset files say disable autoloader.service.[0m
+[0;90m[0;38:5:245mSkipping autovt@.service because it is an alias for getty@.service.[0m
+[0;90m[0;38:5:245mPreset files say disable archlinux-keyring-wkd-sync.service.[0m
+[0;90m[0;38:5:245mPreset files say disable archlinux-keyring-wkd-sync.timer.[0m
+[0;90m[0;38:5:245mPreset files say disable arptables.service.[0m
+[0;90m[0;38:5:245mPreset files say disable audit-rules.service.[0m
+[0;90m[0;38:5:245mPreset files say disable auditd.service.[0m
+[0;90m[0;38:5:245mPreset files say disable auth-rpcgss-module.service.[0m
+[0;90m[0;38:5:245mPreset files say disable basic.target.[0m
+[0;90m[0;38:5:245mPreset files say disable blockdev@.target.[0m
+[0;90m[0;38:5:245mPreset files say disable bluetooth.target.[0m
+[0;90m[0;38:5:245mPreset files say disable boot-complete.target.[0m
+[0;90m[0;38:5:245mPreset files say disable breakpoint-pre-basic.service.[0m
+[0;90m[0;38:5:245mPreset files say disable breakpoint-pre-mount.service.[0m
+[0;90m[0;38:5:245mPreset files say disable breakpoint-pre-switch-root.service.[0m
+[0;90m[0;38:5:245mPreset files say disable brea
+serial_tail_end
+[2026-10-15T17:36:44.410425+00:00] elapsed=135.2s process=None serial_bytes=62264
+serial_tail_begin
+al unit file: /usr/lib/systemd/system/debug-shell.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dev-hugepages.mount[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dev-mqueue.mount[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dirmngr@.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dirmngr@.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dm-event.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/dm-event.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/e2scrub@.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/e2scrub_all.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/e2scrub_all.timer[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/e2scrub_fail@.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/e2scrub_reap.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/ebtables.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/emergency.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/emergency.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/exit.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/factory-reset-now.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/factory-reset.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/final.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/first-boot-complete.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/fsidd.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/fstrim.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/fstrim.timer[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/getty-pre.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/getty.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/getty@.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gpg-agent-browser@.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gpg-agent-extra@.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gpg-agent-ssh@.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gpg-agent@.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gpg-agent@.socket[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/graphical.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/gssproxy.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/halt.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/hibernate.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/hybrid-sleep.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/imports-pre.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/imports.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-cleanup.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-fs.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-parse-etc.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-root-device.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-root-fs.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-switch-root.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-switch-root.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-udevadm-cleanup-db.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd-usr-fs.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/initrd.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/integritysetup-pre.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/integritysetup.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/ip6tables.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/iptables.service[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal unit file: /usr/lib/systemd/system/kexec.target[0m
+[0;90m[0;38:5:245munit_file_build_name_map: normal 
+serial_tail_end
+[2026-10-15T17:37:29.246950+00:00] elapsed=180.1s process=None serial_bytes=112618
+serial_tail_begin
+ile_getattr is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-logind.service:62: System call file_setattr is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-logind.service:62: System call fstatat is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-logind.service:62: System call newfstat is not known, ignoring.[0m
+[0;90m[0;38:5:245mrun-systemd-users.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-systemd-linger.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-shutdown.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-seats.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-inhibit.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sessions.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mUnit modprobe@drm.service has alias modprobe@.service.[0m
+[0;90m[0;38:5:245mUnit systemd-homed.service has alias dbus-org.freedesktop.home1.service.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call llseek is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call file_getattr is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call file_setattr is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call fstatat is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call newfstat is not known, ignoring.[0m
+[0;90m[0;38:5:245m/usr/lib/systemd/system/systemd-homed.service:37: System call open_tree_attr is not known, ignoring.[0m
+[0;90m[0;38:5:245mvar-cache.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-cache-systemd.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-cache-systemd-home.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-systemd-home.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-ask\x2dpassword.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-machines.raw.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mUnit serial-getty@ttyS0.service has alias serial-getty@.service.[0m
+[0;90m[0;38:5:245mUnit dbus.service has alias dbus-broker.service.[0m
+[0;90m[0;38:5:245mhome.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.SysUpdate.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sysupdate.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sysupdate-notify.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sysupdate-notify-io.systemd.sysext.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sysupdate-notify-io.systemd.PCRLock.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-sysupdate-notify-io.systemd.BootControl.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.SysInstall.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.sysext.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.StorageProvider.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.StorageProvider-fs.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-storage.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.StorageProvider-block.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-resolve.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-resolve-io.systemd.Resolve.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-resolve-io.systemd.Resolve.Monitor.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-io.systemd.Report.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report.sign.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report.sign-tsm.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report.sign-tpm2.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-systemd-report.sign.tpm2.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report-io.systemd.Report.SignPlain.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mvar-lib-systemd-report.sign.plain.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report-io.systemd.Files.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:245mrun-systemd-report-io.systemd.CGroup.mount: Failed to load configuration: No such file or directory[0m
+[0;90m[0;38:5:2
+serial_tail_end
+[2026-10-15T17:38:14.299252+00:00] elapsed=225.1s process=None serial_bytes=165473
+serial_tail_begin
+ succeeded.[0m
+[0;90m[0;38:5:245mproc-sys-fs-binfmt_misc.automount: ConditionPathExists=/proc/sys/fs/binfmt_misc succeeded.[0m
+[0;90m[0;38:5:245mAutofs kernel version 1.1[0m
+[0;90m[0;38:5:245mMounting systemd-1 (autofs) on /proc/sys/fs/binfmt_misc (0 "fd=44,pgrp=1,minproto=5,maxproto=5,direct")...[0m
+[0;90m[0;38:5:245mAutofs protocol version 5.6[0m
+[0;90m[0;38:5:245mproc-sys-fs-binfmt_misc.automount: Changed dead -> waiting[0m
+[0;90m[0;38:5:245mproc-sys-fs-binfmt_misc.automount: Job 84 proc-sys-fs-binfmt_misc.automount/start finished, result=done[0m
+[[0;32m  OK  [0m] Set up automount [0;1;39mArbitrary Executa…ormats File System Automount Point[0m.
+         Expecting device [0;1;39m/dev/ttyS0[0m...
+[0;90m[0;38:5:245mbasic.target: starting held back, waiting for: paths.target[0m
+[0;90m[0;38:5:245mclonesetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mclonesetup.target: Job 69 clonesetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mLocal dm-clone Devices[0m.
+[0;90m[0;38:5:245mcryptsetup.target: starting held back, waiting for: systemd-pcrosseparator.service[0m
+[0;90m[0;38:5:245mfirst-boot-complete.target: starting held back, waiting for: systemd-firstboot.service[0m
+[0;90m[0;38:5:245mgetty.target: starting held back, waiting for: serial-getty@ttyS0.service[0m
+[0;90m[0;38:5:245mgraphical.target: starting held back, waiting for: multi-user.target[0m
+[0;90m[0;38:5:245mimports.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mimports.target: Job 32 imports.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mImage Downloads[0m.
+[0;90m[0;38:5:245mintegritysetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mintegritysetup.target: Job 52 integritysetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mLocal Integrity Protected Volumes[0m.
+[0;90m[0;38:5:245mlocal-fs-pre.target: starting held back, waiting for: systemd-tmpfiles-setup-dev-early.service[0m
+[0;90m[0;38:5:245mlocal-fs.target: starting held back, waiting for: systemd-remount-fs.service[0m
+[0;90m[0;38:5:245mmachines.target: starting held back, waiting for: var-lib-machines.mount[0m
+[0;90m[0;38:5:245mmulti-user.target: starting held back, waiting for: systemd-networkd.service[0m
+[0;90m[0;38:5:245mnetwork-pre.target: starting held back, waiting for: systemd-network-generator.service[0m
+[0;90m[0;38:5:245mnetwork.target: starting held back, waiting for: systemd-networkd.service[0m
+[0;90m[0;38:5:245mnss-lookup.target: starting held back, waiting for: systemd-resolved.service[0m
+[0;90m[0;38:5:245mpaths.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mpaths.target: Job 149 paths.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mPath Units[0m.
+[0;90m[0;38:5:245mbasic.target: starting held back, waiting for: systemd-pcrphase-sysinit.service[0m
+[0;90m[0;38:5:245mremote-cryptsetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mremote-cryptsetup.target: Job 175 remote-cryptsetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mRemote Encrypted Volumes[0m.
+[0;90m[0;38:5:245mremote-fs.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mremote-fs.target: Job 158 remote-fs.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mRemote File Systems[0m.
+[0;90m[0;38:5:245mremote-integritysetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mremote-integritysetup.target: Job 171 remote-integritysetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mRemote Integrity Protected Volumes[0m.
+[0;90m[0;38:5:245mremote-veritysetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mremote-veritysetup.target: Job 170 remote-veritysetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mRemote Verity Protected Volumes[0m.
+[0;90m[0;38:5:245mslices.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mslices.target: Job 91 slices.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mSlice Units[0m.
+[0;90m[0;38:5:245mbasic.target: starting held back, waiting for: systemd-pcrphase-sysinit.service[0m
+[0;90m[0;38:5:245msockets.target: starting held back, waiting for: gpg-agent-ssh@etc-pacman.d-gnupg.socket[0m
+[0;90m[0;38:5:245mswap.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mswap.target: Job 88 swap.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mSwaps[0m.
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245mtime-set.target: starting held back, waiting for: systemd-timesyncd.service[0m
+[0;90m[0;38:5:245mtimers.target: starting held back, waiting for: shadow.timer[0m
+[0;90m[0;38:5:245mveritysetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mveritysetup.target: Job 62 veritysetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mLocal Verity Protected Volumes[0m.
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245mdbus.socket: starting held back, waiting for: sysinit.target[0m
+[0;90m[0;38:5:245mdirmngr@etc-pacman.d-gnupg.socket: starting held back, waiting for: sysinit.target[0m
+[0;90m[0;38:5:245mdm-event.socket: Changed dead -> start-open[0m
+[0;90m[0;38:5:245mdm-event.socket: Changed start-open -> listening[0m
+[0;90m[0;38:5:245mdm-event.socket: Job 140 dm-event.socket/start finished, result=done[0m
+[[0;32m  OK  [0m] Listening on [0;1;39mDevice-mapper event daemon FIFOs[0m.
+[0;90m[0;38:5:245mgpg-agent-browser@etc-pacman.d-gnupg.socket: starting he
+serial_tail_end
+[2026-10-15T17:38:59.241245+00:00] elapsed=270.1s process=None serial_bytes=212903
+serial_tail_begin
+;90m[0;38:5:245msystemd-networkd.service: starting held back, waiting for: systemd-sysusers.service[0m
+[0;90m[0;38:5:245msystemd-pcrmachine.service: ConditionSecurity=measured-os failed.[0m
+[0;90m[0;38:5:245msystemd-pcrmachine.service: Starting requested but condition not met. Not starting unit.[0m
+[0;90m[0;38:5:245msystemd-pcrmachine.service: Job 72 systemd-pcrmachine.service/start finished, result=done[0m
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245msystemd-pcrnvdone.service: starting held back, waiting for: systemd-tpm2-setup-early.service[0m
+[0;90m[0;38:5:245msystemd-pcrosseparator.service: ConditionSecurity=measured-os failed.[0m
+[0;90m[0;38:5:245msystemd-pcrosseparator.service: Starting requested but condition not met. Not starting unit.[0m
+[0;90m[0;38:5:245msystemd-pcrosseparator.service: Job 20 systemd-pcrosseparator.service/start finished, result=done[0m
+[0;90m[0;38:5:245mcryptsetup.target: starting held back, waiting for: systemd-pcrnvdone.service[0m
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245msystemd-pcrphase-sysinit.service: starting held back, waiting for: sysinit.target[0m
+[0;90m[0;38:5:245msystemd-pcrphase.service: starting held back, waiting for: sysinit.target[0m
+[0;90m[0;38:5:245msystemd-pcrproduct.service: starting held back, waiting for: systemd-pcrnvdone.service[0m
+[0;90m[0;38:5:245msystemd-pstore.service: starting held back, waiting for: systemd-remount-fs.service[0m
+[0;90m[0;38:5:245msystemd-random-seed.service: starting held back, waiting for: systemd-remount-fs.service[0m
+[0;90m[0;38:5:245msystemd-remount-fs.service: Will spawn child (service_enter_start): /usr/lib/systemd/systemd-remount-fs[0m
+[0;90m[0;38:5:245msystemd-remount-fs.service: Passing 0 fds to service[0m
+[0;90m[0;38:5:245msystemd-remount-fs.service: About to execute: /usr/lib/systemd/systemd-remount-fs[0m
+[0;90m[0;38:5:245mSerializing sd-executor-state to memfd.[0m
+[0;90m[0;38:5:245msystemd-remount-fs.service: Forked /usr/lib/systemd/systemd-remount-fs as 437 (via CLONE_INTO_CGROUP)[0m
+[0;90m[0;38:5:245mClosing set fd 102 (socket:[636])[0m
+[0;90m[0;38:5:245mClosing set fd 103 (socket:[638])[0m
+[0;90m[0;38:5:245mClosing set fd 104 (socket:[634])[0m
+[0;90m[0;38:5:245msystemd-remount-fs.service: Changed dead -> start[0m
+         Starting [0;1;39mRemount Root and Kernel File Systems[0m...
+[0;90m[0;38:5:245msystemd-repart.service: starting held back, waiting for: systemd-tpm2-setup-early.service[0m
+[0;90m[0;38:5:245msystemd-resolved.service: starting held back, waiting for: systemd-sysctl.service[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: ConditionPathIsReadWrite=/proc/sys/net succeeded.[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: Will spawn child (service_enter_start): /usr/lib/systemd/systemd-sysctl[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: Passing 0 fds to service[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: About to execute: /usr/lib/systemd/systemd-sysctl[0m
+[0;90m[0;38:5:245mSerializing sd-executor-state to memfd.[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: Forked /usr/lib/systemd/systemd-sysctl as 438 (via CLONE_INTO_CGROUP)[0m
+[0;90m[0;38:5:245mClosing set fd 103 (socket:[636])[0m
+[0;90m[0;38:5:245mClosing set fd 104 (socket:[638])[0m
+[0;90m[0;38:5:245mClosing set fd 106 (socket:[634])[0m
+[0;90m[0;38:5:245msystemd-sysctl.service: Changed dead -> start[0m
+         Starting [0;1;39mApply Kernel Variables[0m...
+[0;90m[0;38:5:245msystemd-sysext.service: starting held back, waiting for: local-fs.target[0m
+[0;90m[0;38:5:245msystemd-sysusers.service: starting held back, waiting for: systemd-tmpfiles-setup-dev-early.service[0m
+[0;90m[0;38:5:245msystemd-timesyncd.service: starting held back, waiting for: systemd-remount-fs.service[0m
+[0;90m[0;38:5:245msystemd-tmpfiles-setup-dev-early.service: starting held back, waiting for: kmod-static-nodes.service[0m
+[0;90m[0;38:5:245msystemd-tmpfiles-setup-dev.service: starting held back, waiting for: systemd-sysusers.service[0m
+[0;90m[0;38:5:245msystemd-tmpfiles-setup.service: starting held back, waiting for: systemd-sysext.service[0m
+[0;90m[0;38:5:245msystemd-tpm2-setup-early.service: ConditionPathExists=!/run/systemd/tpm2-srk-public-key.pem succeeded.[0m
+[0;90m[0;38:5:245msystemd-tpm2-setup-early.service: ConditionSecurity=measured-os failed.[0m
+[0;90m[0;38:5:245msystemd-tpm2-setup-early.service: Starting requested but condition not met. Not starting unit.[0m
+[0;90m[0;38:5:245msystemd-tpm2-setup-early.service: Job 86 systemd-tpm2-setup-early.service/start finished, result=done[0m
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245msystemd-pcrnvdone.service: ConditionPathExists=/etc/initrd-release failed.[0m
+[0;90m[0;38:5:245msystemd-pcrnvdone.service: Starting requested but condition not met. Not starting unit.[0m
+[0;90m[0;38:5:245msystemd-pcrnvdone.service: Job 70 systemd-pcrnvdone.service/start finished, result=done[0m
+[0;90m[0;38:5:245mcryptsetup.target: Changed dead -> active[0m
+[0;90m[0;38:5:245mcryptsetup.target: Job 55 cryptsetup.target/start finished, result=done[0m
+[[0;32m  OK  [0m] Reached target [0;1;39mLocal Encrypted Volumes[0m.
+[0;90m[0;38:5:245msysinit.target: starting held back, waiting for: systemd-tmpfiles-setup-dev.service[0m
+[0;90m[0;38:5:245msystemd-pcrproduct.service: ConditionSecurity=measured-os failed.[0m
+[0;90m[0;38:5:245msystemd-pcrproduct.service: Starting requested but condition not met. Not starting unit.[0m
+[0;90m[0;38:5:245msystemd-pcrproduct.service: Job 65 systemd-pcrproduct.service/start finished, result=done[0
+serial_tail_end

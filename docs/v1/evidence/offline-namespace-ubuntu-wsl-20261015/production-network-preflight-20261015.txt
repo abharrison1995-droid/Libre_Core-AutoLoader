@@ -1,0 +1,16 @@
+Ubuntu 26.04 WSL production network-isolation preflight — 2026-10-15
+
+Exact command:
+wsl.exe -d Ubuntu -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && id && python3 -c "import subprocess; from usb_builder.build_usb import _establish_offline_network_isolation; print(_establish_offline_network_isolation(subprocess.run))"'
+
+Result: exit status 1. The production preflight resolved `/usr/bin/unshare`,
+then stopped at the trusted-tool prerequisite because `pacman` is absent and
+`pacman -Qo` could not be started. The production error was mapped to
+`OFFLINE_NETWORK_ISOLATION_UNAVAILABLE`.
+
+This run did not enter network-namespace or mount-capability checks, so it says
+nothing about route isolation, devtmpfs, or Archiso mount support in Ubuntu
+WSL. It did not call `execute_build`, create candidate-build work/output, sync
+or install packages, or invoke `mkarchiso`. No package was installed and no
+trust gate was bypassed. Ubuntu WSL is not established as the pinned Archiso
+91-1 build host; the separate Arch WSL evidence remains distinct.

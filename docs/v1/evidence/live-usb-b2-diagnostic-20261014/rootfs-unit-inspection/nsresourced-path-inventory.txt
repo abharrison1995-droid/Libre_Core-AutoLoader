@@ -1,0 +1,5 @@
+-rw-r--r-- root/root              1518 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-nsresourced.service
+-rw-r--r-- root/root              1122 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-nsresourced.socket
+-rwxr-xr-x root/root            121176 2026-09-22 14:13 squashfs-root/usr/lib/systemd/systemd-nsresourced
+-rw-r--r-- root/root                54 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-nsresourced.8.gz
+-rw-r--r-- root/root              2375 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-nsresourced.service.8.gz

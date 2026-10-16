@@ -1,0 +1,15 @@
+diff --git a/include/tree.sh b/include/tree.sh
+--- a/include/tree.sh
++++ b/include/tree.sh
+@@ -730,5 +730,9 @@ check_autoconf()
+ 		fi
+ 		if [ -f "configure" ]; then
+-			x_ ./configure $autoconfargs; :
++			if [ "$project" = "grub" ] && [ "$tree" = "default" ] && [ -n "${LIBRECORE_UNIFONT_PATH:-}" ]; then
++				x_ ./configure --with-unifont="$LIBRECORE_UNIFONT_PATH" $autoconfargs; :
++			else
++				x_ ./configure $autoconfargs; :
++			fi
+ 		fi
+ 
+ 	) || err "can't bootstrap project: $1" "check_autoconf" "$@"; :

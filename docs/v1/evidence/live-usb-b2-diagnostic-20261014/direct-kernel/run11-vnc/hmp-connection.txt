@@ -1,0 +1,2 @@
+socket=/tmp/lc-b2-run11-hmp.sock
+connected and held open from VM startup

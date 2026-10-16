@@ -1,0 +1,1 @@
+utc=2026-10-15T12:31:51Z elapsed=256.4s sent HMP sendkey ctrl-alt-f9 after serial marker

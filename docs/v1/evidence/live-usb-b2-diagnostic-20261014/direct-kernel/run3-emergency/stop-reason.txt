@@ -1,0 +1,1 @@
+The serial log shows emergency.target reached and displays: "Cannot open access to console, the root account is locked." The supervisor stopped QEMU with SIGTERM at 168.9 seconds, before the 300-second cap. No shell commands were sent. QEMU exit code 0 is only the emulator's response to SIGTERM; it is not a guest success result.

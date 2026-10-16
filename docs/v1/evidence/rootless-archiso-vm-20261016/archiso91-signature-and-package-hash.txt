@@ -1,0 +1,28 @@
+TARGET_ARCHISO_BEFORE:
+==> WARNING: /mnt/archv1/work/toolroot-20261016 is not a mountpoint. This may have undesirable side effects.
+archiso 90-1
+PACMAN_SIGNATURE_POLICY:
+SigLevel    = Required DatabaseOptional
+LocalFileSigLevel = Optional
+PACKAGE_SIGNATURE_VERIFY:
+==> WARNING: /mnt/archv1/work/toolroot-20261016 is not a mountpoint. This may have undesirable side effects.
+==> Checking /var/cache/pacman/pkg/archiso-91-1-any.pkg.tar.zst.sig... (detached)
+gpg: Signature made Sun Sep 27 16:55:49 2026 UTC
+gpg:                using EDDSA key 62CC73F884E52957B2FDD8839B7A287D9A2EC608
+gpg: Good signature from "David Runge <dvzrv@archlinux.org>" [full]
+ARCHIVE_SHA256:
+3d08984593f235fc5de8ec379bdf7860fbcd2e62fa7e36b14dc53ba663289d1c  /mnt/archv1/work/toolroot-20261016/var/cache/pacman/pkg/archiso-91-1-any.pkg.tar.zst
+779167c909d3dbdb60d91e9ca6f13e4d0300a2303ffe455a8ac3b452baf61e3c  /mnt/archv1/work/toolroot-20261016/var/cache/pacman/pkg/archiso-91-1-any.pkg.tar.zst.sig
+ARCHIVE_METADATA:
+pkgname = archiso
+pkgver = 91-1
+arch = any
+depend = arch-install-scripts
+depend = bash
+depend = dosfstools
+depend = e2fsprogs
+depend = erofs-utils
+depend = libarchive
+depend = libisoburn
+depend = mtools
+depend = squashfs-tools

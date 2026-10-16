@@ -75,7 +75,11 @@ class WriteExecutionStatus(str, Enum):
 
 @dataclass(frozen=True)
 class HardwareSetupAttestation:
-    """Fresh human-reported wiring and voltage evidence, never imported JSON."""
+    """Fresh human attestations and measurements, never imported JSON.
+
+    The power, AC, battery, orientation and disconnect values are human-reported
+    checks. They are not device telemetry or proof supplied by the application.
+    """
 
     actor: str
     instrument_id: str
@@ -85,6 +89,16 @@ class HardwareSetupAttestation:
     chip_voltage_mv: int
     interface_verified: bool
     wiring_verified: bool
+    target_powered_off: bool = False
+    ac_disconnected: bool = False
+    removable_battery_removed: bool = False
+    chip_pin1_orientation_verified: bool = False
+    programmer_disconnect_before_repower: bool = False
+    ec_version: str = ""
+    ec_evidence_ref: str = ""
+    ec_observed_at_utc: str = ""
+    ec_update_decision: str = ""
+    ec_waiver_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -546,6 +560,11 @@ class ExternalSPIWriteService:
             or not setup.test_point.strip()
             or setup.interface_verified is not True
             or setup.wiring_verified is not True
+            or setup.target_powered_off is not True
+            or setup.ac_disconnected is not True
+            or setup.removable_battery_removed is not True
+            or setup.chip_pin1_orientation_verified is not True
+            or setup.programmer_disconnect_before_repower is not True
             or setup.programmer_voltage_mv != 3300
             or setup.chip_voltage_mv != 3300
             or setup.programmer_voltage_mv != plan.programmer.voltage_mv
@@ -555,11 +574,44 @@ class ExternalSPIWriteService:
             or setup.instrument_id != plan.programmer.instrument_id
             or setup.test_point != plan.programmer.measurement_test_point
         ):
-            raise WriteExecutionError("fresh programmer/chip voltage, interface, wiring, instrument or operator differs from the staged intent")
+            raise WriteExecutionError(
+                "fresh human setup attestation must confirm target off, AC/battery removed, pin-1 orientation, "
+                "programmer disconnect before repower, measured voltage, interface, wiring, instrument and operator"
+            )
         observed = _parse_utc(setup.measured_at_utc, "fresh setup measurement time")
         now = datetime.now(timezone.utc)
         if observed > now + timedelta(seconds=30) or now - observed > _CURRENT_EVIDENCE_MAX_AGE:
             raise WriteExecutionError("fresh hardware setup measurement is stale or future-dated")
+        if plan.profile_id not in {"x200-libreboot", "x220-coreboot"}:
+            raise WriteExecutionError("EC readiness is required only for the supported X200/X220 replacement routes")
+        ec_version_fields = (
+            setup.ec_version.strip(),
+            setup.ec_evidence_ref.strip(),
+            setup.ec_observed_at_utc.strip(),
+        )
+        has_any_ec_version_field = any(ec_version_fields)
+        has_ec_version = all(ec_version_fields)
+        has_waiver = bool(setup.ec_waiver_reason.strip())
+        if has_any_ec_version_field and not has_ec_version:
+            raise WriteExecutionError("EC version, evidence reference, and observation time must be recorded together")
+        if has_ec_version and has_waiver:
+            raise WriteExecutionError("record an EC version/update decision or one explicit named waiver, not both")
+        if has_ec_version:
+            if setup.ec_update_decision not in {"already-current", "updated-before-replacement"}:
+                raise WriteExecutionError("record whether the observed EC version is already current or was updated before replacement")
+            ec_observed = _parse_utc(setup.ec_observed_at_utc, "EC version evidence time")
+            if ec_observed > now + timedelta(seconds=30) or now - ec_observed > _CURRENT_EVIDENCE_MAX_AGE:
+                raise WriteExecutionError("EC version evidence is stale or future-dated")
+        else:
+            if setup.ec_update_decision != "waived" or not has_waiver:
+                raise WriteExecutionError("an EC waiver must be explicit, timestamped, and contain no partial version fields")
+        waiver_lower = setup.ec_waiver_reason.strip().casefold()
+        if has_waiver and (
+            len(waiver_lower) < 20 or "oem" not in waiver_lower or "update" not in waiver_lower
+        ):
+            raise WriteExecutionError(
+                "EC waiver must be named and explain that later OEM EC update access may be lost"
+            )
 
     def _assert_prewrite_checkpoint(self, request: WriteExecutionRequest) -> None:
         path = Path(request.operation_journal_path).expanduser()
@@ -692,6 +744,16 @@ class ExternalSPIWriteService:
                 and artifact.stat().st_size == intent.artifact_size_bytes
                 and _hash_file(artifact) == intent.artifact_sha256
                 and _hash_file(tool) == intent.command.executable_sha256
+                and (
+                    intent.model_id != "x200"
+                    or (
+                        intent.mac_preservation_manifest_path is not None
+                        and intent.mac_preservation_manifest_sha256 is not None
+                        and not _has_link_component(Path(intent.mac_preservation_manifest_path))
+                        and Path(intent.mac_preservation_manifest_path).is_file()
+                        and _hash_file(Path(intent.mac_preservation_manifest_path)) == intent.mac_preservation_manifest_sha256
+                    )
+                )
                 and intent.command.argv == (
                     "-p", intent.programmer, "-c", intent.chip_name, "-w", intent.artifact_path,
                 )
@@ -852,6 +914,34 @@ class ExternalSPIWriteService:
             "revalidated_probe_id": current.probe.probe_id,
             "probe_output_sha256": current.probe.raw_output_sha256,
             "setup_attestation_sha256": _digest_json(current.setup),
+            "human_setup_attestations": {
+                "target_powered_off": current.setup.target_powered_off,
+                "ac_disconnected": current.setup.ac_disconnected,
+                "removable_battery_removed": current.setup.removable_battery_removed,
+                "chip_pin1_orientation_verified": current.setup.chip_pin1_orientation_verified,
+                "programmer_disconnect_before_repower": current.setup.programmer_disconnect_before_repower,
+                "semantics": "human-reported attestations; not measured by AutoLoader",
+            },
+            "ec_readiness": {
+                "version": current.setup.ec_version,
+                "decision": current.setup.ec_update_decision,
+                "evidence_ref": current.setup.ec_evidence_ref,
+                "observed_at_utc": current.setup.ec_observed_at_utc,
+                "waiver_reason": current.setup.ec_waiver_reason,
+                "waiver_actor": current.setup.actor if current.setup.ec_waiver_reason else None,
+                "waiver_recorded_at_utc": current.setup.measured_at_utc if current.setup.ec_waiver_reason else None,
+                "automatic_update_performed": False,
+            },
+            "x200_mac_preservation": ({
+                "policy": intent.mac_policy,
+                "original_mac": intent.original_mac,
+                "selected_mac_before": intent.selected_mac_before,
+                "final_mac": intent.final_mac,
+                "source_artifact_sha256": intent.mac_source_artifact_sha256,
+                "preservation_manifest_path": intent.mac_preservation_manifest_path,
+                "preservation_manifest_sha256": intent.mac_preservation_manifest_sha256,
+                "write_artifact_sha256": intent.artifact_sha256,
+            } if intent.model_id == "x200" else None),
             "artifact_sha256": intent.artifact_sha256,
             "artifact_manifest_sha256": intent.artifact_manifest_sha256,
             "backup_operation_id": intent.backup_operation_id,
@@ -931,6 +1021,16 @@ def _same_setup(left: HardwareSetupAttestation, right: HardwareSetupAttestation)
         and left.chip_voltage_mv == right.chip_voltage_mv
         and left.interface_verified is right.interface_verified
         and left.wiring_verified is right.wiring_verified
+        and left.target_powered_off is right.target_powered_off
+        and left.ac_disconnected is right.ac_disconnected
+        and left.removable_battery_removed is right.removable_battery_removed
+        and left.chip_pin1_orientation_verified is right.chip_pin1_orientation_verified
+        and left.programmer_disconnect_before_repower is right.programmer_disconnect_before_repower
+        and left.ec_version == right.ec_version
+        and left.ec_evidence_ref == right.ec_evidence_ref
+        and left.ec_waiver_reason == right.ec_waiver_reason
+        and left.ec_observed_at_utc == right.ec_observed_at_utc
+        and left.ec_update_decision == right.ec_update_decision
         and _parse_utc(right.measured_at_utc, "fresh setup measurement time")
         >= _parse_utc(left.measured_at_utc, "initial setup measurement time")
     )

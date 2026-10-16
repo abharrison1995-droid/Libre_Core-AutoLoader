@@ -1,0 +1,24 @@
+Arch WSL QEMU acceleration preflight — 2026-10-15
+
+Scope: read-only host/emulator capability check for the pending Live USB boot
+diagnostics. No guest was launched by this preflight, and it does not change
+the preserved b2 BIOS/UEFI TCG results.
+
+Environment and observations:
+- QEMU: 11.1.2.
+- `qemu-system-x86_64 -accel help` listed: tcg, mshv, nitro, kvm.
+- `/dev/kvm` was absent.
+- `/dev/mshv` was absent.
+- The bounded MSHV probe command below exited 1:
+
+```
+timeout 5s qemu-system-x86_64 -machine none -accel mshv -nodefaults -no-user-config -display none -S -m 128M
+```
+
+Its output reported `Failed to open /dev/mshv` and
+`failed to initialize mshv: Operation not permitted`.
+
+Conclusion: no accelerated guest path was established in this Arch WSL
+environment. This result does not establish a native Linux, KVM, or other host
+hypervisor result. Existing WSL QEMU TCG boot evidence remains unchanged and is
+emulator-only; app/service boot validation is still pending.

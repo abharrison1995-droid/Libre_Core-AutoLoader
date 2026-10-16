@@ -1,0 +1,4 @@
+connected=127.0.0.1:5910
+resolution=720x400
+name=QEMU
+auth=none; loopback only

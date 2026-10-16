@@ -429,7 +429,7 @@ def _require_live_write_tty() -> None:
 
 
 def _collect_live_write_setup() -> HardwareSetupAttestation:
-    """Collect fresh human meter/wiring values; never read them from JSON."""
+    """Collect fresh human setup/EC attestations; never read them from JSON."""
     actor = click.prompt("Operator name", type=str).strip()
     instrument = click.prompt("Meter / instrument ID", type=str).strip()
     test_point = click.prompt("Measured programmer and chip test point", type=str).strip()
@@ -437,6 +437,30 @@ def _collect_live_write_setup() -> HardwareSetupAttestation:
     chip_mv = click.prompt("Measured target chip voltage (mV)", type=int)
     interface = click.confirm("Have you verified the external programmer interface?", default=False)
     wiring = click.confirm("Have you verified the wiring and chip orientation?", default=False)
+    powered_off = click.confirm("Is the target powered off before attaching the programmer?", default=False)
+    ac_disconnected = click.confirm("Is AC power disconnected?", default=False)
+    battery_removed = click.confirm("Is the removable battery removed?", default=False)
+    pin1 = click.confirm("Have you verified chip pin-1 orientation from this exact device/setup?", default=False)
+    disconnect_before_repower = click.confirm(
+        "Will you disconnect the programmer before reconnecting AC/battery or repowering?", default=False
+    )
+    click.echo("EC updates are never automated. Record the observed EC version and whether it is already current or was updated before replacement, or explicitly waive the later OEM EC update route.")
+    ec_version = click.prompt("Observed EC version (leave blank only to record an explicit waiver)", default="", show_default=False).strip()
+    if ec_version:
+        ec_evidence_ref = click.prompt("EC version observation evidence reference").strip()
+        ec_observed_at = datetime.now(timezone.utc).isoformat()
+        ec_update_decision = click.prompt(
+            "EC decision (already-current or updated-before-replacement)",
+            type=click.Choice(("already-current", "updated-before-replacement"), case_sensitive=True),
+        )
+        ec_waiver_reason = ""
+    else:
+        ec_evidence_ref = ""
+        ec_observed_at = ""
+        ec_update_decision = "waived"
+        ec_waiver_reason = click.prompt(
+            "Named EC waiver reason (must acknowledge possible loss of later OEM EC updates)", type=str
+        ).strip()
     return HardwareSetupAttestation(
         actor=actor,
         instrument_id=instrument,
@@ -446,6 +470,16 @@ def _collect_live_write_setup() -> HardwareSetupAttestation:
         chip_voltage_mv=chip_mv,
         interface_verified=interface,
         wiring_verified=wiring,
+        target_powered_off=powered_off,
+        ac_disconnected=ac_disconnected,
+        removable_battery_removed=battery_removed,
+        chip_pin1_orientation_verified=pin1,
+        programmer_disconnect_before_repower=disconnect_before_repower,
+        ec_version=ec_version,
+        ec_evidence_ref=ec_evidence_ref,
+        ec_observed_at_utc=ec_observed_at,
+        ec_update_decision=ec_update_decision,
+        ec_waiver_reason=ec_waiver_reason,
     )
 
 
