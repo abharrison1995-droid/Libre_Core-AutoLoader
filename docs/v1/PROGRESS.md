@@ -640,3 +640,29 @@ AutoLoader/service boot is claimed.
 
 No physical hardware has been touched. The hardware workflows remain
 intentionally deferred and **HARDWARE PENDING**. V1 is not release complete.
+
+## X220 pinned-build prerequisite inspection — 2026-10-16
+
+The clean pinned Coreboot checkout is at the expected release commit, and its
+`configs/builder/config.lenovo_x220` hash matches the ArtifactEngine pin. The
+recipe requires `site-local/descriptor.bin`, `me.bin`, and `gbe.bin`; all three
+are absent. The accepted X220 artifact workflow also requires observed chip
+topology and a complete verified two-read original backup/recovery evidence.
+No build command was run and no synthetic inputs were substituted. Exact
+read-only evidence is in
+[`evidence/x220-build-prerequisite-preflight-20261016/README.md`](evidence/x220-build-prerequisite-preflight-20261016/README.md).
+The X220 ROM build remains blocked pending real device-derived inputs; the
+separate Archiso guest is paused and storage is still constrained.
+
+## V1 package wheel smoke — 2026-10-16
+
+Built the current wheel from an isolated package-only copy in WSL `/dev/shm`,
+installed it into a separate `/dev/shm` target, and confirmed imports resolve
+to that target. Both pinned package resources (the U-Boot output-target patch
+and pacstrap status-preservation patch) were present through
+`importlib.resources`. The wheel was 371,855 bytes, 115 archive entries,
+SHA-256 `2103d6e3758c1767de8a4c73e00da44118e42153782b988fecc5ed5350f41c70`.
+Detailed evidence is in
+[`evidence/software-regression-20261016/wheel-build-and-install.txt`](evidence/software-regression-20261016/wheel-build-and-install.txt).
+This closes the current packaging/resource smoke gate only; it does not
+change the pending firmware ROM, ISO/boot, or hardware gates.

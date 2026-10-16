@@ -36,7 +36,9 @@ V1 cannot be marked complete while any release-blocking software check or any of
 ## Latest release-candidate gate snapshot — 2026-10-16
 
 - Windows full regression: **693 passed, 45 skipped, 0 failed**; Windows and Ubuntu WSL full-project mypy: clean on 106 source files. Ubuntu WSL full regression: **734 passed, 4 skipped, 0 failed**. Reports and hashes are in [`software-regression evidence`](evidence/software-regression-20261016/README.md).
+- Current package wheel smoke passed in Ubuntu WSL: isolated wheel built, installed into a separate target, imported from that target, and both pinned patch resources were present. This is packaging validation, not a firmware build; details and hash are in `evidence/software-regression-20261016/wheel-build-and-install.txt`.
 - Linux native build and current-source Live USB remain **PENDING**. The TCG Archiso candidate run is paused under the same guest process before the 2 GiB host-free-space reserve. It has not produced a verified ISO; emulator activity is not a pass.
+- The pinned X220 Coreboot compile preflight is blocked before build because the real device-derived descriptor, ME and GbE inputs are absent. No synthetic regions were substituted; exact details are in [`X220 build prerequisites`](evidence/x220-build-prerequisite-preflight-20261016/README.md).
 - T430 1vyrain, X200 Libreboot, and X220 Coreboot representative hardware acceptance remain **PENDING BY USER REQUEST**. No physical firmware write or recovery was authorized or performed.
 
 The 2026-10-15 Arch WSL mount-capability follow-up added private mount/PID
