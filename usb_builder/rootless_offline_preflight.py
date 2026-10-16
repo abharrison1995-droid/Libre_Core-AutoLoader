@@ -24,8 +24,8 @@ import stat
 import subprocess
 import tempfile
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Callable, Mapping, NoReturn, Sequence
+from pathlib import Path, PurePosixPath
+from typing import Any, Callable, Mapping, NoReturn, Sequence, cast
 
 from usb_builder import network_probe
 
@@ -110,7 +110,10 @@ def _sha256_file(path: Path) -> str:
 
 
 def _validate_pin(pin: LauncherPin) -> None:
-    path = Path(pin.path)
+    # The deployment pin is a Linux/POSIX path even when validators are run
+    # from a Windows test host.  pathlib.Path follows the host convention and
+    # would treat `/usr/local/...` as a Windows-relative path there.
+    path = PurePosixPath(pin.path)
     if (
         str(path) != PRODUCTION_LAUNCHER_PATH
         or not path.is_absolute()
@@ -594,8 +597,19 @@ def _run_bounded(
     }
     if runner is not subprocess.run:
         return runner(list(command), **kwargs)
-    if os.name != "posix" or not callable(getattr(os, "killpg", None)):
+    killpg_candidate = getattr(os, "killpg", None)
+    sigterm_candidate = getattr(signal, "SIGTERM", None)
+    sigkill_candidate = getattr(signal, "SIGKILL", None)
+    if (
+        os.name != "posix"
+        or not callable(killpg_candidate)
+        or not isinstance(sigterm_candidate, int)
+        or not isinstance(sigkill_candidate, int)
+    ):
         _fail("OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE: bounded process-group cleanup is unavailable")
+    killpg = cast(Callable[[int, int], None], killpg_candidate)
+    sigterm = sigterm_candidate
+    sigkill = sigkill_candidate
     child = subprocess.Popen(
         list(command),
         text=True,
@@ -609,8 +623,6 @@ def _run_bounded(
     try:
         stdout, _ = child.communicate(timeout=timeout)
     except subprocess.TimeoutExpired as timeout_error:
-        killpg = os.killpg
-
         def signal_group(number: int) -> None:
             try:
                 killpg(child.pid, number)
@@ -621,7 +633,7 @@ def _run_bounded(
                     raise
 
         try:
-            signal_group(signal.SIGTERM)
+            signal_group(sigterm)
             try:
                 child.communicate(timeout=TERMINATION_GRACE_SECONDS)
             except subprocess.TimeoutExpired:
@@ -629,7 +641,7 @@ def _run_bounded(
             finally:
                 # Always kill the group after grace; the leader may have exited
                 # while a descendant still holds the captured pipe open.
-                signal_group(signal.SIGKILL)
+                signal_group(sigkill)
         except OSError as exc:
             _fail("OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE: timed-out probe group could not be terminated")
         try:

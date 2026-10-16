@@ -205,6 +205,12 @@ def test_launcher_pin_rejects_wrong_path_or_unpinned_identity(mutation, message)
         offline._validate_pin(offline.LauncherPin(**values))
 
 
+def test_valid_fixed_posix_launcher_pin_is_host_independent():
+    # This validates Linux deployment metadata even when the test host is
+    # Windows, where pathlib.Path('/usr/local/...').is_absolute() is false.
+    offline._validate_pin(_pin())
+
+
 @pytest.mark.parametrize(
     ("is_regular", "owner_uid", "mode", "sha256"),
     [
