@@ -21,5 +21,6 @@ f49f57fbc889236729f848d8d24e9d7819f735cb7fc0696a7072721c5c55f10c  ./attempt2-bou
 ea48476a803d607ade9998fcb84cea56f5e3180f6e0b21c0e554d2980145b8c6  ./attempt3-full-system-inspection/emergency-shell.png
 17660db608dc384fe90b93cc862f7dfc9b446e921ff903e1265a55a77fcccfd4  ./attempt3-full-system-inspection/emergency-shell.ppm
 678993607c451946708e263bdff1c1f174d0b1153ca74da00f1a7c6c2a24d6b9  ./attempt3-full-system-inspection/SHA256SUMS
-41a84fab6b31c50d953abb7825b90048f3cfdf9b3b5bc0c413ff2ed5c27ea2b9  ./README.md
+57df556987e7332fbdf11100b05323b833084dbee8325a77bbca9aa1514d9a88  ./host-storage-20261016.txt
+66b5ca55a4534ddea8ffd8d253f1c3d90ba6e642f7557492a41f316df8858980  ./README.md
 0176f13eb6acd7ae99791041841aefe7eb8c96b89179d5e128e2cca5d1027974  ./run_arch_vm.py

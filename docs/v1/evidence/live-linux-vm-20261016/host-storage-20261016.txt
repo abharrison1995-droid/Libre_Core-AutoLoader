@@ -1,0 +1,17 @@
+Host storage measurement — 2026-10-16 20:12 UTC
+
+Command:
+
+    Get-PSDrive C | Select-Object Name,Free,Used
+
+Observed output:
+
+    Name       Free         Used
+    ----       ----         ----
+    C    5981900800 233408839680
+
+At this observation C: had 5,981,900,800 bytes free (about 5.57 GiB).
+This is a point-in-time measurement, not a reservation. It is below the
+approximately 10 GiB estimated for the current-source Live USB build and VM
+evidence. Earlier notes recorded about 2.1 GiB free at a prior checkpoint;
+the later measurement supersedes that number for this timestamp only.

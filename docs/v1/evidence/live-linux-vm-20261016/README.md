@@ -68,9 +68,12 @@ The capture and its lossless PNG conversion are hashed in the attempt-local
 `SHA256SUMS`.
 
 The separate 8 GiB Archiso build guest remains paused with its existing qcow2
-overlay unchanged. It was not resumed or modified. Host C: had about 2.1 GiB
-free after the software test runs, below the recorded space requirement for a
-full current-source Live USB build.
+overlay unchanged. It was not resumed or modified. The earlier host-storage
+checkpoint found about 2.1 GiB free. A later PowerShell measurement at
+2026-10-16 20:12 UTC found 5,981,900,800 bytes free (about 5.57 GiB), still
+below the approximately 10 GiB estimated for a full current-source Live USB
+build and VM evidence. The exact command and output are recorded in
+[`host-storage-20261016.txt`](host-storage-20261016.txt).
 
 ## Attempt 1: rejected runner result
 
