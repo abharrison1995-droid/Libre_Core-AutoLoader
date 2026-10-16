@@ -128,6 +128,109 @@ The Windows and Ubuntu WSL reports above are for the earlier commit `6cabb23d`; 
   create the full Live USB build workspace. Guest build and ISO gates remain
   open.
 
+## Current-source Windows full suite — 2026-10-16
+
+- Source and tests: commit `7b6000ad6503b9ccfd435ec2404674ff26cda6f5`
+  (`Validate POSIX launcher pins on Windows`).
+- Environment: Windows, Python 3.12.14, pytest 9.1.1. The run used a short
+  dedicated temp root and `tmp_path_retention_policy=failed` to avoid Windows
+  path-length failures and unnecessary retained files.
+- Command:
+
+  ```powershell
+  .\.venv\Scripts\python.exe -m pytest -q --basetemp="$env:TEMP\lcw-full-20261016a" --override-ini=tmp_path_retention_policy=failed --junitxml="$env:TEMP\lcw-full-20261016a.xml"
+  ```
+
+- Result: **751 passed, 61 skipped, 0 failures, 0 errors** (812 collected;
+  769.55 seconds; exit 0). JUnit records 769.526 seconds.
+- JUnit report: [`windows-post-rc1-full.xml`](windows-post-rc1-full.xml),
+  SHA-256 `DA7671FC0BD95028F2580CC3D0B1A2824006B2071599B66D9714FAEB6479E62E`.
+- Skip categories are POSIX directory fsync, permission and ownership,
+  symlink, process-group behavior, and Linux namespace/device/tool-ownership
+  checks. Explicitly unvalidated tests include the POSIX permission-bit test,
+  the process-group timeout test, and two Linux unshare tests because Windows
+  lacks `unshare`. One symlink case was skipped because this account lacks
+  the required privilege (`WinError 1314`). Skips are not passing Linux
+  evidence.
+- Full-project `mypy --no-incremental --platform win32 autoloader usb_builder`
+  passed with **109 source files**. The focused rootless-preflight and
+  width-78 CLI fingerprint checks passed **54 tests, 1 skipped**; targeted
+  Win32 mypy passed for the changed module.
+- An earlier Windows run is preserved as
+  [`windows-post-rc1-initial-failed.xml`](windows-post-rc1-initial-failed.xml)
+  (745 passed, 61 skipped, 5 failed). Four failures exposed host-native path
+  validation for a pinned POSIX helper; the reviewed fix is in `7b6000a`.
+  The fifth was a test fixture exceeding Windows' path limit. That failed run
+  is diagnostic only and is not counted as a pass.
+- These are software checks. They do not establish a firmware build, product
+  Live USB boot, SPI operation, recovery, or hardware acceptance.
+
+## Bounded generic Arch VM diagnostic — 2026-10-16
+
+The separate [VM evidence record](../live-linux-vm-20261016/README.md)
+documents a 180-second, read-only generic Arch installer capture under Ubuntu
+WSL2/QEMU TCG. It reached kernel and initramfs loading but no login shell. It
+does not qualify the native Linux build environment, AutoLoader ISO, app or
+service, or any hardware workflow.
+
+A separate Windows-hosted QEMU TCG full-system inspection guest using generic
+Arch Linux 2025.08.01 reached its explicitly selected emergency target and a
+shell with read-only attached ISO/qcow2 storage. User-mode networking was
+enabled. The screenshot shows a failed network `curl` attempt followed by
+another curl-to-Bash invocation whose response, contents and actions were not
+captured, so this is not an isolated/read-only execution diagnostic. Its
+screenshot and input hashes are recorded in
+[`the VM evidence record`](../live-linux-vm-20261016/README.md). It was not an
+AutoLoader ISO or product boot.
+
+## Current-source package wheel smoke — 2026-10-16
+
+- Source commit: `7b6000ad6503b9ccfd435ec2404674ff26cda6f5`.
+- Environment: Ubuntu WSL2 candidate venv. Source archive, wheel build, pip
+  temporary files and isolated target install were confined to `/dev/shm`;
+  `PIP_NO_INDEX=1` prevented index access.
+- The current commit's wheel built successfully (`libre_core_autoloader-0.1.0-py3-none-any.whl`),
+  size **393,143 bytes**, SHA-256
+  `8f0cbc3827e779ab8d236dae62923b238ec05f3ab41f30ee2a7f4faa8244a999`.
+- `pip install --no-deps --no-index --target` succeeded. `autoloader` and
+  `usb_builder` imported from the isolated target. The test confirmed the
+  current `PurePosixPath` launcher source and both pinned package resources
+  resolve from the installed wheel.
+- Full command output: [`wheel-build-and-install-rc1.txt`](wheel-build-and-install-rc1.txt),
+  SHA-256 `10a7a757c2f6802fe1aabf0142c77c3cfa62733a956e8071ba64f15ac8b1958e`.
+  This is a packaging/import/resource smoke test, not a firmware, ISO, boot,
+  writer, or hardware test.
+
+## Current-source Arch WSL non-root full suite — 2026-10-16
+
+- Source and tests: commit `7b6000ad6503b9ccfd435ec2404674ff26cda6f5`
+  (`Validate POSIX launcher pins on Windows`).
+- Environment: Arch Linux on WSL2, launched with `setpriv` as UID/GID 65534
+  (`nobody`), without supplementary groups or capabilities and with
+  `NoNewPrivs=1`. `PATH=/usr/bin:/bin`, `HOME=/dev/shm`,
+  `TMPDIR=/dev/shm`; bytecode and pytest cache disabled. This is WSL2, not a
+  native Linux guest.
+- Exact command:
+
+  ```sh
+  wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- setpriv --bounding-set=-all --inh-caps=-all --ambient-caps=-all --reuid=65534 --regid=65534 --clear-groups --no-new-privs --reset-env -- env PATH=/usr/bin:/bin HOME=/dev/shm TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-arch-nonroot-full-20261016-final --override-ini=tmp_path_retention_policy=failed --junitxml=/dev/shm/lc-v1-arch-nonroot-full-20261016-final.xml
+  ```
+
+- Result: **810 passed, 2 skipped, 0 failures, 0 errors** (812 collected;
+  1239.32 seconds; exit 0). The JUnit XML records 1239.224 seconds.
+- Exact skips: `test_windows_directory_fsync_policy_keeps_approval_closed`
+  (Windows-specific production durability policy) and
+  `test_real_build_usb_cli_fails_before_subprocess_on_windows` (Windows-
+  specific host platform contract). These are not Linux validation gaps.
+- JUnit report: [`arch-post-fix-nonroot-full.xml`](arch-post-fix-nonroot-full.xml),
+  SHA-256 `99de5c4c298a592007b3f8bc8afc66881525f24dda882daffdbbdc3a37d2f06e`.
+- Full-project Arch WSL2 `mypy --no-incremental --cache-dir=/dev/shm/lc-v1-mypy-arch-final autoloader usb_builder`
+  passed with **no issues in 109 source files**. Windows-targeted full-project
+  mypy also passed on 109 source files in the current-source Windows run above.
+- This is software-test evidence only; it does not establish native Linux
+  guest operation, an AutoLoader image build or boot, an SPI operation,
+  recovery, or hardware acceptance.
+
 ## Hardware status
 
 No device identity, SPI probe, measured voltage, backup, write, read-back, recovery action, boot, or functional check occurred in these runs. The requested hardware workflows remain **HARDWARE PENDING** and were deferred until software and VM gates are as complete as possible.
