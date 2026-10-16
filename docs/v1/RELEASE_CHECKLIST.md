@@ -43,11 +43,17 @@ V1 cannot be marked complete while any release-blocking software check or any of
 - The pinned X220 Coreboot compile preflight is blocked before build because the real device-derived descriptor, ME and GbE inputs are absent. No synthetic regions were substituted; exact details are in [`X220 build prerequisites`](evidence/x220-build-prerequisite-preflight-20261016/README.md).
 - T430 1vyrain, X200 Libreboot, and X220 Coreboot representative hardware acceptance remain **PENDING BY USER REQUEST**. No physical firmware write or recovery was authorized or performed.
 
-## Current-commit Arch WSL software regression — 72a302b, 2026-10-16
+## Earlier root-account Arch WSL software regression — 72a302b, 2026-10-16
 
 - Arch Linux WSL2 full suite: **756 passed, 3 skipped** (759 collected; 1161.62s; exit 0). JUnit reports 0 failures/errors and 1161.431s. The skips are `Windows-specific production durability policy`, `UNVALIDATED: test requires a non-root host account so host-root ownership is unmapped`, and `Windows-specific host platform contract`; the ownership check is unvalidated, not a passing Linux check.
 - Full-project no-incremental mypy passed on 108 source files in Arch WSL. Exact command, report, and SHA-256: [`software-regression evidence`](evidence/software-regression-20261016/README.md).
-- This run is at source HEAD `72a302b`. The Windows and Ubuntu WSL results in the earlier snapshot are at `6cabb23d` and do not cover this commit. Arch WSL is not native Linux, and this software run does not pass VM/native Linux, ISO, ROM, Live USB boot, or hardware gates.
+- This root-account run is retained separately; its host-ownership skip was unvalidated. Arch WSL is not native Linux, and this software run does not pass VM/native Linux, ISO, ROM, Live USB boot, or hardware gates.
+
+## Arch WSL2 full suite under setpriv nobody — source/test tree 72a302b, 2026-10-16
+
+- Arch WSL2 full suite: **757 passed, 2 skipped** (759 collected; 1245.94s; exit 0); JUnit time is 1245.846s, with zero failures/errors. The exact skips are `test_windows_directory_fsync_policy_keeps_approval_closed` (Windows-specific production durability policy) and `test_real_build_usb_cli_fails_before_subprocess_on_windows` (Windows-specific host platform contract). The non-root host-ownership test that was unvalidated in the earlier root-account run passed here.
+- Invocation used WSL root to launch `setpriv` with UID/GID 65534 (`nobody`), cleared supplementary groups/capabilities, `NoNewPrivs=1`, `PATH=/usr/bin:/bin`, and `HOME`/`TMPDIR=/dev/shm`; pytest cache and bytecode writes were disabled. The exact command, report, and SHA-256 are in [`software-regression evidence`](evidence/software-regression-20261016/README.md).
+- Tested Python source and tests remained at `72a302b`; docs-only commit `0d74d76` landed during the run. This is WSL2 software evidence, not native Linux or disposable-VM validation. It does not validate the dedicated `fwbuild` account, fixed privileged launcher, production offline execution, package installation, ISO build, boot, ROM, or hardware gates.
 
 The 2026-10-15 Arch WSL mount-capability follow-up added private mount/PID
 namespaces to the existing user-mapped network namespace. Proc, sysfs and

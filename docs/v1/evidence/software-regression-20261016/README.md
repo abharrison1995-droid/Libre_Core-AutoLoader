@@ -46,16 +46,33 @@ Both suites include the exact-period SPI safety fixture optimization. Focused `t
 - Per-test temporary-directory cleanup was enabled; the C: drive remained above 2.3 GiB free.
 - Windows-targeted full-project `mypy --platform win32` passed on **108 source files**. Together with the Ubuntu result above, this is software-only evidence; WSL is not native Linux and neither result establishes an ISO build, boot, or hardware success.
 
-## Current-commit Arch WSL full suite — 2026-10-16
+## Earlier root-account Arch WSL full suite — source 72a302b, 2026-10-16
 
 - Source HEAD under test: `72a302b`.
-- Environment: Arch Linux on WSL2, not native Linux.
+- Environment: Arch Linux on WSL2 running as the root account, not native Linux.
 - Command: `wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env TMPDIR=/dev/shm python -m pytest -q --basetemp=/dev/shm/lc-v1-release-full-arch-20261016 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261016/arch-post-reboot-full.xml`.
 - Result: **756 passed, 3 skipped, 0 failures, 0 errors** (759 collected; 1161.62 seconds; exit 0). The JUnit XML records 1161.431 seconds, 0 failures/errors, and 3 skips.
 - Exact skips: `Windows-specific production durability policy`; `UNVALIDATED: test requires a non-root host account so host-root ownership is unmapped`; `Windows-specific host platform contract`. The host-root ownership case is unvalidated, not a passing Linux check.
 - JUnit report: [`arch-post-reboot-full.xml`](arch-post-reboot-full.xml), SHA-256 `C6086D980C67643FCE5A53A29EACB797BE0BDE9730663A3C950BB0E6DC5A6AF5`.
 - Full-project `mypy --no-incremental` passed on **108 source files** in Arch WSL.
-- This Arch WSL run is for commit `72a302b`. The Windows and Ubuntu WSL reports above are for the earlier commit `6cabb23d`; they do not cover `72a302b`. WSL results are not native Linux, VM, ISO, ROM, boot, or hardware validation.
+- This run is retained as root-account evidence. Its unmapped-host-ownership skip is expected for that account and does not establish the non-root host contract.
+
+## Arch WSL full suite under setpriv nobody — 2026-10-16
+
+- Tested Python source and tests: `72a302b`. Docs-only commit `0d74d76` landed while the suite was running; Python source and test files remained at `72a302b`.
+- Environment: Arch Linux on WSL2, launched from the WSL root account and dropped by `setpriv` to UID/GID 65534 (`nobody`), with no supplementary groups or capabilities and `NoNewPrivs=1`. `PATH=/usr/bin:/bin`; `HOME=/dev/shm`; `TMPDIR=/dev/shm`; bytecode and pytest cache creation disabled. This was not the dedicated `fwbuild` account and did not exercise a privileged offline launcher.
+- Exact command:
+
+  ```sh
+  wsl -d archlinux --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- setpriv --bounding-set=-all --inh-caps=-all --ambient-caps=-all --reuid=65534 --regid=65534 --clear-groups --no-new-privs --reset-env -- env PATH=/usr/bin:/bin HOME=/dev/shm TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-arch-nonroot-full-20261016 --override-ini=tmp_path_retention_policy=failed --junitxml=/dev/shm/lc-v1-arch-nonroot-full-20261016.xml
+  ```
+
+- Result: **757 passed, 2 skipped, 0 failures, 0 errors** (759 collected; 1245.94 seconds; exit 0). JUnit time is 1245.846 seconds.
+- Exact skips: `Windows-specific production durability policy` (`test_windows_directory_fsync_policy_keeps_approval_closed`) and `Windows-specific host platform contract` (`test_real_build_usb_cli_fails_before_subprocess_on_windows`). The previously unvalidated non-root host-ownership case passed in this `nobody`-identity run.
+- JUnit report: [`arch-post-reboot-nonroot-full.xml`](arch-post-reboot-nonroot-full.xml), SHA-256 `0d7d33b29e3efd03c62e2aac47ec507935d06dbee3ea972a59f8aaee170f9c07`.
+- This remains WSL2 software-test evidence, not native Linux, disposable-VM, package/build, ISO, boot, ROM, or hardware validation. Passing as `nobody` does not validate the fixed launcher, the dedicated build account/subuid setup, or production offline execution.
+
+The Windows and Ubuntu WSL reports above are for the earlier commit `6cabb23d`; they do not cover Python source or tests at `72a302b`.
 
 `git diff --check` passed after the runs. Git printed only the existing Windows LF-to-CRLF working-copy notices. These suites and type checks are software validation. They do not establish native Linux, firmware build, SPI, Live USB boot, or physical hardware success.
 

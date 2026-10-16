@@ -706,7 +706,7 @@ establishes an ISO build or boot, successful ROM build, or hardware result.
 Native Linux/VM validation, Live USB app/service boot and all physical hardware
 workflows remain pending. V1 is not release complete.
 
-## Current-commit Arch WSL full software regression — 72a302b, 2026-10-16
+## Earlier root-account Arch WSL full software regression — 72a302b, 2026-10-16
 
 The full suite on Arch Linux WSL2 at source HEAD `72a302b` passed **756 tests,
 3 skipped** (759 collected; 1161.62 seconds; exit 0). Its JUnit XML records
@@ -719,10 +719,31 @@ source files in Arch WSL.
 
 The exact command, report, and SHA-256 are recorded in
 [`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
-The Ubuntu and Windows full-suite reports immediately above are for the earlier
-commit `6cabb23d`; they do not cover `72a302b`. Arch WSL is not native Linux.
-This is software-only evidence and does not pass the VM/native Linux, ISO,
-ROM, Live USB boot, or hardware gates.
+This root-account run is retained separately; its host-ownership skip was
+unvalidated. Arch WSL is not native Linux. This is software-only evidence and
+does not pass the VM/native Linux, ISO, ROM, Live USB boot, or hardware gates.
+
+## Arch WSL non-root privilege-drop full software regression — 2026-10-16
+
+The suite passed **757 tests, 2 skipped** (759 collected; 1245.94 seconds;
+exit 0) with JUnit time 1245.846 seconds. The exact skips are the Windows-only
+production directory-fsync policy and Windows-specific host platform contract.
+The host-ownership test that was unvalidated in the earlier root-account run
+passed here. The command was launched from the Arch WSL root account and used
+`setpriv` to run pytest as UID/GID 65534 (`nobody`), with no supplementary
+groups or capabilities, `NoNewPrivs=1`, `PATH=/usr/bin:/bin`, and
+`HOME`/`TMPDIR=/dev/shm`; pytest cache and bytecode writes were disabled.
+
+The tested Python source and tests remained at `72a302b`; docs-only commit
+`0d74d76` landed while the suite was running. The exact command, JUnit report
+and SHA-256 are in
+[`evidence/software-regression-20261016/README.md`](evidence/software-regression-20261016/README.md).
+This is an Arch WSL2 test run, not native Linux or disposable-VM evidence. It
+does not test the dedicated `fwbuild` account, the fixed privileged launcher,
+production offline execution, package installation, an ISO build, boot, ROM,
+or hardware operation. The Windows and Ubuntu full-suite results in the earlier
+section cover commit `6cabb23d`, not this source/test tree. All release gates
+remain open.
 
 ## Arch WSL namespace primitive diagnostic — 2026-10-16
 
