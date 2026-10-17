@@ -834,6 +834,7 @@ This remains WSL software evidence only. Launcher deployment, controlled
 `pacstrap -N` package-input compatibility, a disposable full-system VM build,
 ISO build/boot, ROM, and hardware gates remain open.
 
+
 ## Current-source RC1 regression and VM evidence — 2026-10-16
 
 Source and tests are commit `7b6000ad6503b9ccfd435ec2404674ff26cda6f5` (`Validate POSIX launcher pins on Windows`). The complete Windows run passed **751 tests, skipped 61, with zero failures/errors** (812 collected; 769.55 seconds). Full-project Windows-targeted mypy passed with no issues in 109 source files. The complete Arch WSL2 suite under UID/GID 65534 (`nobody`) passed **810 tests, skipped 2, with zero failures/errors** (812 collected; 1239.32 seconds). Its two skips are Windows-specific contracts; full-project Arch WSL2 mypy also passed with no issues in 109 source files. The exact current-source wheel also built and installed into an isolated `/dev/shm` target with index access disabled; imports and pinned package resources resolved, and the wheel included the current POSIX launcher fix (393,143 bytes; SHA-256 `8f0cbc3827e779ab8d236dae62923b238ec05f3ab41f30ee2a7f4faa8244a999`). Exact commands, skip names, report hashes and limitations are recorded in `docs/v1/evidence/software-regression-20261016/README.md` and the wheel output record.
@@ -841,3 +842,121 @@ Source and tests are commit `7b6000ad6503b9ccfd435ec2404674ff26cda6f5` (`Validat
 A separate Windows-hosted QEMU 11.1.2 TCG guest using generic Arch Linux 2025.08.01 reached the explicitly selected emergency target and displayed an emergency shell. It used 2 GiB RAM, two vCPUs, generic Arch kernel/initramfs and read-only attached ISO/qcow2 storage, with user-mode networking enabled. The screenshot shows a failed network `curl` attempt followed by another curl-to-Bash invocation whose response, contents and actions were not captured; it is not an isolated or read-only execution diagnostic. The capture and checksums are in `docs/v1/evidence/live-linux-vm-20261016/attempt3-full-system-inspection/`. This does not establish a normal guest boot, current-source package or ISO build, AutoLoader app/service startup, ROM result, or hardware result. The temporary inspection guest was stopped after capture. The separate 8 GiB Archiso build guest remains paused with its qcow2 overlay unchanged.
 
 At this checkpoint, only host C: was visible and had about 2.1 GiB free. Earlier notes treated 10 GiB as a planning estimate; it is a conservative reserve, not a measured minimum. Later checks recorded about 5.57 GiB and 5.70 GiB free. A prior unfinished candidate-build attempt grew its overlay about 382 MB in 91 seconds and was manually paused with 3.24 GB free; there is no complete build or peak-footprint measurement, so available storage has not been proven sufficient or insufficient. A controlled continuation needs an accessible VM control session and monitored stop threshold. No current-source candidate ISO, current-source ROM, device probe, chip-voltage measurement, backup, firmware write, read-back, recovery, or real-device boot was performed. The three physical workflows remain **HARDWARE PENDING**. Status is **SOFTWARE REGRESSION PASS; V1 RELEASE GATES OPEN**.
+
+## Retry7 disposable-guest diagnostic — 2026-10-17
+
+The exact retry7 candidate hashes reviewed by SOL were launched once under a
+900-second wall cap in a disposable Arch guest using QEMU TCG inside Arch WSL2.
+There was no USB, programmer, hardware, or host block-device passthrough. The
+guest reached its systemd debug shell, verified the copied helper and all 24
+read-only source-manifest entries, and confirmed a source write-open was
+denied. The helper command began about 726.5 seconds into the 900-second run;
+its guest UTC date returned around second 833. It then reported identity and
+kernel, checked the source, and sent the read-only `pacman -Q` query for the
+locked package versions. No query result was recorded before the overall cap.
+At most 67 seconds remained for all those checks and completion, so this run
+does not isolate a `pacman` hang; slow guest execution or serial/source-transfer
+overhead remain possible. The guest did not reach the temporary `fwbuild`
+identity, rootless preflights, or scratch-device checks. The scratch file
+remained sparse and unformatted.
+
+The runner reaped QEMU at 900.059 seconds; its QEMU exit code 0 is cleanup
+status, not a guest or gate pass. `diagnostic_complete` was false, no guest
+completion marker appeared, and no package install/sync, product build, ISO,
+firmware, or hardware action occurred. The source ISO was unchanged and the
+2 GiB host free-space floor was preserved. Raw output and the SHA-256 manifest
+are archived in
+[`retry7 results`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry7/);
+the candidate, constraints, and interpretation are documented in its
+[`README`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md).
+The retry7 candidate is closed; another VM launch requires a changed and
+independently reviewed candidate.
+
+The focused no-launch regression for the retry7 helper/runner passed **11
+tests** after evidence archival; a final rerun of
+[`test_retry7_guest_probe.py`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/test_retry7_guest_probe.py)
+passed in **3.03 seconds**. This verifies guard behavior only; it does not
+replace the unfinished guest check. Current-source native Linux, Live USB
+build/boot, offline isolation, complete Libreboot/Coreboot ROM builds, and all
+three real-device workflows remain release blockers. Hardware validation
+remains intentionally deferred until the non-hardware gates are complete.
+
+## Retry8 disposable-guest package diagnostic — 2026-10-17
+
+SOL reviewed the frozen retry8 candidate hashes before one bounded Windows-
+hosted QEMU TCG launch. In the disposable Arch guest, the systemd debug shell
+started, the copied helper hash and all 24 source-manifest entries matched,
+and the read-only source write check was denied. The exact read-only
+`pacman -Q` query returned after 140.495 guest seconds with exit 1: six
+locked package versions matched, but host-only `archiso 91-1` was absent;
+the `core` and `extra` repository sync DB files were also absent. The probe therefore
+stopped before rootless/mount preflight, scratch probing, and builder work.
+No package sync/install, build, ISO, or hardware operation occurred.
+
+SOL classified the missing `archiso` as a diagnostic-host mismatch. The lock
+requires `archiso 91-1` on the builder host; the live image correctly uses
+`mkinitcpio-archiso` without that host-only tool. The product package lock,
+profile, and safety checks remain unchanged. QEMU was reaped after 1,032.341
+seconds; its exit 0 is cleanup only. The ISO remained unchanged, scratch
+allocation was zero, and the host free-space floor was preserved. Raw output
+and hashes are in
+[`retry8 results`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry8/),
+with the interpretation in its README. This is not a rootless build or ISO
+pass. A separately prepared disposable builder guest with verified pinned
+host tools is still required; native Linux, current-source Live USB build and
+boot, complete ROM build validation, and the three real-device workflows
+remain open. Hardware validation remains deferred until the non-hardware
+gates are complete.
+
+The new no-launch regression in `tests/test_live_iso_host_package_context.py`
+asserts that host `archiso` stays out of the runtime profile and replays the
+captured six-row query through the real package parser and fail-closed probe
+sequence. SOL accepted it after verifying the captured result/output hashes.
+The focused Ubuntu run passed **2 tests in 1.11 seconds**; this test does not
+replace the live builder-host, ISO, or hardware gates.
+
+## Current-source Ubuntu WSL regression — 2026-10-17
+
+The complete suite ran from Git HEAD
+`0522fcb3ba68c32df428b998e6f26c0744a50860`, including the new retry8
+regression. Ubuntu 26.04 WSL2, Python 3.14.4, pytest 9.1.1: **839 passed, 6
+skipped, 0 failures, 0 errors** (845 collected; 1,391.29 seconds; exit 0).
+The source was accessed through `/mnt/c` and temporary data used `/dev/shm`;
+this is WSL evidence, not a native Linux run. The six skips remain unpassed
+checks. Full command and environment are recorded in
+[`software-regression-20261017`](evidence/software-regression-20261017/README.md).
+
+Read-only `ArtifactEngine.inspect_source` checks passed in Ubuntu WSL on
+existing clean upstream checkouts: X200 lbmk matched revision
+`1cf3181537b8d1fe1df0e91681f700850a3d9bf6`, tree
+`0cb9451c6e2e265d3aa5b7e371752d45cab98f53`, and 35 pinned files; X220
+Coreboot matched revision `8b0e34f90e08547cf19e550a43ed72f69c39d6ed`, tree
+`1cb70fc2c4a0229fa17991b19cf6916b71f75ba7`, and 6 pinned files. This is
+source identity evidence only. It did not compile ROMs, create artifacts, or
+satisfy the clean native VM toolchain gate.
+
+Sequential native-Linux and `--platform win32` mypy checks both passed with
+no issues in 109 source files. The Win32 target is static analysis only; no
+Windows suite was run at this checkpoint. No current-source Live USB or ROM
+build was made. Native Linux build/boot, complete artifact generation, and
+the three real-device workflows remain open; physical work is still deferred.
+
+## Current-source Windows regression — 2026-10-17
+
+The full Windows suite used Python 3.12.14 and pytest 9.1.1 and passed **752
+tests, with 62 skipped, 0 failures and 0 errors** (814 collected; 789.46
+seconds; exit 0). JUnit is preserved at
+`docs/v1/evidence/software-regression-20261017/windows-pytest.xml` with SHA-256
+`E9965D83D58A9431B661E0FC9F3A403CA7348E74F8B0BC2D1DC6DE85B2EA1F87`.
+Skips cover POSIX durability/process/ownership/symlink behavior, Linux
+namespace/device/pacman checks, and POSIX-only host checks that remain
+unvalidated; one account-specific symlink skip reports `WinError 1314`. These
+62 checks are not passes. The exact run and collection follow-up are in the
+[`2026-10-17 software regression evidence`](evidence/software-regression-20261017/README.md).
+
+The accepted `pyproject.toml` testpaths setting keeps default discovery inside
+`tests/`: the default collection found 814 tests and no evidence-directory
+tests. The explicit evidence-probe selection passed 31 tests and skipped 2;
+the frozen retry7/retry8 evidence files were unchanged. The Windows run is
+software evidence only. Native Linux builder, current-source ISO, Live USB
+app/service boot, ROM artifacts and all hardware workflows remain pending.

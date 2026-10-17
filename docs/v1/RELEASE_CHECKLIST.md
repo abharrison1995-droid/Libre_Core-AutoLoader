@@ -2,7 +2,7 @@
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Latest software regression | SOFTWARE TESTED — PASS; RELEASE VALIDATION OPEN | On source/test commit `7b6000ad6503b9ccfd435ec2404674ff26cda6f5`, the full Windows suite passed 751 tests with 61 skips and zero failures/errors (812 collected), and the full Arch WSL2 non-root suite passed 810 with 2 Windows-specific skips and zero failures/errors (812 collected). Windows-targeted and native Arch WSL2 mypy each passed on 109 source files. The exact-source wheel built and installed into an isolated `/dev/shm` target with index access disabled; both packages and pinned resources resolved. Exact commands, hashes and limitations are recorded in [`software-regression evidence`](evidence/software-regression-20261016/README.md). These are Windows/WSL software checks, not native Linux, product-image or hardware acceptance. |
+| Latest software regression | SOFTWARE TESTED — PASS; RELEASE VALIDATION OPEN | Current-source Windows full suite on Python 3.12.14 / pytest 9.1.1: 752 passed, 62 skipped, zero failures/errors (814 collected; 789.46s; exit 0). Ubuntu 26.04 WSL suite: 839 passed, 6 skipped (845 collected; 1391.29s; exit 0); that full run preceded the later pytest `testpaths = ["tests"]` discovery change. Subsequent collection found 814 tests with no evidence-directory paths; explicit evidence probes passed 31 with 2 skipped. Windows skips are unpassed and cover POSIX durability/process/ownership/symlink behavior, Linux namespace/device/pacman checks, POSIX-only host checks that remain unvalidated, and one account-specific symlink privilege skip (WinError 1314). Current report, JUnit hash, and chronology are in [`2026-10-17 software-regression evidence`](evidence/software-regression-20261017/README.md). These are software checks only; native Linux, ISO, ROM, boot, and hardware gates remain open. |
 | Application and CLI launch cleanly | SOFTWARE TESTED | Phase 03 final independent evidence at `448766a`: SOL reran 124 tests in 79.59s, mypy clean on 86 source files, CLI help passed, and the tree was clean. This software evidence does not include physical hardware validation. |
 | No simulated build/flash/verification success | SOFTWARE TESTED | Orchestrator and `OnevyRainManager` fail closed for unimplemented operations; legacy `ThinkPadECManager` source download/build/flash and `verify_ec()` now raise explicit unavailable `ECModError` outcomes, with empty patch reporting. `tests/test_ec_mod_fail_closed.py` proves these calls make no subprocess or file-write calls and do not touch an existing arbitrary checkout. TUI verification remains `NOT_PERFORMED` without evidence; backup records are not presented as reverified. CLI regression tests reject the removed `--write`/`--yes` bypass. No EC workflow is available in V1. |
 | CLI and TUI use one shared controller | PHASE 08 AND 10B SOFTWARE COMPLETE — SOL ACCEPT; LINUX/HARDWARE PENDING | Phase 08 routes T430 approvals/returns and X200/X220 preparation, backup, build, artifact acceptance and resume through `ApplicationController`. Phase 10B's guarded X200/X220 write/read-back routes from both CLI and the dedicated mounted-screen challenge also call this controller. The screen-bound receipt shows the immutable command/artifact/backup/setup preview and can be cancelled or invalidated before service consumption. Explicit prepare/backup requests can perform read-only hardware I/O, but none was invoked in this implementation pass. Windows directory-fsync constraints prevent write invocation here. All Linux build, physical write/read-back and boot evidence remains pending. |
@@ -17,8 +17,8 @@
 | X200 Libreboot workflow accepted on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
 | X220 Coreboot build/workflow accepted on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
 | Complete backups and read-back verified on real hardware | HARDWARE PENDING | `HARDWARE_TEST_REPORT.md`. |
-| Live USB image builds and boots | CURRENT-SOURCE IMAGE BUILD AND PRODUCT BOOT OPEN; HARDWARE PENDING | The earlier b2 candidate ISO (`afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`) passed target-root/CLI checks but same-hash BIOS/UEFI QEMU runs stalled before AutoLoader/service evidence. A later Windows-hosted generic Arch emergency-shell capture is not an AutoLoader image or isolated diagnostic; the second network curl-to-Bash response/actions were not captured. Evidence and limitations are in [`live Linux VM evidence`](evidence/live-linux-vm-20261016/README.md). No current-source product ISO has been built or booted. The 2026-10-16 20:17 UTC host measurement found 6,120,456,192 bytes free (about 5.70 GiB), while 10 GiB is only a conservative planning reserve, not a measured minimum; current storage therefore does not prove the build impossible or safe to complete. The earlier 2.1 GiB and 5.57 GiB observations are prior checkpoints in the [`storage record`](evidence/live-linux-vm-20261016/host-storage-20261016.txt). Existing guest evidence shows 382 MB overlay growth in 91 seconds before a manual pause, with no complete build or peak footprint. Any continuation needs a controlled VM session and monitored free-space stop threshold. Full BIOS/UEFI AutoLoader app/service boot, offline-isolation validation, and USB/hardware actions remain open. |
-| Documentation matches implemented and validated support | UPDATED — SOFTWARE REVIEW OUTCOMES RECORDED; RELEASE VALIDATION IN PROGRESS | Phase 09 software checks and target-root install validation are complete. Candidate b2 includes the accepted hook-package correction, but same-hash BIOS/UEFI QEMU attempts stall during early systemd startup before AutoLoader/service evidence. Stock Arch reproduces similar early symptoms under WSL/QEMU; no root cause is confirmed. Native Linux/KVM control, successful BIOS/UEFI app/service boot evidence, and offline-isolation validation remain pending, together with the three real-device workflows. Phase 10 release qualification and Phase 11 are incomplete; no device workflow is release validated. |
+| Live USB image builds and boots | CURRENT-SOURCE IMAGE BUILD AND PRODUCT BOOT OPEN; HARDWARE PENDING | Candidate b2 (`afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`) passed target-root/CLI checks, but its same-hash BIOS/UEFI QEMU runs stalled before AutoLoader/service evidence. Retry7 used the frozen, SOL-reviewed diagnostic candidate in a disposable Arch guest under WSL/QEMU TCG. The helper started about 726 seconds into the 900-second run; its UTC date command returned around second 833, leaving at most 67 seconds for remaining source checks, the package query, and completion. `pacman -Q` was sent but produced no recorded result before the overall deadline, so this does not isolate a pacman hang. No package-query completion, rootless preflight, build, or ISO was established; QEMU cleanup exit 0 is not a pass. The five raw retry7 files and checksums are archived in [`retry7 results`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry7/), with interpretation in the [`VM evidence README`](evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md). No current-source product ISO has been built or booted. The earlier b2 startup captures and storage history remain in [`live Linux VM evidence`](evidence/live-linux-vm-20261016/README.md) and [`storage record`](evidence/live-linux-vm-20261016/host-storage-20261016.txt). Native Linux, current-source image build, BIOS/UEFI app/service boot, offline-isolation validation, and all hardware actions remain open. |
+| Documentation matches implemented and validated support | UPDATED — SOFTWARE REVIEW OUTCOMES RECORDED; RELEASE VALIDATION IN PROGRESS | Phase 09 software checks and target-root install validation are complete. Candidate b2 BIOS/UEFI runs stalled before AutoLoader/service evidence. Retry7 is an incomplete disposable-guest diagnostic: source integrity passed, but the package query did not return before its 900-second deadline, so no package, rootless, build, or ISO gate passed. The guest used WSL/QEMU TCG and is not native Linux/KVM validation. The exact outcome is archived in the retry7 VM evidence. Successful BIOS/UEFI app/service boot evidence, offline-isolation validation, native build gates, and the three real-device workflows remain pending. Phase 10 release qualification and Phase 11 are incomplete; no device workflow is release validated. |
 | Phase 00 SOL review accepted | ACCEPTED | SOL accepted Phase 00; four follow-ups were finalized in `2d0e2d1` and the decision wording was aligned in `4c33444`. |
 | Phase 01 SOL review accepted | ACCEPTED | SOL accepted Phase 01; the welcome/version, provisional compatibility and chip-size estimate follow-up was resolved in `207a7df`. |
 | Phase 02 SOL review accepted | ACCEPTED — SOFTWARE ONLY | SOL accepted the standalone policy, immutable evidence, durable journal and digest-bound single-use approval. Implementation commits `5ceb6f79d6924f73c073a4631cb65434e2058fbd` and `263d8d5b4625799f504abfb691ba2ba6bed22ec6`; evidence/documentation commits `ae494ebd27a427573a06e60c6c079c2d9ba526ae` and `f04f9d35957ee0e7575a17a023985c11d4c1254e`. Final checks: 101 tests passed, mypy clean on 82 files, editable install and CLI help passed. At Phase 02 acceptance all application write routes were blocked; Phase 10B later adds guarded external writing for X200/X220. T430 and raw restore remain blocked. |
@@ -157,3 +157,59 @@ Windows-specific skips, 0 failures/errors** (811 collected; 1771.18s; exit
 `docs/v1/evidence/software-regression-20261016/README.md`. These are WSL
 software checks; they do not validate launcher deployment, `pacstrap -N`
 package-input compatibility, or an ISO build.
+
+## Retry8 builder-host diagnostic
+
+The one SOL-reviewed disposable Arch guest run stopped at the exact locked
+host-package query. Six versions matched; host-only `archiso 91-1` was absent
+and the `core`/`extra` repository sync databases were missing. The guest correctly stopped before
+rootless/mount checks, scratch probing, or build work. This is a diagnostic
+environment mismatch, not evidence of a live-image packaging defect; the
+host lock and runtime profile remain unchanged. No package install/sync, ROM,
+ISO, or hardware operation occurred. Raw captures and checksums are under
+`docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry8/`.
+SOL accepted the no-launch host/runtime distinction regression; its focused
+Ubuntu run passed **2 tests in 1.11s**. This confirms fail-closed behavior
+against the captured result, not successful builder-host readiness.
+
+**Still release-blocking:** prepare a disposable build guest with signature-
+verified pinned host tools, pass rootless and mount preflights, complete the
+current-source Live USB build, and boot the same ISO through BIOS and UEFI to
+app/service/no-writer evidence. Complete and inspect the X200/X220 ROM builds.
+All three physical workflows and their hardware-specific tests remain
+deferred until these non-hardware gates pass; explicit human authorization is
+still required before any physical firmware write or hardware-specific
+recovery.
+
+## Current-source Ubuntu WSL regression — 2026-10-17
+
+The complete suite passed **839 tests, skipped 6, with 0 failures/errors**
+(845 collected; 1,391.29 seconds; exit 0). Native-Linux and Win32-targeted
+mypy each reported no issues in 109 source files. The exact command and
+environment are recorded in
+`docs/v1/evidence/software-regression-20261017/README.md`. This is WSL
+software validation; the skipped tests are not passed checks, and native VM
+builder, Live USB boot, ROM, and hardware release gates remain open.
+
+The same checkpoint read-only audited the existing pinned X200 lbmk source
+(35 files) and X220 Coreboot source (6 files); both origins, revisions, trees,
+and pinned hashes matched. These checkouts are not a clean native builder VM
+and the audits created no firmware artifacts.
+
+## Current-source Windows regression — 2026-10-17
+
+The Windows full suite passed **752 tests, skipped 62, with zero failures or
+errors** (814 collected; 789.46 seconds; exit 0) on Python 3.12.14 / pytest
+9.1.1. The Ubuntu full suite listed above ran before the accepted pytest
+discovery change; the later default-collection and explicit-probe checks are
+recorded separately in the evidence report. The skips cover POSIX durability/process/ownership/symlink behavior,
+Linux namespace/device/pacman checks, POSIX-only host checks that remain
+unvalidated, and one account-specific symlink privilege limitation
+(`WinError 1314`). Skips are not passed checks. Exact command and JUnit hash
+are in the linked evidence report. The accepted pytest discovery setting
+keeps archived evidence probes out of the default suite; default collection
+found 814 application tests, while explicit evidence probes passed 31 with 2
+skipped. Frozen retry7/retry8 evidence files were unchanged. This remains
+software-only evidence. Native Linux VM build,
+current-source ISO, BIOS/UEFI app/service boot, ROM validation and hardware
+workflows remain pending.

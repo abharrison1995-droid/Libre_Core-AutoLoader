@@ -102,6 +102,27 @@ python -m mypy autoloader
 
 This project is licensed under GPL-3.0; see [`LICENSE`](LICENSE).
 
+## Current-source software regression — 2026-10-17
+
+The current-source Windows full suite passed **752 tests with 62 skipped**
+(814 collected; zero failures/errors; 789.46 seconds) on Python 3.12.14 and
+pytest 9.1.1. The Ubuntu 26.04 WSL2 suite passed 839 with 6 skipped. Windows
+skips include POSIX durability/process/ownership/symlink cases, Linux-only
+namespace/device/pacman checks, POSIX host checks not validated on Windows,
+and one account-specific symlink privilege limitation (`WinError 1314`).
+Skipped checks remain unpassed. Exact reports and hashes are in the
+[`software regression evidence`](docs/v1/evidence/software-regression-20261017/README.md).
+
+The Ubuntu full suite preceded the pytest discovery change. SOL later accepted
+the `testpaths = ["tests"]` setting restricting default collection to
+application tests; subsequent collection found 814 tests with no
+evidence-directory paths. The explicit evidence-probe selection passed 31
+tests with 2 skipped, and frozen retry7/retry8 evidence files were unchanged.
+These software checks do not
+establish native Linux builder readiness, a current ISO or successful Live
+USB startup, a complete ROM, or hardware validation. Those release gates
+remain pending.
+
 
 Historical pre-correction suite counts are retained in the earlier checkpoints above. The latest software regression evidence is summarized below; WSL results are distinct from native Linux validation.
 
