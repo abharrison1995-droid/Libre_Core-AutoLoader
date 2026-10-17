@@ -974,3 +974,15 @@ for new Arch and Ubuntu VMs must be identified before setup. This is only a
 read-only asset/storage preflight, not VM/build/ISO/ROM/hardware validation.
 Hashes and limits are recorded in
 [`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).
+
+## Safety software coverage baseline — 2026-10-17
+
+A selected 14-module Ubuntu WSL safety-test run passed 295 tests and skipped
+1 in 961.41 seconds. The preserved coverage report shows 74% total, including
+62% branch coverage, below the specification's recommended 85% meaningful
+branch target. This is a diagnostic baseline only; no hardware, VM, ISO, ROM,
+or device validation is implied. SOL's prioritized safety-test follow-up is
+recorded in the evidence note; no tests were added in this baseline pass. The
+per-file figures and report hash are in
+[`safety coverage evidence`](evidence/safety-coverage-20261017/README.md).
+Await SOL's coverage plan before adding tests.

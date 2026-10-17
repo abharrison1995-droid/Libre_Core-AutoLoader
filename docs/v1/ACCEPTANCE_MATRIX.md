@@ -159,3 +159,12 @@ found 814 tests and no evidence-directory paths, while explicit evidence-probe
 tests passed 31 with 2 skipped. Frozen retry7/retry8 evidence files are
 unchanged. This is software regression evidence only; native Linux, image,
 boot, ROM and hardware gates remain open.
+
+### Selected safety test coverage baseline — 2026-10-17
+
+Fourteen selected software test modules passed 295 tests and skipped 1 in
+Ubuntu WSL (961.41s). The preserved report displays 74% total coverage and
+62% branch coverage, below the specification's recommended 85% meaningful
+branch target. This is a diagnostic baseline, not an acceptance pass; it
+establishes no VM, ISO, ROM, or hardware behavior. See the [coverage report
+and per-file figures](evidence/safety-coverage-20261017/README.md).
