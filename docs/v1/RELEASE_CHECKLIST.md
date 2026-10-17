@@ -213,3 +213,15 @@ skipped. Frozen retry7/retry8 evidence files were unchanged. This remains
 software-only evidence. Native Linux VM build,
 current-source ISO, BIOS/UEFI app/service boot, ROM validation and hardware
 workflows remain pending.
+
+## Read-only VM storage preflight — 2026-10-17
+
+Windows QEMU 11.1.2, the pinned Arch ISO, snapshot lock, and package-list
+hashes were verified. C: had 6.66 GiB free; after preserving 2 GiB, about
+4.66 GiB remains for growth, with peak use unmeasured. Existing PID 12540
+remains attached to its old overlay; current paused state was not confirmed
+by the latest unparseable read-only HMP response. The unknown 254.9 GB GPT
+Linux partition remains untouched pending clarification. No new VM was
+created; separate safe destinations for Arch and Ubuntu VMs must be identified
+before setup. This is not VM/build/ISO/ROM/hardware validation. See
+[`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).

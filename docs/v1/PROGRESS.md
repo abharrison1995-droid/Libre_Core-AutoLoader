@@ -960,3 +960,17 @@ tests. The explicit evidence-probe selection passed 31 tests and skipped 2;
 the frozen retry7/retry8 evidence files were unchanged. The Windows run is
 software evidence only. Native Linux builder, current-source ISO, Live USB
 app/service boot, ROM artifacts and all hardware workflows remain pending.
+
+## Read-only VM storage preflight — 2026-10-17
+
+Verified the Windows QEMU 11.1.2 executable, pinned Arch ISO, snapshot lock,
+and package-list hashes. C: had 6.66 GiB free, leaving about 4.66 GiB above
+the requested 2 GiB reserve; peak storage use is unknown. Existing diagnostic
+QEMU PID 12540 remains attached to its old overlay; a prior HMP snapshot was
+paused, but a later read-only status response was not parseable, so current
+pause state is unconfirmed. The unknown 254.9 GB GPT Linux partition remains
+untouched pending clarification. No new VM was created. Separate safe storage
+for new Arch and Ubuntu VMs must be identified before setup. This is only a
+read-only asset/storage preflight, not VM/build/ISO/ROM/hardware validation.
+Hashes and limits are recorded in
+[`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).
