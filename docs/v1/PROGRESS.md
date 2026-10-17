@@ -975,6 +975,28 @@ read-only asset/storage preflight, not VM/build/ISO/ROM/hardware validation.
 Hashes and limits are recorded in
 [`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).
 
+### Diskless Arch ISO QEMU diagnostic — 2026-10-17
+
+After the storage preflight, three diskless QEMU launches used the verified
+official Arch ISO as read-only CD-ROM media. Q35/WHPX reached a kernel panic
+(`No working init found`); i440FX/WHPX loaded the kernel but remained at
+`Loading initramfs`; q35/TCG progressed into systemd startup but the final
+capture still showed a static-device-node job pending. No interactive live
+shell was verified. The q35 TCG guest had no virtual disk, USB passthrough, or
+physical-device mapping and exited after HMP `quit`. The launch omitted an
+explicit network setting, so QEMU's default user-mode networking may have
+been available; no network traffic was captured. Command descriptions are
+transcribed from run notes, not a retained argv log; HMP observations likewise
+have no retained transcript. This is limited boot diagnostic evidence, not a
+VM setup, build, ISO, ROM, or hardware pass. Captures, hashes, and
+interpretation are in
+[`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).
+
+Persistent VM/Archiso build storage remains unresolved: C: now has about 5.3
+GiB free, and the 254.9 GB Linux partition remains untouched pending user
+direction. A request is open asking whether that partition may be inspected
+read-only and used without formatting or changing existing files.
+
 ## Safety software coverage baseline — 2026-10-17
 
 A selected 14-module Ubuntu WSL safety-test run passed 295 tests and skipped
@@ -982,7 +1004,7 @@ A selected 14-module Ubuntu WSL safety-test run passed 295 tests and skipped
 62% branch coverage, below the specification's recommended 85% meaningful
 branch target. This is a diagnostic baseline only; no hardware, VM, ISO, ROM,
 or device validation is implied. SOL's prioritized safety-test follow-up is
-recorded in the evidence note; no tests were added in this baseline pass. The
+recorded in the evidence note; LUNA is running a fresh frozen-denominator
+coverage pass and will add safety tests based on the result. The
 per-file figures and report hash are in
 [`safety coverage evidence`](evidence/safety-coverage-20261017/README.md).
-Await SOL's coverage plan before adding tests.
