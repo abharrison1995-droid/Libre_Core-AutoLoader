@@ -168,3 +168,21 @@ Ubuntu WSL (961.41s). The preserved report displays 74% total coverage and
 branch target. This is a diagnostic baseline, not an acceptance pass; it
 establishes no VM, ISO, ROM, or hardware behavior. See the [coverage report
 and per-file figures](evidence/safety-coverage-20261017/README.md).
+
+### Targeted safety coverage follow-up — 2026-10-17
+
+The preserved post-additions report measures the frozen critical source set
+(`backup.py`, `backup_service.py`, `compatibility.py`, `engine.py`,
+`authorization.py`, and `journal.py`) at **494/678 branches (72.9%)**. The
+85% meaningful-branch target remains open. Write-approval, write-service, and
+post-reboot rates are documented separately. Known platform-specific and
+lower-priority misses are described without claiming the rest unreachable.
+
+Current-source full tests completed with **778 passed / 63 skipped** on
+Windows and **837 passed / 4 skipped** on Ubuntu 26.04 WSL, with no failures or
+errors. Skipped checks remain unpassed; two Ubuntu skips concern missing
+trusted Arch pacman ownership evidence. The final two assertion-only test
+strengthenings were rerun on both hosts (2 passed on each). These runs do not
+establish native Linux, ISO, VM boot, ROM build, or hardware validation. See
+the [coverage report](evidence/safety-coverage-20261017/README.md) and
+[software-regression evidence](evidence/software-regression-20261017/README.md).

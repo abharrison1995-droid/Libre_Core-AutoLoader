@@ -43,6 +43,58 @@
   unvalidated; and one symlink creation failure on this Windows account
   (`WinError 1314`). All 62 skips remain unpassed checks.
 
+## Safety-test follow-up full suites — 2026-10-17
+
+These later suites ran from source HEAD
+`24fbd5b733ed6d407e1fe9131bb6cfd1970da66c` with four modified test modules:
+`test_phase03_spi_safety.py`, `test_phase10a_write_approval.py`,
+`test_phase10b_write_service.py`, and `test_workflow_safety.py`. No product
+Python or builder code was changed in this test phase. The full-suite runs
+included the new functional safety cases. They preceded the final two
+assertion-only strengthening edits; those two affected cases were rerun after
+the edits and passed on each platform.
+
+### Windows
+
+Environment: Windows, Python 3.12.14, pytest 9.1.1. Exact command from the
+repository root:
+
+```powershell
+$bt = Join-Path $env:TEMP 'lcfull17a'
+if (Test-Path -LiteralPath $bt) { throw "basetemp already exists: $bt" }
+& (Join-Path $env:TEMP 'LibreCore-v1-test-20261013\Scripts\python.exe') -m pytest -q --basetemp $bt --override-ini=tmp_path_retention_policy=failed --junitxml docs/v1/evidence/software-regression-20261017/windows-safety-full.xml
+```
+
+Result: **778 passed, 63 skipped, 0 failures, 0 errors** (841 collected;
+817.34 seconds; exit 0). JUnit is 143,367 bytes, SHA-256
+`7AE75D3D25354140D058429079AF8D9B9359141B425454534B16ACDB553848B9`.
+Skipped tests remain unpassed and cover POSIX durability, ownership,
+process and symlink behavior; Linux namespace, device and pacman checks;
+POSIX-only host checks marked unvalidated; and one account-specific symlink
+privilege limitation (WinError 1314).
+
+### Ubuntu WSL
+
+Environment: Ubuntu 26.04 on WSL2, using the existing test virtual environment.
+Exact command from the repository root:
+
+```sh
+wsl.exe -d Ubuntu --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 /home/alex/librecore-v1-test-venv/bin/python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-safety-full-ubuntu-20261017 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261017/ubuntu-safety-full.xml
+```
+
+Result: **837 passed, 4 skipped, 0 failures, 0 errors** (841 collected;
+1,103.95 seconds; exit 0). The JUnit file is 127,699 bytes, SHA-256
+`78A69A9EFD4DDE0BB61B846D1D09BE844BD2D01F5F23D5E60E8A915FDC4D070A`.
+Its skips were two `UNVALIDATED: host lacks trusted Arch pacman executable
+ownership evidence` cases, one Windows-specific production durability case,
+and one Windows-specific host contract. All four remain unpassed; the two
+Arch tool-ownership checks are still unvalidated on this Ubuntu WSL host.
+
+The focused changed-module suite passed **41 tests and skipped 1 on Windows**
+(36.81 seconds) and **42 tests on Ubuntu WSL** (44.24 seconds). After the final
+assertion-only edits, the two affected tests passed on Windows (7.49 seconds)
+and Ubuntu WSL (8.97 seconds).
+
 ## Test discovery and evidence-probe checks
 
 After the Ubuntu full-suite run, `pyproject.toml` was changed to limit default

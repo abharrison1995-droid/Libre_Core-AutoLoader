@@ -566,6 +566,22 @@ def test_expired_approval_is_consumed_and_cannot_be_replayed(tmp_path):
         ledger.consume(expired_token, intent)
 
 
+def test_modified_in_memory_approval_token_is_rejected_without_consuming_valid_token(tmp_path):
+    _plan, intent, *_ = _prepared_write(tmp_path)
+    ledger = WriteApprovalLedger(tmp_path / "approvals")
+    challenge, confirmation, _display = _confirmation(intent)
+    token = ledger.issue(intent, confirmation, challenge=challenge)
+    forged = replace(token, secret="not-the-issued-secret")
+
+    with pytest.raises(WriteApprovalError, match="does not match the in-memory token"):
+        ledger.consume(forged, intent)
+
+    assert not list((tmp_path / "approvals").glob("*.consumed"))
+    receipt = ledger.consume(token, intent)
+    assert receipt.intent_sha256 == intent.intent_sha256
+    assert len(list((tmp_path / "approvals").glob("*.consumed"))) == 1
+
+
 def test_atomic_consumption_allows_only_one_concurrent_consumer(tmp_path):
     _plan, intent, *_ = _prepared_write(tmp_path)
     ledger = WriteApprovalLedger(tmp_path / "approvals")

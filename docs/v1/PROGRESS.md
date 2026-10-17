@@ -1003,8 +1003,22 @@ A selected 14-module Ubuntu WSL safety-test run passed 295 tests and skipped
 1 in 961.41 seconds. The preserved coverage report shows 74% total, including
 62% branch coverage, below the specification's recommended 85% meaningful
 branch target. This is a diagnostic baseline only; no hardware, VM, ISO, ROM,
-or device validation is implied. SOL's prioritized safety-test follow-up is
-recorded in the evidence note; LUNA is running a fresh frozen-denominator
-coverage pass and will add safety tests based on the result. The
-per-file figures and report hash are in
+or device validation is implied. This remains the historical baseline. A
+targeted follow-up added backup reopen/storage, journal, approval,
+write-service and conflicting-identity cases. Its frozen six-file denominator
+is **494/678 branches (72.9%)**, below the 85% target; the separate rates for
+approval, write service and post-reboot are reported independently. The full
+coverage details and report hashes are in
 [`safety coverage evidence`](evidence/safety-coverage-20261017/README.md).
+
+After those test additions, the full Windows suite completed with **778
+passed, 63 skipped, no failures/errors** in 817.34 seconds; the Ubuntu 26.04
+WSL suite completed with **837 passed, 4 skipped, no failures/errors** in
+1,103.95 seconds. The Windows skips include POSIX durability, ownership,
+process and symlink behavior, Linux-only namespace/device/pacman checks, and
+one account-specific symlink privilege skip; they remain unpassed. Ubuntu's
+four skips include two unvalidated trusted-Arch-pacman ownership checks and
+two Windows-specific checks. The two final assertion-only test strengthenings
+were rerun afterward: 2 passed on Windows and 2 passed on Ubuntu WSL. These
+results are software-only; WSL is not native Linux, and native ISO/build,
+VM/boot, ROM, and hardware gates remain open.

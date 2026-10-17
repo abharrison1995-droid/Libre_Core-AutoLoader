@@ -196,12 +196,18 @@ def test_identity_conflict_alias_and_manual_candidate_do_not_authorize(tmp_path:
         manual_model_candidate="t430",
     ))
     manual_conflict = replace(base, device=replace(base.device, manual_model_candidate="x200"))
+    conflicting_tokens_in_one_raw_field = replace(
+        base,
+        device=replace(base.device, raw_dmi_product_name="ThinkPad T430 X220"),
+    )
 
     assert _assert_decision(conflicting, CompatibilityDecision.BLOCKED)
     assert _assert_decision(conflicting_version, CompatibilityDecision.BLOCKED)
     assert _assert_decision(alias, CompatibilityDecision.BLOCKED)
     assert _assert_decision(manual_only, CompatibilityDecision.UNKNOWN)
     assert _assert_decision(manual_conflict, CompatibilityDecision.BLOCKED)
+    within_field_reasons = _assert_decision(conflicting_tokens_in_one_raw_field, CompatibilityDecision.BLOCKED)
+    assert any("conflicting model tokens" in reason for reason in within_field_reasons)
 
 
 def test_t430_family_must_match_upstream_field_parsing(tmp_path: Path) -> None:
@@ -260,6 +266,33 @@ def test_t430_bios_vendor_must_agree_with_stock_classification(tmp_path: Path) -
     assert _assert_decision(vendor_mismatch, CompatibilityDecision.BLOCKED)
     assert _assert_decision(opposite_flag, CompatibilityDecision.BLOCKED)
     assert _assert_decision(missing_vendor, CompatibilityDecision.UNKNOWN)
+
+
+def test_t430_internal_flash_unlock_must_be_observed_available(tmp_path: Path) -> None:
+    artifact = tmp_path / "t430.rom"
+    artifact.write_bytes(b"R" * (4 * MIB))
+    base = make_t430_plan(artifact, "G1ET74WW (2.64 )")
+    observed_locked = replace(
+        base,
+        device=replace(
+            base.device,
+            internal_flash_unlock_observed=True,
+            internal_flash_unlock_status=False,
+        ),
+    )
+    unobserved = replace(
+        base,
+        device=replace(
+            base.device,
+            internal_flash_unlock_observed=False,
+            internal_flash_unlock_status=True,
+        ),
+    )
+
+    locked_reasons = _assert_decision(observed_locked, CompatibilityDecision.BLOCKED)
+    unknown_reasons = _assert_decision(unobserved, CompatibilityDecision.UNKNOWN)
+    assert any("observed as unavailable" in reason for reason in locked_reasons)
+    assert any("not been independently observed" in reason for reason in unknown_reasons)
 
 
 def test_model_family_and_firmware_mismatches_block(x200_files: dict[str, Path]) -> None:
@@ -376,6 +409,16 @@ def test_x220_unknown_topology_and_regions_never_pass(tmp_path: Path) -> None:
         ),
     )
     assert _assert_decision(overlapping, CompatibilityDecision.BLOCKED)
+    out_of_bounds_regions = profile_regions[:-1] + (
+        RegionEvidence("bios", 5 * MIB, 8 * MIB + 1),
+    )
+    out_of_bounds = replace(
+        with_regions,
+        topology=replace(with_regions.topology, regions=out_of_bounds_regions),
+        artifact=replace(with_regions.artifact, regions=out_of_bounds_regions),
+    )
+    reasons = _assert_decision(out_of_bounds, CompatibilityDecision.BLOCKED)
+    assert any("exceeds the observed 8 MiB chip bounds" in reason for reason in reasons)
 
 
 def test_corrupted_artifact_hash_is_blocked(x200_files: dict[str, Path]) -> None:
@@ -601,6 +644,43 @@ def test_journal_rejects_corruption_changed_plan_and_resumes_no_terminal_state(
     checkpoint.write_text(json.dumps(document), encoding="utf-8")
     with pytest.raises(JournalCorruptionError, match="checksum"):
         OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+
+
+def test_journal_rejects_rechecksummed_terminal_state_that_disagrees_with_final_event(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    from autoloader.workflow.journal import _checksum
+
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "terminal-state-tamper.json"
+    session = WorkflowSession(replace(plan, backup=BackupEvidence()), journal_path=checkpoint)
+    session.validate()
+    assert session.verify_backup(plan.backup).decision is CompatibilityDecision.ALLOWED
+    session.journal.append(
+        action="external-spi-write",
+        from_state=OperationState.BACKUP_VERIFIED,
+        to_state=OperationState.WRITE_STARTED,
+        code="WRITE_STARTED",
+        message="synthetic write boundary for journal validation only",
+    )
+    session.journal.append(
+        action="external-spi-write",
+        from_state=OperationState.WRITE_STARTED,
+        to_state=OperationState.WRITE_UNCERTAIN,
+        code="WRITE_UNCERTAIN",
+        message="synthetic uncertain terminal state",
+    )
+
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+    document["state"] = OperationState.WRITE_VERIFIED.value
+    body = {key: value for key, value in document.items() if key != "checkpoint_checksum"}
+    document["checkpoint_checksum"] = _checksum(body)
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+    tampered_bytes = checkpoint.read_bytes()
+
+    with pytest.raises(JournalCorruptionError, match="state does not match the final journal transition"):
+        OperationJournal.inspect_checkpoint(checkpoint, expected_plan=plan)
+    assert checkpoint.read_bytes() == tampered_bytes
 
 
 def test_journal_append_does_not_overwrite_corruption_after_resume(

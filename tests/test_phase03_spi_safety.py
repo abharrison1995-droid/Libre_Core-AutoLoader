@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import tempfile
 from dataclasses import replace
 from datetime import datetime, timezone
@@ -10,7 +11,9 @@ from pathlib import Path
 
 import pytest
 
+from autoloader.exceptions import BackupUnavailableError
 from autoloader.flasher import backup_service
+from autoloader.flasher.backup import BackupManager
 from autoloader.flasher.backup_service import (
     BackupCaptureError,
     BackupManifestError,
@@ -106,7 +109,7 @@ class FakeStorageInspector:
 
 
 class FakeTransport:
-    def __init__(self, probes, read_payloads, *, mismatch_second=False, fail_read=None):
+    def __init__(self, probes, read_payloads, *, mismatch_second=False, fail_read=None, short_read=None):
         self.identity = FlashToolIdentity(
             name="flashrom",
             executable=str(Path(__file__).resolve()),
@@ -118,6 +121,7 @@ class FakeTransport:
         self.read_payloads = dict(read_payloads)
         self.mismatch_second = mismatch_second
         self.fail_read = fail_read
+        self.short_read = short_read
         self.probe_calls = 0
         self.read_calls = []
         self.count_by_capacity: dict[int, int] = {}
@@ -139,6 +143,8 @@ class FakeTransport:
         payload = self.read_payloads[probe.capacity_bytes]
         if self.mismatch_second and count == 2:
             payload = _payload(len(payload), salt=19)
+        if self.short_read == count:
+            payload = payload[:-1]
         if self.fail_read == count:
             path.write_bytes(payload[: max(1, len(payload) // 2)])
             return SPITransportResult(False, "injected fake read failure", 0.0)
@@ -259,6 +265,62 @@ def test_probe_parser_requires_one_exact_unforced_chip_result():
         parse_probe_output("No EEPROM/flash device found.\n")
     with pytest.raises(ProbeOutputError, match="malformed"):
         parse_probe_output(output + "Found unsupported flash chip output\n")
+
+
+def test_legacy_single_chip_backup_and_restore_paths_remain_disabled_without_transport_calls(tmp_path):
+    class NeverRunner:
+        def __getattr__(self, name):
+            pytest.fail(f"legacy backup must not call transport method {name}")
+
+    manager = BackupManager(tmp_path / "legacy", runner=NeverRunner())
+    with pytest.raises(BackupUnavailableError, match="Single-chip backup capture is disabled"):
+        manager.create_backup("x200", ProgrammerType.CH341A, "chip")
+
+    assert manager.restore_from_backup(
+        str(tmp_path / "original.rom"), ProgrammerType.CH341A
+    ) is False
+    assert manager.get_manifest() == []
+
+
+@pytest.mark.parametrize(
+    ("first_bytes", "second_bytes", "expected_match", "expected_hash"),
+    [
+        (None, b"valid", False, ""),
+        (b"", b"valid", False, ""),
+        (b"\xff" * 1024, b"valid", False, ""),
+        (b"\x00" * 1024, b"valid", False, ""),
+        (b"\xff" * 9990 + bytes(range(10)), b"valid", False, ""),
+        (b"first non-degenerate read", b"different read", False, None),
+        (b"same non-degenerate read", b"same non-degenerate read", True, None),
+    ],
+    ids=[
+        "missing-first",
+        "empty-first",
+        "all-ff-first",
+        "all-zero-first",
+        "near-blank-first",
+        "different-reads",
+        "matching-reads",
+    ],
+)
+def test_legacy_pair_verification_never_accepts_missing_degenerate_or_mismatched_reads(
+    tmp_path, first_bytes, second_bytes, expected_match, expected_hash
+):
+    manager = BackupManager(tmp_path / "legacy")
+    first = tmp_path / "first.rom"
+    second = tmp_path / "second.rom"
+    if first_bytes is not None:
+        first.write_bytes(first_bytes)
+    if second_bytes is not None:
+        second.write_bytes(second_bytes)
+
+    matched, digest = manager.verify_backup_pair(first, second)
+
+    assert matched is expected_match
+    if expected_hash is None:
+        assert digest == hashlib.sha256(first_bytes).hexdigest()
+    else:
+        assert digest == expected_hash
 
 
 def test_runner_rejects_caller_chip_override_without_running_probe(monkeypatch):
@@ -473,6 +535,37 @@ def test_backup_service_rejects_corrupt_manifest_before_hardware_reads(tmp_path)
     assert transport.read_calls == []
 
 
+def test_recovery_manifest_start_failure_blocks_before_any_spi_read(tmp_path, monkeypatch):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    original_append = BackupManifestStore.append
+    injected = False
+
+    def fail_recovery_start_once(store, event):
+        nonlocal injected
+        if store.path.parent == recovery and event.get("status") == "in-progress" and not injected:
+            injected = True
+            raise BackupManifestError("injected recovery manifest start failure")
+        return original_append(store, event)
+
+    monkeypatch.setattr(BackupManifestStore, "append", fail_recovery_start_once)
+
+    with pytest.raises(BackupManifestError, match="injected recovery manifest start failure"):
+        _capture(service, plan, probes, primary, recovery)
+
+    assert injected is True
+    assert transport.read_calls == []
+    # The primary write-ahead marker exists, but the recovery marker does not;
+    # the operation stops before filesystem staging or any programmer read.
+    assert [event["status"] for event in BackupManifestStore(primary).read_events()] == ["in-progress"]
+    assert BackupManifestStore(recovery).read_events() == []
+    assert not list(primary.glob("*/")) and not list(recovery.glob("*/"))
+    assert not list(primary.rglob("*.rom")) and not list(recovery.rglob("*.rom"))
+
+
 def test_backup_mismatch_preserves_both_reads_and_never_retries(tmp_path):
     plan = _make_x200(tmp_path)
     content = _payload(4 * MIB)
@@ -492,6 +585,220 @@ def test_backup_mismatch_preserves_both_reads_and_never_retries(tmp_path):
     assert events[-1]["status"] == "failed"
     assert events[-1]["automatic_retry"] is False
     assert events[-1]["automatic_reboot"] is False
+
+
+@pytest.mark.parametrize(
+    ("failure_kind", "failure_read", "expected_reads", "message"),
+    [
+        ("transport", 1, 1, "first independent read failed"),
+        ("transport", 2, 2, "second independent read failed"),
+        ("short-success", 1, 1, "first read for chip .* has .* bytes; expected exactly"),
+    ],
+)
+def test_backup_read_failure_is_replicated_and_preserves_partial_evidence_without_retry(
+    tmp_path, failure_kind, failure_read, expected_reads, message
+):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport(
+        [_probe_line("W25Q32.V", len(content))],
+        {len(content): content},
+        fail_read=failure_read if failure_kind == "transport" else None,
+        short_read=failure_read if failure_kind == "short-success" else None,
+    )
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+
+    with pytest.raises(BackupCaptureError, match=message):
+        _capture(service, plan, probes, primary, recovery)
+
+    assert len(transport.read_calls) == expected_reads
+    primary_events = BackupManifestStore(primary).read_events()
+    recovery_events = BackupManifestStore(recovery).read_events()
+    assert [event["status"] for event in primary_events] == ["in-progress", "failed"]
+    assert [event["status"] for event in recovery_events] == ["in-progress", "failed"]
+    failed_primary = primary_events[-1]
+    failed_recovery = recovery_events[-1]
+    assert failed_primary["event_sha256"] == failed_recovery["event_sha256"]
+    assert failed_primary["automatic_retry"] is False
+    assert failed_primary["automatic_reboot"] is False
+    assert failed_primary["failure"]
+    preserved = [Path(value) for value in failed_primary["preserved_paths"]]
+    assert len(preserved) == expected_reads
+    assert all(path.is_file() for path in preserved)
+    assert all(path.suffix == ".partial" for path in preserved)
+    assert not list(primary.rglob("*.rom"))
+    assert not list(recovery.rglob("*.rom"))
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows symlink creation depends on account privilege")
+def test_backup_reopen_rejects_symlinked_full_chip_copy(tmp_path):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+
+    captured_path = Path(result.chips[0].first_path)
+    retained_target = captured_path.with_name(captured_path.name + ".retained")
+    captured_path.replace(retained_target)
+    captured_path.symlink_to(retained_target.name)
+
+    with pytest.raises(BackupManifestError, match="primary copy .* missing or unsafe"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
+
+
+def test_backup_reopen_rejects_manifest_bound_to_different_observed_chip_topology(tmp_path):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+    changed_chip = replace(plan.topology.chips[0], physical_label="different observed chip")
+    changed_plan = replace(plan, topology=replace(plan.topology, chips=(changed_chip,)))
+
+    with pytest.raises(BackupManifestError, match="chip evidence differs from the current observed topology"):
+        service.load_verified_result(
+            changed_plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
+
+
+@pytest.mark.parametrize(("copy_label", "copy_attribute"), [("primary", "first_path"), ("recovery", "second_path")])
+def test_backup_reopen_rehashes_both_full_chip_copies(tmp_path, copy_label, copy_attribute):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+
+    changed_copy = Path(getattr(result.chips[0], copy_attribute))
+    changed = bytearray(changed_copy.read_bytes())
+    changed[0] ^= 1
+    changed_copy.write_bytes(changed)
+
+    with pytest.raises(BackupManifestError, match=f"{copy_label} copy for .* changed since capture"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
+
+
+def test_backup_reopen_rejects_rechecksummed_same_volume_claims(tmp_path):
+    from autoloader.flasher.backup_service import _canonical, _sha256
+
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+    updated_manifest_hashes = []
+
+    for manifest_path in (Path(result.primary_manifest), Path(result.recovery_manifest)):
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+        verified = document["events"][-1]
+        verified["recovery_storage"]["volume_id"] = verified["primary_storage"]["volume_id"]
+        event_body = {key: value for key, value in verified.items() if key != "event_sha256"}
+        verified["event_sha256"] = _sha256(_canonical(event_body))
+        manifest_body = {key: value for key, value in document.items() if key != "manifest_sha256"}
+        document["manifest_sha256"] = _sha256(_canonical(manifest_body))
+        manifest_path.write_bytes(_canonical(document))
+        updated_manifest_hashes.append(document["manifest_sha256"])
+
+    with pytest.raises(StoragePreflightError, match="separately identified persistent volumes"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=updated_manifest_hashes[0],
+            recovery_manifest_sha256=updated_manifest_hashes[1],
+            expected_tool=transport.identity,
+        )
+
+
+def test_backup_reopen_rejects_replayed_verified_event(tmp_path):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+
+    for directory in (primary, recovery):
+        store = BackupManifestStore(directory)
+        verified = store.read_events()[-1]
+        replay = {
+            key: value
+            for key, value in verified.items()
+            if key not in {"sequence", "previous_sha256", "event_sha256"}
+        }
+        store.append(replay)
+
+    with pytest.raises(BackupManifestError, match="exactly one verified event"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
+
+
+def test_backup_reopen_rejects_validly_rechecksummed_primary_recovery_divergence(tmp_path):
+    from autoloader.flasher.backup_service import _canonical, _sha256
+
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+
+    recovery_manifest = Path(result.recovery_manifest)
+    document = json.loads(recovery_manifest.read_text(encoding="utf-8"))
+    verified = document["events"][-1]
+    verified["tool"]["version"] = "different-tool-version"
+    event_body = {key: value for key, value in verified.items() if key != "event_sha256"}
+    verified["event_sha256"] = _sha256(_canonical(event_body))
+    manifest_body = {key: value for key, value in document.items() if key != "manifest_sha256"}
+    document["manifest_sha256"] = _sha256(_canonical(manifest_body))
+    recovery_manifest.write_bytes(_canonical(document))
+
+    with pytest.raises(BackupManifestError, match="primary and recovery backup events disagree"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=_sha256(_canonical(manifest_body)),
+            expected_tool=transport.identity,
+        )
 
 
 def test_readback_comparison_is_region_aware_and_preserves_mismatch(tmp_path):

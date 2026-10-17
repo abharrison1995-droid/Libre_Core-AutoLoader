@@ -389,6 +389,177 @@ def test_changed_probe_after_approval_burns_token_without_journal_or_writer(tmp_
     assert OperationJournal.load_checkpoint(request.operation_journal_path, expected_plan=request.plan).state is OperationState.BACKUP_VERIFIED
 
 
+def test_changed_setup_after_challenge_burns_approval_before_write_started(tmp_path, monkeypatch):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    original_provider = service.evidence_provider
+
+    class ChangedSecondSetup:
+        def __init__(self):
+            self.calls = 0
+
+        def collect(self, plan):
+            self.calls += 1
+            evidence = original_provider.collect(plan)
+            if self.calls == 2:
+                evidence = replace(
+                    evidence,
+                    setup=replace(
+                        evidence.setup,
+                        ec_waiver_reason=evidence.setup.ec_waiver_reason + " Changed after display.",
+                    ),
+                )
+            return evidence
+
+    service.evidence_provider = ChangedSecondSetup()
+    with pytest.raises(write_service_module.WriteExecutionError, match="changed after approval"):
+        service.execute(request)
+
+    assert writer.calls == []
+    assert readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert journal.state is OperationState.BACKUP_VERIFIED
+    assert all(entry.to_state is not OperationState.WRITE_STARTED for entry in journal.entries)
+    assert len(list((tmp_path / "approval-ledger").glob("*.consumed"))) == 1
+
+
+def test_mutated_backup_copy_after_challenge_burns_approval_before_write_started(tmp_path, monkeypatch):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    provider = service.evidence_provider
+    backup_copy = Path(request.backup_set.chips[0].first_path)
+    provider.mutate = lambda: backup_copy.write_bytes(b"changed after displayed approval")
+
+    with pytest.raises(write_service_module.WriteExecutionError, match="staged X200/X220 write evidence failed revalidation"):
+        service.execute(request)
+
+    assert writer.calls == []
+    assert readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert journal.state is OperationState.BACKUP_VERIFIED
+    assert all(entry.to_state is not OperationState.WRITE_STARTED for entry in journal.entries)
+    assert len(list((tmp_path / "approval-ledger").glob("*.consumed"))) == 1
+
+
+def test_artifact_change_at_writer_boundary_is_rejected_before_subprocess(tmp_path, monkeypatch):
+    class MutatingRevalidationRunner:
+        def __init__(self):
+            self.calls = 0
+            self.delegate = SubprocessWriteCommandRunner()
+
+        def run(self, capability, timeout_seconds):
+            self.calls += 1
+            artifact = Path(capability.command.argv[-1])
+            content = bytearray(artifact.read_bytes())
+            content[0] ^= 1
+            artifact.write_bytes(content)
+            return self.delegate.run(capability, timeout_seconds)
+
+    writer = MutatingRevalidationRunner()
+    service, request, _fake_writer, readback = _service_request(
+        tmp_path, monkeypatch, writer=writer
+    )
+
+    def no_subprocess(*_args, **_kwargs):
+        pytest.fail("changed approved bytes must be rejected before subprocess.run")
+
+    monkeypatch.setattr(write_service_module.subprocess, "run", no_subprocess)
+    result = service.execute(request)
+
+    assert result.state is OperationState.WRITE_UNCERTAIN
+    assert result.code == "WRITER_RUNTIME_ERROR_STATE_UNCERTAIN"
+    assert writer.calls == 1
+    assert readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert journal.state is OperationState.WRITE_UNCERTAIN
+    assert "approved artifact or writer executable changed before subprocess invocation" in journal.entries[-1].message
+
+
+def test_prewrite_artifact_mutation_after_durable_start_blocks_capability_and_writer(tmp_path, monkeypatch):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    original_factory = service.intent_factory
+    intents = []
+
+    class CapturingIntentFactory:
+        def create(self, *args, **kwargs):
+            intent = original_factory.create(*args, **kwargs)
+            intents.append(intent)
+            return intent
+
+    service.intent_factory = CapturingIntentFactory()
+    original_append = journal_module.OperationJournal.append
+    mutation_done = False
+
+    def append_then_mutate(self, **event):
+        nonlocal mutation_done
+        entry = original_append(self, **event)
+        if event.get("code") == "WRITE_STARTED":
+            artifact_path = Path(intents[-1].artifact_path)
+            payload = bytearray(artifact_path.read_bytes())
+            payload[0] ^= 1
+            artifact_path.write_bytes(payload)
+            mutation_done = True
+        return entry
+
+    def capability_must_not_be_minted(*_args, **_kwargs):
+        pytest.fail("PREWRITE_FILE_CHANGED must be detected before capability minting")
+
+    monkeypatch.setattr(journal_module.OperationJournal, "append", append_then_mutate)
+    monkeypatch.setattr(write_service_module, "_mint_approved_write_capability", capability_must_not_be_minted)
+
+    result = service.execute(request)
+
+    assert mutation_done is True
+    assert result.state is OperationState.WRITE_FAILED
+    assert result.code == "PREWRITE_FILE_CHANGED"
+    assert writer.calls == [] and readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert [entry.to_state for entry in journal.entries[-2:]] == [
+        OperationState.WRITE_STARTED,
+        OperationState.WRITE_FAILED,
+    ]
+
+
+def test_mutated_backup_volume_identity_fails_revalidation_before_writer(tmp_path, monkeypatch):
+    from autoloader.flasher.backup_service import _canonical, _sha256
+
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    backup_set = request.backup_set
+    new_manifest_hashes = []
+    new_primary_storage = backup_set.primary_storage
+    new_recovery_storage = replace(
+        backup_set.recovery_storage,
+        volume_id=backup_set.primary_storage.volume_id,
+    )
+
+    for manifest_value in (backup_set.primary_manifest, backup_set.recovery_manifest):
+        manifest_path = Path(manifest_value)
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+        verified = document["events"][-1]
+        verified["recovery_storage"]["volume_id"] = new_primary_storage.volume_id
+        event_body = {key: value for key, value in verified.items() if key != "event_sha256"}
+        verified["event_sha256"] = _sha256(_canonical(event_body))
+        manifest_body = {key: value for key, value in document.items() if key != "manifest_sha256"}
+        document["manifest_sha256"] = _sha256(_canonical(manifest_body))
+        manifest_path.write_bytes(_canonical(document))
+        new_manifest_hashes.append(document["manifest_sha256"])
+
+    mutated_backup = replace(
+        backup_set,
+        primary_manifest_sha256=new_manifest_hashes[0],
+        recovery_manifest_sha256=new_manifest_hashes[1],
+        recovery_storage=new_recovery_storage,
+    )
+    mutated_request = replace(request, backup_set=mutated_backup)
+
+    with pytest.raises(write_service_module.WriteExecutionError, match="separately identified persistent volumes"):
+        service.execute(mutated_request)
+
+    assert writer.calls == [] and readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert journal.state is OperationState.BACKUP_VERIFIED
+    assert all(entry.to_state is not OperationState.WRITE_STARTED for entry in journal.entries)
+    assert list((tmp_path / "approval-ledger").glob("*.consumed")) == []
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state", "expected_status"),
     [

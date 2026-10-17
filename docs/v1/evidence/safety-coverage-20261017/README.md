@@ -62,7 +62,60 @@ is not the preserved artifact. The JSON report is the preserved result.
 The result covers only the selected software tests. It does not establish
 hardware safety, VM operation, ISO creation or boot, ROM build validity, or
 any physical write/read-back/recovery behavior. The one skipped test remains
-unpassed. SOL's prioritized follow-up is to address backup capture/reopen,
-journal and approval integrity, write-service failure boundaries, and
-conflicting identity/topology evidence. Product code was not changed and no
-coverage-driven tests were added in this baseline pass.
+unpassed. This is the historical baseline; targeted test additions and the
+latest coverage export are recorded below.
+
+## Targeted safety follow-up — 2026-10-17
+
+No production code changed. The initial full 14-module coverage run for this
+follow-up completed with **309 passed, 1 skipped** in **1,155.72 seconds**.
+The same coverage database was then extended with focused safety cases,
+including a 9-test append batch, a 27-test append batch, and a final recovery
+manifest-start test (1 passed in 3.89 seconds). The 27-test batch completed in
+68.72 seconds. The batch work exercised four test modules:
+`tests/test_phase03_spi_safety.py`,
+`tests/test_phase10a_write_approval.py`,
+`tests/test_phase10b_write_service.py`, and
+`tests/test_workflow_safety.py`. The report aggregates execution from those
+commands; it is not a fresh isolated run of every listed test module.
+
+The earlier aggregated report remains preserved as
+[`coverage-followup.json`](coverage-followup.json) (SHA-256
+`4F33E27DD2C770BAF4AB24C526157708C470AB9645D486C4E7394B1BE4107566`). The
+latest export is [`coverage-post-additions.json`](coverage-post-additions.json),
+SHA-256 `82D7FB274A5B4EE469CBF3738ECC51DB56A9B466E9CA11FAC75088F3B948DD49`.
+Its complete covered source inventory is the six frozen critical files below
+plus `readback.py`, `recovery.py`, `spi.py`, and the additional workflow files
+listed in the report. The frozen critical denominator is exactly:
+
+| Critical source file | Covered branches | Branches | Rate |
+|---|---:|---:|---:|
+| `autoloader/flasher/backup.py` | 16 | 26 | 61.5% |
+| `autoloader/flasher/backup_service.py` | 126 | 194 | 64.9% |
+| `autoloader/workflow/compatibility.py` | 214 | 262 | 81.7% |
+| `autoloader/workflow/engine.py` | 22 | 28 | 78.6% |
+| `autoloader/workflow/authorization.py` | 32 | 42 | 76.2% |
+| `autoloader/workflow/journal.py` | 84 | 126 | 66.7% |
+| **Frozen critical total** | **494** | **678** | **72.9%** |
+
+The critical target remains **85%** and has not been reached. Separate rates
+are `write_approval.py` 186/334 (55.7%), `write_service.py` 93/150 (62.0%),
+and `post_reboot.py` 142/244 (58.2%). Across all instrumented source files,
+the report records 1,326/2,094 branches (63.3%) and 79.8% statement coverage.
+
+The most recent focused rerun after the final test edits passed **41 tests and
+skipped 1 on Windows** in 36.81 seconds, and passed **42 tests on Ubuntu WSL**
+in 44.24 seconds. After two assertion-only strengthenings, the affected pair
+passed again on Windows (**2 passed, 7.49 seconds**) and Ubuntu WSL
+(**2 passed, 8.97 seconds**). These focused results do not replace the full
+suite results recorded in the software regression report.
+
+Coverage review found remaining misses across manifest/filesystem error
+branches, parser and topology combinations, and journal/approval persistence
+and concurrency paths. Some such cases are platform-specific; Windows skips
+for POSIX durability, ownership, process and symlink behavior remain
+unpassed, and Ubuntu WSL does not establish native Linux behavior. The
+legacy `calculate_entropy` helper in `backup.py` is not used by the current
+degenerate-dump check and its arithmetic branches are lower priority. No
+remaining branch is claimed unreachable. The missed branches remain open for
+review; this report makes no claim that the 85% target or hardware gates pass.
