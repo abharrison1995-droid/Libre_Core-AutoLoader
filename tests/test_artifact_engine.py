@@ -1856,6 +1856,9 @@ def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
 
     assert result.status is BuildStatus.FAILED
     assert result.code == "ARTIFACT_VALIDATION_FAILED"
+    if os.name != "nt":
+        assert result.manifest_path is not None
+        assert result.manifest_path.parent.stat().st_mode & 0o777 == 0o700
     if failure_stage == "olddefconfig":
         assert "injected X220 config failure" in result.message
         assert len(seen_make_cwd) == 1

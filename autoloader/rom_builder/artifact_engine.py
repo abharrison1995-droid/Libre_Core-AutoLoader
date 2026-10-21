@@ -2558,7 +2558,11 @@ class ArtifactEngine:
 
         run_id = str(uuid.uuid4())
         run_dir = output_root / run_id
-        run_dir.mkdir(parents=True, exist_ok=False)
+        run_dir.mkdir(
+            parents=True,
+            exist_ok=False,
+            mode=0o700 if recipe is X220_COREBOOT else 0o777,
+        )
         if recipe is X220_COREBOOT:
             # The operation tree contains backup-derived descriptor/ME/GbE
             # data while Coreboot is running. Keep it private even when the
