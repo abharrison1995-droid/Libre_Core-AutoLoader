@@ -135,7 +135,7 @@ passed 50 tests with 4 skipped (972 deselected), and top-level plus
 `build-usb --help` passed. An exploratory full native suite stopped at about
 7% after errors with no JUnit; native targeted mypy raised an internal error.
 The four current-source Archiso build attempts produced no ISO; subsequent
-startup retries 3–14 were diagnostics, not native build/test gates, and also
+startup retries 3–16 were diagnostics, not native build/test gates, and also
 produced no ISO. Retry13 reached only a systemd debug shell: read-only `id` and
 `lsblk` showed root and the expected ISO, workspace, results, and read-only
 source devices. At that query snapshot, 88 jobs were pending around
@@ -148,10 +148,17 @@ overlays. The live stop-marker scanner did not strip ANSI escapes; the separate
 post-run normalized audit found four Namespace Resource Manager failures,
 zero normal startup target markers, and zero emergency/fatal markers. Its cause
 is unknown. ISO, kernel, initramfs, and source-image before/after hash records
-matched; free space stayed at 153.786 GiB. No guest input or native test/build
-ran. See the [current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md),
+matched; free space stayed at 153.786 GiB. Retry15 was a helper/PTY handshake
+failure with empty serial capture and no guest input. Retry16 captured the PTY
+and four Namespace Resource Manager failure lines, but reached the 600-second
+cap without a stable post-failure shell prompt; no guest input or query was
+sent. Input hashes matched in both attempts. These remain unresolved generic
+ISO diagnostics: no normal boot, native tests, rootless preflight,
+current-source build, or product ISO passed. See the [current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md),
 [retry13 transcript and result](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
-and [retry14 observation bundle](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
+the [retry14 observation bundle](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md),
+[retry15 PTY failure](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/README.md),
+and [retry16 service-timeout diagnostic](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/README.md).
 Native build remains open until normal userspace and the reviewed rootless
 preflight are ready. Hardware remains pending for all three devices.
 

@@ -25,7 +25,7 @@ Current-source native Arch status: the focused X220 selection passed 50 tests,
 4 skipped, and 972 deselected; top-level and `build-usb --help` passed. The
 exploratory full native suite stopped at about 7% after errors without JUnit,
 and native targeted mypy raised an internal error. Four current-source
-Archiso build attempts produced no ISO; subsequent startup retries 3–14 were
+Archiso build attempts produced no ISO; subsequent startup retries 3–16 were
 diagnostics rather than build/test gates and also produced no ISO. Retry13
 reached only a systemd debug shell: read-only `id` and `lsblk` showed root and
 the expected device map. At that query snapshot, 88 systemd jobs remained
@@ -36,11 +36,18 @@ with no guest input. Its live stop-marker scanner did not strip ANSI; a
 post-run normalized audit found four Namespace Resource Manager failures, zero
 normal startup target markers, and zero emergency/fatal markers. The cause is
 unknown. ISO, kernel, initramfs, and source-image before/after hashes matched;
-free space stayed at 153.786 GiB. No normal live boot, rootless preflight,
-current-source build gate, or product ISO passed. Details and hashes are in
+free space stayed at 153.786 GiB. Retry15 was a helper/serial-PTY handshake
+failure with empty serial capture and no guest input. Retry16 captured the PTY
+and four Namespace Resource Manager failures but reached the 600-second cap
+without a stable post-failure shell prompt; no query or other guest input was
+sent. Its ISO, kernel, initramfs, and source-image hashes also matched. These
+generic-ISO diagnostics do not establish normal startup. No normal live boot,
+rootless preflight, current-source build gate, or product ISO passed. Details and hashes are in
 [current-source native Arch evidence](evidence/native-arch-build-20261021/README.md),
 the [retry13 diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
-and the [retry14 observation bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
+the [retry14 observation bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md),
+[retry15 PTY failure](evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/README.md),
+and [retry16 unresolved diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/README.md).
 
 ## Historical native Archiso candidate and QEMU boot — source revision `be2fece`
 

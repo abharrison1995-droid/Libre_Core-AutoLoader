@@ -1,0 +1,11 @@
+{
+  "classification": "post-run audit of retry16 raw serial bytes; no guest input",
+  "raw_serial_bytes": 10040,
+  "raw_serial_sha256": "44ff3d95d59463fcaaaf190f013cd82d5e203ba245477a97d07dfb508c3f7a63",
+  "normalized_serial_bytes": 7487,
+  "normalized_serial_sha256": "da6b88878e182a575d84f867f4fb222a59a8f5ae5f0e8ee66e10a37f4ec2a02a",
+  "namespace_resource_manager_failure_count": 4,
+  "normal_startup_target_count": 0,
+  "emergency_or_fatal_terminal_marker_count": 0,
+  "method": "Decode UTF-8 with replacement, remove ANSI single-character and CSI escape sequences using the retry14 audit regex, then count literal systemd failure/target markers; preserve raw serial unchanged."
+}

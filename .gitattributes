@@ -13,6 +13,8 @@
 /docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/*/hmp-transcript.txt -text whitespace=-blank-at-eol
 *.ppm binary
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/*.log binary
+/docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/*.log binary
+/docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/*.log binary
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/*.py whitespace=-blank-at-eof
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/protocol.txt whitespace=-blank-at-eof
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/*.sh whitespace=-blank-at-eof

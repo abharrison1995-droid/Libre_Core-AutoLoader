@@ -1545,3 +1545,23 @@ Native Linux startup/build gates remain open. The raw and normalized captures,
 audit, exact arguments, and checksums are in the [retry14 evidence
 bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md)
 and [native evidence index](evidence/native-arch-build-20261021/README.md).
+
+### Native Arch startup diagnostic follow-up — retries 15 and 16
+
+Retry15 stopped at a serial-PTY handshake failure: the helper did not capture
+the PTY announcement, the serial log was empty, and no guest input or query
+was sent. QMP stopped QEMU after 32.513 seconds; QEMU exited 0. This is a
+helper failure and does not establish guest startup state.
+
+Retry16 merged QEMU stdout/stderr and captured the PTY announcement. Four
+Namespace Resource Manager failure lines appeared, first at 267.281 seconds.
+The 600-second cap expired without a stable post-failure shell prompt; no
+query or other guest input was sent. QMP quit succeeded and QEMU exited 0
+after 612.783 seconds including teardown. The cause remains unknown. For both
+attempts, before/after hashes for the ISO, kernel, initramfs, and read-only
+source matched; neither attempt used a network or passthrough device. No
+normal live boot, native test suite, rootless preflight, current-source build,
+or product ISO passed, and no hardware was accessed. The exact captures,
+results, protocols, and per-bundle hashes are in the [retry15 bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/README.md),
+[retry16 bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/README.md),
+and [native evidence index](evidence/native-arch-build-20261021/README.md).

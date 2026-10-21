@@ -40,16 +40,24 @@ current native targeted mypy attempt raised an internal error. Top-level CLI
 help and `build-usb --help` now pass; the latter passed after correcting the
 extracted scratch tree's ownership. Four current-source product build attempts
 did not produce an ISO: the last advanced to the mkinitcpio keyboard hook and
-was stopped before completing an initramfs. Subsequent startup retries 3–14
+was stopped before completing an initramfs. Subsequent startup retries 3–16
 were diagnostics rather than native build/test gates and also produced no
 ISO. Retry13 reached only a systemd debug shell; read-only `id` and `lsblk`
 showed root and the expected ISO/workspace/results/read-only-source devices.
 At that query snapshot, 88 jobs remained pending around `systemd-nsresourced`
 and tmpfiles; later the transcript recorded the failure `[FAILED] Failed to start Namespace Resource Manager` (cause not established). The ISO hash was
-unchanged. No normal live boot or rootless preflight passed. See the
+unchanged. No normal live boot or rootless preflight passed. Retry15 was a
+helper/PTY handshake failure with empty serial capture and no guest input.
+Retry16 captured serial output and four Namespace Resource Manager failure
+lines but timed out at 600 seconds without a stable post-failure prompt; no
+query or other guest input was sent. Input hashes for the ISO, kernel,
+initramfs, and source matched before and after both attempts. These diagnostics
+establish neither normal boot nor root cause. See the
 [current-source native Arch build evidence](evidence/native-arch-build-20261021/README.md),
 [retry13 transcript/result](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
-and [retry14 observation bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
+the [retry14 observation bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md),
+[retry15 PTY failure](evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/README.md),
+and [retry16 unresolved diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/README.md).
 Retry14 ran for 600.376 seconds with no guest input. The live stop-marker scan
 did not strip ANSI escapes; a separate post-run normalized audit found four
 Namespace Resource Manager failures, zero normal startup target markers, and

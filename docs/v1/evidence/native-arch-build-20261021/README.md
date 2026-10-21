@@ -95,6 +95,38 @@ initramfs, and source image. No native tests, rootless preflight, current-source
 build, product ISO, or hardware workflow ran. The detailed captures and hashes
 are in the [retry14 observation bundle](boot-diagnostic-retry14-observation-only/README.md).
 
+## Serial PTY handshake attempt (retry15)
+
+Retry15 used the verified generic Arch ISO, kernel/initramfs, read-only source,
+fresh workspace/results overlays, no NIC, and QEMU 10.2.1 TCG multi-thread
+(4 vCPUs, 6144 MiB). The helper did not discover/open the serial PTY within 20
+seconds and QMP stopped QEMU; it exited 0 after 32.513 seconds. Serial capture
+was empty, no guest input or query was sent, and the helper's separate
+stdout/stderr handling missed the PTY announcement. This is a helper/PTY
+handshake failure, not evidence that the guest booted or failed to boot.
+Before/after hashes match for ISO, kernel, initramfs, and source. No native
+tests, preflight, build, product ISO, or hardware action ran. See the
+[retry15 bundle](boot-diagnostic-retry15-pty-failure/README.md).
+
+## Serial PTY and service diagnostic (retry16)
+
+Retry16 merged QEMU stdout/stderr and captured the serial PTY announcement.
+It used the same generic ISO/kernel/initramfs and read-only inputs, fresh
+workspace/results overlays, no NIC, and QEMU 10.2.1 TCG multi-thread (4 vCPUs,
+6144 MiB). Four Namespace Resource Manager failure lines appeared in the
+normalized serial output, first at 267.281 seconds. At the 600-second cap, no
+stable post-failure shell prompt was recognized; `prompt_offset` remained
+zero, the query list was empty, and no guest input was sent. QMP quit
+succeeded; QEMU exited 0 after 612.783 seconds including teardown. The cause
+is unknown. Before/after hashes match for ISO, kernel, initramfs, and source.
+No normal boot/login, native tests, rootless preflight, current-source build,
+product ISO, or hardware action occurred. A post-run scan of the retained raw
+serial counted four service failures, zero normal startup target markers, and
+zero emergency/fatal markers; it records raw/normalized byte counts, hashes,
+and the ANSI-stripping method. See the [post-run scan](boot-diagnostic-retry16-service-timeout/postrun-scan.json)
+and the
+[retry16 bundle](boot-diagnostic-retry16-service-timeout/README.md).
+
 ## Captures
 
 - `native-build-usb-help.log` — successful current-source command help.
@@ -116,6 +148,11 @@ are in the [retry14 observation bundle](boot-diagnostic-retry14-observation-only
 - `boot-diagnostic-retry14-observation-only/` — bounded post-failure generic
   ISO observation, raw and normalized serial, post-run marker audit, exact
   arguments and input hash records; see its `SHA256SUMS`.
+- `boot-diagnostic-retry15-pty-failure/` — serial PTY handshake failure with
+  empty capture/input logs and unchanged input hashes; see its `SHA256SUMS`.
+- `boot-diagnostic-retry16-service-timeout/` — captured serial/QEMU output,
+  post-run ANSI scan and marker counts, no stable prompt/query/input, and
+  unchanged input hashes; see its `SHA256SUMS`.
 - `SHA256SUMS` — hashes for the top-level captured files and this README;
   each retry directory also carries its own manifest.
 
