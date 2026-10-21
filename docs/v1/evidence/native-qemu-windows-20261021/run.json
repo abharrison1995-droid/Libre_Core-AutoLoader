@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-21",
+  "qemu": {
+    "version": "11.1.2",
+    "executable": "C:/msys64/ucrt64/bin/qemu-system-x86_64.exe",
+    "sha256": "A812B50865FFCC7DDD43F9C33E9BB1ED7B3501C1F847EE99EDE8D4B4A4A93742",
+    "accelerators_reported": [
+      "tcg",
+      "whpx"
+    ]
+  },
+  "iso": {
+    "path": "/opt/librecore-autoloader-v1-vm/iso-boot/archlinux-2026.10.01-x86_64.iso",
+    "sha256_post_run_and_previous_record": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+    "per_attempt_pre_run_hash_captured": false,
+    "attachment": "QEMU -cdrom, read-only"
+  },
+  "guest_safety": {
+    "network": "none",
+    "writable_disk": "none",
+    "usb": "none",
+    "source_share": "none",
+    "physical_passthrough": "none",
+    "guest_command_run": false
+  },
+  "attempts": [
+    {
+      "accelerator": "whpx",
+      "machine": "q35",
+      "vcpus": 2,
+      "memory_mib": 4096,
+      "observation_seconds_after_qmp_connection": 50,
+      "qmp_status": "running",
+      "observation": "BIOS Syslinux menu and kernel/initramfs load followed by Linux panic: No working init found",
+      "shutdown": "host-requested QMP quit"
+    },
+    {
+      "accelerator": "tcg",
+      "machine": "q35",
+      "vcpus": 2,
+      "memory_mib": 4096,
+      "observation_seconds_after_qmp_connection": 90,
+      "qmp_status": "running",
+      "observation": "EDD probe completed; VGA showed virtio/vtdx: TDX not supported by the host platform; no shell appeared",
+      "shutdown": "host-requested QMP quit"
+    },
+    {
+      "accelerator": "whpx",
+      "machine": "q35",
+      "vcpus": 2,
+      "memory_mib": 4096,
+      "observation_seconds_after_qmp_connection": 20,
+      "qmp_status": "running",
+      "kernel_args_append": "init=/bin/sh",
+      "boot_line_input": "Syslinux Tab; QMP send-key appended init=/bin/sh; Enter",
+      "observation": "EDD probe completed; screen showed devtmpfs unable to create devtmpfs -1 and TDX-not-supported message; no shell",
+      "shutdown": "host-requested QMP quit"
+    },
+    {
+      "accelerator": "whpx",
+      "machine": "pc",
+      "cpu": "qemu64",
+      "vcpus": 2,
+      "memory_mib": 4096,
+      "iso_source": "approved ext4 workspace via WSL UNC",
+      "observation_seconds_after_qmp_connection": 50,
+      "qmp_status": "running",
+      "observation": "Arch boot splash remained visible; serial log ended while loading initramfs; no shell",
+      "shutdown": "host-requested QMP quit"
+    },
+    {
+      "accelerator": "whpx",
+      "machine": "pc",
+      "cpu": "qemu64",
+      "vcpus": 2,
+      "memory_mib": 4096,
+      "iso_source": "local C:/q copy, SHA-256 matched preserved ISO",
+      "observation_seconds_after_qmp_connection": 90,
+      "qmp_status": "running",
+      "observation": "Arch boot splash remained visible; no shell or guest command observed",
+      "shutdown": "host-requested QMP quit"
+    }
+  ],
+  "acceptance": {
+    "native_linux_guest": "not passed",
+    "native_build": "not run",
+    "product_iso": "not built",
+    "live_usb_boot": "not passed",
+    "hardware_workflows": "not run"
+  },
+  "local_iso_copy": {
+    "path": "C:/q/archlinux-2026.10.01-local.iso",
+    "sha256": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+    "included_in_evidence_bundle": false
+  }
+}

@@ -1,0 +1,3 @@
+No errors were found on the image.
+311/655360 = 0.05% allocated, 36.98% fragmented, 0.00% compressed clusters
+Image end offset: 20774912

@@ -119,3 +119,119 @@ legacy `calculate_entropy` helper in `backup.py` is not used by the current
 degenerate-dump check and its arithmetic branches are lower priority. No
 remaining branch is claimed unreachable. The missed branches remain open for
 review; this report makes no claim that the 85% target or hardware gates pass.
+
+## Earlier fixed-denominator report — 2026-10-17
+
+The latest coverage database retains the earlier 14-module run and targeted
+test appends, including the final existing-journal-before-first-persist test.
+The fresh 14-module run passed **359 tests and skipped 1** in **987.81
+seconds**; the journal test was then appended separately (**1 passed**). The
+JSON export is [`coverage-safety-journal-followup-20261017.json`](coverage-safety-journal-followup-20261017.json).
+This is an aggregated diagnostic report, not a single isolated test command.
+
+The frozen critical denominator is still exactly the six production files
+`autoloader/flasher/backup.py`, `autoloader/flasher/backup_service.py`,
+`autoloader/workflow/compatibility.py`, `autoloader/workflow/engine.py`,
+`autoloader/workflow/authorization.py`, and
+`autoloader/workflow/journal.py`:
+
+| Critical source file | Covered branches | Branches | Rate |
+|---|---:|---:|---:|
+| `autoloader/flasher/backup.py` | 16 | 26 | 61.5% |
+| `autoloader/flasher/backup_service.py` | 139 | 194 | 71.6% |
+| `autoloader/workflow/compatibility.py` | 221 | 262 | 84.4% |
+| `autoloader/workflow/engine.py` | 22 | 28 | 78.6% |
+| `autoloader/workflow/authorization.py` | 35 | 42 | 83.3% |
+| `autoloader/workflow/journal.py` | 96 | 126 | 76.2% |
+| **Frozen critical total** | **529** | **678** | **78.0%** |
+
+The 85% target requires at least 577 covered branches and remains open.
+The latest report records 1,361/2,094 branches (65.0%) across all measured
+files and 80.5% statement coverage. Separate rates are
+`write_approval.py` 186/334 (55.7%), `write_service.py` 93/150 (62.0%), and
+`post_reboot.py` 142/244 (58.2%). These are not part of the frozen six-file
+denominator.
+
+The added safety cases cover backup manifest/reopen mutations, authorization
+revalidation, workflow journal tampering and initial-persist collision, and
+compatibility/topology failures. The backup manifest-chain corruption case
+performs a prior probe but no flash read. The hardlink-alias test is subject
+to platform/permission limits; any skip remains unpassed. Programmer and
+topology tests exercise the validator directly and do not alone prove zero
+writer calls; separate write-service tests cover operation routing. No
+missed branch is declared unreachable without proof. Known lower-priority
+legacy entropy arithmetic and OS-specific durability/ownership behavior are
+identified, while remaining safety-relevant uncovered arcs stay open.
+
+The full current-source suites after the final assertion cleanup passed
+**816 tests, 63 skipped** on Windows in **860.18 seconds**, and **875 tests,
+4 skipped** on Ubuntu 26.04 WSL in **1,099.02 seconds**. The Windows JUnit is
+[`windows-safety-coverage-final.xml`](../software-regression-20261017/windows-safety-coverage-final.xml),
+SHA-256 `89A4D47283023192F7DD7014BE88672EF1650E9DE9196F6705BE7E3D74CDBB22`;
+the Ubuntu JUnit is
+[`ubuntu-safety-coverage-final.xml`](../software-regression-20261017/ubuntu-safety-coverage-final.xml),
+SHA-256 `F3ADC49C06932C002D99599F8F1E3E307BA75E55C6F087793C52891D92FF45F4`.
+Ubuntu's four skips are two unvalidated trusted-Arch-pacman-ownership checks,
+one Windows-specific host contract, and one Windows-specific durability
+policy. Windows skips include POSIX durability, process, ownership and
+symlink semantics; Linux namespace/device/pacman checks; and one account-
+specific symlink privilege limitation (`WinError 1314`). Skips remain
+unpassed. WSL and Windows software results do not establish native Linux,
+VM, ISO, ROM, hardware, or firmware-write validation.
+
+## Write-service crash/replay follow-up — 2026-10-17
+
+Two fake-only write-service regressions were added after SOL identified
+terminal-journal durability and process-loss replay as release-blocking test
+gaps. The terminal-append test injects a directory-sync failure after the
+durable `WRITE_STARTED` entry for uncertain, failed, and verified outcomes.
+Each case reports `UNCERTAIN`, records one writer invocation, and rejects a
+reopened service attempt. The verified case necessarily performs its one
+read-back before attempting `WRITE_VERIFIED`; the failed and uncertain cases
+perform none. A second test raises a simulated process-loss exception after
+the writer boundary is entered and before it returns, reconstructs the
+service and approval ledger from disk, and verifies the unresolved
+`WRITE_STARTED` checkpoint cannot be resumed or replayed. These tests use
+fake transports and never call a physical writer.
+
+Focused Windows command: `pytest -q tests/test_phase10b_write_service.py -k
+'terminal_journal_directory_sync_failure_never_retries or
+crash_after_durable_write_started_cannot_replay_after_reopen'`; result:
+**4 passed, 46 deselected** in **48.63s**. Ubuntu 26.04 WSL ran the same
+selection and passed **4**, deselected **46**, in **60.18s**. The accumulated
+coverage append ran the same selection and passed **4** in **75.60s**.
+
+The resulting accumulated JSON export is
+[`coverage-safety-review7-20261017.json`](coverage-safety-review7-20261017.json),
+SHA-256 `BDA3DE0C5ADAF28B5E6905A3687B4040A5BA33A72042FF926C5394A6C35EC94F`.
+It retains **577/678 (85.1%)** on the fixed six-file critical denominator;
+the write-service and separately measured modules remain outside that
+denominator. The coordinated full-suite reruns are recorded below.
+
+The 101 missed critical-set branches are not claimed unreachable. They group
+into (a) platform-specific filesystem, mount, and descriptor-cleanup paths;
+(b) additional malformed-input and alternative-rejection branches in
+compatibility, backup manifests, and journal reopen/persistence; and (c)
+lower-priority helper/error alternatives such as legacy entropy arithmetic
+and optional cleanup failures. The still-uncovered journal/backup integrity
+cases remain open for review; reaching the aggregate threshold is not a claim
+that every safety path is tested. No hardware or VM/ISO/ROM result is implied.
+
+## Final full-suite confirmation — 2026-10-17
+
+The final Windows run passed **876 tests and skipped 63** (939 collected;
+934.76s; exit 0). Its JUnit report is
+[`windows-safety-crash-replay-final-pass.xml`](../software-regression-20261017/windows-safety-crash-replay-final-pass.xml),
+SHA-256 `6522F8CCEF1D416574DA88D1430AB35E776C39FDFA6721B3B36CE1008DE70798`.
+The final Ubuntu 26.04 WSL run passed **935 tests and skipped 4** (939
+collected; 1221.90s; exit 0). Its JUnit report is
+[`ubuntu-safety-crash-replay-final.xml`](../software-regression-20261017/ubuntu-safety-crash-replay-final.xml),
+SHA-256 `CD6D7CBABF79BC9417C75C5339351C55C203A6BF0F2BE31A4D220E3AF94EAAE4`.
+Ubuntu's skips include two unvalidated Arch pacman-ownership checks and two
+Windows-specific checks. All skipped tests remain unpassed.
+
+The final accumulated report remains **577/678 branches (85.1%)** on the
+fixed six-file critical denominator. Full suites and coverage are software
+evidence only; Ubuntu is WSL, not native Linux. Native Linux/VM, ISO, ROM,
+Live USB boot, physical write/read-back, recovery, and hardware acceptance
+remain open.

@@ -1,0 +1,96 @@
+Host acceleration recheck — 2026-10-20
+
+Read-only host inventory:
+- Windows: Microsoft Windows 10 IoT Enterprise LTSC, build 19044.7807.
+- WSL: 3.0.3.0, Linux kernel 6.18.54.1-microsoft-standard-WSL2.
+- Installed distributions: Ubuntu and Arch Linux, both WSL version 2.
+- systeminfo: “A hypervisor has been detected.”
+- WMI still returned VirtualizationFirmwareEnabled=False and
+  SecondLevelAddressTranslationExtensions=False for Intel Core i3-3110M.
+- Intel's model specification lists Intel VT-x and VT-x with EPT as Yes:
+  https://www.intel.com/content/www/us/en/products/sku/65700/intel-core-i33110m-processor-3m-cache-2-40-ghz/specifications.html
+
+WSL KVM checks:
+- Before WSL shutdown, both Ubuntu and Arch exposed a /dev/kvm character node.
+- A diskless QEMU 10.2.1 command using
+  `-machine none,accel=kvm -nodefaults -display none -qmp stdio` failed with
+  “Could not access KVM kernel module: No such device”.
+- A temporary `%USERPROFILE%\.wslconfig` with
+  `[wsl2]` and `nestedVirtualization=true` was created, then WSL was shut down
+  and restarted. WSL warned that nested virtualization is unsupported on this
+  machine. `modprobe kvm_intel` failed with “VMX not supported by CPU 0”; after
+  restart /dev/kvm was absent. The temporary config was removed and WSL was
+  shut down again to restore the previous configuration.
+- Matching Windows 10 lifted-WSL report:
+  https://github.com/microsoft/WSL/issues/40735
+- WSL setting reference:
+  https://learn.microsoft.com/en-us/windows/wsl/wsl-config
+
+Windows Hypervisor Platform check:
+- `C:\Windows\System32\WinHvPlatform.dll` was present (135,168 bytes).
+- A read-only P/Invoke call to WHvGetCapability code 0 returned HRESULT 0,
+  written size 4, and HypervisorPresent=1.
+- QEMU's documented WHPX backend requires the Windows Hypervisor Platform
+  feature: https://www.qemu.org/docs/master/system/whpx.html
+- Feature state was not read. DISM returned error 740 (elevation required).
+  `Get-VM` was unavailable and the vmms service was absent; vmcompute was
+  running. No Windows feature was changed.
+
+QEMU Windows package check:
+- QEMU's download page links the Windows binaries:
+  https://www.qemu.org/download/
+- Downloaded QEMU 11.1.0 Windows installer: 206,615,928 bytes.
+- SHA-512 matched the published .sha512 sidecar:
+  5bcf9eed634e8575a37b74f445af41a2fe4106da512d0c30c368301d4c105037fdfab40a5287367a28a957624cddebbc8c07e16c88ab6634f554cdf3d16bf543
+- Authenticode status was UnknownError; signer was Universität Mannheim. The
+  QEMU download page says newer installer signing certificates are expired.
+- PE manifest requests requireAdministrator. The installer was not run.
+- 7z identified an NSIS archive with 1,255,949,848 bytes of uncompressed
+  contents. These user-space files could be extracted without running the
+  installer after the approved VM workspace is reattached.
+
+Approved partition reattachment:
+- The 254.9-GB partition is Windows Disk 1, Partition 2. It is the partition
+  already approved for `/opt/librecore-autoloader-v1-vm`.
+- The attach attempt failed before mounting with
+  `WSL_E_ELEVATION_NEEDED_TO_MOUNT_DISK` (0x80040315).
+- A later `Start-Process -Verb RunAs` launch of `wsl.exe` returned
+  “operation was canceled by the user” before an elevated WSL process started.
+  The partition remains detached; no mount occurred.
+- No partition was mounted, formatted, or written by this recheck.
+  Reattachment from an elevated PowerShell is the remaining user action:
+  `wsl --mount \\.\PHYSICALDRIVE1 --partition 2 --type ext4`
+- This command only attaches the existing ext4 partition to WSL; it does not
+  format it. Subsequent workspace files remain confined to the authorized
+  `/opt/librecore-autoloader-v1-vm` directory.
+
+Windows QEMU direct-kernel WHPX diagnostic:
+- The already-installed MSYS2 QEMU 11.1.2 executable was used; the separately
+  downloaded administrator-requiring installer was not run.
+- Two bounded tests booted the verified Arch ISO's extracted kernel and
+  initramfs. The ISO was attached read-only; there was no writable guest disk,
+  network, USB, or physical-device passthrough.
+- `q35,pic=off` and `q35` with its default PIC both reached the kernel, then
+  panicked at about 8.7 and 9.4 seconds with a devtmpfs failure, no initial
+  console, and `Failed to execute /init (error -1)`. QMP capability/status and
+  quit commands worked; the harness stopped each guest. Neither reached a
+  shell, and no root cause is assigned.
+- Read-only initramfs inspection found executable `/init`, `/usr/bin/ash` to
+  BusyBox, BusyBox itself, and `/lib64 -> usr/lib` plus the dynamic loader.
+  This verifies those archive entries only; it does not show why guest init
+  execution failed.
+- Exact argument manifests, serial captures, stderr logs, and archive
+  inspection details are retained in this folder and covered by `SHA256SUMS`.
+
+Windows QEMU TCG comparison:
+- A 45-second diskless direct-kernel run with the same read-only ISO reached
+  early Arch `udev`, `archiso_pxe_nbd`, and `Triggering uevents...` hooks. It
+  did not panic, but did not reach a shell or verified guest command before
+  QMP `quit`; QEMU exited 0 after the harness stop.
+- The exact argv, serial and stderr are retained as
+  `archiso-tcg-direct-retry1-20261020-*`. An earlier command-line syntax error
+  is retained separately and is not a guest run.
+
+No VM guest login, product ISO, firmware ROM, Linux build, application boot,
+or hardware workflow was completed. No physical-device passthrough or
+firmware operation was attempted.

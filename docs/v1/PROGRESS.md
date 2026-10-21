@@ -78,16 +78,16 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 
 ## Phase 04 — Pinned firmware artifact engine
 
-**Status: SOFTWARE COMPLETE — SOL ACCEPT; UPSTREAM LINUX BUILD EVIDENCE PENDING**
+**Status: SOFTWARE COMPLETE — SOL ACCEPT; X200 UPSTREAM DIAGNOSTIC PASSED; ARTIFACTENGINE COMPLETE/DEVICE-BOUND BUILD AND X220 BUILD PENDING**
 
 - Scope implemented: `autoloader/rom_builder/artifact_engine.py` defines immutable source pins, exact allowlisted recipes, build requests, results, source audits, command logs, artifact records, checksummed manifests and reproducibility status. Coreboot, Libreboot and legacy Canoeboot builders are fail-closed adapters; the fabricated moving-release prebuilt catalog, automatic download and blob-injection paths are removed.
-- Pinned sources: Libreboot/lbmk 26.01 commit `1cf3181537b8d1fe1df0e91681f700850a3d9bf6`, tree `0cb9451c6e2e265d3aa5b7e371752d45cab98f53`; Coreboot 26.09 commit `8b0e34f90e08547cf19e550a43ed72f69c39d6ed`, tree `1cb70fc2c4a0229fa17991b19cf6916b71f75ba7`; lbmk's nested X200 Coreboot source commit `fcd716d9a272461da1fdbaf1c048eb5a52c7896b`, tree `e16fe240567cb3fa08619c6a23e51c4af142f6ac`; 1vyrain handoff source commit `a3427b34102f8f9887acf65e23d7fd5900fe1d40`, tree `2298fa23e74c7112b7227d8354a0e51404fda4da`.
-- Recipe allowlist: T430 returns an official-source 1vyrain human handoff only; it does not download, execute or bundle upstream content. X200 selects only the pinned regular-X200 `x200_4mb` or `x200_8mb` lbmk target and derives the canonical SeaBIOS `libgfxinit_corebootfb` file from pinned `include/rom.sh`. The pinned target emits 31 distinct ROM variants across the two init/display configs and 14 GRUB keymaps; the engine requires the exact inventory and records every variant's source path, size and digest while exposing only the recipe-selected SeaBIOS artifact. X200 and X220 selected artifacts must pass strict `cbfstool -k` inspection and contain exactly one `fallback/payload` entry of type `payload`; each manifest records the executable digest, parser-source hashes, source revision/tree, region and full CBFS inventory. X200's tool comes from lbmk's exact nested Coreboot commit/tree, and `cbfs_image.c`/`cbfstool.c` parser sources are hash checked. X220 requires a compatible plan and complete matching Phase 03 original backup on separate persistent destinations; exact descriptor/ME/GbE slices are derived from the two equal full-chip reads, original and generated descriptor maps are checked against the observed map, and every non-BIOS region in the generated full-chip image must byte-match the original. No X220 full-chip artifact can pass without this provenance.
+- Pinned sources: Libreboot/lbmk 26.01 commit `1cf3181537b8d1fe1df0e91681f700850a3d9bf6`, tree `0cb9451c6e2e265d3aa5b7e371752d45cab98f53`; Coreboot 26.09 commit `8b0e34f90e08547cf19e550a43ed72f69c39d6ed`, tree `1cb70fc2c4a0229fa17991b19cf6916b71f75ba7`; lbmk's nested X200 Coreboot pinned base commit `fcd716d9a272461da1fdbaf1c048eb5a52c7896b`, tree `e16fe240567cb3fa08619c6a23e51c4af142f6ac`, with patched resulting tree `627cbbe4f6e7cba7ff22524b82072f1d7b34321c` and operation-generated revision recorded per build; 1vyrain handoff source commit `a3427b34102f8f9887acf65e23d7fd5900fe1d40`, tree `2298fa23e74c7112b7227d8354a0e51404fda4da`.
+- Recipe allowlist: T430 returns an official-source 1vyrain human handoff only; it does not download, execute or bundle upstream content. X200 selects only the pinned regular-X200 `x200_4mb` or `x200_8mb` lbmk target and derives the canonical SeaBIOS `libgfxinit_corebootfb` file from pinned `include/rom.sh`. The pinned target emits 31 distinct ROM variants across the two init/display configs and 14 GRUB keymaps; the engine requires the exact inventory and records every variant's source path, size and digest while exposing only the recipe-selected SeaBIOS artifact. X200 and X220 selected artifacts must pass strict `cbfstool -k` inspection. X200 requires exactly one `fallback/payload` entry of type `simple elf`; X220 requires type `payload`. Each manifest records the executable digest, parser-source hashes, source revision/tree, region and full CBFS inventory. X200's tool comes from lbmk's nested Coreboot source; `cbfs_image.c`/`cbfstool.c` parser sources are hash checked. X220 requires a compatible plan and complete matching Phase 03 original backup on separate persistent destinations; exact descriptor/ME/GbE slices are derived from the two equal full-chip reads, original and generated descriptor maps are checked against the observed map, and every non-BIOS region in the generated full-chip image must byte-match the original. No X220 full-chip artifact can pass without this provenance.
 - Validation: source origin, full commit SHA, tree SHA, clean status and pinned-file hashes are checked; missing, extra, colliding, symlinked or wrong-size X200 outputs fail closed, with no implicit fallback. X200 and X220 resolved Kconfig, exact image size, selected artifact-copy hash and CBFS payload inventory are checked. X220 pre-build checks use artifact-independent `BuildIntentEvidence`; only after generated output passes CBFS, IFD map and non-BIOS preservation checks is the actual artifact digest bound into the finalized operation plan. X220 also records the pinned ifdtool executable identity, original-backup manifests/checksums and preserved region list. Output roots must be outside the application tree. Commands run with a reduced build environment and logs are checksummed. Manifests record source/config/blob/toolchain/command/artifact hashes, sizes, regions, backup provenance, CBFS inventory, failure and reproducibility status.
-- Build environment update: a native Windows build request still returns `LINUX_BUILD_ENV_REQUIRED`. Ubuntu 26.04 WSL is now installed and available. The pinned Libreboot checkout matches its release commit/tree, and its pinned dependency list was installed except for `g++-mipsel-linux-gnu`, which is not needed for the x86 X200 target. No Coreboot/Libreboot compilation was run and no firmware artifact was produced. Fake parser fixtures are not generated-ROM structural or upstream build evidence.
+- Build environment update: a native Windows build request still returns `LINUX_BUILD_ENV_REQUIRED`. Ubuntu 26.04 WSL is installed and available. The pinned Libreboot checkout matches its release commit/tree, and its pinned dependency list was installed except for `g++-mipsel-linux-gnu`, which is not needed for the x86 X200 target. At the original Phase 04 checkpoint, no Coreboot/Libreboot compilation had run. A later pinned X200 upstream diagnostic built 31 expected 4 MiB images, and a separate read-only validation passed pinned size and CBFS structural checks for all 31. These outputs did not produce an ArtifactEngine COMPLETE manifest or device-bound image. Fake parser fixtures remain separate from this upstream diagnostic evidence.
 - Software review and checks: SOL accepted implementation commit `dec5cf903c8c4d09b464f14a38d84207f24a523a` and corrective commit `7c5b14e270c34b4a9856dfbcafdec029be011c8e`. Final software gates: `tests/test_artifact_engine.py` — **25 passed**; full `python -m pytest -q` — **152 passed**; `mypy autoloader` — **no issues in 87 source files**; editable install, CLI help, and `git diff --check` passed. The corrected X220 `print -r COREBOOT -k` nonverbose parser accepts the pinned six-column table without an FMAP marker and rejects unexpected verbose rows. X220 build intent is validated before compilation, then the generated file's actual digest is bound into the finalized operation plan only after artifact validation. SOL acceptance covers the software implementation, not actual firmware builds or hardware.
-- Integration/build/hardware limitations: Phase 08 routes the artifact engine through explicit CLI/TUI workflow actions. Ubuntu 26.04 WSL is available, but no actual firmware compilation or generated-ROM CBFS output was obtained. No measured chip capacity/voltage, physical probe/read/backup/write/read-back, recovery, boot test, IVprep, or destructive media operation occurred. No artifact is flash-ready; all three hardware workflows remain **HARDWARE PENDING**. Phase 10B later added a guarded X200/X220 writer, but the native Windows host's durable directory-fsync gate blocks invoking it.
-- Later Windows regression evidence: `C:\Users\Alex\AppData\Local\Temp\librecore-autoloader-v1-baseline\Scripts\python.exe -m pytest -q` passed **388 tests, 8 skipped in 674.32 seconds** before the isolated Git identity correction. SOL accepted the correction, which revalidates the operation-scoped identity after postprocessing and before any COMPLETE manifest is published. Its focused artifact/X200/X220 suite passed **77 tests with 1 skipped**; mypy is clean on 102 source files. The post-correction full Windows suite passed **395 tests, 9 skipped in 877.46 seconds**, exit 0. The focused fixtures use synthetic outputs and fake command runners. No actual upstream ROM build was attempted.
+- Integration/build/hardware limitations: Phase 08 routes the artifact engine through explicit CLI/TUI workflow actions. Ubuntu 26.04 WSL produced the X200 upstream diagnostic described above, but no ArtifactEngine COMPLETE manifest, device-bound image, or X220 Coreboot ROM has been produced. No measured chip capacity/voltage, physical probe/read/backup/write/read-back, recovery, boot test, IVprep, or destructive media operation occurred. No artifact is flash-ready; all three hardware workflows remain **HARDWARE PENDING**. Phase 10B later added a guarded X200/X220 writer, but the native Windows host's durable directory-fsync gate blocks invoking it.
+- Earlier Windows regression evidence: the baseline checkout's `python -m pytest -q` passed **388 tests, 8 skipped in 674.32 seconds** before the isolated Git identity correction. SOL accepted the correction, which revalidates the operation-scoped identity after postprocessing and before any COMPLETE manifest is published. Its focused artifact/X200/X220 suite passed **77 tests with 1 skipped**; mypy is clean on 102 source files. The post-correction full Windows suite passed **395 tests, 9 skipped in 877.46 seconds**, exit 0. The focused fixtures use synthetic outputs and fake command runners. The X200 upstream diagnostic ran later and is recorded separately below.
 
 ## Phase 05 — T430 1vyrain and IVprep handoff
 
@@ -106,7 +106,7 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 
 ## Phase 06 — X200 Libreboot workflow
 
-**Status: SOFTWARE COMPLETE — SOL ACCEPT; LINUX BUILD AND HARDWARE PENDING**
+**Status: SOFTWARE COMPLETE — SOL ACCEPT; X200 UPSTREAM DIAGNOSTIC PASSED; DEVICE-BOUND BUILDS AND HARDWARE PENDING**
 
 - SOL accepted the software scope after implementation commit `91ec91edaadba1e19dba4a15efc4dbe040680377` and CBFS acceptance correction `b06293ebba4d57c6809eb06e7ac636e96e2902d4`.
 - Tasks 06.01–06.02: `create_x200_build_intent` selects only the pinned `x200_4mb`/`x200_8mb` recipe from one observed 4/8 MiB chip. The shared validator requires exact regular-X200 DMI/MTM evidence, rejects Tablet/X200s/X200si and conflicting identities, and checks the external programmer, wiring, output and observed chip voltage at 3300 mV. This evaluates supplied observations; it does not detect hardware.
@@ -142,7 +142,7 @@ SOL accepted Phase 00 after the four review follow-ups were finalized in commit 
 - Worker visibility: an active Textual action keeps its screen mounted and blocks screen Back, the global `b` binding and `q` quit until its controller result is displayed. The regression holds a fake request in a worker, attempts all three exits, then confirms the result appears before navigation resumes.
 - Final software gates after the worker correction: `python -m pytest -q` — **276 passed in 167.44 seconds**; `mypy autoloader` — **Success: no issues found in 97 source files**; `python -m autoloader --help` — passed; `python -m autoloader prepare-workflow --help` — passed; `git diff --check` — passed. Tests use fake transports, fake artifact engines and synthetic workflow evidence. No hardware I/O or firmware build was run.
 - SOL formally accepted the Phase 08 software scope after its second review. SOL reviewed the reports; it did not execute the test suite. The final local software gates were 276 tests passed in 167.44 seconds, mypy clean on 97 source files, CLI and `prepare-workflow` help passed, and `git diff --check` passed. Implementation commits are `3c6da0c260eaae8f436532244ca824dafc5bdb9f` and `3f6a8a25b2b61dada49690a3bf71b8ae2da69d65`; documentation commit `c3956d20ccd3ab1550516464b09ebc526a05895c` records the implementation before the acceptance decision.
-- Remaining release gates: no pinned upstream Linux build or generated-ROM tool output was produced; no real-device probe, measured voltage, backup, firmware write, IVprep downgrade, media write, restore, post-write read-back, recovery operation or boot test occurred. T430, X200 and X220 remain **HARDWARE PENDING**. Phase 09 software is now accepted; actual Archiso build, QEMU boot and media validation remain pending.
+- Remaining release gates: the later pinned X200 upstream diagnostic built 31 expected images and passed read-only size/CBFS structural validation, but no ArtifactEngine COMPLETE or device-bound image exists; no X220 Coreboot ROM build has completed. No real-device probe, measured voltage, backup, firmware write, IVprep downgrade, media write, restore, post-write read-back, recovery operation or boot test occurred. T430, X200 and X220 remain **HARDWARE PENDING**. Phase 09 software is now accepted; actual Archiso build, QEMU boot and media validation remain pending.
 
 ## Phase 09 — Live USB, offline operation and packaging
 
@@ -207,7 +207,7 @@ At that earlier checkpoint after the accepted Git identity correction, the full 
 
 ## Full upstream source-pin audit (SOL accepted)
 
-The raw-byte audit found CRLF-derived pins across the ten enforced lbmk 26.01 source files and in the artifact engine's 1vyrain handoff descriptor. Pins now use exact upstream raw bytes; X220 pin corrections remain included. Nested lbmk-Coreboot parser pins and IVprep handoff pins were independently checked and already matched. Regression tests assert source-pin maps and recipe config/hash agreement. Full hash values and commit/tree provenance are recorded in [the Phase 04 artifact-engine audit](PHASE04_ARTIFACT_ENGINE.md). Focused audit-related tests pass: 76 passed, 1 skipped; Windows mypy is clean on 102 source files. SOL accepted the source-pin correction. This only corrects source identity metadata: no upstream build, hardware operation, media action, or firmware validation occurred.
+The raw-byte audit found CRLF-derived pins across the ten enforced lbmk 26.01 source files and in the artifact engine's 1vyrain handoff descriptor. Pins now use exact upstream raw bytes; X220 pin corrections remain included. Nested lbmk-Coreboot parser pins and IVprep handoff pins were independently checked and already matched. Regression tests assert source-pin maps and recipe config/hash agreement. Full hash values and commit/tree provenance are recorded in [the Phase 04 artifact-engine audit](PHASE04_ARTIFACT_ENGINE.md). Focused audit-related tests pass: 76 passed, 1 skipped; Windows mypy is clean on 102 source files. SOL accepted the source-pin correction. At that audit checkpoint this corrected source identity metadata only; no upstream build, hardware operation, media action, or firmware validation occurred then.
 
 ## Phase 04 X200 U-Boot compatibility follow-up — SOL accepted
 
@@ -472,7 +472,7 @@ The full Windows suite passed **601 tests, 18 skipped in 707.05 seconds**; Ubunt
 
 The full suites include the new fail-closed EC regression. The legacy `ThinkPadECManager` source download/build/flash/verification methods now raise `ECModError` as unavailable, patch reporting is empty, and tests assert zero subprocess/file-write calls and no changes to an existing arbitrary checkout. This quarantines an unsupported packaged API; it does not add an EC workflow or establish simulated hardware success.
 
-These are software checks, with Ubuntu and Arch results coming from WSL rather than native Linux. Native Linux and Archiso build validation, a successful Live USB BIOS/UEFI app/service boot, complete validated X200/X220 ROM builds, and all three physical hardware workflows remain pending. V1 is not release complete.
+These are software checks, with Ubuntu and Arch results coming from WSL rather than native Linux. A later pinned Libreboot 26.01 WSL diagnostic produced 31 X200 4-MiB variants, and separate validation-only size/CBFS checks accepted their structure; this did not create or accept an ArtifactEngine COMPLETE manifest or a device-bound X200 artifact. The device-bound X200 build-and-acceptance path, X220 build, native Linux and Archiso build validation, a successful Live USB BIOS/UEFI app/service boot, and all three physical hardware workflows remain pending. V1 is not release complete.
 
 ## Rootless Archiso host preflight checkpoint — 2026-10-16
 
@@ -804,6 +804,18 @@ evidence remains required. Status is **CONTRACT IMPLEMENTED;
 DEPLOYMENT/COMPATIBILITY UNVALIDATED**. Native Linux, ISO/boot, ROM, and all
 hardware gates remain open.
 
+SOL accepted a separate fail-closed execution guard: even if a no-build test
+injects a synthetic `SUPPORTED` launcher-preflight report, `execute_build`
+stops with `OFFLINE_ROOTLESS_BUILD_RUNNER_UNAVAILABLE` before source/work/
+output creation, package or build commands, or selection of the online runner.
+In production, earlier host or mount preflights may stop the operation first;
+if they pass, the absent launcher pin stops it with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`. This test-only
+synthetic report is not launcher or `pacstrap -N` compatibility evidence;
+offline build execution remains unavailable and unvalidated. This build-time
+guard is separate from the Live USB runtime network-profile changes below,
+which are also not ISO-boot validation.
+
 If later deployed, the launcher pin requires the exact root-owned setuid mode
 `04755`; every launcher parent directory must be root-owned and not writable
 by group or other. Its scratch parent must be a root-owned, non-link temporary
@@ -966,9 +978,12 @@ app/service boot, ROM artifacts and all hardware workflows remain pending.
 Verified the Windows QEMU 11.1.2 executable, pinned Arch ISO, snapshot lock,
 and package-list hashes. C: had 6.66 GiB free, leaving about 4.66 GiB above
 the requested 2 GiB reserve; peak storage use is unknown. Existing diagnostic
-QEMU PID 12540 remains attached to its old overlay; a prior HMP snapshot was
-paused, but a later read-only status response was not parseable, so current
-pause state is unconfirmed. The unknown 254.9 GB GPT Linux partition remains
+QEMU PID 12540 remains attached to its old overlay. A bounded read-only HMP
+`info status` probe on 2026-10-17 confirmed it is paused; the process
+commandline identifies an Arch ISO dated 2025-08-01 and the existing
+`arch-v4-build-overlay.qcow2`. No unpause, guest command, or VM storage change
+was made. This is not the pinned build environment. The unknown 254.9 GB GPT
+Linux partition remains
 untouched pending clarification. No new VM was created. Separate safe storage
 for new Arch and Ubuntu VMs must be identified before setup. This is only a
 read-only asset/storage preflight, not VM/build/ISO/ROM/hardware validation.
@@ -992,10 +1007,11 @@ VM setup, build, ISO, ROM, or hardware pass. Captures, hashes, and
 interpretation are in
 [`VM preflight evidence`](evidence/vm-preflight-20261017/README.md).
 
-Persistent VM/Archiso build storage remains unresolved: C: now has about 5.3
-GiB free, and the 254.9 GB Linux partition remains untouched pending user
-direction. A request is open asking whether that partition may be inspected
-read-only and used without formatting or changing existing files.
+The 2026-10-17 storage preflight above is historical. On 2026-10-20 the user
+authorized an isolated VM workspace on the 254.9-GB ext4 partition; the
+workspace now exists at `/opt/librecore-autoloader-v1-vm` in the Ubuntu WSL
+mount namespace. See the current boot result below. Storage authorization is
+resolved, but a usable guest, native build, and product ISO are not.
 
 ## Safety software coverage baseline — 2026-10-17
 
@@ -1022,3 +1038,453 @@ two Windows-specific checks. The two final assertion-only test strengthenings
 were rerun afterward: 2 passed on Windows and 2 passed on Ubuntu WSL. These
 results are software-only; WSL is not native Linux, and native ISO/build,
 VM/boot, ROM, and hardware gates remain open.
+
+### Earlier safety-test regression and coverage checkpoint — 2026-10-17
+
+After the final journal-test assertion cleanup, the full Windows suite passed
+**816 tests with 63 skipped** (879 collected; 860.18s), and Ubuntu 26.04 WSL
+passed **875 with 4 skipped** (879 collected; 1,099.02s), with no failures or
+errors. The final reports and exact commands are in the
+[`software-regression evidence`](evidence/software-regression-20261017/README.md).
+Windows skips remain unpassed and include POSIX durability/process/ownership/
+symlink behavior, Linux namespace/device/pacman checks, and one account-
+specific `WinError 1314` symlink limitation. Ubuntu's four skips include two
+unvalidated trusted-Arch-pacman ownership checks and two Windows-specific
+contracts.
+
+The refreshed coverage report measures the frozen six-file critical set at
+**529/678 branches (78.0%)**, still below the recommended 85% target (577
+branches). Backup, journal, authorization, write-service, and compatibility
+failure cases were added; no product code changed. The coverage report and
+per-file rates are in
+[`safety coverage evidence`](evidence/safety-coverage-20261017/README.md).
+Skipped tests remain unpassed. These software-only Windows/WSL results do not
+establish native Linux, VM, ISO, ROM, hardware, or firmware-write validation.
+
+### Focused safety coverage and write-service crash/replay checkpoint before full reruns — 2026-10-17
+
+The focused safety tests now measure **577/678 branches (85.1%)** across the
+fixed six-file critical denominator: compatibility, engine, authorization,
+journal, backup, and backup-service. The accumulated report also records
+1,410/2,094 branches across all instrumented files; separate write-approval,
+write-service, and post-reboot rates remain below this critical-set figure.
+No production code changed.
+
+Two fake-only write-service tests cover terminal journal directory-sync
+failure after durable `WRITE_STARTED` and simulated process loss before the
+writer returns. Both cases verify that approval is consumed and a reopened
+service cannot replay the request. The terminal failure cases each make one
+fake writer call; failed/uncertain outcomes make no read-back, while the
+verified outcome performs exactly its required read-back before the failed
+`WRITE_VERIFIED` sync. Windows passed **4 tests** (48.63s); Ubuntu 26.04 WSL
+passed **4 tests** (60.18s). The accumulated coverage append passed **4** in
+75.60s. Detailed commands, per-file rates, residual missed-branch categories,
+and report hashes are in [`safety coverage evidence`](evidence/safety-coverage-20261017/README.md).
+
+This coverage target is a software metric, not a release or hardware pass.
+At this checkpoint the full suites had not yet been rerun. Missed branches
+remain documented; none is declared unreachable. Hardware, VM, native Linux,
+ISO, ROM, firmware write/read-back, boot, and recovery gates remain open.
+
+### Final safety coverage and crash/replay regression — 2026-10-17
+
+After the fake-only write-service crash/replay tests were added, the corrected
+full Windows run passed **876 tests and skipped 63** (939 collected; 934.76s;
+exit 0). Ubuntu 26.04 WSL passed **935 and skipped 4** (939 collected;
+1221.90s; exit 0). Both runs had zero failures and errors. JUnit reports,
+commands, hashes and the first Windows temp-path setup failure are recorded in
+[`software-regression evidence`](evidence/software-regression-20261017/README.md).
+The corrected Windows run used a process-local temp root and a basetemp below
+it; the initial run is retained as a non-passing environment setup attempt.
+
+Ubuntu's four skips were two unvalidated trusted-Arch-pacman ownership checks,
+one Windows-specific production durability policy, and one Windows-specific
+host platform contract. The Arch ownership checks remain unvalidated. Windows
+skips remain unpassed and cover POSIX durability, ownership, process and
+symlink behavior, Linux namespace/device/package checks, unvalidated host-only
+checks, and one account-specific `WinError 1314` symlink limitation.
+
+The accumulated fixed six-file critical coverage remains **577/678 branches
+(85.1%)**, meeting the recommended meaningful-branch test target. It does not
+represent release acceptance or complete path coverage. These are software
+tests; Ubuntu is WSL, not native Linux. Native Linux/VM, ISO, ROM, Live USB
+boot, physical write/read-back, recovery, and hardware gates remain open. All
+skips remain unpassed.
+
+SOL's read-only audit found no new software blocker and accepted the
+write-service crash/replay coverage. The writer software review is complete;
+the 85% branch metric does not establish real POSIX directory-fsync behavior,
+flashrom execution against a physical device, physical read-back, or boot.
+Those physical and platform-specific validations remain open, along with the
+native Linux/VM, ISO, ROM, recovery, and hardware gates.
+
+## Full VM bring-up continuation — 2026-10-20
+
+The user selected a full VM and authorized using the 254.9-GB ext4 partition
+for its isolated workspace. The workspace is
+`/opt/librecore-autoloader-v1-vm`; the partition was not formatted and no
+pre-existing files were changed.
+
+The official Arch-boxes base image signature and SHA-256 were verified. A
+separate 40-GiB QCOW2 overlay was booted with QEMU 10.2.1 under TCG; the root
+filesystem mounted and systemd entered the installed Arch userspace, but the
+guest did not reach a verified login or SSH session. Device/service jobs
+remained pending and the serial getty timed out. The overlay passed
+`qemu-img check` with no errors and remains diagnostic scratch, not a clean
+build VM.
+
+The official Arch 2026.10.01 ISO was independently downloaded and verified
+against Arch's published PGP fingerprint and the computed SHA-256. A
+read-only, diskless QEMU TCG boot reached early initramfs `udev` hooks, but
+the captured screen still showed `Triggering uevents...` after 90 seconds;
+no shell or command execution was verified. The VM was stopped after 1:56
+elapsed. The screenshot, hashes, QEMU arguments, signature details, and
+explicit test boundary are recorded in
+[`VM bring-up evidence`](evidence/vm-bringup-20261020/README.md).
+
+Windows WMI reports `VirtualizationFirmwareEnabled: False` and
+`SecondLevelAddressTranslationExtensions: False` for its Intel Core i3-3110M
+CPU. The original guest boots used QEMU TCG. A later read-only probe found a
+`/dev/kvm` node but no usable KVM interface; details are in the host
+acceleration recheck below. A `Get-WindowsOptionalFeature` query returned no
+feature state because it required elevation. No firmware settings, Windows
+features, full Windows restart, hardware, or recovery action was changed. The
+native Linux build and product ISO gates remain open. All three physical
+workflows remain **HARDWARE PENDING**.
+
+## Current-source regression and flashrom trust boundary — 2026-10-20
+
+The final full suite on current source passed on Windows: **890 passed, 63
+skipped** (953 collected; 562.40 seconds; exit 0), and Ubuntu 26.04 WSL:
+**949 passed, 4 skipped** (953 collected; 536.37 seconds; exit 0). Neither
+had failures or errors. Every skip remains unpassed; Windows skips cover
+POSIX durability, process/ownership/symlink semantics, Linux namespace/device/
+package paths, host-specific cases, and a symlink privilege limitation.
+Ubuntu skips two trusted Arch pacman-owner cases and two Windows-only
+contracts. Both Win32-targeted and Ubuntu mypy passed on 109 source files.
+Commands, report hashes, skip details and limits are recorded in
+[`software regression evidence`](evidence/software-regression-20261020/README.md).
+
+Flashrom executable discovery now fails closed unless a canonical executable
+has protected root ownership/modes, exact trusted package-manager ownership,
+and a matching no-follow fingerprint/digest. The executable and package
+provenance are rechecked around version, probe, and read calls; subprocesses
+receive a fixed environment, root cwd, no shell, closed file descriptors, and
+no stdin. Its digest and owner are bound into backup evidence and write
+approval/journal identity. SOL reviewed this software slice and accepted it.
+New isolation regressions passed on Windows and Ubuntu WSL; the full suites
+above include the changes. The Ubuntu WSL smoke validated the production
+package-owner resolver against canonical `/usr/bin/gnutrue` and its Debian
+package record. `flashrom` and `flashprog` are absent there, so this was not a
+flashrom or device integration test. A real installed flashrom package,
+native-Linux/POSIX operation and physical SPI use remain pending.
+
+The first WSL full run on the ext4 test workspace is retained separately with
+one failed test assumption: that a persistent `tmp_path` was transient. The
+storage-preflight test was corrected to mock unknown/transient classifications
+deterministically; its focused test passed on both hosts and the final full
+WSL suite is clean. The original report is not counted as a pass. The
+interrupted earlier run in `/tmp` produced no report and is not a test result.
+
+## VM host acceleration recheck — 2026-10-20
+
+Current host inventory: Windows 10 IoT Enterprise LTSC build 19044.7807,
+WSL 3.0.3.0, Linux kernel 6.18.54.1-microsoft-standard-WSL2. Intel's
+specification confirms the i3-3110M supports VT-x/EPT, but neither Ubuntu nor
+Arch WSL exposes usable nested VMX. Before WSL restart, `/dev/kvm` existed but
+QEMU's diskless `accel=kvm` handshake failed. After explicitly setting the
+documented WSL `nestedVirtualization=true` option and restarting WSL,
+`modprobe kvm_intel` reported `VMX not supported by CPU 0`; WSL warned nested
+virtualization is unsupported. The temporary `.wslconfig` was removed.
+
+Windows `WinHvPlatform.dll` is present and its read-only
+`WHvGetCapability(HypervisorPresent)` query succeeds. A diskless Windows QEMU
+11.1.2 WHPX direct-kernel diagnostic was then run twice with the verified ISO
+attached read-only. Both QMP sessions worked, but the guest kernel panicked
+before a shell with `devtmpfs: unable to create devtmpfs -1` and `Failed to
+execute /init (error -1)`; restoring QEMU's default PIC did not change the
+result. Read-only inspection confirmed the extracted initramfs contains the
+expected executable `/init`, BusyBox shell link, and dynamic loader. The cause
+of the guest errors remains unknown. This is not a normal BIOS/UEFI guest boot.
+One bounded Windows QEMU TCG direct-kernel comparison reached the Arch early
+`udev`/`archiso_pxe_nbd` hooks and `Triggering uevents...`, but no shell or
+verified guest command; it was stopped with QMP and is not a boot pass.
+Exact argv, serial/stderr captures, and initramfs observations are in the
+[`VM bring-up evidence`](evidence/vm-bringup-20261020/README.md) folder.
+
+The separate QEMU installer requests administrator privileges; it was not
+executed. WSL shutdown detached the approved ext4 workspace; an earlier
+reattachment attempt failed before mounting with
+`WSL_E_ELEVATION_NEEDED_TO_MOUNT_DISK`. The user subsequently ran the elevated
+PowerShell mount command, and Ubuntu WSL now mounts the same partition at
+`/mnt/wsl/PHYSICALDRIVE1p2`. No Windows feature, firmware setting, formatting,
+or physical hardware was changed. No Linux VM login, build, ISO, ROM, or
+physical hardware workflow passed. A prior `Start-Process -Verb RunAs` launch
+of `wsl.exe` returned “operation was canceled by the user” before the elevated
+process started; that event is historical and superseded by the successful
+manual mount.
+
+## WSL partition mount and Arch ISO serial probe — 2026-10-20
+
+The user ran the elevated PowerShell mount command. Ubuntu WSL now mounts the
+existing 254.9-GB ext4 partition at `/mnt/wsl/PHYSICALDRIVE1p2`; the approved
+workspace remains `/opt/librecore-autoloader-v1-vm`. No formatting or changes
+to unrelated partition contents were made.
+
+A final QEMU 10.2.1 TCG BIOS boot used one vCPU, 4 GiB RAM, the signature- and
+hash-verified Arch 2026.10.01 ISO as a read-only CD-ROM, no virtual network
+adapter, no writable guest disk, and no physical-device passthrough. The
+Syslinux boot options added `console=ttyS0`. Serial output confirms ArchISO
+mounted its live root and started systemd. The run printed the Arch welcome
+banner; the bounded harness sent `id` over a loopback-only serial connection,
+but no `uid=0(root)` response or interactive shell appeared within 360.8
+seconds. The guest was stopped by the harness. This does not pass the VM
+login/command gate and is not native Linux build or product-ISO evidence.
+
+The exact argv, result JSON, serial capture, and boot-options screenshot are
+listed in [`VM bring-up evidence`](evidence/vm-bringup-20261020/README.md).
+The generic Arch ISO boot does not establish a current-source LibreCore ISO,
+firmware build, or hardware workflow. Native Linux, ROM builds, product
+Live-USB/app-service boot, and all three real-device workflows remain open.
+
+## Live USB runtime network defaults — software-only update (2026-10-20)
+
+The profile now appends the sole `ip=off` argument to both BIOS and UEFI boot
+entries, masks the explicit reviewed list of network activation units to
+`/dev/null`, and gives `autoloader.service` a private network namespace with
+only `AF_UNIX` sockets, no new privileges, and no `CAP_SYS_ADMIN` or
+`CAP_NET_ADMIN`. Local console and USB workflows are intended to remain
+available, but have not been verified in a booted candidate image. Builder
+preflight checks the exact source unit; target-root validation requires the
+exact reviewed unit bytes, rejects every unreviewed `.conf` drop-in in the
+effective systemd unit and `system.control` paths, rejects higher-priority
+complete-unit overrides and symlinked override paths, and verifies all masks
+on Linux. Focused Ubuntu WSL tests passed **21 cases** (350 deselected); an
+independent Arch WSL selection passed **15** (356 deselected). Native and
+Win32-targeted mypy passed for `build_usb.py`. SOL accepted this software-only
+slice. The later full Windows and Ubuntu WSL regression results below include
+these runtime changes; neither suite validates booted-ISO behavior.
+
+This is not boot validation: these source changes have not been built into an
+ISO, and no current-source BIOS/UEFI app/service startup has been observed.
+The separate build-time `--network-mode offline` path remains fail-closed
+with `OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`; this runtime profile work does
+not resolve that launcher gate. Native Linux build, ISO boot, and hardware
+validation remain pending.
+
+## Current-source software regression after runtime policy — 2026-10-20
+
+After the runtime network-profile and target-root policy changes, the final
+Windows suite passed **912 tests, skipped 67, with 0 failures/errors** (979
+collected; 568.12 seconds; exit 0). Ubuntu 26.04 WSL passed **975 tests,
+skipped 4, with 0 failures/errors** (979 collected; 583.37 seconds; exit 0).
+Full-project mypy passed on 109 source files in both Windows (`--platform
+win32`) and Ubuntu WSL. Exact current report hashes and run details are in
+[`2026-10-20 software-regression evidence`](evidence/software-regression-20261020/README.md).
+
+The Windows pass used pytest `--basetemp C:\q`; process `TEMP` and `TMP` were
+not changed. An earlier long-temp-root Windows run is preserved as diagnostic
+only: 881 passed, 31 failed, 67 skipped; its failures were deep fixture path
+errors (`FileNotFoundError`/`WinError 206`) and it is not an acceptance result.
+Skipped tests remain unpassed, including POSIX durability/process/ownership/
+symlink semantics, Linux namespace/device/package checks and two Windows-only
+contracts on Ubuntu. Ubuntu WSL is not a native Linux VM. These software
+results do not validate a native build, product ISO/boot, firmware, or any
+hardware workflow; those gates remain open.
+
+## Generic Arch ISO QMP/VGA follow-up — 2026-10-20
+
+A separate QEMU 10.2.1 TCG run used one vCPU/4 GiB and the verified Arch
+2026.10.01 ISO read-only, with no network, writable disk, source share, USB,
+or passthrough device. At 152.088 seconds the full VGA frame still showed
+early-initramfs `udev` at `Triggering uevents...`; no prompt appeared and no
+guest keyboard input was sent. QMP `quit` at 214.277 seconds returned exit 0,
+which is process shutdown only. The ISO hash was unchanged before/after
+(`684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5`). This
+incomplete generic-guest diagnostic provides no shell/command, product ISO,
+build, or hardware evidence. Captures, exact result, and hashes are recorded
+in [`VM bring-up evidence`](evidence/vm-bringup-20261020/README.md).
+
+## Arch-boxes installed guest emergency-mode attempt — 2026-10-20
+
+A fresh QCOW2 overlay backed by the signature- and hash-checked Arch-boxes
+image was booted under QEMU 10.2.1 TCG (one vCPU, 4 GiB). The installed guest
+waited for its configured root UUID and entered systemd emergency mode; the
+captured screen reports that the root account is locked. No usable shell,
+login, SSH banner/session, or guest command was obtained, and no keyboard
+input was sent. The user-mode SSH forward was bound to `127.0.0.1` only. The
+overlay passed `qemu-img check`, and the base image hash remained unchanged.
+This is another failed/incomplete VM attempt, not a guest, Linux build,
+product ISO, ROM, or hardware pass. Exact argv, result, screen captures, and
+hashes are in [`Arch-boxes VM attempt evidence`](evidence/vm-arch-boxes-20261020/README.md).
+
+The approved ext4 workspace remains available and is not the blocker. The
+guest-root boot failure remains unresolved; native Linux build, current-source
+Live USB BIOS/UEFI app/service boot, complete validated ROM builds, and all
+three physical-device workflows remain open. Physical hardware work is still
+deferred until the software gates are exhausted, and no firmware write or
+hardware-specific recovery has been authorized or performed.
+
+## Arch-boxes virtio boot follow-up — 2026-10-20
+
+Changing the guest disk interface from legacy IDE to virtio allowed one
+isolated QEMU 10.2.1 TCG run to find the configured Btrfs root, mount
+`/sysroot`, switch root, and display `Welcome to Arch Linux!`. A later
+networked attempt remained in initrd device-node initialization; the
+host-loopback-only SSH forward returned no SSH banner, and no login, shell,
+or guest command was verified. One console Enter and a later login-key
+attempt during initrd were not command execution. The base QCOW2 remained
+unchanged; the scratch overlay passed `qemu-img check`. Full argv, captures,
+logs, result fields, and hashes are in
+[`Arch-boxes virtio VM evidence`](evidence/vm-arch-boxes-virtio-20261020/README.md).
+
+This is limited guest-userspace boot evidence, not a Linux build VM, product
+Live USB boot, firmware build, or hardware pass. The native guest shell/build
+gate remains open; the three hardware workflows remain deferred and pending.
+
+## Current-source regression and generic VM diagnostics — 2026-10-21
+
+The full Windows suite passed **921 tests, 68 skipped** (989 collected; zero
+failures; 768.92 seconds; exit 0). Ubuntu 26.04 WSL passed **985 tests, 4
+skipped** (989 collected; zero failures; 687.55 seconds; exit 0). Full-project
+mypy passed on 105 source files in both environments. All skips remain
+unpassed. Focused read-only readiness-report tests passed 11 with 1 skipped
+on Windows and 9 on Ubuntu WSL. The report reopens persisted T430/X200/X220
+checkpoints and byte references; its maximum outcome is
+`REVIEW_INPUTS_COMPLETE`. Current device/boot state and recovery volume gates
+that are not persisted remain `UNKNOWN`; this does not establish readiness or
+write authorization. Details and checksums are in
+[`2026-10-21 software regression evidence`](evidence/software-regression-20261021/README.md).
+
+A Windows run using a direct WSL UNC temporary path failed in the X200
+MAC-preservation fixture when it attempted to create its nested sidecar. It is
+an environment-specific diagnostic, not a release test result. An earlier
+Windows retry stopped at zero free C: space; the later full pass completed
+after space was available. C: had approximately 56 GB free at the subsequent
+status check; this mutable value does not establish VM storage sufficiency.
+
+Two separate QEMU 10.2.1 TCG debug-shell attempts were captured from the
+approved ext4 workspace. The Arch-boxes guest waited for a missing root UUID;
+the Arch ISO attempt remained at SeaBIOS EDD probing. Neither yielded a usable
+guest shell or verified guest command. Exact captures, original manifests,
+and interpretation are in the [Arch-boxes debug-shell evidence](evidence/vm-debug-shell-20261021/README.md)
+and [Arch ISO debug-shell evidence](evidence/archiso-debug-shell-20261021/README.md).
+They are generic VM diagnostics only; they do not establish a native Linux
+builder, current-source product ISO, AutoLoader app/service startup, ROM, or
+hardware result.
+
+Native Linux/Archiso build and current-source product ISO validation remain
+pending. Successful product Live USB BIOS/UEFI app/service boot remains
+unproven. T430, X200, and X220 physical workflows remain **HARDWARE PENDING**;
+no physical hardware operation occurred.
+
+## Earlier wheel and X200 upstream compile checkpoint — 2026-10-21
+
+The current-source wheel smoke passed package assembly and import-path checks
+in Ubuntu 26.04 WSL. It is limited to the Python wheel and does not validate an
+ISO or firmware build; details are in the [wheel smoke record](evidence/current-source-wheel-20261021/README.md).
+
+A separate clean, pinned Libreboot 26.01 X200 upstream diagnostic ran
+`./mk -b coreboot x200_4mb` in Ubuntu 26.04 WSL for 6,751.435 seconds and
+returned exit 1 before ROM generation. Host GCC 15.2.0 promoted a discarded
+`const` qualifier warning in the pinned Coreboot `cbfstool` host utility to an
+error. The run produced zero ROMs, invoked no ArtifactEngine build, and
+published no `COMPLETE` manifest. Full command, hashes, and log are in the
+[X200 upstream diagnostic record](evidence/x200-upstream-compile-resume-20261021/README.md).
+At that checkpoint, no retry or compiler/source adjustment had been applied
+pending review; SOL subsequently accepted the exact const-correctness patch.
+
+This WSL diagnostic does not establish a native Linux build or accepted ROM.
+The product ISO/boot and all T430/X200/X220 hardware gates remain pending.
+
+
+## Native Windows QEMU full-ISO attempts — 2026-10-21
+
+A user-level MSYS2 install provided native Windows QEMU 11.1.2 with WHPX and TCG available. The verified Arch 2026.10.01 ISO was attached read-only from the approved ext4 workspace. Five bounded BIOS runs used 4 GiB and two vCPUs, with no network adapter, writable disk, USB device, source share, or physical passthrough. The source ISO hash checked after the runs matched the earlier recorded value; there was no per-attempt pre-run hash capture.
+
+The 50-second WHPX run reached Syslinux and loaded the kernel/initramfs, then displayed a Linux panic: No working init found. A second WHPX boot appended init=/bin/sh through the Syslinux editor; at 20 seconds the screen showed devtmpfs creation failure and a TDX-not-supported message, with no shell. The 90-second TCG run reached EDD probing and displayed a TDX-not-supported message, but no shell appeared. Two legacy PC/qemu64 WHPX runs also stayed at the Arch boot splash: one observed 50 seconds from UNC while the initramfs loaded, and one observed 90 seconds from a local ISO copy whose hash matched the preserved source. Neither reached a shell. QMP reported the emulator running when each capture was taken; all five runs were stopped by host-requested QMP quit. No guest command ran. These diagnostics do not pass a Linux build VM, product ISO, Live USB boot, ROM, or hardware workflow. Captures and checksums are in [native Windows QEMU evidence](evidence/native-qemu-windows-20261021/README.md).
+
+Native Linux/Archiso build and current-source product ISO validation remain pending. Successful product Live USB BIOS/UEFI app/service boot remains unproven. T430, X200, and X220 physical workflows remain **HARDWARE PENDING**; no physical hardware operation occurred.
+
+## Schema-4 software follow-up and reviewed X200 provenance — 2026-10-21
+
+The schema-4 X200 manifest guard exposed a stale workflow check: artifact
+acceptance still expected the pre-patch Coreboot identity instead of the exact
+post-lbmk identity bound by CBFS. The shared X200 workflow now requires
+schema 4, validates the same four nested repository evidence rows as the
+ArtifactEngine, and binds CBFS repository/revision/tree to the validated
+post-lbmk Coreboot row. Synthetic complete-X200 fixtures now use schema-4
+nested evidence. SOL accepted the frozen change. The X220 and T430 manifest
+schema behavior is unchanged.
+
+After that correction, the full Windows suite passed **929 tests, 68 skipped**
+(997 collected; 0 failures/errors; 712.265 seconds). Ubuntu 26.04 WSL passed
+**993 tests, 4 skipped** (997 collected; 0 failures/errors; 679.831 seconds).
+Full-project no-incremental mypy passed on **111 source files** in Windows
+native mode, Windows Win32-targeted mode, and Ubuntu WSL. The Ubuntu run put
+`TMPDIR` and pytest's base on the user-authorized ext4 workspace after an
+earlier parallel run filled the WSL `/tmp` tmpfs; that earlier run is excluded.
+The current reports and structured results are in
+[`schema-4 regression evidence`](evidence/software-regression-20261021/README.md).
+Platform skips are unvalidated and remain open.
+
+The updated source wheel passed assembly, exact inclusion of the four pinned
+patch resources, extracted-wheel imports for `autoloader` and `usb_builder`,
+and extracted-wheel top-level and flash help. It contains the newly reviewed
+X200 vboot `cbfstool` compatibility patch. Full hashes and the smoke runner
+are in the [schema-4 wheel evidence](evidence/current-source-wheel-schema4-20261021/README.md).
+This does not establish a Live USB build or boot.
+
+Native Linux/Archiso build and product ISO/BIOS/UEFI validation remain pending.
+The separate fresh X200 build diagnostic with the accepted vboot overlay is
+recorded in its own evidence folder; it does not create a validated hardware
+artifact or authorize writes. The T430, X200, and X220 physical workflows
+remain **HARDWARE PENDING**, and no physical hardware operation has occurred.
+
+## X200 CBFS null-interval fix and fresh software regression — 2026-10-21
+
+SOL accepted the final X200 parser/provenance review. CBFS interval validation
+now includes every row, including `(empty)/null` placeholders, while allowing
+adjacent intervals. Regression tests reject null-to-payload and null-to-null
+overlap. The parser allows repeated `(empty)/null` names only, retains normal
+name uniqueness and bounds checks, requires X200's `fallback/payload` type to
+be `simple elf`, and leaves X220's `payload` rule unchanged. SOL also reviewed
+the generated-Coreboot-file inventory, shipped-header byte equality, bounded
+x86-64 ELF identity, schema-4 manifest reopen checks, and exact primary Vboot
+pin. The focused 7-test selection passed on Windows and Ubuntu WSL.
+
+The fresh full software suites passed on current source: Windows **945 passed,
+70 skipped** (1,015 collected; 831.38s; exit 0; JUnit SHA-256
+`fc23169ea17c9ce666e8604194c7452a5287bf39131406f3f3a7059779970f7f`) and
+Ubuntu 26.04 WSL **1,011 passed, 4 skipped** (1,015 collected; 670.76s; exit
+0; JUnit SHA-256
+`89245058bcab381a96608be87e7c70cfb4aa3f6a413997fac7532684efb441ff`).
+Full-project no-incremental mypy passed on **111 source files** in Windows
+native mode, Windows Win32-targeted mode, and Ubuntu WSL. Skips remain
+unpassed. Commands and JUnit reports are in
+[`fresh current-source regression evidence`](evidence/software-regression-20261021/README.md).
+
+A current-source Ubuntu WSL wheel smoke passed. The source snapshot hash is
+`626b26ed30b27ec0e4c7fcfc75d0fbaef09327ec3e58b906abcb1c5fca4215d2`; the
+417,524-byte wheel hash is
+`12fa189a8b662183060d1c1c0d3a85af70e6b3d3099087f974896d3e26186da8`.
+The four pinned patch resources, extracted package imports, top-level CLI
+help, and flash help passed. It is packaging smoke only; see the [wheel
+record](evidence/current-source-wheel-x200-null-overlap-20261021/README.md).
+
+The pinned Libreboot 26.01 upstream X200 command `./mk -b coreboot x200_4mb`
+completed in Ubuntu WSL with exit 0 after 6,585.017 seconds and produced all
+31 expected 4 MiB variants. A separate read-only validation-only attempt
+`validation-20261021T064904674992Z` inspected all 31 with pinned size and CBFS
+structural checks, recorded 511 commands, and returned `VALIDATION_ONLY_PASSED`.
+It did not rebuild, invoke ArtifactEngine, publish `COMPLETE`, copy ROMs into
+the repository, or access hardware. The generated ROMs remain in Linux scratch
+and are not flash-ready artifacts. See the [X200 build and validation
+record](evidence/x200-vboot-overlay-build-20261021/README.md).
+
+Native Linux/Archiso build and current-source Live USB BIOS/UEFI app/service
+boot remain pending. The WSL/Windows VM diagnostics have not established a
+usable guest shell or successful product ISO boot. T430, X200, and X220 real
+device workflows remain **HARDWARE PENDING**; no probe, backup capture,
+firmware write, read-back, recovery, or hardware boot occurred. All firmware
+writes and hardware-specific recovery still require explicit human approval.

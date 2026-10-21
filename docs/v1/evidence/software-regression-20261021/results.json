@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-21",
+  "windows": {
+    "command": "python -B -m pytest -q -p no:cacheprovider --basetemp=C:\\q\\v1-readiness-full-final-20261021",
+    "collected": 989,
+    "passed": 921,
+    "skipped": 68,
+    "failed": 0,
+    "duration_seconds": 768.92,
+    "exit_code": 0,
+    "junit_xml": null,
+    "skip_taxonomy": null
+  },
+  "ubuntu": {
+    "environment": "Ubuntu 26.04 WSL",
+    "collected": 989,
+    "passed": 985,
+    "skipped": 4,
+    "failed": 0,
+    "duration_seconds": 687.55,
+    "exit_code": 0,
+    "source_record": "ubuntu-wsl-source-record/results.json"
+  },
+  "mypy": {
+    "windows_source_files": 105,
+    "ubuntu_source_files": 105,
+    "result": "success"
+  },
+  "readiness_focused": {
+    "windows": {"passed": 11, "skipped": 1, "duration_seconds": 160.41},
+    "ubuntu_wsl": {"passed": 9, "duration_seconds": 128.49}
+  },
+  "unc_path_diagnostic": {
+    "result": "environment_specific_failure",
+    "note": "X200 fixture could not create its nested MAC-preservation sidecar over the direct WSL UNC temporary path; excluded from release results"
+  },
+  "c_drive_free_bytes_at_later_check": "approximately 56 GB",
+  "native_linux_iso_build": "pending",
+  "product_iso_boot": "pending",
+  "hardware_validation": "pending"
+}

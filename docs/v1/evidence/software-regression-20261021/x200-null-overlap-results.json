@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-21",
+  "scope": "Current source after SOL-accepted X200 CBFS null-interval overlap fix",
+  "focused_parser_tests": {
+    "windows": {"passed": 7, "failed": 0},
+    "ubuntu_wsl": {"passed": 7, "failed": 0}
+  },
+  "full_suite": {
+    "windows": {
+      "collected": 1015,
+      "passed": 945,
+      "skipped": 70,
+      "failed": 0,
+      "errors": 0,
+      "duration_seconds": 831.38,
+      "junit": "windows-x200-null-overlap.xml",
+      "junit_sha256": "fc23169ea17c9ce666e8604194c7452a5287bf39131406f3f3a7059779970f7f",
+      "command": ".venv\\Scripts\\python.exe -B -m pytest -q -p no:cacheprovider --basetemp=C:\\q\\v1-x200-null-overlap-20261021 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261021/windows-x200-null-overlap.xml"
+    },
+    "ubuntu_wsl": {
+      "environment": "Ubuntu 26.04 WSL",
+      "collected": 1015,
+      "passed": 1011,
+      "skipped": 4,
+      "failed": 0,
+      "errors": 0,
+      "duration_seconds": 670.76,
+      "junit": "ubuntu-x200-null-overlap.xml",
+      "junit_sha256": "89245058bcab381a96608be87e7c70cfb4aa3f6a413997fac7532684efb441ff",
+      "command": "TMPDIR=<authorized ext4 workspace>/tmp /home/alex/.venvs/autoloader-v1/bin/python -B -m pytest -q -p no:cacheprovider --basetemp=<authorized ext4 workspace>/pytest-ubuntu-x200-null-overlap-20261021 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261021/ubuntu-x200-null-overlap.xml"
+    }
+  },
+  "skip_scope": {
+    "windows": "POSIX directory durability, symlink and ownership/mode behavior, process-group/signals, Linux device/user-namespace and Arch tool checks, and one Windows permission-bit case; reasons are recorded in JUnit XML",
+    "ubuntu_wsl": "Two trusted Arch pacman ownership checks and two Windows-specific contracts",
+    "all_skips_unvalidated": true
+  },
+  "mypy": {
+    "source_files": 111,
+    "windows_native": "passed",
+    "windows_win32_targeted": "passed",
+    "ubuntu_wsl": "passed",
+    "incremental": false
+  },
+  "wheel_smoke": {
+    "result": "PASS",
+    "source_snapshot_sha256": "626b26ed30b27ec0e4c7fcfc75d0fbaef09327ec3e58b906abcb1c5fca4215d2",
+    "wheel_sha256": "12fa189a8b662183060d1c1c0d3a85af70e6b3d3099087f974896d3e26186da8",
+    "wheel_bytes": 417524
+  },
+  "x200_upstream_diagnostic": {
+    "build_status": "EXITED_ZERO",
+    "build_command": "./mk -b coreboot x200_4mb",
+    "build_elapsed_seconds": 6585.017,
+    "rom_variant_count": 31,
+    "validation_status": "VALIDATION_ONLY_PASSED",
+    "validated_rom_count": 31,
+    "validation_command_count": 511,
+    "artifactengine_build_invoked": false,
+    "complete_manifest_published": false,
+    "roms_copied_into_repository": false,
+    "hardware_or_media_operations": "NONE",
+    "flash_ready": false
+  },
+  "release_boundary": {
+    "native_linux_archiso_build": "pending",
+    "current_source_live_usb_bios_uefi_boot": "pending",
+    "x220_coreboot_rom_build": "pending",
+    "t430_hardware_workflow": "pending",
+    "x200_hardware_workflow": "pending",
+    "x220_hardware_workflow": "pending"
+  }
+}

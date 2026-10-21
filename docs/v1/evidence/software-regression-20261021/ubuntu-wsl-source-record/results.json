@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-21",
+  "linux": {
+    "environment": "Ubuntu WSL",
+    "full_suite": {"collected": 989, "passed": 985, "skipped": 4, "failed": 0, "duration_seconds": 687.55, "exit_code": 0},
+    "readiness_focused": {"passed": 9, "duration_seconds": 128.49},
+    "mypy_source_files": 105,
+    "mypy_result": "success"
+  },
+  "windows": {
+    "focused_readiness_ui_cli": {"passed": 11, "skipped": 1, "duration_seconds": 160.41},
+    "mypy_source_files": 105,
+    "mypy_result": "success",
+    "full_suite": {"status": "incomplete_storage_exhaustion", "volume": "C:", "free_bytes": 0},
+    "isolated_fixture_error": "OSError: [Errno 28] No space left on device"
+  },
+  "hardware_validation": "pending_deferred",
+  "native_archiso_and_live_usb": "pending"
+}

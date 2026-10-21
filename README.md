@@ -1,6 +1,6 @@
 # Libre_Core AutoLoader
 
-Libre_Core AutoLoader is an in-development Python application for preparing and documenting ThinkPad firmware workflows. The CLI and Textual interface share a model-specific controller for the three V1 profiles. Explicit X200/X220 preparation can inspect local identity and SPI evidence; backup actions perform full-chip reads, and build actions invoke only the pinned artifact engine. The guarded CLI and dedicated mounted-screen TUI write routes reopen staged X200/X220 evidence, require fresh evidence and one-use exact-action human approval, and perform a separate full-chip read-back. The TUI challenge is bound to its active screen and can be cancelled until the service consumes the receipt. Both write routes are unavailable on this Windows development host because durable directory fsync is unsupported. Ubuntu 26.04 WSL is available for Linux build validation. An earlier X200 attempt compiled components but did not produce a complete validated ROM; a fresh fail-closed ArtifactEngine preflight correctly stopped before building because physical identity, chip-capacity, and verified-backup evidence were unavailable. No accepted ROM artifact or COMPLETE manifest exists. Raw restore/recovery remains unavailable, and real-device boot validation has not passed. No hardware workflow has been validated on a real device.
+Libre_Core AutoLoader is an in-development Python application for preparing and documenting ThinkPad firmware workflows. The CLI and Textual interface share a model-specific controller for the three V1 profiles. Explicit X200/X220 preparation can inspect local identity and SPI evidence; backup actions perform full-chip reads, and build actions invoke only the pinned artifact engine. The guarded CLI and dedicated mounted-screen TUI write routes reopen staged X200/X220 evidence, require fresh evidence and one-use exact-action human approval, and perform a separate full-chip read-back. The TUI challenge is bound to its active screen and can be cancelled until the service consumes the receipt. Both write routes are unavailable on this Windows development host because durable directory fsync is unsupported. Ubuntu 26.04 WSL has been used for software tests, but is not native Linux. A later pinned Libreboot 26.01 WSL diagnostic produced 31 X200 4-MiB variants, and separate validation-only size/CBFS checks accepted their structure. That diagnostic did not create or accept an ArtifactEngine COMPLETE manifest or a device-bound artifact. The latest fail-closed ArtifactEngine preflight stopped before building because physical identity, chip-capacity, and verified-backup evidence were unavailable. No accepted device-bound ROM artifact or COMPLETE manifest exists. Raw restore/recovery remains unavailable, and real-device boot validation has not passed. No hardware workflow has been validated on a real device.
 
 ## V1 reference workflows
 
@@ -40,6 +40,7 @@ autoloader inspect-checkpoint --checkpoint path/to/workflow-journal.json
 autoloader resume-checkpoint --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
 autoloader t430-stage --request handoff-stage.json --checkpoint C:\firmware-work\t430.json
 autoloader resume-checkpoint --profile t430-1vyrain --checkpoint C:\firmware-work\t430.json
+autoloader review-readiness --profile x220-coreboot --checkpoint C:\firmware-work\x220.json
 autoloader usb --output-dir ./iso_build
 autoloader build-usb --source-root /work/Libre_Core-AutoLoader --profile-dir /work/Libre_Core-AutoLoader/usb_builder/archiso_profile --snapshot-lock /work/Libre_Core-AutoLoader/usb_builder/snapshot.lock.json --output-dir /work/iso-output --work-parent /work/iso-work --network-mode online
 ```
@@ -50,7 +51,7 @@ autoloader build-usb --source-root /work/Libre_Core-AutoLoader --profile-dir /wo
 - `import-evidence` accepts typed raw `DeviceEvidence` JSON and saves a candidate to a new path. Existing paths are not overwritten. Its checksum detects accidental corruption; it does not authenticate the evidence or prove that it came from the device.
 - `prepare-workflow` requires a new absolute checkpoint path and a versioned operator request. On an explicit X200/X220 request it captures local DMI/BIOS and a read-only SPI probe; X220 also reads the original chip to inspect the pinned IFD map. These are explicit local hardware-read actions. The request's voltage, wiring, and storage values are human-reported evidence with actor, UTC time, instrument, and test point; they are not independently authenticated by the application. Candidate-evidence import cannot set observed chip or programmer fields.
 - `backup` (and its `accept-verified-backup` alias) captures two full-chip reads and stores them on the separately selected persistent destinations, or reopens and revalidates an existing verified backup. This is an explicit physical read action when run on a connected device.
-- `build-rom` routes through the shared controller and invokes only the pinned X200/X220 recipe after revalidating the saved intent and backup. X220 passes descriptor, ME, and GbE blobs sliced from the verified original backup. A supported Linux build environment is required; a native Windows invocation returns `LINUX_BUILD_ENV_REQUIRED` before starting a build command or creating output. Ubuntu 26.04 WSL is available, and the pinned Libreboot source checkout matches its commit/tree; the pinned dependency list was installed except for `g++-mipsel-linux-gnu`, which is not needed by the x86 X200 target. Earlier Linux attempts compiled components but have not produced a complete validated ROM, parser-accepted artifact, or COMPLETE manifest. Passing software tests does not establish that an upstream build has succeeded.
+- `build-rom` routes through the shared controller and invokes only the pinned X200/X220 recipe after revalidating the saved intent and backup. X220 passes descriptor, ME, and GbE blobs sliced from the verified original backup. A supported Linux build environment is required; a native Windows invocation returns `LINUX_BUILD_ENV_REQUIRED` before starting a build command or creating output. Ubuntu 26.04 WSL is available, and the pinned Libreboot source checkout matches its commit/tree; the pinned dependency list was installed except for `g++-mipsel-linux-gnu`, which is not needed by the x86 X200 target. A subsequent pinned Libreboot 26.01 WSL diagnostic produced 31 X200 4-MiB variants; separate validation-only size/CBFS checks accepted their structure. This did not create or accept an ArtifactEngine COMPLETE manifest or a device-bound artifact. The device-bound X200/X220 build-and-acceptance path remains unvalidated. Passing software tests or structural diagnostics does not establish device compatibility or successful upstream artifact acceptance.
 - `accept-completed-artifact` reopens the persisted manifest and selected artifact, revalidates current local evidence, backup files, pinned source/tool records, and model-specific structure checks, then stages only `STAGED/HARDWARE_PENDING`.
 - `verify` reports read-back as `NOT_PERFORMED`; it does not probe or read physical flash.
 - `flash` accepts only an exact staged X200/X220 checkpoint and current versioned request; arbitrary `--rom` paths are not supported. It requires a real OS TTY, collects live meter/wiring attestations and asks for the exact operation challenge. The controller reopens the pinned artifact and complete backup, then repeats local DMI/SPI checks before the one-shot writer. Independent full-chip read-back is required before `WRITE_VERIFIED`; timeout, nonzero exit or a mismatch is `UNCERTAIN` and never retries. Windows is blocked because the durable approval ledger requires directory fsync. T430 remains a separate IVprep/1vyrain human handoff, and restore is disabled.
@@ -81,13 +82,22 @@ SOL accepted a separately pinned USB initramfs derivative that removes only `kms
 
 ### Current derivative candidate b2 (2026-10-14)
 
-Candidate b2 was built from clean USB-only snapshot commit `1197d9040a39d6da012f459b8bb1f45385ee0072`, tree `d2588ddff4f0c5d4115565f47360314553106d38`. Its ISO is 1,012,215,808 bytes with SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`. Target-root installation and packaged CLI checks passed. Inspection of the 79 MiB initramfs confirmed the `kms`-omitting derivative with PXE hooks retained. Same-hash BIOS (310s) and UEFI (922s) QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Later direct-kernel diagnostics captured some read-only systemd state but established no root cause and do not pass normal BIOS/UEFI startup acceptance. The current Arch WSL production mount preflight stops at devtmpfs with `EPERM` before candidate-build work/output; native Linux build, new candidate, successful app/service boot, and physical USB checks remain pending. The ISO and evidence are not hardware validation.
+Candidate b2 was built from clean USB-only snapshot commit `1197d9040a39d6da012f459b8bb1f45385ee0072`, tree `d2588ddff4f0c5d4115565f47360314553106d38`. Its ISO is 1,012,215,808 bytes with SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`. Target-root installation and packaged CLI checks passed. Inspection of the 79 MiB initramfs confirmed the `kms`-omitting derivative with PXE hooks retained. Same-hash BIOS (310s) and UEFI (922s) QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Later direct-kernel diagnostics captured some read-only systemd state but established no root cause and do not pass normal BIOS/UEFI startup acceptance. The earlier root-oriented Arch WSL production-mount preflight stopped at devtmpfs with `EPERM` before candidate-build work/output; that checkpoint is superseded by the later non-root Archiso `-N` preflight path. The current native online build and boot gates are underway; the offline runner remains unavailable, and physical USB checks remain pending. The ISO and evidence are not hardware validation.
 
 Successful candidate publication places the ISO, build logs, provenance and `SHA256SUMS` together inside `candidate-bundle` through one atomic directory rename. When Archiso deletes its target sync database files, provenance records the pinned Archiso 91-1 source/config invariant and exact staged database hashes as `SOURCE_LEVEL_INVARIANT_ONLY`; retained database files, when present, are independently hashed and compared.
 
+Two later generic-guest debug-shell diagnostics were recorded on 2026-10-21.
+The Arch-boxes guest entered system initialization but waited for a missing
+root UUID; the Arch ISO attempt remained at SeaBIOS EDD probing. Neither
+produced a guest shell or command result. These are incomplete QEMU
+preparation attempts, not native Linux, current-source product ISO, or
+AutoLoader boot evidence. Captures and checksum manifests are in the
+[`Arch-boxes VM diagnostic`](docs/v1/evidence/vm-debug-shell-20261021/README.md)
+and [`Arch ISO diagnostic`](docs/v1/evidence/archiso-debug-shell-20261021/README.md).
+
 ## Safety and validation status
 
-No physical hardware action, media write or real-device boot test was performed during the current implementation pass. An earlier X200 attempt compiled some upstream components but did not produce a complete validated ROM. Tests used fake evidence, runners and transports only. No real-device DMI capture, SPI probe/read, backup, voltage measurement, firmware write, IVprep downgrade, restoration, post-write read-back or hardware recovery occurred. The QEMU boots above are emulator evidence only and did not verify app/service startup. The repository's software services and synthetic tests do not establish a successful upstream firmware build or a correct installation. Hardware acceptance remains pending for all three V1 devices, and physical writes/recovery still require explicit human authorization.
+No physical hardware action, media write or real-device boot test was performed during the current implementation pass. An earlier X200 attempt compiled some upstream components but did not produce a complete validated ROM. Tests used fake evidence, runners and transports only. No real-device DMI capture, SPI probe/read, backup, voltage measurement, firmware write, IVprep downgrade, restoration, post-write read-back or hardware recovery occurred. The QEMU boots above are emulator evidence only and did not verify app/service startup. A later pinned Libreboot 26.01 X200 diagnostic produced 31 ROM variants that passed validation-only size and CBFS structure checks; it did not create an ArtifactEngine COMPLETE manifest or device-bound accepted artifact. The software services and synthetic tests do not establish an ArtifactEngine COMPLETE/device-bound accepted build or correct hardware installation. Hardware acceptance remains pending for all three V1 devices, and physical writes/recovery still require explicit human authorization.
 
 The implementation plan, current acceptance matrix, known issues and hardware report are in [`docs/v1/`](docs/v1/).
 
@@ -102,31 +112,74 @@ python -m mypy autoloader
 
 This project is licensed under GPL-3.0; see [`LICENSE`](LICENSE).
 
-## Current-source software regression — 2026-10-17
+## Current-source software regression — 2026-10-21
 
-The current-source Windows full suite passed **752 tests with 62 skipped**
-(814 collected; zero failures/errors; 789.46 seconds) on Python 3.12.14 and
-pytest 9.1.1. The Ubuntu 26.04 WSL2 suite passed 839 with 6 skipped. Windows
-skips include POSIX durability/process/ownership/symlink cases, Linux-only
-namespace/device/pacman checks, POSIX host checks not validated on Windows,
-and one account-specific symlink privilege limitation (`WinError 1314`).
-Skipped checks remain unpassed. Exact reports and hashes are in the
-[`software regression evidence`](docs/v1/evidence/software-regression-20261017/README.md).
+The full suite passed on Windows (**921 passed, 68 skipped**, 989 collected;
+zero failures; 768.92 seconds) and Ubuntu 26.04 WSL (**985 passed, 4
+skipped**, 989 collected; zero failures; 687.55 seconds). Full-project mypy
+passed on 105 source files in both environments. All skipped tests remain
+unpassed. The exact Windows command and preserved Ubuntu WSL source record
+are in the [`2026-10-21 software-regression evidence`](docs/v1/evidence/software-regression-20261021/README.md).
 
-The Ubuntu full suite preceded the pytest discovery change. SOL later accepted
-the `testpaths = ["tests"]` setting restricting default collection to
-application tests; subsequent collection found 814 tests with no
-evidence-directory paths. The explicit evidence-probe selection passed 31
-tests with 2 skipped, and frozen retry7/retry8 evidence files were unchanged.
-These software checks do not
-establish native Linux builder readiness, a current ISO or successful Live
-USB startup, a complete ROM, or hardware validation. Those release gates
-remain pending.
+The read-only `review-readiness` report reopens persisted T430/X200/X220
+evidence; its maximum result is `REVIEW_INPUTS_COMPLETE`, with current device,
+boot and unrecorded recovery-volume checks left unknown. Focused checks passed
+11 tests with 1 skip on Windows and 9 tests on Ubuntu WSL. A direct WSL UNC
+temporary-path run failed in an X200 sidecar fixture and is diagnostic only,
+not a release result. Native Linux/Archiso build, current-source product ISO
+and Live USB app/service boot remain pending, as do all three hardware
+workflows. No hardware operation occurred.
+
+## Earlier current-source software regression — 2026-10-20
+
+The current source passed the full automated suite on Windows and Ubuntu 26.04
+WSL. Windows passed **890 tests with 63 skipped** (953 collected; zero
+failures/errors; 562.40 seconds). Ubuntu WSL passed **949 with 4 skipped**
+(953 collected; zero failures/errors; 536.37 seconds). All skips remain
+unpassed. Windows skips include POSIX durability, process, ownership and
+symlink behavior, Linux namespace/device/package checks, host-specific checks,
+and a `WinError 1314` symlink privilege limitation. Ubuntu skips include two
+trusted Arch package-owner checks (Arch/pacman unavailable) and two
+Windows-only contracts. Both Win32-targeted and Ubuntu mypy runs passed on 109
+source files. A read-only Ubuntu package-owner smoke check resolved the
+canonical `gnutrue` executable to its root-owned Debian package; Ubuntu WSL
+has no `flashrom` or `flashprog`, so no flashrom probe or hardware access was
+performed. Exact commands, report hashes, skips and evidence limits are in
+the [`2026-10-20 software-regression evidence`](docs/v1/evidence/software-regression-20261020/README.md).
+
+These results establish automated software regression only. Ubuntu WSL is not
+native Linux; its package-owner smoke check is not flashrom integration. The
+current-source Live USB build/boot, complete X200/X220 ROM builds and all
+three real-device workflows remain pending. No physical firmware write or
+recovery operation has been performed.
+
+## Historical current-source software regression — 2026-10-17
+
+After the final fake-only write-service crash/replay tests, the corrected
+Windows full suite passed **876 tests with 63 skipped** (939 collected; zero
+failures/errors; 934.76 seconds) on Python 3.12.14 / pytest 9.1.1. Ubuntu
+26.04 WSL2 passed **935 with 4 skipped** (939 collected; zero failures/errors;
+1221.90 seconds). The initial Windows attempt used a pytest base outside the
+system temp root and failed one storage-preflight test; it is preserved as a
+failed environment setup, not a pass. The corrected run placed process-local
+`TEMP`/`TMP` and pytest base under the same short root. Windows skips include
+POSIX durability/process/ownership/symlink cases, Linux namespace/device/
+package checks, unvalidated host checks, and one account-specific symlink
+privilege limitation (`WinError 1314`). Ubuntu skips are two unvalidated
+trusted-Arch-pacman ownership checks and two Windows-specific contracts. All
+skipped checks remain unpassed. Exact commands, JUnit hashes, and the failed
+attempt are in the [`software regression evidence`](docs/v1/evidence/software-regression-20261017/README.md).
+
+The frozen six-file safety branch denominator is **577/678 (85.1%)** after
+meaningful fail-closed test additions; this is a test metric, not release
+acceptance. These software results do not establish native Linux builder
+readiness, a current ISO or successful Live USB startup, a complete ROM, or
+hardware validation. Those release gates remain pending.
 
 
-Historical pre-correction suite counts are retained in the earlier checkpoints above. The latest software regression evidence is summarized below; WSL results are distinct from native Linux validation.
+Earlier cross-platform suite counts are retained below for traceability; they do not supersede the current 2026-10-20 regression above. WSL results remain distinct from native Linux validation.
 
-The latest Arch WSL2 full suite ran against Python source/tests at `72a302b`, using `setpriv` to test as UID/GID 65534 (`nobody`): **757 passed, 2 skipped** (759 collected; 1245.94s; exit 0). A docs-only commit `0d74d76` landed during the run; the tested Python source and test files remained at `72a302b`. Earlier Windows and Ubuntu WSL full suites were **699 passed, 60 skipped** and **755 passed, 4 skipped**, respectively, on `6cabb23d`; they do not cover the later source/test tree. Exact commands, skip reasons, reports and hashes are in [the software regression evidence](docs/v1/evidence/software-regression-20261016/README.md). The `nobody` test is WSL2 software evidence; it does not validate the dedicated build account, fixed privileged launcher, production offline route, native Linux, VM/ISO, ROM, boot, or hardware gates. Offline production execution remains fail-closed. Native Linux build, offline ISO build, successful Live USB app/service boot, and all hardware workflows remain pending; release is not complete.
+The earlier Arch WSL2 full suite ran against Python source/tests at `72a302b`, using `setpriv` to test as UID/GID 65534 (`nobody`): **757 passed, 2 skipped** (759 collected; 1245.94s; exit 0). A docs-only commit `0d74d76` landed during the run; the tested Python source and test files remained at `72a302b`. Earlier Windows and Ubuntu WSL full suites were **699 passed, 60 skipped** and **755 passed, 4 skipped**, respectively, on `6cabb23d`; they do not cover the later source/test tree. Exact commands, skip reasons, reports and hashes are in [the software regression evidence](docs/v1/evidence/software-regression-20261016/README.md). The `nobody` test is WSL2 software evidence; it does not validate the dedicated build account, fixed privileged launcher, production offline route, native Linux, VM/ISO, ROM, boot, or hardware gates. Offline production execution remains fail-closed. Native Linux build, offline ISO build, successful Live USB app/service boot, and all hardware workflows remain pending; release is not complete.
 
 A separate Ubuntu 26.04 WSL production preflight stopped before namespace/mount checks because `pacman` is absent, so the trusted `pacman -Qo` ownership check could not start (`OFFLINE_NETWORK_ISOLATION_UNAVAILABLE`). It did not test devtmpfs or create candidate-build work/output. Ubuntu WSL is not the pinned Archiso 91-1 build host; exact evidence is in `docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`. This does not change the distinct Arch WSL preflight result or establish native Linux build support.
 

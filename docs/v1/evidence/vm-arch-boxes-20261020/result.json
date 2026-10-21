@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-20",
+  "outcome": "NOT_PASSED",
+  "guest_state_observed": "systemd emergency mode after waiting for configured root UUID",
+  "root_account_state_observed": "locked",
+  "usable_guest_shell": false,
+  "verified_login": false,
+  "ssh_protocol_banner": false,
+  "guest_command_sent": false,
+  "guest_command_result": false,
+  "guest_keyboard_input_sent": false,
+  "firmware_or_recovery_operation": false,
+  "physical_device_passthrough": false,
+  "qmp_shutdown_reason": "host-qmp-quit",
+  "overlay_qemu_img_check": "No errors were found on the image.",
+  "artifacts": {
+    "screen_png": "emergency-mode.png",
+    "screen_ppm": "emergency-mode.ppm",
+    "serial_log": "serial.log",
+    "qemu_log": "qemu.log"
+  },
+  "notes": [
+    "The SSH forward was bound to host loopback only; no SSH session was established.",
+    "The base QCOW2 image remained unchanged.",
+    "Process shutdown through QMP is not evidence of guest success."
+  ]
+}

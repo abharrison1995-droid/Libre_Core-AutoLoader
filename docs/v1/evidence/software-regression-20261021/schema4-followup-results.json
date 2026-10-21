@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-21",
+  "scope": "current working tree after SOL-accepted X200 schema-4 nested provenance validator and fixture update",
+  "windows": {
+    "environment": "Windows 11, repository .venv",
+    "command": ".venv\\Scripts\\python.exe -B -m pytest -q -p no:cacheprovider --basetemp=C:\\q\\v1-readiness-full-schema4-20261021 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261021/windows-schema4-followup.xml",
+    "collected": 997,
+    "passed": 929,
+    "skipped": 68,
+    "failed": 0,
+    "errors": 0,
+    "duration_seconds": 712.265,
+    "junit_sha256": "d16204d90ffc18ff4d0f7cf88fa1d2c71960ca72ad49b1af5fe2dac0c46da460"
+  },
+  "ubuntu_wsl": {
+    "environment": "Ubuntu 26.04 WSL",
+    "command": "python -B -m pytest -q -p no:cacheprovider --basetemp=/mnt/wsl/PHYSICALDRIVE1p2/home/alex/codex-vm-workspace-librecore-20261021/pytest-ubuntu-schema4-20261021 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261021/ubuntu-schema4-followup.xml",
+    "collected": 997,
+    "passed": 993,
+    "skipped": 4,
+    "failed": 0,
+    "errors": 0,
+    "duration_seconds": 679.831,
+    "junit_sha256": "3d016052fedabbd85d4284305d444ee0d2179209d3f924572d8db4d5254a0f68"
+  },
+  "mypy": {
+    "source_files": 111,
+    "windows_native": "passed",
+    "windows_win32": "passed",
+    "ubuntu_wsl": "passed"
+  },
+  "release_boundary": {
+    "native_linux_build_vm": "pending",
+    "product_iso_bios_uefi_boot": "pending",
+    "physical_hardware_workflows": "pending",
+    "firmware_write_or_recovery_performed": false
+  }
+}

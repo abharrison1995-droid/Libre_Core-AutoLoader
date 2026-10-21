@@ -141,3 +141,124 @@ validation. They do not establish a native Linux VM build, an offline ISO
 build, a successful current Live USB BIOS/UEFI app/service boot, an X200/X220
 ROM build, or any hardware operation. Skipped tests remain skips. No physical
 firmware write, read-back, recovery, or boot test occurred.
+
+## Earlier safety-test regression after journal test cleanup — 2026-10-17
+
+These full suites ran after the final current test edits, including removal of
+a tautological writer-call assertion from the journal initial-persist test.
+The test change only narrows the assertion/comment; no product code changed.
+The Windows and Ubuntu results below supersede earlier full-suite counts for
+this safety-test source snapshot. Earlier failed Windows attempts remain
+preserved in their separate JUnit files and are not treated as passes.
+
+### Windows
+
+Windows Python 3.12.14 / pytest 9.1.1. The run set process-local `TEMP` and
+`TMP` to a short user-profile directory to avoid the documented Windows path
+length limit:
+
+```powershell
+$env:TEMP = 'C:\Users\Alex\Desktop\lcw19'
+$env:TMP = $env:TEMP
+& "$env:TEMP\LibreCore-v1-test-20261013\Scripts\python.exe" -m pytest -q --basetemp "$env:TEMP\pytest" --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261017/windows-safety-coverage-final.xml
+```
+
+Result: **816 passed, 63 skipped, 0 failures, 0 errors** (879 collected;
+860.18 seconds; exit 0). JUnit SHA-256:
+`89A4D47283023192F7DD7014BE88672EF1650E9DE9196F6705BE7E3D74CDBB22`.
+Skips include POSIX directory-fsync/durability, process, ownership and symlink
+semantics; Linux namespace/device/pacman checks; and one account-specific
+symlink-creation limitation (`WinError 1314`). They remain unpassed.
+
+### Ubuntu WSL
+
+Ubuntu 26.04 WSL2, using the existing test environment and `/dev/shm` for
+temporary files:
+
+```sh
+wsl.exe -d Ubuntu --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env TMPDIR=/dev/shm PYTHONDONTWRITEBYTECODE=1 /home/alex/librecore-v1-test-venv/bin/python -m pytest -q -p no:cacheprovider --basetemp=/dev/shm/lc-v1-safe-full-ubuntu-final-20261017 --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261017/ubuntu-safety-coverage-final.xml
+```
+
+Result: **875 passed, 4 skipped, 0 failures, 0 errors** (879 collected;
+1,099.02 seconds; exit 0). JUnit SHA-256:
+`F3ADC49C06932C002D99599F8F1E3E307BA75E55C6F087793C52891D92FF45F4`.
+The four skips are two `UNVALIDATED: host lacks trusted Arch pacman
+executable ownership evidence` cases, one Windows-specific host contract,
+and one Windows-specific production durability policy. The two Arch host
+checks remain unvalidated; WSL is not native Linux.
+
+The Windows and Ubuntu suites include the safety tests present at that
+checkpoint. The coverage figure there is historical; the later frozen report
+is recorded below. Full software suites do not establish native Linux, VM,
+ISO, ROM, hardware, or firmware-write validation. Skips remain unpassed.
+
+## Final safety coverage and crash/replay regression — 2026-10-17
+
+These runs include the final fake-only write-service crash/replay tests. They
+ran from Git HEAD `fcfd91179a9f8ae42493c5eec624b1454f873583` with working-tree
+test changes in `tests/test_phase03_spi_safety.py`,
+`tests/test_phase10b_write_service.py`, and `tests/test_workflow_safety.py`.
+No production Python or builder code changed during either run.
+
+### Windows
+
+Python 3.12.14 / pytest 9.1.1. An initial attempt used a pytest base outside
+Python's system temp root and failed one storage-preflight test because that
+test correctly treats the system temp location as nonpersistent. The failed
+JUnit is retained at
+[`windows-safety-crash-replay-final.xml`](windows-safety-crash-replay-final.xml),
+SHA-256 `CF4A176D1B891BC107A6F82036589B8FE07C182F3A12BAE8D1C593571A9538CE`;
+it recorded 875 passed, 63 skipped, and one failed test (939 collected), so it
+is not a passing run. The corrected run set process-local `TEMP` and `TMP`
+to `C:\Users\Alex\Desktop\lcwtmp-crash-replay-20261017`, verified
+`tempfile.gettempdir()` returned that exact root, and placed `--basetemp`
+beneath it at `pytest-final`.
+
+Exact corrected PowerShell command from the repository root:
+
+```powershell
+$ErrorActionPreference='Stop'
+$repo='C:\Users\Alex\Desktop\Libre_Core-AutoLoader'
+$python=Join-Path $env:TEMP 'LibreCore-v1-test-20261013\Scripts\python.exe'
+$temp='C:\Users\Alex\Desktop\lcwtmp-crash-replay-20261017'
+$base=Join-Path $temp 'pytest-final'
+$junit=Join-Path $repo 'docs/v1/evidence/software-regression-20261017/windows-safety-crash-replay-final-pass.xml'
+$env:TEMP=$temp; $env:TMP=$temp
+$probe=& $python -c 'import tempfile; print(tempfile.gettempdir())'
+& $python -m pytest -q -p no:cacheprovider --basetemp=$base --override-ini=tmp_path_retention_policy=failed --junitxml=$junit
+```
+
+The temp-root probe printed the selected root exactly. Result: **876 passed,
+63 skipped, 0 failures, 0 errors** (939 collected; **934.76 seconds**; exit
+0). The JUnit report is
+[`windows-safety-crash-replay-final-pass.xml`](windows-safety-crash-replay-final-pass.xml),
+SHA-256 `6522F8CCEF1D416574DA88D1430AB35E776C39FDFA6721B3B36CE1008DE70798`.
+Skips cover POSIX directory durability, ownership, process and symlink
+semantics; Linux namespace/device/package checks; unvalidated host-only
+checks; and one account-specific symlink privilege failure (`WinError 1314`).
+All skipped tests remain unpassed.
+
+### Ubuntu 26.04 WSL
+
+The fresh temp root was `/tmp/lc-v1-crash-replay-20261017`; before the run,
+Python reported `tempfile.gettempdir()` exactly equal to `TMPDIR`. The pytest
+base was a new child directory under that root. Exact command:
+
+```sh
+wsl.exe -d Ubuntu --cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader -- env TMPDIR=/tmp/lc-v1-crash-replay-20261017 PYTHONDONTWRITEBYTECODE=1 /home/alex/librecore-v1-test-venv/bin/python -m pytest -q -p no:cacheprovider --basetemp=/tmp/lc-v1-crash-replay-20261017/pytestbase --override-ini=tmp_path_retention_policy=failed --junitxml=docs/v1/evidence/software-regression-20261017/ubuntu-safety-crash-replay-final.xml
+```
+
+Result: **935 passed, 4 skipped, 0 failures, 0 errors** (939 collected;
+**1221.90 seconds**; exit 0). The JUnit report is
+[`ubuntu-safety-crash-replay-final.xml`](ubuntu-safety-crash-replay-final.xml),
+SHA-256 `CD6D7CBABF79BC9417C75C5339351C55C203A6BF0F2BE31A4D220E3AF94EAAE4`.
+The exact skips are two `UNVALIDATED: host lacks trusted Arch pacman
+executable ownership evidence` checks, one Windows-specific production
+durability policy, and one Windows-specific host platform contract. The two
+Arch tool-ownership checks remain unvalidated, not passing Linux checks.
+
+The latest accumulated coverage export remains **577/678 branches (85.1%)**
+on the fixed six-file critical denominator; this is a software-test metric,
+not release acceptance. Windows and Ubuntu WSL results do not establish native
+Linux, VM, ISO, ROM, Live USB boot, physical write/read-back, recovery, or
+hardware validation. All skips remain unpassed.

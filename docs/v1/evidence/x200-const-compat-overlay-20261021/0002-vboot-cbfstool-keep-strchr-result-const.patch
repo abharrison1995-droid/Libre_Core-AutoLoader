@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Libre Core AutoLoader Diagnostic <firmware-build@localhost.invalid>
+Date: Wed, 21 Oct 2026 00:00:00 +0000
+Subject: [PATCH] host/lib/cbfstool: preserve const qualifier from strchr
+
+The input pointer is const, and this local is only null-checked and used to
+calculate a length. Keep the strchr result const rather than discarding its
+qualifier.
+
+---
+ host/lib/cbfstool.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/host/lib/cbfstool.c b/host/lib/cbfstool.c
+index 9b4de49e3985f17f8613834385d63c62c6bf94ec..2a2578c002777e9030fe1eee3462dbf47792e390 100644
+--- a/host/lib/cbfstool.c
++++ b/host/lib/cbfstool.c
+@@ -259,7 +259,7 @@ static char *extract_config_value(const char *buf, const char *config_field)
+ 	free(to_find);
+ 
+ 	if (start) {
+-		char *end = strchr(start, '\n');
++		const char *end = strchr(start, '\n');
+ 		if (end)
+ 			return strndup(start, end - start);
+ 	}
+-- 
+2.39.5

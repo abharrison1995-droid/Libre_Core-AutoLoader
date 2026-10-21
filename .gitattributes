@@ -11,3 +11,4 @@
 /usb_builder/archiso_profile/packages.x86_64 text eol=lf
 /usb_builder/archiso_profile/airootfs/etc/motd text eol=lf
 /docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/*/hmp-transcript.txt -text whitespace=-blank-at-eol
+*.ppm binary
