@@ -179,6 +179,8 @@ def test_controller_x220_build_passes_only_workflow_derived_blobs_to_artifact_en
     tool = FlashToolIdentity(
         "flashrom", str((tmp_path / "flashrom.exe").resolve()), "1.4.0", "flashrom v1.4.0",
         datetime.now(timezone.utc).isoformat(),
+        "a" * 64,
+        "pacman: test/flashrom 1.4.0-1",
     )
     probe = ChipProbeEvidence.from_output(
         programmer=ProgrammerType.CH341A,

@@ -218,9 +218,32 @@ def test_internal_flasher_check_prerequisites(monkeypatch):
     assert flasher.check_prerequisites() is True
 
 
-def test_flashrom_runner_timeout_handling(monkeypatch):
+def test_flashrom_runner_timeout_handling(monkeypatch, tmp_path):
     import subprocess
+    import hashlib
+    import autoloader.flasher.flashrom as flashrom_module
     from autoloader.flasher.flashrom import FlashromRunner
+    fake_executable = tmp_path / "flashrom"
+    fake_executable.write_bytes(b"synthetic executable")
+    resolved = str(fake_executable.resolve())
+    info = fake_executable.stat()
+    provenance = flashrom_module._TrustedExecutable(
+        file=flashrom_module._FileFingerprint(
+            path=resolved,
+            sha256=hashlib.sha256(fake_executable.read_bytes()).hexdigest(),
+            device=info.st_dev,
+            inode=info.st_ino,
+            size=info.st_size,
+            mtime_ns=info.st_mtime_ns,
+            ctime_ns=info.st_ctime_ns,
+            mode=info.st_mode,
+            uid=info.st_uid,
+            gid=info.st_gid,
+        ),
+        package_owner="pacman: test/flashrom 1.4.0-1",
+    )
+    monkeypatch.setattr(flashrom_module.shutil, "which", lambda name: resolved if name == "flashrom" else None)
+    monkeypatch.setattr(flashrom_module, "_trusted_executable_provenance", lambda _path: provenance)
     runner = FlashromRunner()
 
     def mock_run_timeout(*args, **kwargs):

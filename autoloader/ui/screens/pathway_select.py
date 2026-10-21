@@ -30,6 +30,7 @@ class PathwaySelectScreen(ControllerScreen):
                 yield Button("Import Candidate Evidence", id="action-import")
                 yield Button("Resume / Load Checkpoint", id="action-resume")
                 yield Button("Inspect Operation Checkpoint", id="action-inspect")
+                yield Button("Review Persisted Readiness Inputs", id="action-readiness")
                 yield Button("Submit T430 Handoff Stage", id="action-t430-stage")
                 yield Button("View Evidence", id="action-evidence")
                 yield Button("1vyrain Handoff Guidance", id="action-handoff")
@@ -81,6 +82,7 @@ class PathwaySelectScreen(ControllerScreen):
             "action-import": ApplicationAction.IMPORT_EVIDENCE,
             "action-resume": ApplicationAction.RESUME,
             "action-inspect": ApplicationAction.INSPECT_CHECKPOINT,
+            "action-readiness": ApplicationAction.REVIEW_READINESS,
             "action-t430-stage": ApplicationAction.T430_HANDOFF_STEP,
             "action-evidence": ApplicationAction.VIEW_EVIDENCE,
             "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
@@ -98,8 +100,14 @@ class PathwaySelectScreen(ControllerScreen):
                 action is ApplicationAction.BOOT_CHECK
                 and status.profile_id in {"x200-libreboot", "x220-coreboot", "t430-1vyrain"}
             )
+            enabled_for_readiness_review = (
+                action is ApplicationAction.REVIEW_READINESS
+                and status.profile_id in {"x200-libreboot", "x220-coreboot", "t430-1vyrain"}
+            )
             self.query_one(f"#{widget_id}", Button).disabled = (
-                action not in status.allowed_next_actions and not enabled_for_post_reboot_intake
+                action not in status.allowed_next_actions
+                and not enabled_for_post_reboot_intake
+                and not enabled_for_readiness_review
             )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -133,6 +141,9 @@ class PathwaySelectScreen(ControllerScreen):
                 checkpoint_path=status.operation_journal_ref,
             )
             self.app.notify(f"{result.code}: {result.message}", title="Checkpoint", timeout=12)
+            return
+        if button_id == "action-readiness":
+            self.app.push_screen("readiness_review")
             return
         if button_id == "action-t430-stage":
             status = self.controller_app.controller.profile_status()

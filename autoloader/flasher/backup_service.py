@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import tempfile
 import uuid
@@ -43,6 +44,10 @@ class BackupCaptureError(BackupVerificationError):
 
 class StoragePreflightError(BackupUnavailableError):
     """A backup destination is not demonstrably persistent and usable."""
+
+
+_SHA256_ONLY = re.compile(r"^[0-9a-f]{64}$")
+_PACKAGE_OWNER_ONLY = re.compile(r"^(?:pacman|dpkg): [^\r\n]+$")
 
 
 @dataclass(frozen=True)
@@ -682,12 +687,18 @@ class BackupSetService:
         tool_name = _required_string(tool, "name")
         tool_version = _required_string(tool, "version")
         tool_executable = _required_string(tool, "executable")
+        tool_sha256 = _required_string(tool, "sha256")
+        tool_package_owner = _required_string(tool, "package_owner")
         if not Path(tool_executable).is_absolute():
             raise BackupManifestError("verified backup tool executable path is not absolute")
+        if not _SHA256_ONLY.fullmatch(tool_sha256) or not _PACKAGE_OWNER_ONLY.fullmatch(tool_package_owner):
+            raise BackupManifestError("verified backup tool provenance is malformed")
         if expected_tool is not None and (
             tool_name.casefold() != expected_tool.name.casefold()
             or tool_version != expected_tool.version
             or Path(tool_executable).resolve(strict=False) != Path(expected_tool.executable).resolve(strict=False)
+            or tool_sha256 != expected_tool.sha256
+            or tool_package_owner != expected_tool.package_owner
         ):
             raise BackupManifestError("backup tool identity differs from the fresh local probe")
         expected_device_identifiers = {
@@ -814,7 +825,16 @@ def _match_probes_to_topology(
         probe.validate_integrity()
         if probe.programmer is not programmer:
             raise BackupUnavailableError("probe programmer differs from the selected backup programmer")
-    tools = {(probe.tool.name, probe.tool.executable, probe.tool.version) for probe in probes}
+    tools = {
+        (
+            probe.tool.name,
+            probe.tool.executable,
+            probe.tool.version,
+            probe.tool.sha256,
+            probe.tool.package_owner,
+        )
+        for probe in probes
+    }
     if len(tools) != 1:
         raise BackupUnavailableError("all chips must be probed using the same exact tool executable and version")
     by_capacity = {probe.capacity_bytes: probe for probe in probes}
@@ -829,11 +849,15 @@ def _same_tool_identity(current: FlashToolIdentity, probed: FlashToolIdentity) -
         str(Path(current.executable).resolve(strict=False)),
         current.version,
         current.raw_version,
+        current.sha256,
+        current.package_owner,
     ) == (
         probed.name.casefold(),
         str(Path(probed.executable).resolve(strict=False)),
         probed.version,
         probed.raw_version,
+        probed.sha256,
+        probed.package_owner,
     )
 
 
@@ -918,6 +942,8 @@ def _base_manifest_event(
             "name": tool.name,
             "executable": tool.executable,
             "version": tool.version,
+            "sha256": tool.sha256,
+            "package_owner": tool.package_owner,
         },
         "probe_records": [
             {

@@ -34,9 +34,8 @@ from autoloader.rom_builder.artifact_engine import (
     derive_lbmk_output_inventory,
     sha256_file,
     _LBMK_COREBOOT_CBFSTOOL_SOURCES,
-    _LBMK_COREBOOT_ORIGINS,
-    _LBMK_COREBOOT_REVISION,
-    _LBMK_COREBOOT_TREE,
+    _validate_x200_nested_repository_evidence,
+    _verify_x200_coreboot_generated_files,
 )
 from autoloader.workflow.compatibility import CompatibilityValidator
 from autoloader.workflow.engine import WorkflowSession, WorkflowTransitionError
@@ -461,7 +460,7 @@ class X200LibrebootWorkflow:
         if result.status is not BuildStatus.COMPLETE or result.manifest is None or result.manifest_path is None:
             raise ValueError(f"ArtifactEngine did not return a COMPLETE X200 manifest: {result.code}: {result.message}")
         manifest = result.manifest
-        if manifest.status != "complete" or manifest.schema_version != 3:
+        if manifest.status != "complete" or manifest.schema_version != 4:
             raise ValueError("Artifact manifest is not a supported COMPLETE manifest")
         if (
             manifest.recipe_id != recipe.recipe_id
@@ -536,15 +535,24 @@ class X200LibrebootWorkflow:
             raise ValueError("Artifact manifest must stage exactly the selected ROM, not every build variant")
         selected = self._selected_artifact_record(result)
         cbfs = selected.cbfs_inspection
+        if cbfs is None:
+            raise ValueError("Selected X200 artifact lacks pinned whole-chip CBFS source evidence")
+        _validate_x200_nested_repository_evidence(cbfs.nested_repositories)
+        coreboot_evidence = next(
+            item for item in cbfs.nested_repositories if item.role == "coreboot"
+        )
+        assert result.manifest_path is not None
+        _verify_x200_coreboot_generated_files(
+            result.manifest_path.parent, coreboot_evidence, check_repository_status=False
+        )
         if (
             selected.source_relative_path != recipe.output_relative_path
             or selected.regions
-            or cbfs is None
             or cbfs.region != "whole_flash"
             or cbfs.required_payload != "fallback/payload"
-            or cbfs.source_repository_url not in _LBMK_COREBOOT_ORIGINS
-            or cbfs.source_revision != _LBMK_COREBOOT_REVISION
-            or cbfs.source_tree_id != _LBMK_COREBOOT_TREE
+            or cbfs.source_repository_url != coreboot_evidence.repository_url
+            or cbfs.source_revision != coreboot_evidence.resulting_revision
+            or cbfs.source_tree_id != coreboot_evidence.resulting_tree_id
             or cbfs.source_file_hashes != tuple((item.path, item.sha256) for item in _LBMK_COREBOOT_CBFSTOOL_SOURCES)
         ):
             raise ValueError("Selected X200 artifact lacks the exact pinned whole-chip CBFS payload evidence")

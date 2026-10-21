@@ -92,6 +92,7 @@ class FixedWriteCommand:
     executable_sha256: str
     tool_name: str
     tool_version: str
+    tool_package_owner: str
     argv: tuple[str, ...]
 
     def __post_init__(self) -> None:
@@ -665,6 +666,8 @@ class WriteIntentFactory:
             write_artifact_sha = mac_evidence.write_artifact_sha256
             write_artifact_size = mac_evidence.write_artifact_size_bytes
         tool_sha = _hash_file(tool_path)
+        if tool_sha != probe.tool.sha256:
+            raise WriteApprovalError("flashrom/flashprog executable changed after the trusted SPI probe")
         expected_argv = (
             "-p", probe.programmer.value,
             "-c", probe.chip_name,
@@ -675,6 +678,7 @@ class WriteIntentFactory:
             executable_sha256=tool_sha,
             tool_name=probe.tool.name,
             tool_version=probe.tool.version,
+            tool_package_owner=probe.tool.package_owner,
             argv=expected_argv,
         )
         backup_pairs = tuple(
@@ -1719,6 +1723,7 @@ def _validate_intent_policy(intent: WriteIntent) -> None:
         or normalized_path(str(executable)) != intent.command.executable
         or not _SHA256.fullmatch(intent.command.executable_sha256)
         or intent.command.tool_name not in {"flashrom", "flashprog"}
+        or not re.fullmatch(r"(?:pacman|dpkg): [^\r\n]+", intent.command.tool_package_owner)
         or not re.fullmatch(r"[0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?", intent.command.tool_version)
     ):
         raise WriteApprovalError("fixed flash tool identity is malformed")

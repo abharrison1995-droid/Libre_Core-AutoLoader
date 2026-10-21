@@ -295,6 +295,25 @@ def post_reboot_check(profile: str, checkpoint: Path, observations_file: Path) -
     console.print("Evidence: " + ", ".join(result.evidence_refs))
 
 
+@cli.command("review-readiness")
+@click.option("--profile", required=True, type=click.Choice(V1_PROFILE_CHOICES), help="Allowlisted V1 workflow profile.")
+@click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing terminal operation checkpoint to inspect without hardware access.")
+def review_readiness(profile: str, checkpoint: Path) -> None:
+    """Review persisted operation inputs only; never probes or authorizes hardware work."""
+    controller = ApplicationController()
+    result = controller.request_action(
+        ApplicationAction.REVIEW_READINESS,
+        profile_id=profile,
+        checkpoint_path=checkpoint,
+    )
+    if result.code != "REVIEW_INPUTS_COMPLETE":
+        raise click.ClickException(f"[{result.code}] {result.message}")
+    console.print(f"[{result.code}] {result.message}")
+    for reason in result.reasons:
+        console.print(reason)
+    console.print("Evidence: " + ", ".join(result.evidence_refs))
+
+
 @cli.command("build-rom")
 @click.option("--profile", required=True, type=click.Choice(("x200-libreboot", "x220-coreboot")), help="Allowlisted X200/X220 profile.")
 @click.option("--checkpoint", required=True, type=click.Path(exists=True, dir_okay=False, path_type=Path), help="Existing evidence checkpoint with verified backup.")

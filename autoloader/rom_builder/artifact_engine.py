@@ -8,6 +8,7 @@ tree. T430 deliberately has a handoff descriptor instead of a compiled ROM.
 from __future__ import annotations
 
 import hashlib
+import importlib.resources
 import json
 import os
 import platform
@@ -110,6 +111,97 @@ _X200_GRUB_FONT_OVERLAY_PATH = f"autoloader/rom_builder/patches/{_X200_GRUB_FONT
 _X200_GRUB_FONT_OVERLAY_SHA256 = "3356bf29879cf87659230a201ab81f5e45cc5a0e9c80161463a9b868955f036d"
 _X200_LBMK_TREE_SH_SHA256 = "de3c294c4401fcc5a6364e644364127e3ddb31d3f0d7b00050350516ae428876"
 _X200_LBMK_TREE_SH_PATCHED_SHA256 = "1d2070246558a882a7dcf25a6e54c1b3498111b177318cd44704a549e773a9e7"
+_X200_VBOOT_OVERLAY_RESOURCE = "0011-lbmk-vboot-cbfstool-keep-strchr-result-const.patch"
+_X200_VBOOT_OVERLAY_RESOURCE_PATH = f"autoloader/rom_builder/patches/{_X200_VBOOT_OVERLAY_RESOURCE}"
+_X200_VBOOT_OVERLAY_SHA256 = "172c41a5b92557de0739ec01ec2f37331c9066c8896fbfa3829be89f45bcfaf7"
+_X200_VBOOT_OVERLAY_RELATIVE_PATH = (
+    "config/submodule/coreboot/default/vboot/patches/"
+    "0002-vboot-cbfstool-keep-strchr-result-const.patch"
+)
+_X200_VBOOT_SOURCE_RELATIVE_PATH = "work/lbmk/src/coreboot/default/3rdparty/vboot"
+_X200_VBOOT_BASE_REVISION = "3f94e2c7ed58c4e67d6e7dc6052ec615dbbb9bb4"
+_X200_VBOOT_BASE_TREE = "5e90bceae43ffb05372312703105959c1bdca9a1"
+_X200_VBOOT_PRE_OVERLAY_TREE = "d45dd5aeaeee63a23d7b92ba38f8ed5641ba2dc7"
+_X200_VBOOT_POST_OVERLAY_TREE = "349851764655bb215f6ad63b89a6aa6e9ffa43c5"
+_X200_VBOOT_PREIMAGE_SHA256 = "643cbe79bc91455013f23521f646fbc31d44cbc31f0758f57cd9680de6a8e6a4"
+_X200_VBOOT_POSTIMAGE_SHA256 = "32f09d3948d5c9471c966767a990545cd2f3293491118ad1ef3f510f62462245"
+_X200_VBOOT_SOURCE_FILE = "host/lib/cbfstool.c"
+_X200_VBOOT_CACHE_RELATIVE_PATH = "cache/clone/review.coreboot.org/vboot.git"
+_X200_VBOOT_ORIGIN_URL = "https://review.coreboot.org/vboot.git"
+_X200_VBOOT_EXISTING_PATCH = (
+    "config/submodule/coreboot/default/vboot/patches/"
+    "0001-extract_vmlinuz.c-Fix-the-bounds-check-on-vmlinuz_he.patch",
+    "5008f31ddb78d77fdceb27412d2d56844676b4eb48150fdea8575caf513d8543",
+)
+_X200_COREBOOT_POST_TREE = "627cbbe4f6e7cba7ff22524b82072f1d7b34321c"
+_X200_COREBOOT_CACHE_RELATIVE_PATH = "cache/clone/github.com/coreboot/coreboot.git"
+_X200_COREBOOT_ORIGIN_URL = "https://github.com/coreboot/coreboot.git"
+_X200_COREBOOT_PATCH_COUNT = 44
+_X200_COREBOOT_GENERATED_STATUS = (
+    " M 3rdparty/libgfxinit",
+    " M 3rdparty/vboot",
+    "?? 3rdparty/fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c/",
+    "?? util/cbfstool/fmd_parser.h",
+    "?? util/cbfstool/fmd_scanner.h",
+    "?? util/vboot_lib/libvboot_host.so",
+)
+_X200_COREBOOT_GENERATED_FILES = (
+    "util/cbfstool/fmd_parser.h",
+    "util/cbfstool/fmd_scanner.h",
+    "util/vboot_lib/libvboot_host.so",
+)
+_X200_COREBOOT_GENERATED_HEADER_SOURCES = (
+    (
+        "util/cbfstool/fmd_parser.h",
+        "util/cbfstool/fmd_parser.h_shipped",
+        "4e93908f1854f103e832c4c115330689b4bb623f2d94ecdb2dcd7d0d6c9f609f",
+    ),
+    (
+        "util/cbfstool/fmd_scanner.h",
+        "util/cbfstool/fmd_scanner.h_shipped",
+        "c5b826d911122e6513f1f5c2ad5d30b067caf275e0a949b544b6a853a081cb46",
+    ),
+)
+_X200_COREBOOT_HOST_ELF = "util/vboot_lib/libvboot_host.so"
+_X200_COREBOOT_HOST_ELF_MAX_BYTES = 128 * 1024 * 1024
+_X200_LIBGFXINIT_BASE_REVISION = "17cfc92f402493979783585b6581efbd98c0cf07"
+_X200_LIBGFXINIT_BASE_TREE = "95104a05ac567e1c2b391fbf1a77beb29e5983ce"
+_X200_LIBGFXINIT_POST_TREE = "8c338661300d540f564bc6af728a6d61563bc3d3"
+_X200_LIBGFXINIT_CACHE_RELATIVE_PATH = "cache/clone/review.coreboot.org/libgfxinit.git"
+_X200_LIBGFXINIT_ORIGIN_URL = "https://review.coreboot.org/libgfxinit.git"
+_X200_LIBGFXINIT_PATCH_INPUTS = (
+    (
+        "config/submodule/coreboot/default/libgfxinit/patches/"
+        "0001-g45-hw-gfx-gma-plls.adb-Make-reference-clock-frequen.patch",
+        "5cb94277754f1711d25c4ddce8c4e5de48afc004ea718bc9e8ff799e6ad29db3",
+    ),
+    (
+        "config/submodule/coreboot/default/libgfxinit/patches/"
+        "0002-re-try-EDID-reading-when-it-fails.patch",
+        "cbe477a3fb1a64082754269453d8bd98557c93aa0a90931ae251a44dd7d73def",
+    ),
+)
+_X200_VBOOT_PATCH_STACK = (
+    _X200_VBOOT_EXISTING_PATCH,
+    (_X200_VBOOT_OVERLAY_RELATIVE_PATH, _X200_VBOOT_OVERLAY_SHA256),
+)
+_X200_LIBGFXINIT_MODULE_CONFIG = (
+    "config/submodule/coreboot/default/libgfxinit/module.cfg",
+    "d991d35b81f20012cbae7fb9f7fcd8ca55f4e7bb13870ba104b4785bfb2864ad",
+)
+_X200_VBOOT_MODULE_CONFIG = (
+    "config/submodule/coreboot/default/vboot/module.cfg",
+    "655585bc4f884c52bdf93b6685e6aa073a92adfa39d96ee73f33ba5ec31aea48",
+)
+_X200_FSP_MODULE_CONFIG = (
+    "config/submodule/coreboot/default/fsp/module.cfg",
+    "8d54dcc9ea20155ac2ff18e37adbe60b58820c4b5009cdf07e46ee6c9be652e0",
+)
+_X200_FSP_REVISION = "cc36ae2b5775fa7400cb3282680afc0f6cb37a3c"
+_X200_FSP_TREE = "fd1a467ea43780838eec34f4b893172e2a9b2db6"
+_X200_FSP_RELATIVE_PATH = "work/lbmk/src/coreboot/default/3rdparty/fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c"
+_X200_FSP_CACHE_RELATIVE_PATH = "cache/clone/review.coreboot.org/fsp.git"
+_X200_FSP_ORIGIN_URL = "https://review.coreboot.org/fsp.git"
 _X200_GRUB_PACKAGE_CFG_SHA256 = "6e8886854534db158f8560d7ec99e6eccd2f2c4ca6100aa0c9442c22558081c8"
 _X200_GRUB_TARGET_CFG_SHA256 = "a23bb6648ce1f893504c19d957a53de9de8a861f92ae123ade094dade4e8f5a8"
 _X200_GRUB_PATCH_INPUTS = (
@@ -576,6 +668,131 @@ class CBFSEntry:
 
 
 @dataclass(frozen=True)
+class X200GeneratedFileEvidence:
+    """Typed evidence for the exact generated files permitted in patched Coreboot."""
+
+    relative_path: str
+    size_bytes: int
+    sha256: str
+    kind: str
+    source_relative_path: str | None = None
+    source_sha256: str | None = None
+    elf_class: str | None = None
+    elf_type: str | None = None
+    elf_machine: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.relative_path, str) or type(self.size_bytes) is not int:
+            raise ValueError("Generated source evidence requires a text path and integer size")
+        if not isinstance(self.sha256, str) or not isinstance(self.kind, str):
+            raise ValueError("Generated source evidence hash and kind must be text")
+        path = PurePosixPath(self.relative_path)
+        if path.is_absolute() or ".." in path.parts or "\\" in self.relative_path or "\x00" in self.relative_path:
+            raise ValueError("Generated source evidence path must be safe and repository-relative")
+        if self.size_bytes <= 0 or not _SHA256_RE.fullmatch(self.sha256):
+            raise ValueError("Generated source evidence requires a positive size and lowercase SHA-256")
+        if self.kind == "copied-shipped-header":
+            if (
+                self.source_relative_path is None
+                or self.source_sha256 is None
+                or not _SHA256_RE.fullmatch(self.source_sha256)
+                or self.elf_class is not None
+                or self.elf_type is not None
+                or self.elf_machine is not None
+            ):
+                raise ValueError("Copied generated header evidence must bind its shipped source only")
+        elif self.kind == "elf-shared-object":
+            if (
+                self.source_relative_path is not None
+                or self.source_sha256 is not None
+                or self.elf_class != "ELF64"
+                or self.elf_type != "ET_DYN"
+                or self.elf_machine != "EM_X86_64"
+            ):
+                raise ValueError("Generated host library must record the bounded x86-64 ELF shared-object identity")
+        else:
+            raise ValueError("Generated source evidence has an unsupported file kind")
+        if self.source_relative_path is not None:
+            if not isinstance(self.source_relative_path, str):
+                raise ValueError("Generated source evidence source path must be text or null")
+            source = PurePosixPath(self.source_relative_path)
+            if source.is_absolute() or ".." in source.parts or "\\" in self.source_relative_path or "\x00" in self.source_relative_path:
+                raise ValueError("Generated source evidence source path must be repository-relative")
+        for identity in (self.source_sha256, self.elf_class, self.elf_type, self.elf_machine):
+            if identity is not None and not isinstance(identity, str):
+                raise ValueError("Generated source evidence optional identity fields must be text or null")
+
+
+@dataclass(frozen=True)
+class X200NestedRepositoryEvidence:
+    """Exact base-to-patched identity for one lbmk-managed nested repository."""
+
+    role: str
+    relative_path: str
+    repository_url: str
+    cache_origin_relative_path: str
+    base_revision: str
+    base_tree_id: str
+    resulting_revision: str
+    resulting_tree_id: str
+    patch_inputs: tuple[tuple[str, str], ...]
+    patch_revisions: tuple[str, ...]
+    patch_tree_ids: tuple[str, ...]
+    source_file_hashes: tuple[tuple[str, str], ...] = ()
+    source_file_preimage_hashes: tuple[tuple[str, str], ...] = ()
+    generated_status: tuple[str, ...] = ()
+    generated_files: tuple[X200GeneratedFileEvidence, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "patch_inputs", tuple(tuple(item) for item in self.patch_inputs))
+        object.__setattr__(self, "patch_revisions", tuple(self.patch_revisions))
+        object.__setattr__(self, "patch_tree_ids", tuple(self.patch_tree_ids))
+        object.__setattr__(self, "source_file_hashes", tuple(tuple(item) for item in self.source_file_hashes))
+        object.__setattr__(self, "source_file_preimage_hashes", tuple(tuple(item) for item in self.source_file_preimage_hashes))
+        object.__setattr__(self, "generated_status", tuple(self.generated_status))
+        object.__setattr__(self, "generated_files", tuple(self.generated_files))
+        if not self.role or not self.relative_path or not self.cache_origin_relative_path:
+            raise ValueError("X200 nested source evidence requires a role and operation-relative paths")
+        if not self.repository_url.startswith("https://") or "@" in self.repository_url:
+            raise ValueError("X200 nested source evidence requires a credential-free HTTPS repository")
+        if any(not _GIT_OBJECT_RE.fullmatch(value) for value in (
+            self.base_revision,
+            self.base_tree_id,
+            self.resulting_revision,
+            self.resulting_tree_id,
+            *self.patch_revisions,
+            *self.patch_tree_ids,
+        )):
+            raise ValueError("X200 nested source evidence contains a malformed Git identity")
+        if len(self.patch_inputs) != len(self.patch_tree_ids) or len(self.patch_inputs) != len(self.patch_revisions):
+            raise ValueError("X200 nested source patch inputs, commits and result trees must correspond one-to-one")
+        if len(set(self.patch_revisions)) != len(self.patch_revisions):
+            raise ValueError("X200 nested source generated patch commits must be unique")
+        if self.patch_revisions and self.patch_revisions[-1] != self.resulting_revision:
+            raise ValueError("X200 nested source final revision must match its final applied patch commit")
+        for path in (
+            self.relative_path,
+            self.cache_origin_relative_path,
+            *(path for path, _ in self.patch_inputs),
+            *(path for path, _ in self.source_file_hashes),
+            *(path for path, _ in self.source_file_preimage_hashes),
+        ):
+            candidate = PurePosixPath(path)
+            if candidate.is_absolute() or ".." in candidate.parts or "\\" in path or "\x00" in path:
+                raise ValueError("X200 nested source paths must be safe repository-relative paths")
+        if any(not isinstance(item, str) for item in self.generated_status):
+            raise ValueError("X200 nested source generated status must contain text rows")
+        if any(not isinstance(item, X200GeneratedFileEvidence) for item in self.generated_files):
+            raise ValueError("Generated nested source inventory must contain typed file evidence")
+        if any(not _SHA256_RE.fullmatch(digest) for _, digest in (
+            *self.patch_inputs, *self.source_file_hashes, *self.source_file_preimage_hashes
+        )):
+            raise ValueError("X200 nested source evidence contains a malformed SHA-256")
+        if self.role != "coreboot" and self.generated_files:
+            raise ValueError("Generated Coreboot file inventory cannot be attached to an unrelated nested repository")
+
+
+@dataclass(frozen=True)
 class CBFSInspectionRecord:
     tool_relative_path: str
     tool_sha256: str
@@ -586,16 +803,329 @@ class CBFSInspectionRecord:
     required_payload: str
     inventory: tuple[CBFSEntry, ...]
     source_file_hashes: tuple[tuple[str, str], ...]
+    nested_repositories: tuple[X200NestedRepositoryEvidence, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "inventory", tuple(self.inventory))
         object.__setattr__(self, "source_file_hashes", tuple(self.source_file_hashes))
+        object.__setattr__(self, "nested_repositories", tuple(self.nested_repositories))
         if not _SHA256_RE.fullmatch(self.tool_sha256):
             raise ValueError("CBFS inspection requires the exact tool binary SHA-256")
         if not self.inventory:
             raise ValueError("CBFS inspection requires a complete non-empty inventory")
         if not self.source_file_hashes or any(not _SHA256_RE.fullmatch(digest) for _, digest in self.source_file_hashes):
             raise ValueError("CBFS inspection requires hashed parser source files")
+
+
+def _validate_x200_coreboot_generated_file_evidence(
+    evidence: X200NestedRepositoryEvidence,
+) -> None:
+    if evidence.role != "coreboot":
+        raise ValueError("Generated-file evidence is valid only for the Coreboot nested repository")
+    files = evidence.generated_files
+    if tuple(item.relative_path for item in files) != _X200_COREBOOT_GENERATED_FILES:
+        raise ValueError("X200 Coreboot generated-file inventory is missing, extra, duplicated, or out of order")
+    by_path = {item.relative_path: item for item in files}
+    for output_path, source_path, source_hash in _X200_COREBOOT_GENERATED_HEADER_SOURCES:
+        item = by_path[output_path]
+        if (
+            item.kind != "copied-shipped-header"
+            or item.source_relative_path != source_path
+            or item.source_sha256 != source_hash
+            or item.sha256 != source_hash
+        ):
+            raise ValueError("X200 generated cbfstool header evidence differs from the exact shipped source")
+    library = by_path[_X200_COREBOOT_HOST_ELF]
+    if (
+        library.kind != "elf-shared-object"
+        or library.source_relative_path is not None
+        or library.source_sha256 is not None
+        or library.elf_class != "ELF64"
+        or library.elf_type != "ET_DYN"
+        or library.elf_machine != "EM_X86_64"
+        or library.size_bytes > _X200_COREBOOT_HOST_ELF_MAX_BYTES
+    ):
+        raise ValueError("X200 generated vboot host library evidence is not a bounded x86-64 ELF shared object")
+
+
+def _validate_x200_nested_repository_evidence(
+    repositories: Sequence[X200NestedRepositoryEvidence],
+) -> None:
+    """Require the exact lbmk-managed Coreboot and submodule result contract."""
+    rows = tuple(repositories)
+    if tuple(item.role for item in rows) != ("coreboot", "libgfxinit", "vboot", "fsp"):
+        raise ValueError("X200 nested repository evidence is incomplete, duplicated, or out of order")
+
+    coreboot, libgfxinit, vboot, fsp = rows
+    operation_prefix = "work/lbmk/"
+    expected_coreboot_prefix = f"{operation_prefix}config/coreboot/default/patches/"
+    if (
+        coreboot.relative_path != "work/lbmk/src/coreboot/default"
+        or coreboot.repository_url != _X200_COREBOOT_ORIGIN_URL
+        or coreboot.cache_origin_relative_path != f"{operation_prefix}{_X200_COREBOOT_CACHE_RELATIVE_PATH}"
+        or coreboot.base_revision != _LBMK_COREBOOT_REVISION
+        or coreboot.base_tree_id != _LBMK_COREBOOT_TREE
+        or coreboot.resulting_tree_id != _X200_COREBOOT_POST_TREE
+        or len(coreboot.patch_inputs) != _X200_COREBOOT_PATCH_COUNT
+        or any(not path.startswith(expected_coreboot_prefix) for path, _ in coreboot.patch_inputs)
+        or len({path for path, _ in coreboot.patch_inputs}) != _X200_COREBOOT_PATCH_COUNT
+        or len(coreboot.patch_tree_ids) != _X200_COREBOOT_PATCH_COUNT
+        or len(coreboot.patch_revisions) != _X200_COREBOOT_PATCH_COUNT
+        or coreboot.patch_tree_ids[-1] != _X200_COREBOOT_POST_TREE
+        or coreboot.generated_status != _X200_COREBOOT_GENERATED_STATUS
+        or dict(coreboot.source_file_hashes) != {item.path: item.sha256 for item in _LBMK_COREBOOT_CBFSTOOL_SOURCES}
+        or coreboot.source_file_preimage_hashes
+    ):
+        raise ValueError("X200 post-lbmk Coreboot source provenance differs from its exact patched tree")
+    _validate_x200_coreboot_generated_file_evidence(coreboot)
+
+    if (
+        libgfxinit.relative_path != "work/lbmk/src/coreboot/default/3rdparty/libgfxinit"
+        or libgfxinit.repository_url != _X200_LIBGFXINIT_ORIGIN_URL
+        or libgfxinit.cache_origin_relative_path != f"{operation_prefix}{_X200_LIBGFXINIT_CACHE_RELATIVE_PATH}"
+        or libgfxinit.base_revision != _X200_LIBGFXINIT_BASE_REVISION
+        or libgfxinit.base_tree_id != _X200_LIBGFXINIT_BASE_TREE
+        or libgfxinit.resulting_tree_id != _X200_LIBGFXINIT_POST_TREE
+        or libgfxinit.patch_inputs != tuple(
+            (f"{operation_prefix}{path}", digest) for path, digest in _X200_LIBGFXINIT_PATCH_INPUTS
+        )
+        or len(libgfxinit.patch_tree_ids) != len(_X200_LIBGFXINIT_PATCH_INPUTS)
+        or len(libgfxinit.patch_revisions) != len(_X200_LIBGFXINIT_PATCH_INPUTS)
+        or libgfxinit.patch_tree_ids[-1] != _X200_LIBGFXINIT_POST_TREE
+        or libgfxinit.source_file_hashes
+        or libgfxinit.source_file_preimage_hashes
+        or libgfxinit.generated_status
+        or libgfxinit.generated_files
+    ):
+        raise ValueError("X200 post-lbmk libgfxinit provenance differs from its exact patched tree")
+
+    if (
+        vboot.relative_path != _X200_VBOOT_SOURCE_RELATIVE_PATH
+        or vboot.repository_url != _X200_VBOOT_ORIGIN_URL
+        or vboot.cache_origin_relative_path != f"{operation_prefix}{_X200_VBOOT_CACHE_RELATIVE_PATH}"
+        or vboot.base_revision != _X200_VBOOT_BASE_REVISION
+        or vboot.base_tree_id != _X200_VBOOT_BASE_TREE
+        or vboot.resulting_tree_id != _X200_VBOOT_POST_OVERLAY_TREE
+        or vboot.patch_inputs != tuple(
+            (f"{operation_prefix}{path}", digest) for path, digest in _X200_VBOOT_PATCH_STACK
+        )
+        or len(vboot.patch_revisions) != len(_X200_VBOOT_PATCH_STACK)
+        or vboot.patch_tree_ids != (_X200_VBOOT_PRE_OVERLAY_TREE, _X200_VBOOT_POST_OVERLAY_TREE)
+        or dict(vboot.source_file_hashes) != {_X200_VBOOT_SOURCE_FILE: _X200_VBOOT_POSTIMAGE_SHA256}
+        or dict(vboot.source_file_preimage_hashes) != {_X200_VBOOT_SOURCE_FILE: _X200_VBOOT_PREIMAGE_SHA256}
+        or vboot.generated_status
+        or vboot.generated_files
+    ):
+        raise ValueError("X200 vboot overlay provenance differs from its exact pre/post source state")
+
+    if (
+        fsp.relative_path != _X200_FSP_RELATIVE_PATH
+        or fsp.repository_url != _X200_FSP_ORIGIN_URL
+        or fsp.cache_origin_relative_path != f"{operation_prefix}{_X200_FSP_CACHE_RELATIVE_PATH}"
+        or fsp.base_revision != _X200_FSP_REVISION
+        or fsp.base_tree_id != _X200_FSP_TREE
+        or fsp.resulting_revision != _X200_FSP_REVISION
+        or fsp.resulting_tree_id != _X200_FSP_TREE
+        or fsp.patch_inputs
+        or fsp.patch_tree_ids
+        or fsp.patch_revisions
+        or fsp.source_file_hashes
+        or fsp.source_file_preimage_hashes
+        or fsp.generated_status
+        or fsp.generated_files
+    ):
+        raise ValueError("X200 fetched FSP source provenance differs from its exact pinned checkout")
+
+
+def _regular_generated_file(checkout: Path, relative_path: str) -> Path:
+    candidate = checkout.joinpath(*PurePosixPath(relative_path).parts)
+    _assert_no_symlink_components(candidate, root=checkout)
+    try:
+        mode = candidate.lstat().st_mode
+    except OSError as exc:
+        raise ValueError(f"Required generated Coreboot file is missing: {relative_path}") from exc
+    if not stat.S_ISREG(mode):
+        raise ValueError(f"Generated Coreboot path must be a regular non-symlink file: {relative_path}")
+    return candidate
+
+
+def _elf_shared_object_identity(path: Path) -> tuple[int, str, str, str]:
+    """Read and bound-check the ELF64 header without loading the library."""
+    file_size = path.stat().st_size
+    if file_size < 64 or file_size > _X200_COREBOOT_HOST_ELF_MAX_BYTES or not os.access(path, os.X_OK):
+        raise ValueError("Generated vboot host library is empty, oversized, or non-executable")
+    with path.open("rb") as stream:
+        header = stream.read(64)
+    if (
+        len(header) != 64
+        or header[:4] != b"\x7fELF"
+        or header[4] != 2
+        or header[5] != 1
+        or header[6] != 1
+    ):
+        raise ValueError("Generated vboot host library has an unsupported ELF identity")
+    elf_type = int.from_bytes(header[16:18], "little")
+    machine = int.from_bytes(header[18:20], "little")
+    elf_version = int.from_bytes(header[20:24], "little")
+    program_offset = int.from_bytes(header[32:40], "little")
+    header_size = int.from_bytes(header[52:54], "little")
+    program_entry_size = int.from_bytes(header[54:56], "little")
+    program_count = int.from_bytes(header[56:58], "little")
+    program_end = program_offset + program_entry_size * program_count
+    if (
+        elf_type != 3
+        or machine != 62
+        or elf_version != 1
+        or header_size != 64
+        or program_offset < 64
+        or program_entry_size != 56
+        or not 1 <= program_count <= 256
+        or program_end > file_size
+    ):
+        raise ValueError("Generated vboot host library ELF header is malformed or out of bounds")
+    with path.open("rb") as stream:
+        stream.seek(program_offset)
+        program_headers = stream.read(program_entry_size * program_count)
+    if len(program_headers) != program_entry_size * program_count:
+        raise ValueError("Generated vboot host library ELF program-header table is truncated")
+    for index in range(program_count):
+        start = index * program_entry_size
+        header_entry = program_headers[start:start + program_entry_size]
+        segment_offset = int.from_bytes(header_entry[8:16], "little")
+        segment_file_size = int.from_bytes(header_entry[32:40], "little")
+        if segment_offset + segment_file_size > file_size:
+            raise ValueError("Generated vboot host library ELF segment extends beyond the file")
+    return file_size, "ELF64", "ET_DYN", "EM_X86_64"
+
+
+def _capture_x200_coreboot_generated_files(checkout: Path) -> tuple[X200GeneratedFileEvidence, ...]:
+    """Capture exactly the deterministic shipped-header copies and host ELF output."""
+    rows: list[X200GeneratedFileEvidence] = []
+    for output_relative, source_relative, expected_hash in _X200_COREBOOT_GENERATED_HEADER_SOURCES:
+        output = _regular_generated_file(checkout, output_relative)
+        source = _regular_generated_file(checkout, source_relative)
+        source_bytes = source.read_bytes()
+        output_bytes = output.read_bytes()
+        source_hash = hashlib.sha256(source_bytes).hexdigest()
+        if source_hash != expected_hash or output_bytes != source_bytes:
+            raise ValueError(f"Generated Coreboot header differs from its exact shipped source: {output_relative}")
+        rows.append(X200GeneratedFileEvidence(
+            relative_path=output_relative,
+            size_bytes=len(output_bytes),
+            sha256=hashlib.sha256(output_bytes).hexdigest(),
+            kind="copied-shipped-header",
+            source_relative_path=source_relative,
+            source_sha256=source_hash,
+        ))
+    library = _regular_generated_file(checkout, _X200_COREBOOT_HOST_ELF)
+    library_size, elf_class, elf_type, elf_machine = _elf_shared_object_identity(library)
+    rows.append(X200GeneratedFileEvidence(
+        relative_path=_X200_COREBOOT_HOST_ELF,
+        size_bytes=library_size,
+        sha256=sha256_file(library),
+        kind="elf-shared-object",
+        elf_class=elf_class,
+        elf_type=elf_type,
+        elf_machine=elf_machine,
+    ))
+    return tuple(rows)
+
+
+def _verify_x200_coreboot_generated_files(
+    operation_dir: str | Path,
+    evidence: X200NestedRepositoryEvidence,
+    *,
+    check_repository_status: bool = True,
+) -> None:
+    """Rehash generated outputs and exact status at reopen and workflow acceptance."""
+    _validate_x200_coreboot_generated_file_evidence(evidence)
+    operation = Path(operation_dir).absolute()
+    if operation.is_symlink() or not operation.is_dir():
+        raise ValueError("X200 artifact operation directory is missing or symlinked")
+    current = Path(operation.anchor)
+    for component in operation.parts[1:]:
+        current = current / component
+        if current.is_symlink():
+            raise ValueError("X200 artifact operation directory has a symlinked path component")
+    checkout = operation.joinpath(*PurePosixPath(evidence.relative_path).parts)
+    _assert_no_symlink_components(checkout, root=operation)
+    if not checkout.is_dir():
+        raise ValueError("Persisted X200 Coreboot generated-file checkout is missing")
+    if check_repository_status:
+        git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+        git_env.update({
+            "GIT_CONFIG_GLOBAL": str(operation / _BUILD_GIT_CONFIG_MANIFEST_PATH.removeprefix("<operation-output-directory>/")),
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+            "LC_ALL": "C",
+        })
+        status = subprocess.run(
+            ["git", "-C", str(checkout), "status", "--porcelain=v1", "--untracked-files=all"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=git_env,
+        )
+        if status.returncode != 0:
+            raise ValueError("Unable to recheck persisted X200 Coreboot generated-file source status")
+        observed_status = tuple(filter(None, status.stdout.rstrip("\r\n").splitlines()))
+        if observed_status != _X200_COREBOOT_GENERATED_STATUS:
+            raise ValueError("Persisted X200 Coreboot generated-file source status changed")
+    if _capture_x200_coreboot_generated_files(checkout) != evidence.generated_files:
+        raise ValueError("Persisted X200 Coreboot generated-file bytes differ from typed evidence")
+
+
+def _validate_x200_lbmk_overlay_root_state(
+    *,
+    revision: str,
+    tree_id: str,
+    origin: str,
+    status: Sequence[str],
+    after_build: bool,
+) -> None:
+    expected_status = (
+        (
+            " M include/tree.sh",
+            f"?? {_X200_UBOOT_OVERLAY_PATH}",
+            f"?? {_X200_VBOOT_OVERLAY_RELATIVE_PATH}",
+        )
+        if after_build
+        else (f"?? {_X200_UBOOT_OVERLAY_PATH}",)
+    )
+    if (
+        revision != LIBREBOOT_2601.revision
+        or tree_id != LIBREBOOT_2601.tree_id
+        or origin != LIBREBOOT_2601.repository_url
+        or tuple(sorted(status)) != tuple(sorted(expected_status))
+    ):
+        raise ValueError("Disposable lbmk source identity/status differs from the exact pinned overlay state")
+
+
+def _validate_x200_vboot_overlay_bytes(patch_bytes: bytes, before: bytes, after: bytes) -> None:
+    if hashlib.sha256(patch_bytes).hexdigest() != _X200_VBOOT_OVERLAY_SHA256:
+        raise ValueError("X200 vboot compatibility patch bytes differ from the reviewed overlay")
+    if (
+        hashlib.sha256(before).hexdigest() != _X200_VBOOT_PREIMAGE_SHA256
+        or hashlib.sha256(after).hexdigest() != _X200_VBOOT_POSTIMAGE_SHA256
+    ):
+        raise ValueError("X200 vboot parser source preimage/postimage hash differs from the reviewed overlay")
+    old = b"char *end = strchr(start, '\\n');"
+    new = b"const char *end = strchr(start, '\\n');"
+    if before.count(old) != 1 or before.replace(old, new, 1) != after:
+        raise ValueError("X200 vboot parser postimage contains changes beyond the exact const-correctness line")
+
+
+def _x200_vboot_overlay_resource_bytes() -> bytes:
+    """Read the wheel-packaged overlay resource, never an evidence-copy path."""
+    resource = importlib.resources.files("autoloader.rom_builder").joinpath(
+        "patches", _X200_VBOOT_OVERLAY_RESOURCE
+    )
+    try:
+        return resource.read_bytes()
+    except (FileNotFoundError, OSError) as exc:
+        raise ValueError("Packaged X200 vboot compatibility overlay is unavailable") from exc
 
 
 @dataclass(frozen=True)
@@ -684,10 +1214,17 @@ class ArtifactManifest:
         object.__setattr__(self, "expected_regions", tuple(self.expected_regions))
         object.__setattr__(self, "blob_sha256", tuple(self.blob_sha256))
         object.__setattr__(self, "artifacts", tuple(self.artifacts))
-        if self.schema_version != 3:
-            raise ValueError("Artifact manifest schema version 3 is required")
+        if self.schema_version not in {3, 4}:
+            raise ValueError("Artifact manifest schema version 3 or 4 is required")
         if self.status not in {"complete", "failed"}:
             raise ValueError("Artifact manifest status must be complete or failed")
+        if not self.recipe_id.startswith("x200-libreboot-") and any(
+            nested.generated_files
+            for artifact in self.artifacts
+            if artifact.cbfs_inspection is not None
+            for nested in artifact.cbfs_inspection.nested_repositories
+        ):
+            raise ValueError("X200 generated Coreboot inventory cannot be attached to an unrelated artifact manifest")
         if self.status == "complete":
             if self.selected_artifact_relative_path is None or self.selected_artifact_sha256 is None:
                 raise ValueError("A complete manifest must identify its selected artifact path and digest")
@@ -701,6 +1238,8 @@ class ArtifactManifest:
             if not self.artifacts or len(selected) != 1 or self.failure_code is not None:
                 raise ValueError("A complete manifest requires one selected artifact and no failure")
             selected_record = selected[0]
+            if self.recipe_id.startswith("x200-libreboot-") and self.schema_version != 4:
+                raise ValueError("A complete X200 artifact requires schema 4 nested lbmk source provenance")
             if self.recipe_id.startswith(("x200-libreboot-", "x220-coreboot-")):
                 if selected_record.cbfs_inspection is None:
                     raise ValueError("A complete firmware artifact requires pinned CBFS structure inspection")
@@ -713,6 +1252,20 @@ class ArtifactManifest:
                 raise ValueError("A complete X200 artifact requires pinned patched U-Boot dependency provenance")
             if self.recipe_id.startswith("x200-libreboot-") and self.x200_grub_font is None:
                 raise ValueError("A complete X200 artifact requires pinned GRUB Unifont and payload provenance")
+            if self.recipe_id.startswith("x200-libreboot-"):
+                if selected_record.cbfs_inspection is None:
+                    raise ValueError("A complete X200 artifact requires schema 4 nested lbmk source provenance")
+                _validate_x200_nested_repository_evidence(selected_record.cbfs_inspection.nested_repositories)
+                coreboot_evidence = next(
+                    item for item in selected_record.cbfs_inspection.nested_repositories
+                    if item.role == "coreboot"
+                )
+                if (
+                    selected_record.cbfs_inspection.source_repository_url != coreboot_evidence.repository_url
+                    or selected_record.cbfs_inspection.source_revision != coreboot_evidence.resulting_revision
+                    or selected_record.cbfs_inspection.source_tree_id != coreboot_evidence.resulting_tree_id
+                ):
+                    raise ValueError("X200 CBFS evidence does not bind its exact post-lbmk Coreboot checkout")
             if self.recipe_id.startswith("x220-coreboot-") and self.x200_uboot_dependency is not None:
                 raise ValueError("X200 U-Boot overlay evidence cannot be attached to an X220 artifact")
             if self.recipe_id.startswith("x220-coreboot-") and self.x200_grub_font is not None:
@@ -721,6 +1274,10 @@ class ArtifactManifest:
                 raise ValueError("A complete X220 full-chip artifact requires original-backup provenance")
             if self.recipe_id.startswith("x220-coreboot-") and selected_record.region_inspection_tool is None:
                 raise ValueError("A complete X220 full-chip artifact requires pinned IFD region inspection")
+            if self.recipe_id.startswith("x220-coreboot-") and selected_record.cbfs_inspection is not None and any(
+                nested.generated_files for nested in selected_record.cbfs_inspection.nested_repositories
+            ):
+                raise ValueError("X200 generated Coreboot inventory cannot be attached to an X220 artifact")
             if self.recipe_id.startswith("x220-coreboot-"):
                 plan = self.finalized_operation_plan
                 if plan is None:
@@ -832,6 +1389,11 @@ LIBREBOOT_2601 = SourcePin(
         PinnedFile("config/coreboot/default/target.cfg", "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e"),
         PinnedFile("config/git/coreboot/pkg.cfg", "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f"),
         PinnedFile("include/lib.sh", "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a"),
+        PinnedFile(*_X200_LIBGFXINIT_MODULE_CONFIG),
+        *(PinnedFile(*item) for item in _X200_LIBGFXINIT_PATCH_INPUTS),
+        PinnedFile(*_X200_VBOOT_MODULE_CONFIG),
+        PinnedFile(*_X200_VBOOT_EXISTING_PATCH),
+        PinnedFile(*_X200_FSP_MODULE_CONFIG),
     ),
 )
 
@@ -1159,6 +1721,7 @@ def parse_cbfs_parseable_output(
     *,
     required_payload: str,
     region_size_bytes: int,
+    required_payload_type: str = "payload",
     expected_region: str | None = None,
 ) -> tuple[CBFSEntry, ...]:
     """Parse pinned coreboot cbfstool ``print -k`` output without guessing.
@@ -1170,8 +1733,8 @@ def parse_cbfs_parseable_output(
     or accepted here. Any extra or malformed row invalidates the inventory
     rather than being silently skipped.
     """
-    if not required_payload or region_size_bytes <= 0:
-        raise ValueError("CBFS validation requires a payload name and positive region size")
+    if not required_payload or not required_payload_type or region_size_bytes <= 0:
+        raise ValueError("CBFS validation requires a payload name/type and positive region size")
     lines = output.splitlines()
     expected_header = "Name\tOffset\tType\tMetadata Size\tData Size\tTotal Size"
     marker_offset = 0
@@ -1185,14 +1748,21 @@ def parse_cbfs_parseable_output(
         raise ValueError("Pinned cbfstool output has an unexpected or missing parseable header")
     entries: list[CBFSEntry] = []
     names: set[str] = set()
+    entry_intervals: list[tuple[int, int, int]] = []
     for index, line in enumerate(lines[1:], start=2 + marker_offset):
         fields = line.split("\t")
         if len(fields) != 6:
             raise ValueError(f"Malformed pinned cbfstool inventory row {index}")
         name, offset_text, entry_type, metadata_text, data_text, total_text = fields
-        if not name or name in names or not entry_type:
+        if not name or not entry_type.strip() or entry_type != entry_type.strip():
             raise ValueError(f"Duplicate or empty CBFS entry name/type on row {index}")
-        names.add(name)
+        if name == "(empty)":
+            if entry_type != "null":
+                raise ValueError(f"CBFS empty placeholder row {index} must have null type")
+        else:
+            if name in names:
+                raise ValueError(f"Duplicate or empty CBFS entry name/type on row {index}")
+            names.add(name)
         if any(not _CBFS_HEX_RE.fullmatch(value) for value in (offset_text, metadata_text, data_text, total_text)):
             raise ValueError(f"CBFS row {index} has malformed hexadecimal size or offset")
         offset, metadata_size, data_size, total_size = (
@@ -1204,13 +1774,25 @@ def parse_cbfs_parseable_output(
         if total_size <= 0 or offset + total_size > region_size_bytes:
             raise ValueError(f"CBFS row {index} extends outside the selected firmware region")
         entries.append(CBFSEntry(name, offset, entry_type, metadata_size, data_size, total_size))
+        # Null `(empty)` rows are placeholders, but their reported extents are
+        # still part of cbfstool's inventory and must not alias another row.
+        entry_intervals.append((offset, offset + total_size, index))
+    ordered_intervals = sorted(entry_intervals)
+    for previous, current in zip(ordered_intervals, ordered_intervals[1:]):
+        if current[0] < previous[1]:
+            raise ValueError(
+                f"CBFS rows {previous[2]} and {current[2]} overlap"
+            )
     matching_payloads = [entry for entry in entries if entry.name == required_payload]
     if (
         len(matching_payloads) != 1
-        or matching_payloads[0].entry_type != "payload"
+        or matching_payloads[0].entry_type != required_payload_type
         or matching_payloads[0].data_size_bytes <= 0
     ):
-        raise ValueError(f"CBFS inventory lacks exactly one required payload entry {required_payload!r}")
+        raise ValueError(
+            f"CBFS inventory lacks exactly one required payload entry {required_payload!r} "
+            f"with type {required_payload_type!r}"
+        )
     if not entries:
         raise ValueError("Pinned cbfstool returned an empty CBFS inventory")
     return tuple(entries)
@@ -1819,6 +2401,19 @@ class ArtifactEngine:
             or sha256_file(selected) != manifest.selected_artifact_sha256
         ):
             raise ValueError("Manifest-selected artifact size or SHA-256 changed")
+        if manifest.recipe_id.startswith("x200-libreboot-"):
+            selected_record = next(
+                item for item in manifest.artifacts
+                if item.relative_path == manifest.selected_artifact_relative_path
+                and item.sha256 == manifest.selected_artifact_sha256
+            )
+            if selected_record.cbfs_inspection is None:
+                raise ValueError("Complete X200 artifact is missing its persisted CBFS source evidence")
+            coreboot_evidence = next(
+                item for item in selected_record.cbfs_inspection.nested_repositories
+                if item.role == "coreboot"
+            )
+            _verify_x200_coreboot_generated_files(path.parent, coreboot_evidence)
         return ArtifactBuildResult(
             BuildStatus.COMPLETE,
             "PERSISTED_ARTIFACT_REOPENED",
@@ -1975,6 +2570,7 @@ class ArtifactEngine:
         finalized_operation_plan: OperationPlan | None = None
         x200_uboot_dependency: X200UBootDependencyEvidence | None = None
         x200_grub_font: X200GrubFontEvidence | None = None
+        x200_nested_repository_evidence: tuple[X200NestedRepositoryEvidence, ...] | None = None
         x200_unifont_path: Path | None = None
         failure_code: str | None = None
         failure_detail: str | None = None
@@ -1996,6 +2592,7 @@ class ArtifactEngine:
                     logs_dir,
                     commands,
                 )
+                self._stage_x200_vboot_compat_overlay(build_source)
             if recipe is X220_COREBOOT:
                 self._stage_x220_inputs(source, prepared_blobs, blob_hashes)
                 seed_path = source / ".config"
@@ -2085,6 +2682,8 @@ class ArtifactEngine:
                 logs_dir,
                 commands,
             )
+            if recipe.workflow_id == "x200-libreboot":
+                x200_nested_repository_evidence = cbfs_inspection.nested_repositories
 
             staged_selected: Path | None = None
             for raw_artifact in raw_artifacts:
@@ -2147,6 +2746,11 @@ class ArtifactEngine:
                 if x200_grub_font is None:
                     raise ValueError("X200 GRUB Unifont provenance disappeared before final validation")
                 self._validate_x200_grub_font_evidence(run_dir, x200_grub_font)
+                if x200_nested_repository_evidence is None:
+                    raise ValueError("X200 nested source provenance disappeared before final validation")
+                final_nested_evidence = self._validate_lbmk_nested_coreboot(build_source, logs_dir, commands)
+                if final_nested_evidence != x200_nested_repository_evidence:
+                    raise ValueError("X200 nested source provenance changed before artifact publication")
                 final_source_audit = self.inspect_source(recipe.recipe_id, source)
                 if final_source_audit != source_audit:
                     raise ValueError("Original pinned Libreboot checkout changed during isolated X200 build")
@@ -2168,6 +2772,11 @@ class ArtifactEngine:
                     if x200_grub_font is None:
                         raise ValueError("X200 artifact publication lacks verified GRUB Unifont evidence")
                     self._validate_x200_grub_font_evidence(run_dir, x200_grub_font)
+                    if x200_nested_repository_evidence is None:
+                        raise ValueError("X200 artifact publication lacks nested source provenance")
+                    final_nested_evidence = self._validate_lbmk_nested_coreboot(build_source, logs_dir, commands)
+                    if final_nested_evidence != x200_nested_repository_evidence:
+                        raise ValueError("X200 nested source provenance changed at artifact publication")
             except (OSError, ValueError) as exc:
                 failure_code = "ARTIFACT_VALIDATION_FAILED"
                 failure_detail = f"Final artifact evidence validation failed before publication: {exc}"
@@ -2177,7 +2786,7 @@ class ArtifactEngine:
             failure_detail = "X200 COMPLETE status requires the verified pinned GRUB Unifont build evidence"
         status = "complete" if artifacts and failure_code is None else "failed"
         manifest = ArtifactManifest(
-            schema_version=3,
+            schema_version=4 if recipe.workflow_id == "x200-libreboot" else 3,
             operation_id=run_id,
             created_at_utc=datetime.now(timezone.utc).isoformat(),
             recipe_id=recipe.recipe_id,
@@ -2409,6 +3018,37 @@ class ArtifactEngine:
         if tracked_status != " M include/tree.sh":
             raise ValueError("X200 lbmk overlay changed tracked inputs beyond the reviewed include/tree.sh file")
         return staged_font
+
+    def _stage_x200_vboot_compat_overlay(self, build_source: Path) -> None:
+        """Stage the one reviewed GCC 15 const-correctness patch for lbmk's vboot module."""
+        resource_bytes = _x200_vboot_overlay_resource_bytes()
+        if hashlib.sha256(resource_bytes).hexdigest() != _X200_VBOOT_OVERLAY_SHA256:
+            raise ValueError("Pinned X200 vboot compatibility overlay resource is missing or changed")
+        patch_directory = build_source.joinpath(
+            *PurePosixPath("config/submodule/coreboot/default/vboot/patches").parts
+        )
+        _assert_no_symlink_components(patch_directory, root=build_source)
+        if not patch_directory.is_dir():
+            raise ValueError("Pinned lbmk vboot submodule patch directory is missing")
+        expected_existing = Path(_X200_VBOOT_EXISTING_PATCH[0]).name
+        entries = tuple(patch_directory.iterdir())
+        if (
+            any(path.is_symlink() or not path.is_file() for path in entries)
+            or tuple(sorted(path.name for path in entries)) != (expected_existing,)
+        ):
+            raise ValueError("Pinned lbmk vboot patch directory differs from the exact pre-overlay inventory")
+        existing = patch_directory / expected_existing
+        if sha256_file(existing) != _X200_VBOOT_EXISTING_PATCH[1]:
+            raise ValueError("Pinned existing vboot patch changed before compatibility overlay staging")
+        destination = build_source.joinpath(*PurePosixPath(_X200_VBOOT_OVERLAY_RELATIVE_PATH).parts)
+        _assert_no_symlink_components(destination.parent, root=build_source)
+        try:
+            with destination.open("xb") as output_file:
+                output_file.write(resource_bytes)
+        except FileExistsError as exc:
+            raise ValueError("X200 vboot compatibility overlay destination already exists") from exc
+        if destination.is_symlink() or not destination.is_file() or sha256_file(destination) != _X200_VBOOT_OVERLAY_SHA256:
+            raise ValueError("Operation-owned vboot compatibility overlay copy failed its exact hash check")
 
     @staticmethod
     def _verify_x200_grub_patch_inputs(build_source: Path) -> None:
@@ -2711,6 +3351,18 @@ class ArtifactEngine:
             raise ValueError("X200 build requires GNU objcopy, not an unverified substitute")
         return (str(path), sha256_file(path), version[0].strip())
 
+    @staticmethod
+    def _verify_x200_vboot_overlay_stage(build_source: Path) -> None:
+        resource_bytes = _x200_vboot_overlay_resource_bytes()
+        staged = build_source.joinpath(*PurePosixPath(_X200_VBOOT_OVERLAY_RELATIVE_PATH).parts)
+        if (
+            staged.is_symlink()
+            or not staged.is_file()
+            or hashlib.sha256(resource_bytes).hexdigest() != _X200_VBOOT_OVERLAY_SHA256
+            or sha256_file(staged) != _X200_VBOOT_OVERLAY_SHA256
+        ):
+            raise ValueError("Pinned X200 vboot compatibility overlay changed after staging")
+
     def _patch_file_produces_commit_tree(
         self,
         repository: Path,
@@ -2784,6 +3436,8 @@ class ArtifactEngine:
         objcopy: tuple[str, str, str],
         logs_dir: Path,
         commands: list[CommandRecord],
+        *,
+        after_build: bool = False,
     ) -> X200UBootDependencyEvidence:
         package_cfg = build_source / "config" / "git" / "u-boot" / "pkg.cfg"
         target_cfg = build_source / "config" / "u-boot" / "x86_64" / "target.cfg"
@@ -2827,13 +3481,15 @@ class ArtifactEngine:
         lbmk_tree = self._run_readonly(("git", "-C", str(build_source), "rev-parse", "HEAD^{tree}"), build_source, logs_dir, commands).strip()
         lbmk_origin = self._run_readonly(("git", "-C", str(build_source), "remote", "get-url", "origin"), build_source, logs_dir, commands).strip()
         lbmk_status = self._run_readonly(("git", "-C", str(build_source), "status", "--porcelain", "--untracked-files=all"), build_source, logs_dir, commands)
-        if (
-            lbmk_revision != LIBREBOOT_2601.revision
-            or lbmk_tree != LIBREBOOT_2601.tree_id
-            or lbmk_origin != LIBREBOOT_2601.repository_url
-            or tuple(filter(None, lbmk_status.splitlines())) != (f"?? {_X200_UBOOT_OVERLAY_PATH}",)
-        ):
-            raise ValueError("Disposable lbmk checkout changed from its pinned tracked source tree")
+        _validate_x200_lbmk_overlay_root_state(
+            revision=lbmk_revision,
+            tree_id=lbmk_tree,
+            origin=lbmk_origin,
+            status=tuple(filter(None, lbmk_status.splitlines())),
+            after_build=after_build,
+        )
+        if after_build:
+            self._verify_x200_vboot_overlay_stage(build_source)
         uboot_source = build_source / "src" / "u-boot" / "x86_64"
         for parent_dir in (build_source / "src", build_source / "src" / "u-boot", uboot_source):
             if parent_dir.is_symlink() or not parent_dir.is_dir():
@@ -2995,7 +3651,9 @@ class ArtifactEngine:
         if recipe.workflow_id != "x200-libreboot":
             raise ValueError("X200 U-Boot validation was requested for a different model workflow")
         after_objcopy = self._capture_gnu_objcopy(run_dir, logs_dir, commands)
-        after = self._collect_x200_uboot_dependency(build_source, after_objcopy, logs_dir, commands)
+        after = self._collect_x200_uboot_dependency(
+            build_source, after_objcopy, logs_dir, commands, after_build=True
+        )
         if after != before:
             raise ValueError("X200 U-Boot dependency source or GNU objcopy changed during the build")
         return after
@@ -3010,10 +3668,12 @@ class ArtifactEngine:
     ) -> CBFSInspectionRecord:
         command: tuple[str, ...]
         if recipe.kind is RecipeKind.LIBREBOOT:
-            nested_source = source / "src" / "coreboot" / "default"
-            nested_origin, nested_revision, nested_tree, parser_source_hashes = self._validate_lbmk_nested_coreboot(
-                nested_source
-            )
+            nested_repositories = self._validate_lbmk_nested_coreboot(source, logs_dir, commands)
+            coreboot_evidence = next(item for item in nested_repositories if item.role == "coreboot")
+            nested_origin = coreboot_evidence.repository_url
+            nested_revision = coreboot_evidence.resulting_revision
+            nested_tree = coreboot_evidence.resulting_tree_id
+            parser_source_hashes = coreboot_evidence.source_file_hashes
             tool = source / "elf" / "coreboot" / "default" / "cbfstool"
             relative_tool_path = tool.relative_to(source).as_posix()
             command = (str(tool), str(artifact), "print", "-k")
@@ -3021,6 +3681,7 @@ class ArtifactEngine:
             region_size = dict(recipe.config_expectations)["CONFIG_CBFS_SIZE"]
             region_size_bytes = int(region_size, 0)
             required_payload = "fallback/payload"
+            required_payload_type = "simple elf"
         elif recipe is X220_COREBOOT:
             nested_origin, nested_revision, nested_tree = (
                 recipe.source.repository_url,
@@ -3041,6 +3702,7 @@ class ArtifactEngine:
             region_name = "COREBOOT"
             region_size_bytes = 3 * 1024 * 1024
             required_payload = "fallback/payload"
+            required_payload_type = "payload"
         else:
             raise ValueError("T430 handoff recipes have no CBFS artifact to inspect")
         if tool.is_symlink() or not tool.is_file():
@@ -3050,6 +3712,7 @@ class ArtifactEngine:
             output,
             required_payload=required_payload,
             region_size_bytes=region_size_bytes,
+            required_payload_type=required_payload_type,
             expected_region="COREBOOT" if recipe is X220_COREBOOT else None,
         )
         return CBFSInspectionRecord(
@@ -3062,32 +3725,356 @@ class ArtifactEngine:
             required_payload=required_payload,
             inventory=inventory,
             source_file_hashes=parser_source_hashes,
+            nested_repositories=(nested_repositories if recipe.kind is RecipeKind.LIBREBOOT else ()),
         )
 
-    def _validate_lbmk_nested_coreboot(self, source: Path) -> tuple[str, str, str, tuple[tuple[str, str], ...]]:
-        nested = _require_external_path(Path(source), "lbmk nested Coreboot checkout", must_exist=True)
-        if not nested.is_dir():
-            raise ValueError("Pinned lbmk nested Coreboot checkout is missing")
-        origin = self._git_value(nested, "remote", "get-url", "origin")
-        revision = self._git_value(nested, "rev-parse", "HEAD")
-        tree_id = self._git_value(nested, "rev-parse", "HEAD^{tree}")
-        status = self._git_value(nested, "status", "--porcelain=v1", "--untracked-files=all")
-        if origin not in _LBMK_COREBOOT_ORIGINS:
-            raise ValueError("lbmk nested Coreboot origin differs from its pinned official source")
-        if revision != _LBMK_COREBOOT_REVISION or tree_id != _LBMK_COREBOOT_TREE:
-            raise ValueError("lbmk nested Coreboot revision/tree differs from the pinned target.cfg")
-        if status:
-            raise ValueError("lbmk nested Coreboot source tree is dirty after the pinned build")
-        file_hashes: list[tuple[str, str]] = []
-        for pinned_file in _LBMK_COREBOOT_CBFSTOOL_SOURCES:
-            candidate = nested / PurePosixPath(pinned_file.path)
-            if candidate.is_symlink() or not candidate.is_file():
-                raise ValueError(f"Pinned lbmk Coreboot CBFS parser source is missing or unsafe: {pinned_file.path}")
-            digest = sha256_file(candidate)
-            if digest != pinned_file.sha256:
-                raise ValueError(f"Pinned lbmk Coreboot CBFS parser source hash mismatch: {pinned_file.path}")
-            file_hashes.append((pinned_file.path, digest))
-        return origin, revision, tree_id, tuple(file_hashes)
+    def _validate_lbmk_nested_coreboot(
+        self,
+        build_source: Path,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+    ) -> tuple[X200NestedRepositoryEvidence, ...]:
+        """Validate lbmk's exact generated Coreboot/submodule patch chain.
+
+        lbmk converts configured patches into locally generated commits, so
+        generated commit IDs are deliberately recorded rather than pinned.
+        The base commit/tree, in-root cache remote, exact patch bytes, linear
+        ancestry, every resulting patch tree and final source tree are pinned.
+        """
+        root = _require_external_path(Path(build_source), "disposable lbmk source", must_exist=True)
+        if root.is_symlink() or not root.is_dir():
+            raise ValueError("Disposable lbmk source is missing or unsafe")
+        root = root.resolve(strict=True)
+        root_revision = self._git_value(root, "rev-parse", "HEAD")
+        root_tree = self._git_value(root, "rev-parse", "HEAD^{tree}")
+        root_origin = self._git_value(root, "remote", "get-url", "origin")
+        root_status = tuple(filter(None, self._git_value(
+            root, "status", "--porcelain=v1", "--untracked-files=all"
+        ).splitlines()))
+        _validate_x200_lbmk_overlay_root_state(
+            revision=root_revision,
+            tree_id=root_tree,
+            origin=root_origin,
+            status=root_status,
+            after_build=True,
+        )
+        tree_script = root / "include" / "tree.sh"
+        if tree_script.is_symlink() or not tree_script.is_file() or sha256_file(tree_script) != _X200_LBMK_TREE_SH_PATCHED_SHA256:
+            raise ValueError("X200 lbmk tree script changed from its exact reviewed staged overlay")
+        self._verify_x200_vboot_overlay_stage(root)
+
+        coreboot = root / "src" / "coreboot" / "default"
+        coreboot_evidence = self._validate_lbmk_patched_repository(
+            role="coreboot",
+            checkout=coreboot,
+            root=root,
+            cache_relative_path=_X200_COREBOOT_CACHE_RELATIVE_PATH,
+            repository_url=_X200_COREBOOT_ORIGIN_URL,
+            base_revision=_LBMK_COREBOOT_REVISION,
+            base_tree_id=_LBMK_COREBOOT_TREE,
+            expected_result_tree=_X200_COREBOOT_POST_TREE,
+            patch_directory=PurePosixPath("config/coreboot/default/patches"),
+            expected_patch_inputs=None,
+            expected_patch_count=_X200_COREBOOT_PATCH_COUNT,
+            logs_dir=logs_dir,
+            commands=commands,
+            source_file_pins=_LBMK_COREBOOT_CBFSTOOL_SOURCES,
+            expected_generated_status=_X200_COREBOOT_GENERATED_STATUS,
+        )
+        if coreboot_evidence.resulting_tree_id != _X200_COREBOOT_POST_TREE:
+            raise ValueError("lbmk Coreboot patch stack produced an unexpected final source tree")
+
+        coreboot_status = self._validate_lbmk_coreboot_gitlinks(coreboot)
+        if coreboot_status != coreboot_evidence.generated_status:
+            raise ValueError("Coreboot nested status changed while source provenance was being recorded")
+        libgfxinit = coreboot / "3rdparty" / "libgfxinit"
+        libgfx_evidence = self._validate_lbmk_patched_repository(
+            role="libgfxinit",
+            checkout=libgfxinit,
+            root=root,
+            cache_relative_path=_X200_LIBGFXINIT_CACHE_RELATIVE_PATH,
+            repository_url=_X200_LIBGFXINIT_ORIGIN_URL,
+            base_revision=_X200_LIBGFXINIT_BASE_REVISION,
+            base_tree_id=_X200_LIBGFXINIT_BASE_TREE,
+            expected_result_tree=_X200_LIBGFXINIT_POST_TREE,
+            patch_directory=None,
+            expected_patch_inputs=_X200_LIBGFXINIT_PATCH_INPUTS,
+            expected_patch_count=len(_X200_LIBGFXINIT_PATCH_INPUTS),
+            logs_dir=logs_dir,
+            commands=commands,
+        )
+        vboot = coreboot / "3rdparty" / "vboot"
+        vboot_evidence = self._validate_lbmk_patched_repository(
+            role="vboot",
+            checkout=vboot,
+            root=root,
+            cache_relative_path=_X200_VBOOT_CACHE_RELATIVE_PATH,
+            repository_url=_X200_VBOOT_ORIGIN_URL,
+            base_revision=_X200_VBOOT_BASE_REVISION,
+            base_tree_id=_X200_VBOOT_BASE_TREE,
+            expected_result_tree=_X200_VBOOT_POST_OVERLAY_TREE,
+            patch_directory=None,
+            expected_patch_inputs=_X200_VBOOT_PATCH_STACK,
+            expected_patch_count=len(_X200_VBOOT_PATCH_STACK),
+            logs_dir=logs_dir,
+            commands=commands,
+            source_file_pins=(PinnedFile(_X200_VBOOT_SOURCE_FILE, _X200_VBOOT_POSTIMAGE_SHA256),),
+            expected_patch_tree_ids=(_X200_VBOOT_PRE_OVERLAY_TREE, _X200_VBOOT_POST_OVERLAY_TREE),
+        )
+        fsp_evidence = self._validate_lbmk_unpatched_repository(
+            role="fsp",
+            checkout=root.joinpath(*PurePosixPath(_X200_FSP_RELATIVE_PATH.removeprefix("work/lbmk/")).parts),
+            root=root,
+            cache_relative_path=_X200_FSP_CACHE_RELATIVE_PATH,
+            repository_url=_X200_FSP_ORIGIN_URL,
+            expected_revision=_X200_FSP_REVISION,
+            expected_tree=_X200_FSP_TREE,
+        )
+        evidence = (coreboot_evidence, libgfx_evidence, vboot_evidence, fsp_evidence)
+        _validate_x200_nested_repository_evidence(evidence)
+        return evidence
+
+    def _validate_lbmk_patched_repository(
+        self,
+        *,
+        role: str,
+        checkout: Path,
+        root: Path,
+        cache_relative_path: str,
+        repository_url: str,
+        base_revision: str,
+        base_tree_id: str,
+        expected_result_tree: str,
+        patch_directory: PurePosixPath | None,
+        expected_patch_inputs: tuple[tuple[str, str], ...] | None,
+        expected_patch_count: int,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+        source_file_pins: Sequence[PinnedFile] = (),
+        expected_patch_tree_ids: tuple[str, ...] | None = None,
+        expected_generated_status: tuple[str, ...] = (),
+    ) -> X200NestedRepositoryEvidence:
+        checkout = Path(checkout)
+        _assert_no_symlink_components(checkout, root=root)
+        if not checkout.is_dir():
+            raise ValueError(f"lbmk {role} nested checkout is missing")
+        checkout = checkout.resolve(strict=True)
+        cache = root.joinpath(*PurePosixPath(cache_relative_path).parts)
+        _assert_no_symlink_components(cache, root=root)
+        if not cache.is_dir():
+            raise ValueError(f"lbmk {role} pinned local source cache is missing")
+        expected_origin = cache.resolve(strict=True)
+        checkout_origin = self._git_value(checkout, "remote", "get-url", "origin")
+        cache_toplevel = self._git_value(cache, "rev-parse", "--show-toplevel")
+        cache_remote = self._git_value(cache, "remote", "get-url", "origin")
+        cache_base_revision = self._git_value(cache, "rev-parse", base_revision)
+        cache_base_tree = self._git_value(cache, "rev-parse", f"{base_revision}^{{tree}}")
+        if (
+            not Path(checkout_origin).is_absolute()
+            or Path(checkout_origin).resolve(strict=True) != expected_origin
+            or Path(cache_toplevel).resolve(strict=True) != expected_origin
+            or cache_remote != repository_url
+            or cache_base_revision != base_revision
+            or cache_base_tree != base_tree_id
+        ):
+            raise ValueError(f"lbmk {role} source/cache origin or pinned base identity changed")
+        actual_base_tree = self._git_value(checkout, "rev-parse", f"{base_revision}^{{tree}}")
+        if actual_base_tree != base_tree_id:
+            raise ValueError(f"lbmk {role} checkout does not contain the exact pinned base tree")
+
+        if expected_patch_inputs is None:
+            if patch_directory is None:
+                raise ValueError("Pinned nested patch directory contract is missing")
+            patch_root = root.joinpath(*patch_directory.parts)
+            _assert_no_symlink_components(patch_root, root=root)
+            if not patch_root.is_dir():
+                raise ValueError(f"lbmk {role} pinned patch input directory is missing")
+            entries = tuple(patch_root.iterdir())
+            if any(path.is_symlink() or not path.is_file() for path in entries):
+                raise ValueError(f"lbmk {role} patch input directory contains an unsafe entry")
+            if len(entries) != expected_patch_count:
+                raise ValueError(f"lbmk {role} patch input count differs from the pinned source tree")
+            patch_inputs = tuple(
+                (path.relative_to(root).as_posix(), sha256_file(path))
+                for path in sorted(entries, key=lambda item: item.name)
+            )
+        else:
+            patch_inputs = expected_patch_inputs
+        if len(patch_inputs) != expected_patch_count:
+            raise ValueError(f"lbmk {role} patch stack has an unexpected number of inputs")
+
+        rows = self._git_value(
+            checkout,
+            "rev-list", "--reverse", "--parents", f"{base_revision}..HEAD",
+        ).splitlines()
+        if len(rows) != expected_patch_count:
+            raise ValueError(f"lbmk {role} generated patch history has an unexpected commit count")
+        patch_tree_ids: list[str] = []
+        commits: list[str] = []
+        previous = base_revision
+        resolved_patch_inputs: list[tuple[str, str]] = []
+        for row, (patch_relative, expected_digest) in zip(rows, patch_inputs, strict=True):
+            fields = row.split()
+            if len(fields) != 2 or fields[1] != previous or not _GIT_OBJECT_RE.fullmatch(fields[0]):
+                raise ValueError(f"lbmk {role} patch history is not a linear chain from the pinned base")
+            commit = fields[0]
+            patch_path = root.joinpath(*PurePosixPath(patch_relative).parts)
+            _assert_no_symlink_components(patch_path, root=root)
+            if not patch_path.is_file() or sha256_file(patch_path) != expected_digest:
+                raise ValueError(f"lbmk {role} patch bytes differ from the staged/pinned source: {patch_relative}")
+            subject = _email_patch_subject(patch_path.read_bytes())
+            observed_subject = self._git_value(checkout, "show", "-s", "--format=%s", commit)
+            if observed_subject != subject:
+                raise ValueError(f"lbmk {role} applied patch subject/order differs from its exact patch bytes")
+            if not self._patch_file_produces_commit_tree(
+                checkout, previous, commit, patch_path, logs_dir, commands
+            ):
+                raise ValueError(f"lbmk {role} patch commit tree differs from its exact patch bytes")
+            tree_id = self._git_value(checkout, "rev-parse", f"{commit}^{{tree}}")
+            commits.append(commit)
+            patch_tree_ids.append(tree_id)
+            resolved_patch_inputs.append((patch_relative, expected_digest))
+            previous = commit
+        revision = self._git_value(checkout, "rev-parse", "HEAD")
+        result_tree = self._git_value(checkout, "rev-parse", "HEAD^{tree}")
+        status = tuple(filter(None, self._git_value(
+            checkout, "status", "--porcelain=v1", "--untracked-files=all"
+        ).splitlines()))
+        if (
+            revision != previous
+            or result_tree != expected_result_tree
+            or tuple(sorted(status)) != tuple(sorted(expected_generated_status))
+            or (expected_patch_tree_ids is not None and tuple(patch_tree_ids) != expected_patch_tree_ids)
+        ):
+            raise ValueError(f"lbmk {role} final commit/tree/status differs from the exact reviewed patch chain")
+
+        source_hashes: list[tuple[str, str]] = []
+        for pinned in source_file_pins:
+            candidate = checkout.joinpath(*PurePosixPath(pinned.path).parts)
+            _assert_no_symlink_components(candidate, root=checkout)
+            if not candidate.is_file() or sha256_file(candidate) != pinned.sha256:
+                raise ValueError(f"lbmk {role} post-patch source file hash mismatch: {pinned.path}")
+            source_hashes.append((pinned.path, pinned.sha256))
+        if role == "vboot":
+            if len(commits) != 2:
+                raise ValueError("Pinned vboot patch chain must include the pre-overlay and overlay commits")
+            self._validate_x200_vboot_pre_postimage(checkout, commits[0], revision)
+        operation_prefix = "work/lbmk/"
+        return X200NestedRepositoryEvidence(
+            role=role,
+            relative_path=f"{operation_prefix}{checkout.relative_to(root).as_posix()}",
+            repository_url=repository_url,
+            cache_origin_relative_path=f"{operation_prefix}{cache_relative_path}",
+            base_revision=base_revision,
+            base_tree_id=base_tree_id,
+            resulting_revision=revision,
+            resulting_tree_id=result_tree,
+            patch_inputs=tuple((f"{operation_prefix}{path}", digest) for path, digest in resolved_patch_inputs),
+            patch_revisions=tuple(commits),
+            patch_tree_ids=tuple(patch_tree_ids),
+            source_file_hashes=tuple(sorted(source_hashes)),
+            source_file_preimage_hashes=(
+                ((_X200_VBOOT_SOURCE_FILE, _X200_VBOOT_PREIMAGE_SHA256),)
+                if role == "vboot"
+                else ()
+            ),
+            generated_status=tuple(sorted(status)),
+            generated_files=(
+                _capture_x200_coreboot_generated_files(checkout)
+                if role == "coreboot"
+                else ()
+            ),
+        )
+
+    def _validate_lbmk_unpatched_repository(
+        self,
+        *,
+        role: str,
+        checkout: Path,
+        root: Path,
+        cache_relative_path: str,
+        repository_url: str,
+        expected_revision: str,
+        expected_tree: str,
+    ) -> X200NestedRepositoryEvidence:
+        checkout = Path(checkout)
+        _assert_no_symlink_components(checkout, root=root)
+        cache = root.joinpath(*PurePosixPath(cache_relative_path).parts)
+        _assert_no_symlink_components(cache, root=root)
+        if not checkout.is_dir() or not cache.is_dir():
+            raise ValueError(f"lbmk {role} checkout/cache is missing")
+        checkout_origin = self._git_value(checkout, "remote", "get-url", "origin")
+        cache_toplevel = self._git_value(cache, "rev-parse", "--show-toplevel")
+        if (
+            not Path(checkout_origin).is_absolute()
+            or Path(checkout_origin).resolve(strict=True) != cache.resolve(strict=True)
+            or Path(cache_toplevel).resolve(strict=True) != cache.resolve(strict=True)
+            or self._git_value(cache, "remote", "get-url", "origin") != repository_url
+            or self._git_value(checkout, "rev-parse", "HEAD") != expected_revision
+            or self._git_value(checkout, "rev-parse", "HEAD^{tree}") != expected_tree
+            or self._git_value(checkout, "status", "--porcelain=v1", "--untracked-files=all")
+        ):
+            raise ValueError(f"lbmk {role} source is not the exact clean pinned checkout")
+        cache_revision = self._git_value(cache, "rev-parse", expected_revision)
+        cache_tree = self._git_value(cache, "rev-parse", f"{expected_revision}^{{tree}}")
+        if cache_revision != expected_revision or cache_tree != expected_tree:
+            raise ValueError(f"lbmk {role} cache lacks the exact pinned source object")
+        return X200NestedRepositoryEvidence(
+            role=role,
+            relative_path=f"work/lbmk/{checkout.relative_to(root).as_posix()}",
+            repository_url=repository_url,
+            cache_origin_relative_path=f"work/lbmk/{cache_relative_path}",
+            base_revision=expected_revision,
+            base_tree_id=expected_tree,
+            resulting_revision=expected_revision,
+            resulting_tree_id=expected_tree,
+            patch_inputs=(),
+            patch_revisions=(),
+            patch_tree_ids=(),
+        )
+
+    def _validate_lbmk_coreboot_gitlinks(self, coreboot: Path) -> tuple[str, ...]:
+        expected = {
+            "3rdparty/libgfxinit": _X200_LIBGFXINIT_BASE_REVISION,
+            "3rdparty/vboot": _X200_VBOOT_BASE_REVISION,
+        }
+        for path, revision in expected.items():
+            actual = self._git_value(coreboot, "rev-parse", f"HEAD:{path}")
+            if actual != revision:
+                raise ValueError(f"Pinned Coreboot superproject gitlink changed: {path}")
+        status = tuple(filter(None, self._git_value(
+            coreboot, "status", "--porcelain=v1", "--untracked-files=all"
+        ).splitlines()))
+        if tuple(sorted(status)) != tuple(sorted(_X200_COREBOOT_GENERATED_STATUS)):
+            raise ValueError("Coreboot nested submodule/FSP worktree status differs from the exact lbmk output")
+        return _X200_COREBOOT_GENERATED_STATUS
+
+    def _validate_x200_vboot_pre_postimage(
+        self,
+        checkout: Path,
+        pre_overlay_revision: str,
+        resulting_revision: str,
+    ) -> None:
+        path = _X200_VBOOT_SOURCE_FILE
+        before = subprocess.run(
+            ["git", "-C", str(checkout), "show", f"{pre_overlay_revision}:{path}"],
+            check=False,
+            capture_output=True,
+            timeout=30,
+        )
+        if before.returncode != 0 or hashlib.sha256(before.stdout).hexdigest() != _X200_VBOOT_PREIMAGE_SHA256:
+            raise ValueError("Pinned vboot base/parser preimage differs from the reviewed const-correctness overlay")
+        after = subprocess.run(
+            ["git", "-C", str(checkout), "show", f"{resulting_revision}:{path}"],
+            check=False,
+            capture_output=True,
+            timeout=30,
+        )
+        if after.returncode != 0 or hashlib.sha256(after.stdout).hexdigest() != _X200_VBOOT_POSTIMAGE_SHA256:
+            raise ValueError("Patched vboot parser postimage differs from the reviewed const-correctness overlay")
+        _validate_x200_vboot_overlay_bytes(
+            _x200_vboot_overlay_resource_bytes(), before.stdout, after.stdout
+        )
 
     def _stage_x220_inputs(
         self,
@@ -3257,6 +4244,12 @@ class ArtifactEngine:
         )
         if result.returncode != 0:
             raise ValueError(f"Unable to inspect pinned Git source ({' '.join(args)})")
+        if args[:1] == ("status",) and "--porcelain=v1" in args:
+            # Porcelain's leading column is meaningful (for example, " M" is
+            # a worktree-only modification).  Strip record terminators only;
+            # str.strip() would erase that status column and break exact state
+            # validation for the disposable X200 overlay root.
+            return result.stdout.rstrip("\r\n")
         return result.stdout.strip()
 
     def _toolchain_versions(self) -> tuple[tuple[str, str], ...]:
@@ -3447,6 +4440,57 @@ def _artifact_manifest_from_mapping(value: object) -> ArtifactManifest:
                 data_size_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "data_size_bytes"),
                 total_size_bytes=_integer(_mapping(raw_entry, "CBFS entry"), "total_size_bytes"),
             ) for raw_entry in _array(entry["inventory"], "CBFS inventory"))
+            nested_rows: list[X200NestedRepositoryEvidence] = []
+            for raw_nested in _array(entry.get("nested_repositories", []), "CBFS nested repositories"):
+                nested = _mapping(raw_nested, "CBFS nested repository")
+                def text_pairs(key: str) -> tuple[tuple[str, str], ...]:
+                    pairs: list[tuple[str, str]] = []
+                    for raw_pair in _array(nested.get(key, []), f"nested repository {key}"):
+                        pair = _array(raw_pair, f"nested repository {key} pair")
+                        if len(pair) != 2 or any(not isinstance(item, str) for item in pair):
+                            raise ValueError(f"Persisted nested repository {key} must contain text pairs")
+                        pairs.append((str(pair[0]), str(pair[1])))
+                    return tuple(pairs)
+                patch_trees = _array(nested.get("patch_tree_ids", []), "nested repository patch trees")
+                patch_revisions = _array(nested.get("patch_revisions", []), "nested repository patch revisions")
+                generated_status = _array(nested.get("generated_status", []), "nested repository generated status")
+                if any(not isinstance(item, str) for item in (*patch_trees, *patch_revisions, *generated_status)):
+                    raise ValueError("Persisted nested repository commit, tree and status fields must be text")
+                generated_files: list[X200GeneratedFileEvidence] = []
+                for raw_generated in _array(nested.get("generated_files", []), "nested repository generated files"):
+                    generated = _mapping(raw_generated, "generated nested repository file")
+                    if set(generated) != set(X200GeneratedFileEvidence.__dataclass_fields__):
+                        raise ValueError("Persisted generated-file evidence has missing or unsupported fields")
+                    if any(not isinstance(generated.get(key), str) for key in ("relative_path", "sha256", "kind")):
+                        raise ValueError("Persisted generated-file path, hash and kind must be text")
+                    generated_files.append(X200GeneratedFileEvidence(
+                        relative_path=str(generated["relative_path"]),
+                        size_bytes=_integer(generated, "size_bytes"),
+                        sha256=str(generated["sha256"]),
+                        kind=str(generated["kind"]),
+                        source_relative_path=_optional_text(generated, "source_relative_path"),
+                        source_sha256=_optional_text(generated, "source_sha256"),
+                        elf_class=_optional_text(generated, "elf_class"),
+                        elf_type=_optional_text(generated, "elf_type"),
+                        elf_machine=_optional_text(generated, "elf_machine"),
+                    ))
+                nested_rows.append(X200NestedRepositoryEvidence(
+                    role=str(nested["role"]),
+                    relative_path=str(nested["relative_path"]),
+                    repository_url=str(nested["repository_url"]),
+                    cache_origin_relative_path=str(nested["cache_origin_relative_path"]),
+                    base_revision=str(nested["base_revision"]),
+                    base_tree_id=str(nested["base_tree_id"]),
+                    resulting_revision=str(nested["resulting_revision"]),
+                    resulting_tree_id=str(nested["resulting_tree_id"]),
+                    patch_inputs=text_pairs("patch_inputs"),
+                    patch_revisions=tuple(str(item) for item in patch_revisions),
+                    patch_tree_ids=tuple(str(item) for item in patch_trees),
+                    source_file_hashes=text_pairs("source_file_hashes"),
+                    source_file_preimage_hashes=text_pairs("source_file_preimage_hashes"),
+                    generated_status=tuple(str(item) for item in generated_status),
+                    generated_files=tuple(generated_files),
+                ))
             cbfs = CBFSInspectionRecord(
                 tool_relative_path=str(entry["tool_relative_path"]),
                 tool_sha256=str(entry["tool_sha256"]),
@@ -3457,6 +4501,7 @@ def _artifact_manifest_from_mapping(value: object) -> ArtifactManifest:
                 required_payload=str(entry["required_payload"]),
                 inventory=entries,
                 source_file_hashes=tuple((str(pair[0]), str(pair[1])) for pair in _array(entry["source_file_hashes"], "CBFS source hashes") if isinstance(pair, list) and len(pair) == 2),
+                nested_repositories=tuple(nested_rows),
             )
         provenance_value = item.get("backup_provenance")
         provenance = None

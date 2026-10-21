@@ -25,6 +25,7 @@ from autoloader.workflow import (
     DeviceEvidence,
     FirmwareFamily,
     JournalCorruptionError,
+    JournalConflictError,
     JournalPlanMismatchError,
     OperationJournal,
     OperationPlan,
@@ -43,6 +44,23 @@ PINNED_REVISION = "a3427b34102f8f9887acf65e23d7fd5900fe1d40"
 
 def _hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _reseal_journal_document(document: dict[str, object]) -> None:
+    """Recompute journal checksums after deliberate, schema-valid test tampering."""
+    from autoloader.workflow.journal import _checksum
+
+    entries = document["entries"]
+    assert isinstance(entries, list)
+    for entry in entries:
+        assert isinstance(entry, dict)
+        event = {key: value for key, value in entry.items() if key != "checksum"}
+        entry["checksum"] = _checksum({
+            "previous_checksum": entry["previous_checksum"],
+            "event": event,
+        })
+    body = {key: value for key, value in document.items() if key != "checkpoint_checksum"}
+    document["checkpoint_checksum"] = _checksum(body)
 
 
 @pytest.fixture(autouse=True)
@@ -316,6 +334,75 @@ def test_model_family_and_firmware_mismatches_block(x200_files: dict[str, Path])
     assert _assert_decision(wrong_chip_voltage, CompatibilityDecision.BLOCKED)
 
 
+@pytest.mark.parametrize(
+    ("case", "expected", "reason_fragment"),
+    [
+        ("programmer-unobserved", CompatibilityDecision.UNKNOWN, "not been physically observed"),
+        ("interface-failed", CompatibilityDecision.BLOCKED, "interface or wiring verification failed"),
+        ("interface-unknown", CompatibilityDecision.UNKNOWN, "interface and wiring must be verified"),
+        ("voltage-unknown", CompatibilityDecision.UNKNOWN, "output voltage is unknown"),
+        ("voltage-mismatch", CompatibilityDecision.BLOCKED, "exactly 3300 mV"),
+        ("topology-unobserved", CompatibilityDecision.UNKNOWN, "physical flash chip topology has not been observed"),
+        ("chip-unobserved", CompatibilityDecision.UNKNOWN, "one or more listed flash chips are not physically observed"),
+        ("duplicate-chip-id", CompatibilityDecision.BLOCKED, "duplicate chip identifiers"),
+    ],
+)
+def test_programmer_and_topology_uncertainty_never_becomes_write_compatibility(
+    x200_files: dict[str, Path],
+    case: str,
+    expected: CompatibilityDecision,
+    reason_fragment: str,
+) -> None:
+    plan = make_x200_plan(x200_files)
+    if case == "programmer-unobserved":
+        plan = replace(plan, programmer=replace(plan.programmer, observed=False))
+    elif case == "interface-failed":
+        plan = replace(plan, programmer=replace(plan.programmer, interface_verified=False))
+    elif case == "interface-unknown":
+        plan = replace(plan, programmer=replace(plan.programmer, interface_verified=None))
+    elif case == "voltage-unknown":
+        plan = replace(plan, programmer=replace(plan.programmer, voltage_mv=None))
+    elif case == "voltage-mismatch":
+        plan = replace(plan, programmer=replace(plan.programmer, voltage_mv=1800))
+    elif case == "topology-unobserved":
+        plan = replace(plan, topology=replace(plan.topology, observed=False))
+    elif case == "chip-unobserved":
+        plan = replace(
+            plan,
+            topology=replace(plan.topology, chips=(replace(plan.topology.chips[0], observed=False),)),
+        )
+    elif case == "duplicate-chip-id":
+        original = plan.topology.chips[0]
+        duplicate = replace(original, physical_label="secondary")
+        plan = replace(plan, topology=replace(plan.topology, chips=(original, duplicate)))
+
+    result = CompatibilityValidator().validate(plan)
+    assert result.decision is expected, result.reasons
+    assert any(reason_fragment in reason for reason in result.reasons), result.reasons
+
+
+@pytest.mark.parametrize("profile", ["x200", "t430"])
+def test_observed_chip_capacity_mismatch_blocks_each_fixed_v1_profile(
+    x200_files: dict[str, Path], tmp_path: Path, profile: str
+) -> None:
+    if profile == "x200":
+        plan = make_x200_plan(x200_files)
+        changed_chip = replace(plan.topology.chips[0], capacity_bytes=2 * MIB)
+        changed_topology = replace(plan.topology, chips=(changed_chip,))
+        expected_reason = "observed flash chip capacity is not allowlisted"
+    else:
+        artifact = tmp_path / "t430-original.rom"
+        artifact.write_bytes(b"T" * (4 * MIB))
+        plan = make_t430_plan(artifact, "G1ET74WW (2.64 )")
+        changed_chips = (plan.topology.chips[0], replace(plan.topology.chips[1], capacity_bytes=8 * MIB))
+        changed_topology = replace(plan.topology, chips=changed_chips)
+        expected_reason = "top flash chip capacity does not match the V1 profile"
+
+    result = CompatibilityValidator().validate(replace(plan, topology=changed_topology))
+    assert result.decision is CompatibilityDecision.BLOCKED, result.reasons
+    assert any(expected_reason in reason for reason in result.reasons), result.reasons
+
+
 def test_raw_dmi_and_bios_are_preserved_without_normalized_fallback() -> None:
     detection = DetectionResult(
         "t430", "ThinkPad T430", "2342", None, "high",
@@ -466,6 +553,93 @@ def test_backup_requires_complete_stable_matching_reads(x200_files: dict[str, Pa
         x200_files["backup-a.bin"].write_bytes(original)
 
 
+@pytest.mark.parametrize(
+    ("case", "expected", "reason"),
+    [
+        ("topology-unobserved", CompatibilityDecision.UNKNOWN, "complete observed chip topology"),
+        ("chip-unobserved", CompatibilityDecision.BLOCKED, "cannot skip an unobserved flash chip"),
+        ("no-chip-identifiers", CompatibilityDecision.BLOCKED, "no observed chip identifiers"),
+    ],
+)
+def test_backup_validator_keeps_incomplete_physical_topology_unusable(
+    x200_files: dict[str, Path], case: str, expected: CompatibilityDecision, reason: str
+) -> None:
+    plan = make_x200_plan(x200_files)
+    if case == "topology-unobserved":
+        plan = replace(plan, topology=replace(plan.topology, observed=False))
+    elif case == "chip-unobserved":
+        plan = replace(
+            plan,
+            topology=replace(
+                plan.topology,
+                chips=(replace(plan.topology.chips[0], observed=False),),
+            ),
+        )
+    elif case == "no-chip-identifiers":
+        plan = replace(plan, topology=replace(plan.topology, chips=()))
+
+    result = CompatibilityValidator().validate_backup(plan)
+    assert result.decision is expected, result.reasons
+    assert any(reason in item for item in result.reasons), result.reasons
+
+
+def test_backup_validator_rejects_profile_outside_explicit_allowlist(x200_files: dict[str, Path]) -> None:
+    plan = replace(make_x200_plan(x200_files), profile_id="unlisted-device-profile")
+    result = CompatibilityValidator().validate_backup(plan)
+    assert result.decision is CompatibilityDecision.BLOCKED
+    assert any("explicit V1 allowlist" in reason for reason in result.reasons)
+
+
+@pytest.mark.parametrize(
+    ("case", "expected", "reason"),
+    [
+        ("unobserved-topology", CompatibilityDecision.UNKNOWN, "complete observed chip topology"),
+        ("duplicate-pair", CompatibilityDecision.BLOCKED, "exactly one pair"),
+        ("partial-path", CompatibilityDecision.BLOCKED, "temporary or partial"),
+        ("same-path", CompatibilityDecision.BLOCKED, "separate files"),
+        ("malformed-hash", CompatibilityDecision.BLOCKED, "SHA-256 declaration is malformed"),
+        ("missing-file", CompatibilityDecision.UNKNOWN, "not available for verification"),
+        ("wrong-size", CompatibilityDecision.BLOCKED, "exact observed chip capacity"),
+        ("changed-file", CompatibilityDecision.BLOCKED, "content differs from a declared SHA-256"),
+    ],
+)
+def test_backup_validator_rejects_untrusted_read_pair_variants(
+    x200_files: dict[str, Path],
+    tmp_path: Path,
+    case: str,
+    expected: CompatibilityDecision,
+    reason: str,
+) -> None:
+    plan = make_x200_plan(x200_files)
+    pair = plan.backup.pairs[0]
+    if case == "unobserved-topology":
+        plan = replace(plan, topology=replace(plan.topology, observed=False))
+    elif case == "duplicate-pair":
+        plan = replace(plan, backup=BackupEvidence((pair, pair)))
+    elif case == "partial-path":
+        plan = replace(plan, backup=BackupEvidence((replace(pair, first_path=pair.first_path + ".partial"),)))
+    elif case == "same-path":
+        plan = replace(plan, backup=BackupEvidence((replace(pair, second_path=pair.first_path),)))
+    elif case == "malformed-hash":
+        plan = replace(plan, backup=BackupEvidence((replace(pair, first_sha256="not-a-sha256"),)))
+    elif case == "missing-file":
+        plan = replace(plan, backup=BackupEvidence((replace(pair, first_path=str(tmp_path / "missing.rom")),)))
+    elif case == "wrong-size":
+        short = tmp_path / "short-backup.rom"
+        short.write_bytes(b"short")
+        plan = replace(plan, backup=BackupEvidence((replace(
+            pair, first_path=str(short), first_sha256=_hash(short)
+        ),)))
+    elif case == "changed-file":
+        changed = tmp_path / "changed-backup.rom"
+        changed.write_bytes(b"\x73" * (4 * MIB))
+        plan = replace(plan, backup=BackupEvidence((replace(pair, first_path=str(changed)),)))
+
+    result = CompatibilityValidator().validate_backup(plan)
+    assert result.decision is expected, result.reasons
+    assert any(reason in item for item in result.reasons), result.reasons
+
+
 def test_state_machine_blocks_write_and_never_invokes_injected_writer(x200_files: dict[str, Path]) -> None:
     complete_plan = make_x200_plan(x200_files)
     session = WorkflowSession(replace(complete_plan, backup=BackupEvidence()))
@@ -540,6 +714,107 @@ def test_authorization_rejects_changed_evidence_and_reuse(x200_files: dict[str, 
         assert calls == []
     finally:
         x200_files["libreboot.rom"].write_bytes(original)
+
+
+@pytest.mark.parametrize(
+    ("change", "expected_message"),
+    [
+        ("compatibility", "plan evidence no longer passes compatibility validation"),
+        ("backup", "backup evidence no longer passes verification"),
+    ],
+)
+def test_authorization_issue_revalidates_live_plan_and_backup_before_token_creation(
+    x200_files: dict[str, Path], change: str, expected_message: str
+) -> None:
+    plan = make_x200_plan(x200_files)
+    validator = CompatibilityValidator()
+    approved_compatibility = validator.validate(plan)
+    approved_backup = validator.validate_backup(plan)
+    assert approved_compatibility.decision is CompatibilityDecision.ALLOWED
+    assert approved_backup.decision is CompatibilityDecision.ALLOWED
+    ledger = AuthorizationLedger(validator)
+
+    if change == "compatibility":
+        current_plan = replace(plan, programmer=replace(plan.programmer, kind=ProgrammerKind.SIMULATION))
+        backup_path = None
+        original_backup = None
+    else:
+        current_plan = plan
+        backup_path = Path(plan.backup.pairs[0].second_path)
+        original_backup = backup_path.read_bytes()
+        backup_path.write_bytes(b"changed after old validation")
+
+    try:
+        with pytest.raises(AuthorizationError, match=expected_message):
+            ledger.issue(
+                current_plan,
+                actor="Synthetic safety test",
+                explicit_approval=True,
+                compatibility=approved_compatibility,
+                backup_verification=approved_backup,
+            )
+        assert ledger._entries == {}
+    finally:
+        if backup_path is not None and original_backup is not None:
+            backup_path.write_bytes(original_backup)
+
+
+@pytest.mark.parametrize(
+    ("case", "expected_message"),
+    [
+        ("no-explicit-approval", "explicit human approval is required"),
+        ("missing-actor", "approval actor must be recorded"),
+        ("compatibility-not-allowed", "compatibility evidence is not fully allowed"),
+        ("backup-not-allowed", "complete verified backup evidence is required"),
+    ],
+)
+def test_authorization_missing_or_denied_inputs_create_no_receipt(
+    x200_files: dict[str, Path], case: str, expected_message: str
+) -> None:
+    plan = make_x200_plan(x200_files)
+    validator = CompatibilityValidator()
+    compatibility = validator.validate(plan)
+    backup = validator.validate_backup(plan)
+    ledger = AuthorizationLedger(validator)
+    explicit_approval = True
+    actor = "Synthetic safety test"
+    if case == "no-explicit-approval":
+        explicit_approval = False
+    elif case == "missing-actor":
+        actor = "   "
+    elif case == "compatibility-not-allowed":
+        compatibility = replace(compatibility, decision=CompatibilityDecision.BLOCKED)
+    elif case == "backup-not-allowed":
+        backup = replace(backup, decision=CompatibilityDecision.BLOCKED)
+
+    with pytest.raises(AuthorizationError, match=expected_message):
+        ledger.issue(
+            plan,
+            actor=actor,
+            explicit_approval=explicit_approval,
+            compatibility=compatibility,
+            backup_verification=backup,
+        )
+    assert ledger._entries == {}
+
+
+def test_unknown_approval_token_does_not_consume_a_valid_token(x200_files: dict[str, Path]) -> None:
+    plan = make_x200_plan(x200_files)
+    validator = CompatibilityValidator()
+    ledger = AuthorizationLedger(validator)
+    token = ledger.issue(
+        plan,
+        actor="Synthetic safety test",
+        explicit_approval=True,
+        compatibility=validator.validate(plan),
+        backup_verification=validator.validate_backup(plan),
+    )
+    forged = replace(token, token_id="not-present-in-ledger")
+
+    with pytest.raises(AuthorizationError, match="unknown or invalid"):
+        ledger.consume(forged, plan)
+
+    assert ledger.consume(token, plan) == token.digests
 
 
 def test_illegal_stale_transitions_and_no_human_approval_fail_closed(x200_files: dict[str, Path]) -> None:
@@ -646,6 +921,188 @@ def test_journal_rejects_corruption_changed_plan_and_resumes_no_terminal_state(
         OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
 
 
+@pytest.mark.parametrize(
+    ("tamper", "expected_message"),
+    [
+        ("sequence", "invalid sequence or operation ID"),
+        ("operation-id", "invalid sequence or operation ID"),
+        ("stale-time", "non-monotonic timestamp"),
+        ("illegal-transition", "illegal state transition"),
+        ("device-fingerprint", "changes device or artifact identity"),
+        ("previous-checksum", "breaks the checksum chain"),
+        ("failure-flag", "inconsistent failure fields"),
+        ("unexpected-failure-code", "unexpected failure details"),
+    ],
+)
+def test_rechecksummed_journal_event_tampering_stays_corrupt(
+    x200_files: dict[str, Path],
+    tmp_path: Path,
+    tamper: str,
+    expected_message: str,
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / f"tampered-{tamper}.json"
+    session = WorkflowSession(plan, journal_path=checkpoint)
+    assert session.validate().decision is CompatibilityDecision.ALLOWED
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+    entry = document["entries"][0]
+    if tamper == "sequence":
+        entry["sequence"] = 2
+    elif tamper == "operation-id":
+        entry["operation_id"] = "00000000-0000-4000-8000-000000000000"
+    elif tamper == "stale-time":
+        entry["timestamp_utc"] = "2000-01-01T00:00:00+00:00"
+    elif tamper == "illegal-transition":
+        entry["to_state"] = OperationState.WRITE_STARTED.value
+    elif tamper == "device-fingerprint":
+        entry["device_fingerprint"] = "0" * 64
+    elif tamper == "previous-checksum":
+        entry["previous_checksum"] = "f" * 64
+    elif tamper == "failure-flag":
+        entry["failure"] = True
+    elif tamper == "unexpected-failure-code":
+        entry["failure_code"] = "SYNTHETIC_UNEXPECTED_FAILURE"
+    _reseal_journal_document(document)
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+    tampered_bytes = checkpoint.read_bytes()
+
+    with pytest.raises(JournalCorruptionError, match=expected_message):
+        OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+    assert checkpoint.read_bytes() == tampered_bytes
+
+
+@pytest.mark.parametrize(
+    ("tamper", "expected_message"),
+    [
+        ("schema", "schema version is unsupported"),
+        ("updated-before-created", "checkpoint metadata is malformed"),
+        ("short-fingerprint", "checkpoint metadata is malformed"),
+        ("entries-not-list", "checkpoint metadata is malformed"),
+        ("non-object-event", "journal event is not an object"),
+        ("event-checksum", "event 1 checksum is invalid"),
+        ("backup-header-mismatch", "checkpoint backup evidence does not match"),
+    ],
+)
+def test_rechecksummed_journal_header_and_event_shapes_remain_corrupt(
+    x200_files: dict[str, Path],
+    tmp_path: Path,
+    tamper: str,
+    expected_message: str,
+) -> None:
+    from autoloader.workflow.journal import _checksum
+
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / f"rechecksummed-{tamper}.json"
+    session = WorkflowSession(plan, journal_path=checkpoint)
+    assert session.validate().decision is CompatibilityDecision.ALLOWED
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+    if tamper == "schema":
+        document["schema_version"] = 999
+    elif tamper == "updated-before-created":
+        document["updated_at_utc"] = "2000-01-01T00:00:00+00:00"
+    elif tamper == "short-fingerprint":
+        document["device_fingerprint"] = "bad"
+    elif tamper == "entries-not-list":
+        document["entries"] = {"unexpected": "object"}
+    elif tamper == "non-object-event":
+        document["entries"][0] = None
+    elif tamper == "event-checksum":
+        document["entries"][0]["message"] = "changed without event reseal"
+    elif tamper == "backup-header-mismatch":
+        document["backup_checksums"] = [{
+            "chip_id": "main",
+            "capture_id": "synthetic-capture",
+            "path": str(tmp_path / "synthetic.rom"),
+            "declared_sha256": "a" * 64,
+            "actual_size_bytes": 4,
+            "actual_sha256": "a" * 64,
+        }]
+    body = {key: value for key, value in document.items() if key != "checkpoint_checksum"}
+    document["checkpoint_checksum"] = _checksum(body)
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+    tampered_bytes = checkpoint.read_bytes()
+
+    with pytest.raises(JournalCorruptionError, match=expected_message):
+        OperationJournal.inspect_checkpoint(checkpoint, expected_plan=plan)
+    assert checkpoint.read_bytes() == tampered_bytes
+    assert session.state is OperationState.VALIDATED
+
+
+def test_journal_rejects_backup_metadata_changed_outside_verify_transition(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "backup-metadata-tamper.json"
+    session = WorkflowSession(plan, journal_path=checkpoint)
+    session.validate()
+    session.journal.append(
+        action="synthetic-block",
+        from_state=OperationState.VALIDATED,
+        to_state=OperationState.BLOCKED,
+        code="SYNTHETIC_BLOCK",
+        message="synthetic terminal event for metadata validation only",
+    )
+    document = json.loads(checkpoint.read_text(encoding="utf-8"))
+    document["entries"][1]["backup_checksums"] = []
+    _reseal_journal_document(document)
+    checkpoint.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(JournalCorruptionError, match="changes backup evidence outside verification"):
+        OperationJournal.inspect_checkpoint(checkpoint, expected_plan=plan)
+
+
+def test_journal_append_conflict_and_removal_preserve_checkpoint_and_state(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "concurrent-journal.json"
+    first = OperationJournal(checkpoint, plan=plan)
+    assert first.append(
+        action="validate",
+        from_state=OperationState.DRAFT,
+        to_state=OperationState.VALIDATED,
+        code="PLAN_VALIDATED",
+        message="synthetic validated checkpoint",
+    ).to_state is OperationState.VALIDATED
+    stale = OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+    winner = OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+    winner.append(
+        action="synthetic-block",
+        from_state=OperationState.VALIDATED,
+        to_state=OperationState.BLOCKED,
+        code="SYNTHETIC_BLOCK",
+        message="first writer wins the checkpoint compare-and-swap",
+    )
+    committed = checkpoint.read_bytes()
+
+    with pytest.raises(JournalConflictError, match="changed since this journal was loaded"):
+        stale.append(
+            action="synthetic-block",
+            from_state=OperationState.VALIDATED,
+            to_state=OperationState.BLOCKED,
+            code="SYNTHETIC_BLOCK",
+            message="stale writer must not replace the checkpoint",
+        )
+    assert stale.state is OperationState.VALIDATED
+    assert checkpoint.read_bytes() == committed
+
+    removed_path = tmp_path / "removed-journal.json"
+    original = OperationJournal(removed_path, plan=plan)
+    loaded = OperationJournal.load_checkpoint(removed_path, expected_plan=plan)
+    removed_path.unlink()
+    with pytest.raises(JournalConflictError, match="was removed since it was loaded"):
+        loaded.append(
+            action="validate",
+            from_state=OperationState.DRAFT,
+            to_state=OperationState.VALIDATED,
+            code="PLAN_VALIDATED",
+            message="must not recreate a removed checkpoint",
+        )
+    assert loaded.state is OperationState.DRAFT
+    assert not removed_path.exists()
+    assert original.state is OperationState.DRAFT
+
+
 def test_journal_rejects_rechecksummed_terminal_state_that_disagrees_with_final_event(
     x200_files: dict[str, Path], tmp_path: Path
 ) -> None:
@@ -702,6 +1159,62 @@ def test_journal_append_does_not_overwrite_corruption_after_resume(
         resumed.verify_backup()
     assert resumed.state is OperationState.VALIDATED
     assert checkpoint.read_bytes() == corrupted_bytes
+
+
+@pytest.mark.parametrize(
+    ("replacement", "resume_message", "append_message"),
+    [
+        (b"{", "missing, truncated or invalid JSON", "cannot be read before append"),
+        (b"[]", "root must be a JSON object", "root is malformed before append"),
+    ],
+)
+def test_loaded_journal_refuses_malformed_replacement_before_append_or_resume(
+    x200_files: dict[str, Path],
+    tmp_path: Path,
+    replacement: bytes,
+    resume_message: str,
+    append_message: str,
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "malformed-after-load.json"
+    original = WorkflowSession(plan, journal_path=checkpoint)
+    assert original.validate().decision is CompatibilityDecision.ALLOWED
+    loaded = OperationJournal.load_checkpoint(checkpoint, expected_plan=plan)
+    resumed = WorkflowSession(plan, journal=loaded)
+    state_before = resumed.state
+    entries_before = resumed.journal.entries
+    checkpoint.write_bytes(replacement)
+    foreign_bytes = checkpoint.read_bytes()
+
+    with pytest.raises(JournalCorruptionError, match=resume_message):
+        WorkflowSession.resume(plan, checkpoint)
+    with pytest.raises(JournalCorruptionError, match=append_message):
+        resumed.verify_backup()
+
+    assert resumed.state is state_before is OperationState.VALIDATED
+    assert resumed.journal.entries == entries_before
+    assert checkpoint.read_bytes() == foreign_bytes
+
+
+def test_initial_journal_bind_refuses_existing_file_before_first_checkpoint(
+    x200_files: dict[str, Path], tmp_path: Path
+) -> None:
+    plan = make_x200_plan(x200_files)
+    checkpoint = tmp_path / "created-before-initial-persist.json"
+    journal = OperationJournal(checkpoint)
+    assert not checkpoint.exists()
+
+    foreign_bytes = b'{"foreign":"checkpoint"}\n'
+    checkpoint.write_bytes(foreign_bytes)
+
+    with pytest.raises(FileExistsError, match="refusing to overwrite an existing operation journal"):
+        journal.bind_plan(plan)
+
+    assert checkpoint.read_bytes() == foreign_bytes
+    assert journal.state is OperationState.DRAFT
+    assert journal.entries == ()
+    assert journal._snapshot_checksum is None
+    # The failed initial bind cannot persist or advance the workflow journal.
 
 
 def test_blocked_journal_persists_failure_details_for_inspection(

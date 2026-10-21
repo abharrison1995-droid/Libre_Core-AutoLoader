@@ -44,12 +44,15 @@ from autoloader.workflow.types import (
     ChipEvidence,
     ChipTopology,
     BuildIntentEvidence,
+    CompatibilityDecision,
     ProgrammerEvidence,
     ProgrammerKind,
     DeviceEvidence,
     FirmwareFamily,
     OperationPlan,
     RegionEvidence,
+    CompatibilityResult,
+    EvidenceConfidence,
     VerificationStatus,
 )
 from tests.test_workflow_safety import MIB, make_t430_plan, make_x200_plan
@@ -57,6 +60,27 @@ from tests.test_workflow_safety import MIB, make_t430_plan, make_x200_plan
 
 def _hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _rewrite_backup_manifests(result, mutation) -> tuple[str, str]:
+    """Reseal both synthetic manifest chains after an intentional tamper."""
+    hashes = []
+    for raw_path in (result.primary_manifest, result.recovery_manifest):
+        path = Path(raw_path)
+        document = json.loads(path.read_text(encoding="utf-8"))
+        mutation(document["events"][-1])
+        previous = "0" * 64
+        for index, event in enumerate(document["events"], start=1):
+            event["sequence"] = index
+            event["previous_sha256"] = previous
+            payload = {key: value for key, value in event.items() if key != "event_sha256"}
+            event["event_sha256"] = backup_service._sha256(backup_service._canonical(payload))
+            previous = event["event_sha256"]
+        body = {key: value for key, value in document.items() if key != "manifest_sha256"}
+        document["manifest_sha256"] = backup_service._sha256(backup_service._canonical(body))
+        path.write_bytes(backup_service._canonical(document))
+        hashes.append(document["manifest_sha256"])
+    return hashes[0], hashes[1]
 
 
 def _payload(size: int, salt: int = 3) -> bytes:
@@ -116,6 +140,8 @@ class FakeTransport:
             version="1.4.0",
             raw_version="flashrom v1.4.0 fake build",
             observed_at_utc=datetime.now(timezone.utc).isoformat(),
+            sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            package_owner="pacman: test/flashrom 1.4.0-1",
         )
         self.probes = list(probes)
         self.read_payloads = dict(read_payloads)
@@ -337,6 +363,56 @@ def test_probe_evidence_rejects_reported_programmer_mismatch():
         SPIProbeService(fake).probe(ProgrammerType.CH341A)
 
 
+def test_backup_probe_matcher_requires_observed_topology_and_selected_programmer(tmp_path):
+    from autoloader.exceptions import BackupUnavailableError
+    from autoloader.flasher.backup_service import _match_probes_to_topology
+
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB, 5)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    with pytest.raises(BackupUnavailableError, match="complete observed chip topology"):
+        _match_probes_to_topology(
+            replace(plan, topology=replace(plan.topology, observed=False)),
+            probes,
+            ProgrammerType.CH341A,
+        )
+
+    buspirate_probe = ChipProbeEvidence.from_output(
+        programmer=ProgrammerType.BUS_PIRATE,
+        tool=transport.identity,
+        output=_probe_line("W25Q32.V", len(content), "buspirate_spi"),
+    )
+    with pytest.raises(BackupUnavailableError, match="differs from the selected backup programmer"):
+        _match_probes_to_topology(plan, (buspirate_probe,), ProgrammerType.CH341A)
+    assert transport.read_calls == []
+
+
+def test_backup_programmer_voltage_must_match_each_observed_chip(tmp_path):
+    from autoloader.exceptions import BackupUnavailableError
+    from autoloader.flasher.backup_service import _validate_external_backup_programmer
+
+    plan = _make_x200(tmp_path)
+    evidence = ProgrammerEvidence(
+        kind=ProgrammerKind.EXTERNAL_SPI,
+        observed=True,
+        interface_verified=True,
+        wiring_verified=True,
+        voltage_mv=3300,
+    )
+    wrong_chip_voltage_plan = replace(
+        plan,
+        topology=replace(
+            plan.topology,
+            chips=(replace(plan.topology.chips[0], voltage_mv=1800),),
+        ),
+    )
+    with pytest.raises(BackupUnavailableError, match="observed voltage matching the programmer"):
+        _validate_external_backup_programmer(
+            wrong_chip_voltage_plan, ProgrammerType.CH341A, evidence
+        )
+
+
 def test_backup_service_captures_complete_persistent_x200_set_and_recovery_readiness(tmp_path):
     plan = _make_x200(tmp_path)
     content = _payload(4 * MIB)
@@ -362,6 +438,32 @@ def test_backup_service_captures_complete_persistent_x200_set_and_recovery_readi
     assert readiness.status == "ready", readiness.reasons
     assert readiness.recovery_write_enabled is False
     assert readiness.hardware_recovery_tested is False
+
+
+def test_backup_reopen_rejects_operation_artifact_drift_before_reusing_backup(tmp_path):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB, 29)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+    reads_before_reopen = list(transport.read_calls)
+    changed_plan = replace(
+        plan,
+        artifact=replace(plan.artifact, expected_sha256="f" * 64),
+    )
+
+    with pytest.raises(BackupManifestError, match="current exact operation artifact"):
+        service.load_verified_result(
+            changed_plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
+    assert transport.read_calls == reads_before_reopen
 
 
 def test_recovery_readiness_blocks_changed_plan_and_later_failure_event(tmp_path):
@@ -439,13 +541,21 @@ def test_x220_backup_capture_binds_prebuild_intent_without_future_artifact(tmp_p
     from autoloader.rom_builder.artifact_engine import COREBOOT_2609, X220_COREBOOT
 
     plan = _make_x220(tmp_path)
+    intent_programmer = replace(
+        plan.programmer,
+        evidence_source="synthetic test attestation",
+        attested_by="test operator",
+        attested_at=datetime.now(timezone.utc).isoformat(),
+        instrument_id="synthetic meter",
+        measurement_test_point="synthetic point",
+    )
     intent = BuildIntentEvidence(
         profile_id=plan.profile_id,
         requested_model_id=plan.requested_model_id,
         firmware_family=plan.firmware_family,
         device=plan.device,
         topology=plan.topology,
-        programmer=plan.programmer,
+        programmer=intent_programmer,
         recipe_id=X220_COREBOOT.recipe_id,
         source_url=COREBOOT_2609.repository_url,
         source_revision=COREBOOT_2609.revision,
@@ -465,6 +575,27 @@ def test_x220_backup_capture_binds_prebuild_intent_without_future_artifact(tmp_p
     assert event["build_intent"]["recipe_id"] == X220_COREBOOT.recipe_id
     assert event["build_intent_sha256"]
     assert RecoveryReadinessService().evaluate(intent, result).status == "ready"
+    reopened = service.load_verified_result(
+        intent,
+        operation_id=result.operation_id,
+        primary_manifest=result.primary_manifest,
+        recovery_manifest=result.recovery_manifest,
+        primary_manifest_sha256=result.primary_manifest_sha256,
+        recovery_manifest_sha256=result.recovery_manifest_sha256,
+        expected_tool=transport.identity,
+    )
+    assert reopened.operation_id == result.operation_id
+    changed_intent = replace(intent, source_revision="f" * 40)
+    with pytest.raises(BackupManifestError, match="current exact build intent"):
+        service.load_verified_result(
+            changed_intent,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=result.primary_manifest_sha256,
+            recovery_manifest_sha256=result.recovery_manifest_sha256,
+            expected_tool=transport.identity,
+        )
 
 
 def test_backup_service_blocks_invalid_x220_region_map_before_reads(tmp_path):
@@ -497,6 +628,76 @@ def test_backup_service_blocks_incomplete_probe_or_transient_storage_before_read
     assert transport.read_calls == []
 
 
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("relative-primary", "primary backup destination must be absolute and link-free"),
+        ("same-destination", "stored at different destinations"),
+    ],
+)
+def test_backup_storage_identity_failure_stops_before_manifest_or_read(
+    tmp_path, case: str, message: str
+) -> None:
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB, 41)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    original_inspect = service.storage_inspector.inspect
+
+    def inspect(path, required_bytes, *, persistence_confirmed):
+        evidence = original_inspect(path, required_bytes, persistence_confirmed=persistence_confirmed)
+        if case == "relative-primary" and Path(path) == primary:
+            return replace(evidence, path="relative-backup")
+        if case == "same-destination" and Path(path) == recovery:
+            return replace(evidence, path=str(primary), volume_id="different-claimed-volume")
+        return evidence
+
+    service.storage_inspector.inspect = inspect
+    with pytest.raises(StoragePreflightError, match=message):
+        _capture(service, plan, probes, primary, recovery)
+    assert transport.read_calls == []
+    assert not (primary / "backup-manifest.json").exists()
+    assert not (recovery / "backup-manifest.json").exists()
+
+
+@pytest.mark.parametrize(
+    ("case", "message", "expected_reads"),
+    [
+        ("missing-dump", "did not create a file", 1),
+        ("short-dump", "expected exactly", 1),
+        ("blank-dump", "blank or degenerate", 1),
+    ],
+)
+def test_backup_capture_rejects_missing_short_and_blank_dump_outputs(
+    tmp_path, case: str, message: str, expected_reads: int
+) -> None:
+    plan = _make_x200(tmp_path)
+    content = b"\x00" * (4 * MIB) if case == "blank-dump" else _payload(4 * MIB, 47)
+
+    class MissingDumpTransport(FakeTransport):
+        def read_chip(self, programmer, probe, destination):
+            self.read_calls.append((programmer, probe.chip_name, Path(destination)))
+            return SPITransportResult(True, "fake success without an output file", 0.0)
+
+    if case == "missing-dump":
+        transport = MissingDumpTransport([_probe_line("W25Q32.V", 4 * MIB)], {4 * MIB: content})
+    else:
+        transport = FakeTransport(
+            [_probe_line("W25Q32.V", 4 * MIB)],
+            {4 * MIB: content},
+            short_read=1 if case == "short-dump" else None,
+        )
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    with pytest.raises(BackupCaptureError, match=message):
+        _capture(service, plan, probes, primary, recovery)
+    assert len(transport.read_calls) == expected_reads
+    assert [event["status"] for event in BackupManifestStore(primary).read_events()] == ["in-progress", "failed"]
+    assert [event["status"] for event in BackupManifestStore(recovery).read_events()] == ["in-progress", "failed"]
+    assert not any(event["status"] == "verified" for event in BackupManifestStore(primary).read_events())
+
+
 def test_backup_service_rechecks_exact_tool_identity_before_reads(tmp_path):
     from autoloader.exceptions import BackupUnavailableError
 
@@ -510,6 +711,124 @@ def test_backup_service_rechecks_exact_tool_identity_before_reads(tmp_path):
     with pytest.raises(BackupUnavailableError, match="differs from the exact probe evidence"):
         _capture(service, plan, probes, primary, recovery)
     assert transport.read_calls == []
+
+
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("kind", "independently observed external SPI programmer"),
+        ("not-observed", "independently observed external SPI programmer"),
+        ("interface", "verified programmer interface and wiring"),
+        ("wiring", "verified programmer interface and wiring"),
+        ("voltage-unknown", "exactly 3300 mV"),
+        ("voltage-mismatch", "exactly 3300 mV"),
+        ("internal-selected", "generic internal programmer is not an allowed"),
+    ],
+)
+def test_backup_capture_rejects_untrusted_programmer_attestation_before_reads(
+    tmp_path, case: str, message: str
+) -> None:
+    from autoloader.exceptions import BackupUnavailableError
+
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    evidence = plan.programmer
+    selected = ProgrammerType.CH341A
+    if case == "kind":
+        evidence = replace(evidence, kind=ProgrammerKind.SIMULATION)
+    elif case == "not-observed":
+        evidence = replace(evidence, observed=False)
+    elif case == "interface":
+        evidence = replace(evidence, interface_verified=False)
+    elif case == "wiring":
+        evidence = replace(evidence, wiring_verified=None)
+    elif case == "voltage-unknown":
+        evidence = replace(evidence, voltage_mv=None)
+    elif case == "voltage-mismatch":
+        evidence = replace(evidence, voltage_mv=1800)
+    elif case == "internal-selected":
+        selected = ProgrammerType.INTERNAL
+
+    with pytest.raises(BackupUnavailableError, match=message):
+        service.capture(
+            plan,
+            probes,
+            programmer=selected,
+            programmer_evidence=evidence,
+            primary_directory=primary,
+            recovery_directory=recovery,
+            primary_persistent_confirmed=True,
+            recovery_persistent_confirmed=True,
+        )
+    assert transport.read_calls == []
+    assert not (primary / "backup-manifest.json").exists()
+    assert not (recovery / "backup-manifest.json").exists()
+
+
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("probe-count", "exactly every chip"),
+        ("duplicate-probe-id", "distinct raw probe record"),
+        ("duplicate-capacity", "mapping is ambiguous"),
+        ("capacity-mismatch", "capacities do not match"),
+        ("different-tool", "same exact tool executable and version"),
+        ("changed-probe-digest", "evidence fields do not match"),
+    ],
+)
+def test_t430_backup_capture_rejects_probe_topology_drift_before_reads(
+    tmp_path, case: str, message: str
+) -> None:
+    from autoloader.exceptions import BackupUnavailableError
+
+    plan = _make_t430(tmp_path)
+    content4 = _payload(4 * MIB, 3)
+    content8 = _payload(8 * MIB, 7)
+    probe_outputs = [_probe_line("W25Q64.V", 8 * MIB), _probe_line("W25Q32.V", 4 * MIB)]
+    if case == "capacity-mismatch":
+        probe_outputs[1] = _probe_line("W25Q128.V", 16 * MIB)
+    transport = FakeTransport(probe_outputs, {4 * MIB: content4, 8 * MIB: content8, 16 * MIB: _payload(16 * MIB, 13)})
+    probes = _probe(transport, count=2)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    external = ProgrammerEvidence(
+        kind=ProgrammerKind.EXTERNAL_SPI,
+        observed=True,
+        interface_verified=True,
+        wiring_verified=True,
+        voltage_mv=3300,
+    )
+
+    if case == "probe-count":
+        probes = probes[:1]
+    elif case == "duplicate-probe-id":
+        probes = (probes[0], replace(probes[1], probe_id=probes[0].probe_id))
+    elif case == "duplicate-capacity":
+        probes = (probes[0], replace(
+            probes[1],
+            chip_name=probes[0].chip_name,
+            capacity_bytes=probes[0].capacity_bytes,
+            raw_output=probes[0].raw_output,
+            raw_output_sha256=probes[0].raw_output_sha256,
+            reported_programmer=probes[0].reported_programmer,
+        ))
+    elif case == "different-tool":
+        other_tool = replace(
+            probes[1].tool,
+            version="1.5.0",
+            raw_version="flashrom v1.5.0 synthetic build",
+        )
+        probes = (probes[0], replace(probes[1], tool=other_tool))
+    elif case == "changed-probe-digest":
+        probes = (replace(probes[0], raw_output_sha256="0" * 64), probes[1])
+
+    with pytest.raises((BackupUnavailableError, SPIOperationError), match=message):
+        _capture(service, plan, probes, primary, recovery, programmer_evidence=external)
+    assert transport.read_calls == []
+    assert not (primary / "backup-manifest.json").exists()
+    assert not (recovery / "backup-manifest.json").exists()
 
 
 def test_backup_service_requires_separate_storage_volumes(tmp_path):
@@ -533,6 +852,52 @@ def test_backup_service_rejects_corrupt_manifest_before_hardware_reads(tmp_path)
     with pytest.raises(BackupManifestError):
         _capture(service, plan, probes, primary, recovery)
     assert transport.read_calls == []
+
+
+@pytest.mark.parametrize(
+    ("tamper", "expected_message"),
+    [
+        ("schema", "unsupported schema"),
+        ("events-type", "events are malformed"),
+        ("event-type", "invalid sequence data"),
+        ("sequence", "invalid sequence data"),
+        ("previous-hash", "breaks its checksum chain"),
+        ("event-hash", "event .* checksum is invalid"),
+        ("manifest-hash", "manifest checksum is invalid"),
+    ],
+)
+def test_backup_manifest_chain_tampering_blocks_before_spi_reads(
+    tmp_path, tamper, expected_message
+):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    recovery_store = BackupManifestStore(recovery)
+    recovery_store.append({"status": "synthetic seed for integrity validation"})
+    manifest_path = recovery / "backup-manifest.json"
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if tamper == "schema":
+        document["schema_version"] = 999
+    elif tamper == "events-type":
+        document["events"] = {"not": "a list"}
+    elif tamper == "event-type":
+        document["events"][0] = None
+    elif tamper == "sequence":
+        document["events"][0]["sequence"] = 2
+    elif tamper == "previous-hash":
+        document["events"][0]["previous_sha256"] = "f" * 64
+    elif tamper == "event-hash":
+        document["events"][0]["status"] = "altered without resealing"
+    elif tamper == "manifest-hash":
+        document["manifest_sha256"] = "0" * 64
+    manifest_path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(BackupManifestError, match=expected_message):
+        _capture(service, plan, probes, primary, recovery)
+    assert transport.read_calls == []
+    assert not list(primary.rglob("*.partial")) and not list(recovery.rglob("*.partial"))
 
 
 def test_recovery_manifest_start_failure_blocks_before_any_spi_read(tmp_path, monkeypatch):
@@ -585,6 +950,118 @@ def test_backup_mismatch_preserves_both_reads_and_never_retries(tmp_path):
     assert events[-1]["status"] == "failed"
     assert events[-1]["automatic_retry"] is False
     assert events[-1]["automatic_reboot"] is False
+
+
+def test_backup_detects_first_dump_mutation_after_initial_hash_and_preserves_failure(tmp_path, monkeypatch):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    original_hash = backup_service._hash_file
+    mutated = False
+
+    def hash_then_mutate_first_partial(path):
+        nonlocal mutated
+        digest = original_hash(path)
+        if path.name.endswith("read-1.partial") and not mutated:
+            path.write_bytes(_payload(len(content), salt=71))
+            mutated = True
+        return digest
+
+    monkeypatch.setattr(backup_service, "_hash_file", hash_then_mutate_first_partial)
+    with pytest.raises(BackupCaptureError, match="persisted backup changed after read"):
+        _capture(service, plan, probes, primary, recovery)
+
+    assert mutated is True
+    assert len(transport.read_calls) == 2
+    primary_events = BackupManifestStore(primary).read_events()
+    recovery_events = BackupManifestStore(recovery).read_events()
+    assert [event["status"] for event in primary_events] == ["in-progress", "failed"]
+    assert [event["status"] for event in recovery_events] == ["in-progress", "failed"]
+    assert primary_events[-1]["automatic_retry"] is False
+    assert recovery_events[-1]["automatic_reboot"] is False
+    assert len(list(primary.rglob("*.rom"))) == 1
+    assert len(list(recovery.rglob("*.rom"))) == 1
+
+
+def test_backup_policy_failure_after_reads_never_publishes_verified_result(tmp_path, monkeypatch):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+
+    def reject_saved_pair(_plan):
+        return CompatibilityResult(
+            CompatibilityDecision.BLOCKED,
+            "x200",
+            EvidenceConfidence.LOW,
+            ("injected independent backup policy rejection",),
+        )
+
+    monkeypatch.setattr(service.validator, "validate_backup", reject_saved_pair)
+    with pytest.raises(BackupCaptureError, match="failed independent policy validation"):
+        _capture(service, plan, probes, primary, recovery)
+
+    assert len(transport.read_calls) == 2
+    for directory in (primary, recovery):
+        events = BackupManifestStore(directory).read_events()
+        assert [event["status"] for event in events] == ["in-progress", "failed"]
+        assert events[-1]["failure"]
+        assert events[-1]["automatic_retry"] is False
+        assert events[-1]["automatic_reboot"] is False
+        assert len(list(directory.rglob("*.rom"))) == 1
+
+
+@pytest.mark.parametrize(
+    ("tamper", "expected_message"),
+    [
+        ("missing-chip", "does not cover every expected chip"),
+        ("malformed-chip", "chip record is malformed"),
+        ("empty-capture-id", "chip record is malformed"),
+        ("invalid-storage-capacity", "storage record is malformed"),
+        ("unsupported-programmer", "unsupported programmer"),
+        ("malformed-topology", "duplicate or malformed chip topology"),
+    ],
+)
+def test_backup_reopen_rejects_resealed_semantically_invalid_manifest(
+    tmp_path, tamper, expected_message
+):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+    read_calls_before_reopen = len(transport.read_calls)
+
+    def mutate(event):
+        if tamper == "missing-chip":
+            event["chips"] = []
+        elif tamper == "malformed-chip":
+            event["chips"][0] = None
+        elif tamper == "empty-capture-id":
+            event["chips"][0]["first_capture_id"] = ""
+        elif tamper == "invalid-storage-capacity":
+            event["primary_storage"]["available_bytes"] = 0
+        elif tamper == "unsupported-programmer":
+            event["programmer"] = "unsupported-programmer"
+        elif tamper == "malformed-topology":
+            event["topology"] = [None]
+
+    manifest_hashes = _rewrite_backup_manifests(result, mutate)
+    with pytest.raises(BackupManifestError, match=expected_message):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=manifest_hashes[0],
+            recovery_manifest_sha256=manifest_hashes[1],
+            expected_tool=transport.identity,
+        )
+    assert len(transport.read_calls) == read_calls_before_reopen == 2
 
 
 @pytest.mark.parametrize(
@@ -801,6 +1278,109 @@ def test_backup_reopen_rejects_validly_rechecksummed_primary_recovery_divergence
         )
 
 
+@pytest.mark.parametrize(
+    ("tamper", "expected_message"),
+    [
+        ("chip-id", "differs from current observed topology"),
+        ("chip-capacity", "differs from current observed topology"),
+        ("tool-version", "backup tool identity differs from the fresh local probe"),
+        ("tool-sha256", "backup tool identity differs from the fresh local probe"),
+        ("tool-package-owner", "backup tool identity differs from the fresh local probe"),
+        ("device-identity", "device identity differs from the current plan"),
+        ("region-map", "region map differs from the current topology"),
+        ("chip-voltage-evidence", "chip evidence differs from the current observed topology"),
+        ("programmer-evidence", "programmer setup provenance differs from current attestation"),
+        ("internal-programmer", "cannot use the internal programmer"),
+    ],
+)
+def test_verified_backup_reopen_rejects_rechecksummed_identity_and_setup_tampering(
+    tmp_path, tamper, expected_message
+):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+
+    if tamper == "chip-capacity":
+        smaller = _payload(2 * MIB, 19)
+        for copy_path in (result.chips[0].first_path, result.chips[0].second_path):
+            Path(copy_path).write_bytes(smaller)
+        smaller_hash = hashlib.sha256(smaller).hexdigest()
+
+    def mutate(event):
+        if tamper == "chip-id":
+            event["chips"][0]["chip_id"] = "unobserved-chip"
+        elif tamper == "chip-capacity":
+            chip = event["chips"][0]
+            chip["capacity_bytes"] = 2 * MIB
+            chip["first_size_bytes"] = chip["second_size_bytes"] = 2 * MIB
+            chip["first_sha256"] = chip["second_sha256"] = smaller_hash
+        elif tamper == "tool-version":
+            event["tool"]["version"] = "different-pinned-version"
+        elif tamper == "tool-sha256":
+            event["tool"]["sha256"] = "f" * 64
+        elif tamper == "tool-package-owner":
+            event["tool"]["package_owner"] = "dpkg: other-package: /usr/bin/flashrom"
+        elif tamper == "device-identity":
+            event["device_identifiers"]["raw_dmi_product_name"] = "ThinkPad X220"
+        elif tamper == "region-map":
+            event["regions"] = [{"name": "unexpected", "start_byte": 0, "end_byte": 1}]
+        elif tamper == "chip-voltage-evidence":
+            event["topology"][0]["voltage_evidence_source"] = "unrecorded-source"
+        elif tamper == "programmer-evidence":
+            event["programmer_evidence"]["interface_verified"] = False
+        elif tamper == "internal-programmer":
+            event["programmer"] = ProgrammerType.INTERNAL.value
+
+    manifest_hashes = _rewrite_backup_manifests(result, mutate)
+    read_count = len(transport.read_calls)
+    with pytest.raises(BackupManifestError, match=expected_message):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=manifest_hashes[0],
+            recovery_manifest_sha256=manifest_hashes[1],
+            expected_tool=transport.identity,
+        )
+    assert len(transport.read_calls) == read_count == 2
+
+
+def test_verified_backup_reopen_rejects_primary_recovery_hardlink_alias(tmp_path):
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery)
+    first_path = Path(result.chips[0].first_path)
+    second_path = Path(result.chips[0].second_path)
+    alias_path = second_path.with_name("recovery-hardlink.rom")
+    try:
+        os.link(first_path, alias_path)
+    except (OSError, NotImplementedError) as exc:
+        pytest.skip(f"host does not support creating a local hard link: {exc}")
+
+    def alias_recovery_copy(event):
+        event["chips"][0]["second_path"] = str(alias_path)
+
+    manifest_hashes = _rewrite_backup_manifests(result, alias_recovery_copy)
+    with pytest.raises(BackupManifestError, match="copies must be distinct files"):
+        service.load_verified_result(
+            plan,
+            operation_id=result.operation_id,
+            primary_manifest=result.primary_manifest,
+            recovery_manifest=result.recovery_manifest,
+            primary_manifest_sha256=manifest_hashes[0],
+            recovery_manifest_sha256=manifest_hashes[1],
+            expected_tool=transport.identity,
+        )
+    assert len(transport.read_calls) == 2
+
+
 def test_readback_comparison_is_region_aware_and_preserves_mismatch(tmp_path):
     chip = bytearray(_payload(8192))
     intended_region = bytes((index * 13 + 5) % 251 for index in range(2048))
@@ -839,9 +1419,31 @@ def test_readback_rejects_invalid_or_incomplete_region_map(tmp_path):
     assert "different byte lengths" in result.details[0]
 
 
-def test_flashrom_runner_allows_only_exact_read_only_command_forms(monkeypatch):
+def test_flashrom_runner_allows_only_exact_read_only_command_forms(monkeypatch, tmp_path):
     from types import SimpleNamespace
+    import autoloader.flasher.flashrom as flashrom_module
 
+    fake_executable = tmp_path / "flashrom"
+    fake_executable.write_bytes(b"synthetic executable")
+    resolved = str(fake_executable.resolve())
+    info = fake_executable.stat()
+    provenance = flashrom_module._TrustedExecutable(
+        file=flashrom_module._FileFingerprint(
+            path=resolved,
+            sha256=hashlib.sha256(fake_executable.read_bytes()).hexdigest(),
+            device=info.st_dev,
+            inode=info.st_ino,
+            size=info.st_size,
+            mtime_ns=info.st_mtime_ns,
+            ctime_ns=info.st_ctime_ns,
+            mode=info.st_mode,
+            uid=info.st_uid,
+            gid=info.st_gid,
+        ),
+        package_owner="pacman: test/flashrom 1.4.0-1",
+    )
+    monkeypatch.setattr(flashrom_module.shutil, "which", lambda name: resolved if name == "flashrom" else None)
+    monkeypatch.setattr(flashrom_module, "_trusted_executable_provenance", lambda _path: provenance)
     runner = FlashromRunner()
     calls = []
 
@@ -907,14 +1509,45 @@ def test_flashrom_runner_rejects_mutating_aliases_and_injected_options_without_s
     assert verify.code == "UNSUPPORTED_ARGUMENTS"
 
 
-def test_filesystem_storage_preflight_rejects_unknown_or_transient_storage(tmp_path):
+@pytest.mark.parametrize("filesystem_type", [None, "tmpfs"], ids=["unknown", "transient"])
+def test_filesystem_storage_preflight_rejects_unknown_or_transient_storage(
+    tmp_path, monkeypatch, filesystem_type
+):
+    # Exercise the POSIX durability policy on every host, with a destination
+    # outside the configured system-temp path so the mount classification is
+    # the reason this storage is rejected.
+    real_os = backup_service.os
+
+    class PosixOSProxy:
+        name = "posix"
+
+        def __getattr__(self, name):
+            return getattr(real_os, name)
+
+    monkeypatch.setattr(backup_service, "os", PosixOSProxy())
+    monkeypatch.setattr(
+        backup_service.tempfile,
+        "gettempdir",
+        lambda: str(tmp_path.parent / "unrelated-system-temp"),
+    )
+    monkeypatch.setattr(backup_service, "_mount_type", lambda _path: filesystem_type)
+
+    def scratch_readback_must_not_run(_directory):
+        pytest.fail("unknown/transient storage must be rejected before scratch writes")
+
+    monkeypatch.setattr(
+        FilesystemStorageInspector,
+        "_scratch_readback",
+        staticmethod(scratch_readback_must_not_run),
+    )
     evidence = FilesystemStorageInspector().inspect(
         tmp_path,
         1024,
         persistence_confirmed=True,
     )
-    # The test temp area is not accepted as a durable recovery location.
+    assert evidence.filesystem_type == filesystem_type
     assert evidence.persistence_confirmed is False
+    assert evidence.scratch_readback_verified is False
     assert evidence.usable is False
 
 

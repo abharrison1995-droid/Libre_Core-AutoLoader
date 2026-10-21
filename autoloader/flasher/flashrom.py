@@ -1,10 +1,14 @@
 """
 Flashrom/Flashprog wrapper.
 """
+import hashlib
+import os
+import stat
 import subprocess
 import logging
 import re
 import shutil
+import sys
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -39,17 +43,192 @@ class FlashResult:
 
 @dataclass(frozen=True)
 class FlashToolIdentity:
-    """Exact executable and version observed from a safe `--version` query."""
+    """Trusted executable hash/provenance plus version observed by the runner."""
 
     name: str
     executable: str
     version: str
     raw_version: str
     observed_at_utc: str
+    sha256: str = ""
+    package_owner: str = ""
+
+
+@dataclass(frozen=True)
+class _FileFingerprint:
+    path: str
+    sha256: str
+    device: int
+    inode: int
+    size: int
+    mtime_ns: int
+    ctime_ns: int
+    mode: int
+    uid: int
+    gid: int
+
+
+@dataclass(frozen=True)
+class _TrustedExecutable:
+    file: _FileFingerprint
+    package_owner: str
 
 
 class ProbeOutputError(ValueError):
     """A flashrom probe did not identify exactly one unambiguous chip."""
+
+
+def _trusted_root_owned_stat(info: os.stat_result, *, directory: bool) -> bool:
+    """Require Linux system ownership and no group/other write access."""
+    expected_type = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
+    if not expected_type or info.st_uid != 0 or info.st_mode & 0o022:
+        return False
+    return directory or bool(info.st_mode & 0o111)
+
+
+def _same_file_stat(left: os.stat_result, right: os.stat_result) -> bool:
+    return (
+        left.st_dev,
+        left.st_ino,
+        left.st_size,
+        left.st_mtime_ns,
+        left.st_ctime_ns,
+        left.st_mode,
+        left.st_uid,
+        left.st_gid,
+    ) == (
+        right.st_dev,
+        right.st_ino,
+        right.st_size,
+        right.st_mtime_ns,
+        right.st_ctime_ns,
+        right.st_mode,
+        right.st_uid,
+        right.st_gid,
+    )
+
+
+def _fingerprint_trusted_linux_file(path: str) -> _FileFingerprint | None:
+    """Hash one root-owned executable below root-owned, non-writable directories.
+
+    This policy intentionally supports Linux system tools only. It does not
+    establish trust against a malicious root user or compromised kernel.
+    """
+    if not sys.platform.startswith("linux") or not os.path.isabs(path):
+        return None
+    try:
+        resolved = Path(path).resolve(strict=True)
+        if str(resolved) != path:
+            return None
+
+        # Every directory component must be protected from non-root replacement.
+        for directory_path in reversed(resolved.parents):
+            directory_info = directory_path.lstat()
+            if stat.S_ISLNK(directory_info.st_mode) or not _trusted_root_owned_stat(
+                directory_info, directory=True
+            ):
+                return None
+        file_info = resolved.lstat()
+        if stat.S_ISLNK(file_info.st_mode) or not _trusted_root_owned_stat(file_info, directory=False):
+            return None
+
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(str(resolved), flags)
+        try:
+            opened_info = os.fstat(descriptor)
+            if not _same_file_stat(file_info, opened_info):
+                return None
+            digest = hashlib.sha256()
+            while True:
+                chunk = os.read(descriptor, 1024 * 1024)
+                if not chunk:
+                    break
+                digest.update(chunk)
+            final_info = os.fstat(descriptor)
+            if not _same_file_stat(opened_info, final_info):
+                return None
+        finally:
+            os.close(descriptor)
+    except OSError:
+        return None
+    return _FileFingerprint(
+        path=str(resolved),
+        sha256=digest.hexdigest(),
+        device=int(final_info.st_dev),
+        inode=int(final_info.st_ino),
+        size=int(final_info.st_size),
+        mtime_ns=int(final_info.st_mtime_ns),
+        ctime_ns=int(final_info.st_ctime_ns),
+        mode=int(final_info.st_mode),
+        uid=int(final_info.st_uid),
+        gid=int(final_info.st_gid),
+    )
+
+
+def _run_trusted_package_query(manager: str, args: list[str]) -> subprocess.CompletedProcess[str] | None:
+    """Run a fixed package-manager query only while its own bytes are stable."""
+    before = _fingerprint_trusted_linux_file(manager)
+    if before is None:
+        return None
+    try:
+        result = subprocess.run(
+            [manager, *args],
+            cwd=os.path.abspath(os.sep),
+            env={"LC_ALL": "C"},
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=10,
+            shell=False,
+            close_fds=True,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    after = _fingerprint_trusted_linux_file(manager)
+    return result if after == before else None
+
+
+def _linux_package_owner(executable: str) -> str | None:
+    """Return manager-backed ownership for an exact system executable path."""
+    pacman = "/usr/bin/pacman"
+    pacman_result = _run_trusted_package_query(pacman, ["-Qo", "--", executable])
+    if pacman_result is not None and pacman_result.returncode == 0:
+        prefix = f"{executable} is owned by "
+        lines = pacman_result.stdout.splitlines()
+        if len(lines) == 1 and lines[0].startswith(prefix):
+            owner = lines[0][len(prefix):].strip()
+            if owner and not any(ord(character) < 32 for character in owner):
+                return f"pacman: {owner}"
+
+    dpkg = "/usr/bin/dpkg-query"
+    dpkg_result = _run_trusted_package_query(dpkg, ["-S", "--", executable])
+    if dpkg_result is not None and dpkg_result.returncode == 0:
+        matches = []
+        for line in dpkg_result.stdout.splitlines():
+            package, separator, owned_path = line.partition(": ")
+            if separator and owned_path == executable and package.strip():
+                matches.append(line.strip())
+        if len(matches) == 1 and not any(ord(character) < 32 for character in matches[0]):
+            return f"dpkg: {matches[0]}"
+    return None
+
+
+def _trusted_executable_provenance(path: str) -> _TrustedExecutable | None:
+    """Accept only root-protected Linux executables owned by pacman or dpkg.
+
+    PATH is discovery input only. Windows and systems without a trusted local
+    package ownership query remain unavailable unless a separate explicit
+    trusted pin/policy is introduced.
+    """
+    before = _fingerprint_trusted_linux_file(path)
+    if before is None:
+        return None
+    package_owner = _linux_package_owner(path)
+    after = _fingerprint_trusted_linux_file(path)
+    if package_owner is None or before != after:
+        return None
+    return _TrustedExecutable(file=after, package_owner=package_owner)
 
 
 _CHIP_LINE = re.compile(
@@ -61,6 +240,8 @@ _TOOL_VERSION = re.compile(
     r'\b(flashrom|flashprog)\s+v?([0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?)\b',
     re.IGNORECASE,
 )
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_PACKAGE_OWNER = re.compile(r"^(?:pacman|dpkg): [^\r\n]+$")
 _PROGRAMMER_VALUES = frozenset(programmer.value for programmer in ProgrammerType)
 _CHIP_SELECTOR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
 _REGION_SELECTOR = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
@@ -138,60 +319,131 @@ def parse_probe_output(output: str) -> tuple[str, int, str]:
 
 class FlashromRunner:
     def __init__(self):
-        self.tool_path = self.detect_tool()
-    
-    def detect_tool(self) -> str:
-        # Prefer flashprog, fallback to flashrom
-        return shutil.which("flashprog") or shutil.which("flashrom") or "flashrom"
+        self._tool_name: str | None = None
+        self._trusted_executable: _TrustedExecutable | None = None
+        self._tool_path = self.detect_tool()
+
+    @property
+    def tool_path(self) -> str | None:
+        """Executable resolved once so probing and identity use the same path."""
+        return self._tool_path
+
+    def detect_tool(self) -> str | None:
+        # PATH is discovery input only. A candidate must also pass Linux owner,
+        # mode, parent-path, hash, and package-owner checks before use.
+        for candidate in ("flashprog", "flashrom"):
+            found = shutil.which(candidate)
+            if found is None:
+                continue
+            try:
+                resolved = Path(found).resolve(strict=True)
+            except OSError:
+                continue
+            executable = str(resolved)
+            provenance = _trusted_executable_provenance(executable)
+            if provenance is None:
+                continue
+            self._tool_name = candidate
+            self._trusted_executable = provenance
+            return executable
+        return None
+
+    def _trusted_tool_unchanged(self) -> bool:
+        expected = self._trusted_executable
+        executable = self.tool_path
+        if expected is None or executable is None:
+            return False
+        current = _trusted_executable_provenance(executable)
+        return current == expected
 
     def inspect_tool(self) -> Optional[FlashToolIdentity]:
         """Return an exact tool/version record, or None when unavailable/ambiguous."""
-        candidates = ("flashprog", "flashrom")
-        for candidate in candidates:
-            executable = shutil.which(candidate)
-            if executable is None:
-                continue
-            try:
-                result = subprocess.run(
-                    [executable, "--version"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                    timeout=10,
-                )
-            except (OSError, subprocess.TimeoutExpired):
-                continue
-            raw = f"{result.stdout}\n{result.stderr}".strip()
-            match = _TOOL_VERSION.search(raw)
-            if result.returncode != 0 or match is None or match.group(1).casefold() != candidate:
-                continue
-            return FlashToolIdentity(
-                name=candidate,
-                executable=str(Path(executable).resolve(strict=False)),
-                version=match.group(2),
-                raw_version=raw,
-                observed_at_utc=datetime.now(timezone.utc).isoformat(),
+        executable = self.tool_path
+        provenance = self._trusted_executable
+        if (
+            executable is None
+            or provenance is None
+            or not Path(executable).is_absolute()
+            or provenance.file.path != executable
+            or not self._trusted_tool_unchanged()
+        ):
+            return None
+        candidate = self._tool_name
+        if candidate not in {"flashrom", "flashprog"}:
+            return None
+        try:
+            result = subprocess.run(
+                [executable, "--version"],
+                cwd=os.path.abspath(os.sep),
+                env={},
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+                shell=False,
+                close_fds=True,
             )
-        return None
+        except (OSError, subprocess.TimeoutExpired):
+            self._trusted_tool_unchanged()
+            return None
+        if not self._trusted_tool_unchanged():
+            return None
+        raw = f"{result.stdout}\n{result.stderr}".strip()
+        match = _TOOL_VERSION.search(raw)
+        if result.returncode != 0 or match is None or match.group(1).casefold() != candidate:
+            return None
+        return FlashToolIdentity(
+            name=candidate,
+            executable=executable,
+            version=match.group(2),
+            raw_version=raw,
+            observed_at_utc=datetime.now(timezone.utc).isoformat(),
+            sha256=provenance.file.sha256,
+            package_owner=provenance.package_owner,
+        )
 
     def run_command(self, args: List[str], timeout: int = FLASH_TIMEOUT) -> Tuple[bool, str, float]:
         if not _is_allowed_read_only_command(args):
             return False, _READ_ONLY_REJECTION, 0.0
+        executable = self.tool_path
+        if (
+            executable is None
+            or not Path(executable).is_absolute()
+            or not self._trusted_tool_unchanged()
+        ):
+            return False, "Flashrom/flashprog executable is unavailable or lacks trusted, unchanged system provenance.", 0.0
         start = time.time()
-        cmd = [self.tool_path, *args]
+        cmd = [executable, *args]
         logger.info(f"Running command: {' '.join(cmd)}")
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=timeout)
+            result = subprocess.run(
+                cmd,
+                cwd=os.path.abspath(os.sep),
+                env={},
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=timeout,
+                shell=False,
+                close_fds=True,
+            )
             duration = time.time() - start
+            if not self._trusted_tool_unchanged():
+                return False, "Flashrom/flashprog executable identity changed during the command.", duration
             success = result.returncode == 0
             log_output = result.stdout + "\n" + result.stderr
             return success, log_output, duration
         except subprocess.TimeoutExpired:
             duration = time.time() - start
+            if not self._trusted_tool_unchanged():
+                return False, "Flashrom/flashprog executable identity changed during the command.", duration
             err_msg = f"Flashrom command timed out after {timeout}s: {' '.join(cmd)}"
             logger.error(err_msg)
             return False, err_msg, duration
         except Exception as e:
+            self._trusted_tool_unchanged()
             logger.error(f"Failed to run command: {e}")
             return False, str(e), time.time() - start
 

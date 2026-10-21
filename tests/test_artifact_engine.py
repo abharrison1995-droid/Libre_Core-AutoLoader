@@ -69,6 +69,167 @@ from autoloader.workflow.types import (
 )
 
 
+def _synthetic_x200_nested_repository_evidence():
+    import autoloader.rom_builder.artifact_engine as module
+
+    coreboot = module.X200NestedRepositoryEvidence(
+        role="coreboot",
+        relative_path="work/lbmk/src/coreboot/default",
+        repository_url=module._X200_COREBOOT_ORIGIN_URL,
+        cache_origin_relative_path=f"work/lbmk/{module._X200_COREBOOT_CACHE_RELATIVE_PATH}",
+        base_revision=module._LBMK_COREBOOT_REVISION,
+        base_tree_id=module._LBMK_COREBOOT_TREE,
+        resulting_revision="a" * 40,
+        resulting_tree_id=module._X200_COREBOOT_POST_TREE,
+        patch_inputs=tuple(
+            (f"work/lbmk/config/coreboot/default/patches/{index:04}.patch", "b" * 64)
+            for index in range(module._X200_COREBOOT_PATCH_COUNT)
+        ),
+        patch_revisions=tuple(
+            f"{index:040x}" for index in range(1, module._X200_COREBOOT_PATCH_COUNT)
+        ) + ("a" * 40,),
+        patch_tree_ids=("c" * 40,) * (module._X200_COREBOOT_PATCH_COUNT - 1) + (module._X200_COREBOOT_POST_TREE,),
+        source_file_hashes=tuple((item.path, item.sha256) for item in module._LBMK_COREBOOT_CBFSTOOL_SOURCES),
+        generated_status=(
+            " M 3rdparty/libgfxinit",
+            " M 3rdparty/vboot",
+            "?? 3rdparty/fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c/",
+            "?? util/cbfstool/fmd_parser.h",
+            "?? util/cbfstool/fmd_scanner.h",
+            "?? util/vboot_lib/libvboot_host.so",
+        ),
+        generated_files=(
+            module.X200GeneratedFileEvidence(
+                relative_path="util/cbfstool/fmd_parser.h",
+                size_bytes=3607,
+                sha256="4e93908f1854f103e832c4c115330689b4bb623f2d94ecdb2dcd7d0d6c9f609f",
+                kind="copied-shipped-header",
+                source_relative_path="util/cbfstool/fmd_parser.h_shipped",
+                source_sha256="4e93908f1854f103e832c4c115330689b4bb623f2d94ecdb2dcd7d0d6c9f609f",
+            ),
+            module.X200GeneratedFileEvidence(
+                relative_path="util/cbfstool/fmd_scanner.h",
+                size_bytes=10277,
+                sha256="c5b826d911122e6513f1f5c2ad5d30b067caf275e0a949b544b6a853a081cb46",
+                kind="copied-shipped-header",
+                source_relative_path="util/cbfstool/fmd_scanner.h_shipped",
+                source_sha256="c5b826d911122e6513f1f5c2ad5d30b067caf275e0a949b544b6a853a081cb46",
+            ),
+            module.X200GeneratedFileEvidence(
+                relative_path="util/vboot_lib/libvboot_host.so",
+                size_bytes=120,
+                sha256="d" * 64,
+                kind="elf-shared-object",
+                elf_class="ELF64",
+                elf_type="ET_DYN",
+                elf_machine="EM_X86_64",
+            ),
+        ),
+    )
+    libgfxinit = module.X200NestedRepositoryEvidence(
+        role="libgfxinit",
+        relative_path="work/lbmk/src/coreboot/default/3rdparty/libgfxinit",
+        repository_url=module._X200_LIBGFXINIT_ORIGIN_URL,
+        cache_origin_relative_path=f"work/lbmk/{module._X200_LIBGFXINIT_CACHE_RELATIVE_PATH}",
+        base_revision=module._X200_LIBGFXINIT_BASE_REVISION,
+        base_tree_id=module._X200_LIBGFXINIT_BASE_TREE,
+        resulting_revision="e" * 40,
+        resulting_tree_id=module._X200_LIBGFXINIT_POST_TREE,
+        patch_inputs=tuple((f"work/lbmk/{path}", digest) for path, digest in module._X200_LIBGFXINIT_PATCH_INPUTS),
+        patch_revisions=("d" * 40, "e" * 40),
+        patch_tree_ids=("e" * 40, module._X200_LIBGFXINIT_POST_TREE),
+    )
+    vboot = module.X200NestedRepositoryEvidence(
+        role="vboot",
+        relative_path=module._X200_VBOOT_SOURCE_RELATIVE_PATH,
+        repository_url=module._X200_VBOOT_ORIGIN_URL,
+        cache_origin_relative_path=f"work/lbmk/{module._X200_VBOOT_CACHE_RELATIVE_PATH}",
+        base_revision=module._X200_VBOOT_BASE_REVISION,
+        base_tree_id=module._X200_VBOOT_BASE_TREE,
+        resulting_revision="f" * 40,
+        resulting_tree_id=module._X200_VBOOT_POST_OVERLAY_TREE,
+        patch_inputs=tuple((f"work/lbmk/{path}", digest) for path, digest in module._X200_VBOOT_PATCH_STACK),
+        patch_revisions=("1" * 40, "f" * 40),
+        patch_tree_ids=(module._X200_VBOOT_PRE_OVERLAY_TREE, module._X200_VBOOT_POST_OVERLAY_TREE),
+        source_file_hashes=((module._X200_VBOOT_SOURCE_FILE, module._X200_VBOOT_POSTIMAGE_SHA256),),
+        source_file_preimage_hashes=((module._X200_VBOOT_SOURCE_FILE, module._X200_VBOOT_PREIMAGE_SHA256),),
+    )
+    fsp = module.X200NestedRepositoryEvidence(
+        role="fsp",
+        relative_path=module._X200_FSP_RELATIVE_PATH,
+        repository_url=module._X200_FSP_ORIGIN_URL,
+        cache_origin_relative_path=f"work/lbmk/{module._X200_FSP_CACHE_RELATIVE_PATH}",
+        base_revision=module._X200_FSP_REVISION,
+        base_tree_id=module._X200_FSP_TREE,
+        resulting_revision=module._X200_FSP_REVISION,
+        resulting_tree_id=module._X200_FSP_TREE,
+        patch_inputs=(),
+        patch_revisions=(),
+        patch_tree_ids=(),
+    )
+    return (coreboot, libgfxinit, vboot, fsp)
+
+
+def _minimal_test_elf_shared_object() -> bytes:
+    elf = bytearray(120)
+    elf[:16] = b"\x7fELF\x02\x01\x01" + (b"\x00" * 9)
+    elf[16:18] = (3).to_bytes(2, "little")
+    elf[18:20] = (62).to_bytes(2, "little")
+    elf[20:24] = (1).to_bytes(4, "little")
+    elf[32:40] = (64).to_bytes(8, "little")
+    elf[52:54] = (64).to_bytes(2, "little")
+    elf[54:56] = (56).to_bytes(2, "little")
+    elf[56:58] = (1).to_bytes(2, "little")
+    elf[64:68] = (1).to_bytes(4, "little")
+    elf[72:80] = (120).to_bytes(8, "little")
+    elf[80:88] = (120).to_bytes(8, "little")
+    return bytes(elf)
+
+
+def _write_test_generated_coreboot_tree(root: Path) -> Path:
+    import autoloader.rom_builder.artifact_engine as module
+
+    checkout = root / "work" / "lbmk" / "src" / "coreboot" / "default"
+    gitlink_root = checkout / "3rdparty"
+    gitlink_root.mkdir(parents=True, exist_ok=True)
+    (gitlink_root / "libgfxinit").write_text("base libgfxinit placeholder\n", encoding="utf-8")
+    (gitlink_root / "vboot").write_text("base vboot placeholder\n", encoding="utf-8")
+    fixture_dir = Path(__file__).parent / "fixtures" / "x200_coreboot_generated"
+    for _output_relative, source_relative, _expected_hash in module._X200_COREBOOT_GENERATED_HEADER_SOURCES:
+        source = checkout.joinpath(*Path(source_relative).parts)
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes((fixture_dir / Path(source_relative).name.removesuffix("_shipped")).read_bytes())
+    git = ["git", "-C", str(checkout)]
+    subprocess.run([*git, "init", "--quiet"], check=True, capture_output=True, text=True)
+    subprocess.run([*git, "config", "user.name", "X200 fixture"], check=True)
+    subprocess.run([*git, "config", "user.email", "x200-fixture@example.invalid"], check=True)
+    excludes = checkout / ".git" / "empty-excludes"
+    excludes.write_text("", encoding="utf-8")
+    subprocess.run([*git, "config", "core.excludesFile", str(excludes)], check=True)
+    subprocess.run([*git, "config", "core.autocrlf", "false"], check=True)
+    subprocess.run([*git, "config", "commit.gpgsign", "false"], check=True)
+    subprocess.run([*git, "add", "3rdparty/libgfxinit", "3rdparty/vboot", "util/cbfstool/*_shipped"], check=True)
+    subprocess.run([*git, "commit", "--quiet", "-m", "synthetic status baseline"], check=True)
+    (gitlink_root / "libgfxinit").write_text("patched libgfxinit placeholder\n", encoding="utf-8")
+    (gitlink_root / "vboot").write_text("patched vboot placeholder\n", encoding="utf-8")
+    fsp = gitlink_root / "fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c"
+    fsp.mkdir()
+    subprocess.run(["git", "-C", str(fsp), "init", "--quiet"], check=True)
+    for output_relative, source_relative, _expected_hash in module._X200_COREBOOT_GENERATED_HEADER_SOURCES:
+        output = checkout.joinpath(*Path(output_relative).parts)
+        source = checkout.joinpath(*Path(source_relative).parts)
+        source.parent.mkdir(parents=True, exist_ok=True)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        data = (fixture_dir / Path(output_relative).name).read_bytes()
+        source.write_bytes(data)
+        output.write_bytes(data)
+    library = checkout.joinpath(*Path(module._X200_COREBOOT_HOST_ELF).parts)
+    library.parent.mkdir(parents=True, exist_ok=True)
+    library.write_bytes(_minimal_test_elf_shared_object())
+    library.chmod(0o755)
+    return checkout
+
+
 def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
     import autoloader.rom_builder.artifact_engine as module
 
@@ -99,6 +260,9 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "fd6a56a8e20c15f4fd8f03511f05ce8264f120ad0a0dc11900e2e04f89a88dda",
         "0cfd0e5cfb4b169355508e270b1cff1f644010cda72bd36a9a8f07952377e3cb",
     )
+    assert module._X200_VBOOT_OVERLAY_SHA256 == "172c41a5b92557de0739ec01ec2f37331c9066c8896fbfa3829be89f45bcfaf7"
+    assert module._X200_VBOOT_PREIMAGE_SHA256 == "643cbe79bc91455013f23521f646fbc31d44cbc31f0758f57cd9680de6a8e6a4"
+    assert module._X200_VBOOT_POSTIMAGE_SHA256 == "32f09d3948d5c9471c966767a990545cd2f3293491118ad1ef3f510f62462245"
     assert {item.path: item.sha256 for item in LIBREBOOT_2601.files} == {
         "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
         "include/get.sh": "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9",
@@ -122,6 +286,12 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "config/coreboot/default/target.cfg": "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e",
         "config/git/coreboot/pkg.cfg": "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f",
         "include/lib.sh": "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a",
+        "config/submodule/coreboot/default/libgfxinit/module.cfg": "d991d35b81f20012cbae7fb9f7fcd8ca55f4e7bb13870ba104b4785bfb2864ad",
+        "config/submodule/coreboot/default/libgfxinit/patches/0001-g45-hw-gfx-gma-plls.adb-Make-reference-clock-frequen.patch": "5cb94277754f1711d25c4ddce8c4e5de48afc004ea718bc9e8ff799e6ad29db3",
+        "config/submodule/coreboot/default/libgfxinit/patches/0002-re-try-EDID-reading-when-it-fails.patch": "cbe477a3fb1a64082754269453d8bd98557c93aa0a90931ae251a44dd7d73def",
+        "config/submodule/coreboot/default/vboot/module.cfg": "655585bc4f884c52bdf93b6685e6aa073a92adfa39d96ee73f33ba5ec31aea48",
+        "config/submodule/coreboot/default/vboot/patches/0001-extract_vmlinuz.c-Fix-the-bounds-check-on-vmlinuz_he.patch": "5008f31ddb78d77fdceb27412d2d56844676b4eb48150fdea8575caf513d8543",
+        "config/submodule/coreboot/default/fsp/module.cfg": "8d54dcc9ea20155ac2ff18e37adbe60b58820c4b5009cdf07e46ee6c9be652e0",
         "config/git/grub/pkg.cfg": "6e8886854534db158f8560d7ec99e6eccd2f2c4ca6100aa0c9442c22558081c8",
         "config/grub/default/target.cfg": "a23bb6648ce1f893504c19d957a53de9de8a861f92ae123ade094dade4e8f5a8",
         "include/tree.sh": "de3c294c4401fcc5a6364e644364127e3ddb31d3f0d7b00050350516ae428876",
@@ -137,6 +307,329 @@ def test_pins_are_full_and_recipe_allowlist_is_exact() -> None:
         "config/grub/default/patches/0010-Revert-configure-Print-a-more-helpful-error-if-autoc.patch": "4a00cc1ab2b3c04d0251a50f7309a4b82c9943a901ef92207f54baae346d46d6",
     }
     assert X200_4MB.expected_config_sha256 == "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c"
+
+
+def test_x200_nested_repository_manifest_contract_binds_generated_trees_and_patch_inputs() -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    rows = _synthetic_x200_nested_repository_evidence()
+    module._validate_x200_nested_repository_evidence(rows)
+
+    vboot = rows[2]
+    assert module._X200_VBOOT_ORIGIN_URL == "https://review.coreboot.org/vboot.git"
+    assert module._X200_VBOOT_CACHE_RELATIVE_PATH == "cache/clone/review.coreboot.org/vboot.git"
+    mutations = (
+        replace(vboot, repository_url="https://github.com/coreboot/vboot"),
+        replace(vboot, repository_url="https://attacker.invalid/vboot.git"),
+        replace(vboot, cache_origin_relative_path="work/lbmk/cache/clone/github.com/coreboot/vboot"),
+        replace(vboot, cache_origin_relative_path="work/lbmk/cache/clone/attacker.invalid/vboot.git"),
+        replace(vboot, resulting_tree_id="2" * 40),
+        replace(vboot, patch_inputs=(vboot.patch_inputs[0], (vboot.patch_inputs[1][0], "9" * 64))),
+        replace(vboot, source_file_hashes=((module._X200_VBOOT_SOURCE_FILE, "8" * 64),)),
+        replace(vboot, source_file_preimage_hashes=((module._X200_VBOOT_SOURCE_FILE, "7" * 64),)),
+        replace(vboot, generated_status=(" M unexpected.c",)),
+    )
+    for changed in mutations:
+        with pytest.raises(ValueError, match="provenance|source state"):
+            module._validate_x200_nested_repository_evidence((rows[0], rows[1], changed, rows[3]))
+
+    changed_coreboot = replace(rows[0], resulting_tree_id="7" * 40)
+    with pytest.raises(ValueError, match="Coreboot source provenance"):
+        module._validate_x200_nested_repository_evidence((changed_coreboot, rows[1], rows[2], rows[3]))
+    with pytest.raises(ValueError, match="final revision"):
+        replace(vboot, patch_revisions=("1" * 40, "2" * 40))
+
+
+def test_x200_generated_file_manifest_requires_exact_typed_inventory() -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    rows = _synthetic_x200_nested_repository_evidence()
+    module._validate_x200_nested_repository_evidence(rows)
+    coreboot = rows[0]
+    with pytest.raises(ValueError, match="generated-file inventory"):
+        module._validate_x200_nested_repository_evidence((replace(coreboot, generated_files=()), *rows[1:]))
+    with pytest.raises(ValueError, match="generated-file inventory"):
+        extra = (*coreboot.generated_files, coreboot.generated_files[-1])
+        module._validate_x200_nested_repository_evidence((replace(coreboot, generated_files=extra), *rows[1:]))
+    with pytest.raises(ValueError, match="source provenance"):
+        module._validate_x200_nested_repository_evidence((
+            replace(coreboot, generated_status=coreboot.generated_status[:-1]), *rows[1:]
+        ))
+    with pytest.raises(ValueError, match="shipped source"):
+        changed_header = replace(coreboot.generated_files[0], sha256="e" * 64)
+        module._validate_x200_nested_repository_evidence((
+            replace(coreboot, generated_files=(changed_header, *coreboot.generated_files[1:])), *rows[1:]
+        ))
+    with pytest.raises(ValueError, match="host library"):
+        changed_elf = replace(coreboot.generated_files[-1], elf_machine="EM_AARCH64")
+        module._validate_x200_nested_repository_evidence((
+            replace(coreboot, generated_files=(*coreboot.generated_files[:-1], changed_elf)), *rows[1:]
+        ))
+    with pytest.raises(ValueError, match="unrelated nested repository"):
+        replace(rows[1], generated_files=coreboot.generated_files)
+
+
+@pytest.mark.parametrize("mutation", [
+    "missing", "directory", "symlink", "symlink-directory", "modified-header", "bad-elf", "bad-elf-bounds"
+])
+def test_x200_generated_file_capture_rejects_unsafe_or_changed_outputs(tmp_path: Path, mutation: str) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    checkout = _write_test_generated_coreboot_tree(tmp_path)
+    target = checkout / "util" / "cbfstool" / "fmd_parser.h"
+    library = checkout / "util" / "vboot_lib" / "libvboot_host.so"
+    if mutation == "missing":
+        target.unlink()
+    elif mutation == "directory":
+        target.unlink()
+        target.mkdir()
+    elif mutation == "symlink":
+        target.unlink()
+        try:
+            target.symlink_to(target.with_name("fmd_parser.h_shipped"))
+        except (OSError, NotImplementedError) as exc:
+            pytest.skip(f"Host cannot create symlinks for this negative case: {exc}")
+    elif mutation == "symlink-directory":
+        util = checkout / "util"
+        relocated = tmp_path / "outside-util"
+        util.rename(relocated)
+        try:
+            util.symlink_to(relocated, target_is_directory=True)
+        except (OSError, NotImplementedError) as exc:
+            pytest.skip(f"Host cannot create directory symlinks for this negative case: {exc}")
+    elif mutation == "modified-header":
+        target.write_bytes(target.read_bytes() + b"\nchanged\n")
+    else:
+        library_data = bytearray(_minimal_test_elf_shared_object())
+        if mutation == "bad-elf":
+            library_data[:4] = b"NOPE"
+        else:
+            library_data[32:40] = ((1 << 63) - 1).to_bytes(8, "little")
+        library.write_bytes(library_data)
+        library.chmod(0o755)
+    with pytest.raises(ValueError):
+        module._capture_x200_coreboot_generated_files(checkout)
+
+
+def test_x200_generated_file_inventory_rehashes_status_and_bytes_at_reopen(tmp_path: Path) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    checkout = _write_test_generated_coreboot_tree(tmp_path)
+    coreboot = _synthetic_x200_nested_repository_evidence()[0]
+    evidence = replace(coreboot, generated_files=module._capture_x200_coreboot_generated_files(checkout))
+    operation = tmp_path
+    module._verify_x200_coreboot_generated_files(operation, evidence)
+    library = checkout / "util" / "vboot_lib" / "libvboot_host.so"
+    library.write_bytes(library.read_bytes() + b"mutation")
+    with pytest.raises(ValueError, match="bytes differ"):
+        module._verify_x200_coreboot_generated_files(operation, evidence)
+    library.write_bytes(_minimal_test_elf_shared_object())
+    (checkout / "unexpected-generated-output.h").write_text("unexpected\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="status changed"):
+        module._verify_x200_coreboot_generated_files(operation, evidence)
+    (checkout / "unexpected-generated-output.h").unlink()
+    shipped = checkout / "util" / "cbfstool" / "fmd_parser.h_shipped"
+    shipped.write_bytes(shipped.read_bytes() + b"unexpected tracked change")
+    with pytest.raises(ValueError, match="status changed"):
+        module._verify_x200_coreboot_generated_files(operation, evidence)
+
+
+def test_x200_vboot_overlay_is_packaged_and_matches_reviewed_evidence_copy() -> None:
+    import importlib.resources
+    import autoloader.rom_builder.artifact_engine as module
+
+    packaged = importlib.resources.files("autoloader.rom_builder").joinpath(
+        "patches", module._X200_VBOOT_OVERLAY_RESOURCE
+    ).read_bytes()
+    evidence_copy = (
+        Path(__file__).parents[1]
+        / "docs"
+        / "v1"
+        / "evidence"
+        / "x200-const-compat-overlay-20261021"
+        / "0002-vboot-cbfstool-keep-strchr-result-const.patch"
+    )
+    assert hashlib.sha256(packaged).hexdigest() == module._X200_VBOOT_OVERLAY_SHA256
+    assert evidence_copy.read_bytes() == packaged
+
+
+def test_legacy_schema_three_cannot_reopen_as_complete_x200() -> None:
+    import json
+    import autoloader.rom_builder.artifact_engine as module
+
+    failed = ArtifactManifest(
+        schema_version=3,
+        operation_id="legacy-x200-operation",
+        created_at_utc="2026-10-10T00:00:00+00:00",
+        recipe_id="x200-libreboot-4mb",
+        workflow_id="x200-libreboot",
+        status="failed",
+        source_repository_url=LIBREBOOT_2601.repository_url,
+        source_revision=LIBREBOOT_2601.revision,
+        source_tree_id=LIBREBOOT_2601.tree_id,
+        source_files=(),
+        commands=(),
+        host_platform="test host",
+        toolchain=(),
+        build_environment=(),
+        container_image_digest=None,
+        configuration_sha256="a" * 64,
+        resolved_configuration_sha256=None,
+        observed_chip_capacity_bytes=X200_4MB.expected_size_bytes,
+        expected_regions=(),
+        blob_sha256=(),
+        artifacts=(),
+        selected_artifact_relative_path=None,
+        selected_artifact_sha256=None,
+        failure_code="HISTORICAL_FIXTURE",
+        failure_detail="Synthetic legacy manifest; no build or hardware operation.",
+        reproducibility=ReproducibilityRecord("not_attempted", None, None, "No build run."),
+    )
+    cbfs = module.CBFSInspectionRecord(
+        tool_relative_path="elf/coreboot/default/cbfstool",
+        tool_sha256="b" * 64,
+        source_repository_url=LIBREBOOT_2601.repository_url,
+        source_revision=LIBREBOOT_2601.revision,
+        source_tree_id=LIBREBOOT_2601.tree_id,
+        region="whole_flash",
+        required_payload="fallback/payload",
+        inventory=(module.CBFSEntry("fallback/payload", 0, "payload", 0, 1, 1),),
+        source_file_hashes=(("util/cbfstool/cbfs_image.c", "c" * 64),),
+    )
+    selected = module.ArtifactRecord(
+        relative_path="artifacts/x200.rom",
+        sha256="d" * 64,
+        size_bytes=1,
+        regions=(),
+        source_relative_path="bin/x200.rom",
+        cbfs_inspection=cbfs,
+    )
+    roundtrip_manifest = replace(
+        failed,
+        schema_version=4,
+        artifacts=(replace(
+            selected,
+            cbfs_inspection=replace(
+                cbfs,
+                nested_repositories=_synthetic_x200_nested_repository_evidence(),
+            ),
+        ),),
+    )
+    reopened = module._artifact_manifest_from_mapping(json.loads(roundtrip_manifest.canonical_json()))
+    assert reopened.artifacts[0].cbfs_inspection is not None
+    assert reopened.artifacts[0].cbfs_inspection.nested_repositories == _synthetic_x200_nested_repository_evidence()
+
+    missing = json.loads(roundtrip_manifest.canonical_json())
+    missing["artifacts"][0]["cbfs_inspection"]["nested_repositories"][0].pop("generated_files")
+    missing_manifest = module._artifact_manifest_from_mapping(missing)
+    assert missing_manifest.artifacts[0].cbfs_inspection is not None
+    with pytest.raises(ValueError, match="generated-file inventory"):
+        module._validate_x200_nested_repository_evidence(
+            missing_manifest.artifacts[0].cbfs_inspection.nested_repositories
+        )
+
+    tampered = json.loads(roundtrip_manifest.canonical_json())
+    tampered["artifacts"][0]["cbfs_inspection"]["nested_repositories"][0]["generated_files"][0]["sha256"] = "e" * 64
+    tampered_manifest = module._artifact_manifest_from_mapping(tampered)
+    assert tampered_manifest.artifacts[0].cbfs_inspection is not None
+    with pytest.raises(ValueError, match="shipped source"):
+        module._validate_x200_nested_repository_evidence(
+            tampered_manifest.artifacts[0].cbfs_inspection.nested_repositories
+        )
+
+    with pytest.raises(ValueError, match="schema 4 nested lbmk source provenance"):
+        replace(
+            failed,
+            status="complete",
+            failure_code=None,
+            artifacts=(selected,),
+            selected_artifact_relative_path=selected.relative_path,
+            selected_artifact_sha256=selected.sha256,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("revision", "1" * 40),
+        ("tree_id", "2" * 40),
+        ("origin", "https://attacker.invalid/lbmk.git"),
+        ("status", (" M include/tree.sh", "?? unexpected.patch", "?? config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch", "?? config/submodule/coreboot/default/vboot/patches/0002-vboot-cbfstool-keep-strchr-result-const.patch")),
+    ],
+)
+def test_x200_lbmk_overlay_root_state_rejects_parent_drift(field: str, value: object) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    fields: dict[str, object] = {
+        "revision": LIBREBOOT_2601.revision,
+        "tree_id": LIBREBOOT_2601.tree_id,
+        "origin": LIBREBOOT_2601.repository_url,
+        "status": (
+            " M include/tree.sh",
+            "?? config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch",
+            "?? config/submodule/coreboot/default/vboot/patches/0002-vboot-cbfstool-keep-strchr-result-const.patch",
+        ),
+    }
+    module._validate_x200_lbmk_overlay_root_state(**fields, after_build=True)  # type: ignore[arg-type]
+    fields[field] = value
+    with pytest.raises(ValueError, match="identity/status"):
+        module._validate_x200_lbmk_overlay_root_state(**fields, after_build=True)  # type: ignore[arg-type]
+
+
+def test_git_value_preserves_leading_porcelain_status_column(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import subprocess
+    from types import SimpleNamespace
+
+    import autoloader.rom_builder.artifact_engine as module
+
+    porcelain = (
+        " M include/tree.sh\n"
+        "?? config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch\n"
+        "?? config/submodule/coreboot/default/vboot/patches/0002-vboot-cbfstool-keep-strchr-result-const.patch\n"
+    )
+
+    def fake_run(argv: list[str], **kwargs: object) -> SimpleNamespace:
+        assert argv == [
+            "git", "-C", str(tmp_path), "status", "--porcelain=v1", "--untracked-files=all"
+        ]
+        assert kwargs["timeout"] == 30
+        return SimpleNamespace(returncode=0, stdout=porcelain)
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    observed = module.ArtifactEngine._git_value(
+        tmp_path, "status", "--porcelain=v1", "--untracked-files=all"
+    )
+    assert observed == porcelain.rstrip("\r\n")
+    module._validate_x200_lbmk_overlay_root_state(
+        revision=module.LIBREBOOT_2601.revision,
+        tree_id=module.LIBREBOOT_2601.tree_id,
+        origin=module.LIBREBOOT_2601.repository_url,
+        status=tuple(filter(None, observed.splitlines())),
+        after_build=True,
+    )
+
+
+def test_x200_vboot_overlay_bytes_allow_only_pinned_const_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    before = b"static void f(void) {\n\tchar *end = strchr(start, '\\n');\n}\n"
+    after = before.replace(b"char *end", b"const char *end", 1)
+    patch = (
+        Path(module.__file__).parent / "patches" / module._X200_VBOOT_OVERLAY_RESOURCE
+    ).read_bytes()
+    monkeypatch.setattr(module, "_X200_VBOOT_PREIMAGE_SHA256", hashlib.sha256(before).hexdigest())
+    monkeypatch.setattr(module, "_X200_VBOOT_POSTIMAGE_SHA256", hashlib.sha256(after).hexdigest())
+    module._validate_x200_vboot_overlay_bytes(patch, before, after)
+    with pytest.raises(ValueError, match="patch bytes"):
+        module._validate_x200_vboot_overlay_bytes(patch + b"unexpected", before, after)
+    with pytest.raises(ValueError, match="postimage"):
+        module._validate_x200_vboot_overlay_bytes(patch, before, after + b"extra")
+    with pytest.raises(ValueError, match="postimage"):
+        module._validate_x200_vboot_overlay_bytes(patch, before.replace(b"strchr", b"memchr"), after)
 
 
 def test_pinned_lbmk_cbfstool_path_matches_exact_26_01_source() -> None:
@@ -802,6 +1295,7 @@ _CBFS_FIXTURE = "\n".join((
     "fallback/payload\t0x2000\tpayload\t0x20\t0x4000\t0x4020",
     "(empty)\t0x7000\tnull\t0x20\t0x1000\t0x1020",
 ))
+_X200_CBFS_FIXTURE = _CBFS_FIXTURE.replace("\tpayload\t", "\tsimple elf\t")
 
 
 def test_cbfs_parseable_inventory_requires_pinned_header_bounds_and_payload() -> None:
@@ -822,6 +1316,8 @@ def test_cbfs_parseable_inventory_requires_pinned_header_bounds_and_payload() ->
         _CBFS_FIXTURE.replace("fallback/payload", "fallback/romstage"),
         _CBFS_FIXTURE.replace("0x7000", "0x9000"),
         _CBFS_FIXTURE.replace("\t0x1000\t0x1020\n", "\t0x1000\n"),
+        _CBFS_FIXTURE.replace("\tnull\t", "\t\t"),
+        _CBFS_FIXTURE + "\nfallback/romstage\t0x8000\traw\t0x20\t0x100\t0x120",
     )
     for output in invalid:
         with pytest.raises(ValueError):
@@ -830,6 +1326,75 @@ def test_cbfs_parseable_inventory_requires_pinned_header_bounds_and_payload() ->
                 required_payload="fallback/payload",
                 region_size_bytes=0x9000,
             )
+
+
+def test_cbfs_parseable_inventory_allows_adjacency_and_repeated_null_placeholders() -> None:
+    adjacent = "\n".join((
+        "Name\tOffset\tType\tMetadata Size\tData Size\tTotal Size",
+        "fallback/romstage\t0x0\tstage\t0x20\t0x1000\t0x1020",
+        "fallback/payload\t0x1020\tpayload\t0x20\t0x4000\t0x4020",
+        "(empty)\t0x5040\tnull\t0x20\t0x1000\t0x1020",
+        "(empty)\t0x6060\tnull\t0x20\t0x100\t0x120",
+    ))
+    inventory = parse_cbfs_parseable_output(
+        adjacent,
+        required_payload="fallback/payload",
+        region_size_bytes=0x9000,
+    )
+    assert [entry.name for entry in inventory].count("(empty)") == 2
+    mixed_null_types = adjacent + "\n(empty)\t0x6180\traw\t0x20\t0x100\t0x120"
+    with pytest.raises(ValueError, match="empty placeholder.*null type"):
+        parse_cbfs_parseable_output(
+            mixed_null_types,
+            required_payload="fallback/payload",
+            region_size_bytes=0x9000,
+        )
+
+
+def test_cbfs_parseable_inventory_rejects_overlapping_entry_intervals() -> None:
+    overlapping = _CBFS_FIXTURE.replace("fallback/payload\t0x2000", "fallback/payload\t0x1000")
+    with pytest.raises(ValueError, match="CBFS rows .* overlap"):
+        parse_cbfs_parseable_output(
+            overlapping,
+            required_payload="fallback/payload",
+            region_size_bytes=0x9000,
+        )
+
+
+def test_cbfs_parseable_inventory_rejects_null_intervals_overlapping_payload_or_null() -> None:
+    null_overlaps_payload = _CBFS_FIXTURE.replace("(empty)\t0x7000", "(empty)\t0x3000")
+    null_overlaps_null = _CBFS_FIXTURE + "\n(empty)\t0x7800\tnull\t0x20\t0x1000\t0x1020"
+    for output in (null_overlaps_payload, null_overlaps_null):
+        with pytest.raises(ValueError, match="CBFS rows .* overlap"):
+            parse_cbfs_parseable_output(
+                output,
+                required_payload="fallback/payload",
+                region_size_bytes=0x9000,
+            )
+
+
+def test_cbfs_parseable_inventory_separates_x200_and_x220_payload_types() -> None:
+    x200 = parse_cbfs_parseable_output(
+        _X200_CBFS_FIXTURE,
+        required_payload="fallback/payload",
+        required_payload_type="simple elf",
+        region_size_bytes=0x9000,
+    )
+    assert next(entry for entry in x200 if entry.name == "fallback/payload").entry_type == "simple elf"
+
+    with pytest.raises(ValueError, match="type 'simple elf'"):
+        parse_cbfs_parseable_output(
+            _CBFS_FIXTURE,
+            required_payload="fallback/payload",
+            required_payload_type="simple elf",
+            region_size_bytes=0x9000,
+        )
+    x220 = parse_cbfs_parseable_output(
+        _CBFS_FIXTURE,
+        required_payload="fallback/payload",
+        region_size_bytes=0x9000,
+    )
+    assert next(entry for entry in x220 if entry.name == "fallback/payload").entry_type == "payload"
 
 
 def test_cbfs_parseable_inventory_accepts_pinned_nonverbose_region_output() -> None:
@@ -874,7 +1439,7 @@ def test_cbfs_inspection_records_exact_pinned_tool_invocations(tmp_path: Path, m
         invocations.append(tuple(argv))
         if "-r" in argv:
             return _CBFS_FIXTURE
-        return _CBFS_FIXTURE
+        return _X200_CBFS_FIXTURE
 
     monkeypatch.setattr(engine, "_run_readonly", fake_readonly)
     records: list[CommandRecord] = []
@@ -896,15 +1461,7 @@ def test_cbfs_inspection_records_exact_pinned_tool_invocations(tmp_path: Path, m
     monkeypatch.setattr(
         engine,
         "_validate_lbmk_nested_coreboot",
-        lambda _path: (
-            "https://review.coreboot.org/coreboot",
-            "fcd716d9a272461da1fdbaf1c048eb5a52c7896b",
-            "e16fe240567cb3fa08619c6a23e51c4af142f6ac",
-            (
-                ("util/cbfstool/cbfs_image.c", "a" * 64),
-                ("util/cbfstool/cbfstool.c", "b" * 64),
-            ),
-        ),
+        lambda _path, _logs, _commands: _synthetic_x200_nested_repository_evidence(),
     )
     invocations.clear()
     engine._inspect_cbfs(lbmk_recipe, source, rom, logs, records)
@@ -1688,6 +2245,13 @@ def test_operation_git_config_mutation_during_artifact_postprocessing_never_publ
         objcopy_version="GNU objcopy fixture; no tool run",
     )
     monkeypatch.setattr(engine, "_prepare_x200_lbmk_build_source", lambda _recipe, _source, _run, _logs, _commands: (source, dependency))
+    synthetic_nested = _synthetic_x200_nested_repository_evidence()
+    monkeypatch.setattr(engine, "_stage_x200_vboot_compat_overlay", lambda _source: None)
+    monkeypatch.setattr(
+        engine,
+        "_validate_lbmk_nested_coreboot",
+        lambda _source, _logs, _commands: synthetic_nested,
+    )
     monkeypatch.setattr(
         engine,
         "_validate_x200_uboot_dependency_after_build",
@@ -1763,16 +2327,18 @@ def test_operation_git_config_mutation_during_artifact_postprocessing_never_publ
             git_config.unlink()
         else:
             git_config.write_text("[user]\n\tname = altered after build\n", encoding="utf-8")
+        coreboot_evidence = next(item for item in synthetic_nested if item.role == "coreboot")
         return module.CBFSInspectionRecord(
             tool_relative_path="fixture/cbfstool",
             tool_sha256="b" * 64,
-            source_repository_url="https://github.com/coreboot/coreboot.git",
-            source_revision=module._LBMK_COREBOOT_REVISION,
-            source_tree_id=module._LBMK_COREBOOT_TREE,
+            source_repository_url=coreboot_evidence.repository_url,
+            source_revision=coreboot_evidence.resulting_revision,
+            source_tree_id=coreboot_evidence.resulting_tree_id,
             region="whole_flash",
             required_payload="fallback/payload",
             inventory=(module.CBFSEntry("fallback/payload", 0, "payload", 0, 1, 1),),
             source_file_hashes=tuple((item.path, item.sha256) for item in module._LBMK_COREBOOT_CBFSTOOL_SOURCES),
+            nested_repositories=synthetic_nested,
         )
 
     monkeypatch.setattr(engine, "_inspect_cbfs", mutate_during_cbfs_inspection)

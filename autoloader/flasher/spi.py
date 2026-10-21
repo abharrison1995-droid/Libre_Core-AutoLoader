@@ -28,6 +28,8 @@ class SPIOperationError(RuntimeError):
 
 
 _VERSION_ONLY = re.compile(r"^[0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?$")
+_SHA256_ONLY = re.compile(r"^[0-9a-f]{64}$")
+_PACKAGE_OWNER_ONLY = re.compile(r"^(?:pacman|dpkg): [^\r\n]+$")
 
 
 @dataclass(frozen=True)
@@ -108,6 +110,8 @@ def _valid_tool_identity(tool: FlashToolIdentity) -> bool:
         tool.name.casefold() not in {"flashrom", "flashprog"}
         or not _VERSION_ONLY.fullmatch(tool.version)
         or not Path(tool.executable).is_absolute()
+        or not _SHA256_ONLY.fullmatch(tool.sha256)
+        or not _PACKAGE_OWNER_ONLY.fullmatch(tool.package_owner)
     ):
         return False
     match = re.search(r"\b(flashrom|flashprog)\s+v?([0-9]+(?:\.[0-9]+){1,3}(?:[-+][A-Za-z0-9.-]+)?)\b", tool.raw_version, re.I)

@@ -88,6 +88,7 @@ class ApplicationAction(str, Enum):
     RESTORE = "restore"
     READBACK = "readback"
     BOOT_CHECK = "boot-check"
+    REVIEW_READINESS = "review-readiness"
 
 
 class ApplicationStatus(str, Enum):
@@ -972,6 +973,37 @@ class ApplicationController:
                 )
             except (OSError, ValueError, RuntimeError, AutoLoaderError, TypeError) as exc:
                 return self._unavailable(action, "POST_REBOOT_EVIDENCE_REJECTED", str(exc), profile_id)
+        if action is ApplicationAction.REVIEW_READINESS:
+            if not isinstance(profile_id, str) or profile_id not in V1_PROFILES:
+                return self._unavailable(
+                    action, "PROFILE_REQUIRED", "Select an allowlisted V1 profile and supply its terminal checkpoint.", profile_id
+                )
+            if checkpoint_path is None:
+                return self._unavailable(
+                    action, "READINESS_CHECKPOINT_REQUIRED", "Supply an existing terminal operation checkpoint to review.", profile_id
+                )
+            try:
+                from autoloader.workflow.device_readiness import DeviceReadinessReportService
+
+                readiness_report = DeviceReadinessReportService.inspect(profile_id, checkpoint_path)
+                gate_lines = tuple(
+                    f"{gate.status}: {gate.name} — {gate.detail}" for gate in readiness_report.gates
+                )
+                return ApplicationActionResult(
+                    action,
+                    ApplicationStatus.UNKNOWN,
+                    readiness_report.outcome,
+                    readiness_report.disclaimer,
+                    gate_lines,
+                    (
+                        readiness_report.checkpoint_path,
+                        f"checkpoint-sha256:{readiness_report.checkpoint_sha256}",
+                        f"operation:{readiness_report.operation_id}",
+                        f"device-sha256:{readiness_report.device_fingerprint_sha256}",
+                    ),
+                )
+            except (OSError, ValueError, RuntimeError, TypeError) as exc:
+                return self._unavailable(action, "READINESS_REPORT_REJECTED", str(exc), profile_id)
         if action is ApplicationAction.DETECT_DEVICE:
             capture, status = self.detect_device()
             if status is not None and status.stage in {

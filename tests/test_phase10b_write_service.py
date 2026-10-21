@@ -818,6 +818,113 @@ def test_capability_mint_failure_after_write_started_is_terminal_failed_without_
     assert OperationJournal.inspect_checkpoint(request.operation_journal_path).state is OperationState.WRITE_FAILED
 
 
+def test_persisted_writer_policy_tampering_blocks_before_subprocess(tmp_path, monkeypatch):
+    service, request, writer, readback = _service_request(tmp_path, monkeypatch)
+    original_policy = write_service_module._writer_execution_policy_payload()
+    original_append = OperationJournal.append
+    policy_field_mutations = 0
+
+    def reseal_with_altered_policy(journal_path):
+        nonlocal policy_field_mutations
+        document = json.loads(Path(journal_path).read_text(encoding="utf-8"))
+        raw_entry = document["entries"][-1]
+        record = json.loads(raw_entry["message"])
+        original_command_digest = record["fixed_command_sha256"]
+        altered_policy = dict(record["writer_execution_policy"])
+        altered_policy["env"] = {"LD_PRELOAD": "/tmp/injected.so"}
+        record["writer_execution_policy"] = altered_policy
+        message = json.dumps(record, sort_keys=True, separators=(",", ":"))
+        inspected = OperationJournal.inspect_checkpoint(journal_path)
+        changed_entry = replace(inspected.entries[-1], message=message)
+        event = journal_module._entry_payload(changed_entry, include_checksum=False)
+        raw_entry["message"] = message
+        raw_entry["checksum"] = journal_module._checksum({
+            "previous_checksum": changed_entry.previous_checksum,
+            "event": event,
+        })
+        body = {key: value for key, value in document.items() if key != "checkpoint_checksum"}
+        document["checkpoint_checksum"] = journal_module._checksum(body)
+        Path(journal_path).write_text(
+            json.dumps(document, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+        )
+        reopened = OperationJournal.inspect_checkpoint(journal_path)
+        reopened_record = json.loads(reopened.entries[-1].message)
+        assert reopened_record["fixed_command_sha256"] == original_command_digest
+        assert reopened_record["writer_execution_policy"] != original_policy
+        policy_field_mutations += 1
+
+    def append_then_reseal(journal, **kwargs):
+        entry = original_append(journal, **kwargs)
+        if kwargs.get("code") == "WRITE_STARTED":
+            reseal_with_altered_policy(journal.path)
+        return entry
+
+    monkeypatch.setattr(OperationJournal, "append", append_then_reseal)
+    result = service.execute(request)
+
+    assert result.status is WriteExecutionStatus.UNCERTAIN
+    assert result.code.endswith("JOURNAL_FAILED")
+    assert result.state is OperationState.WRITE_STARTED
+    assert policy_field_mutations == 1
+    assert writer.calls == []
+    assert readback.calls == []
+    journal = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert journal.state is OperationState.WRITE_STARTED
+    start = next(entry for entry in journal.entries if entry.code == "WRITE_STARTED")
+    start_payload = json.loads(start.message)
+    assert start_payload["writer_execution_policy"]["env"] == {"LD_PRELOAD": "/tmp/injected.so"}
+    assert start_payload["fixed_command_sha256"]
+
+
+def test_consume_rejects_resealed_policy_field_change_after_capability_mint(tmp_path, monkeypatch):
+    service, request, _writer, readback = _service_request(
+        tmp_path, monkeypatch, writer=SubprocessWriteCommandRunner()
+    )
+    original_mint = write_service_module._mint_approved_write_capability
+    original_policy = write_service_module._writer_execution_policy_payload()
+    subprocess_calls = []
+
+    def reseal_policy_field(journal_path):
+        document = json.loads(Path(journal_path).read_text(encoding="utf-8"))
+        raw_entry = document["entries"][-1]
+        record = json.loads(raw_entry["message"])
+        original_command_digest = record["fixed_command_sha256"]
+        record["writer_execution_policy"] = {**original_policy, "cwd": str(tmp_path)}
+        message = json.dumps(record, sort_keys=True, separators=(",", ":"))
+        inspected = OperationJournal.inspect_checkpoint(journal_path)
+        changed_entry = replace(inspected.entries[-1], message=message)
+        raw_entry["message"] = message
+        raw_entry["checksum"] = journal_module._checksum({
+            "previous_checksum": changed_entry.previous_checksum,
+            "event": journal_module._entry_payload(changed_entry, include_checksum=False),
+        })
+        body = {key: value for key, value in document.items() if key != "checkpoint_checksum"}
+        document["checkpoint_checksum"] = journal_module._checksum(body)
+        Path(journal_path).write_text(
+            json.dumps(document, sort_keys=True, separators=(",", ":")), encoding="utf-8"
+        )
+        reopened = OperationJournal.inspect_checkpoint(journal_path)
+        reopened_record = json.loads(reopened.entries[-1].message)
+        assert reopened_record["fixed_command_sha256"] == original_command_digest
+        assert reopened_record["writer_execution_policy"] != original_policy
+
+    def mint_then_reseal(*args, **kwargs):
+        capability = original_mint(*args, **kwargs)
+        reseal_policy_field(capability.journal_path)
+        return capability
+
+    monkeypatch.setattr(write_service_module, "_mint_approved_write_capability", mint_then_reseal)
+    monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: subprocess_calls.append((args, kwargs)))
+    result = service.execute(request)
+
+    assert result.status is WriteExecutionStatus.UNCERTAIN
+    assert result.code.endswith("JOURNAL_FAILED")
+    assert result.state is OperationState.WRITE_STARTED
+    assert subprocess_calls == []
+    assert readback.calls == []
+    assert OperationJournal.inspect_checkpoint(request.operation_journal_path).state is OperationState.WRITE_STARTED
+
+
 def test_unexpected_writer_exception_is_terminal_uncertain(tmp_path, monkeypatch):
     writer = _FakeWriter()
     writer.exception = RuntimeError("synthetic post-invocation runner error")
@@ -830,3 +937,119 @@ def test_unexpected_writer_exception_is_terminal_uncertain(tmp_path, monkeypatch
     assert result.state is OperationState.WRITE_UNCERTAIN
     assert len(writer.calls) == 1 and readback.calls == []
     assert OperationJournal.inspect_checkpoint(request.operation_journal_path).state is OperationState.WRITE_UNCERTAIN
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected_terminal_state", "expected_readbacks"),
+    [
+        ("uncertain", OperationState.WRITE_UNCERTAIN, 0),
+        ("failed", OperationState.WRITE_FAILED, 0),
+        ("verified", OperationState.WRITE_VERIFIED, 1),
+    ],
+)
+def test_terminal_journal_directory_sync_failure_never_retries(
+    tmp_path, monkeypatch, outcome, expected_terminal_state, expected_readbacks
+):
+    writer = _FakeWriter()
+    if outcome == "uncertain":
+        writer.result = subprocess.CompletedProcess([], 7, "", "synthetic partial writer result")
+    elif outcome == "failed":
+        writer.exception = OSError("synthetic writer start failure after boundary entry")
+    service, request, _writer, readback = _service_request(tmp_path, monkeypatch, writer=writer)
+
+    original_sync = journal_module._sync_directory
+    sync_calls = 0
+
+    def fail_terminal_sync(directory):
+        nonlocal sync_calls
+        sync_calls += 1
+        if sync_calls == 2:
+            raise OSError("synthetic terminal journal directory fsync failure")
+        original_sync(directory)
+
+    # The first journal directory sync durably records WRITE_STARTED. The
+    # second occurs after the one writer invocation, while persisting its
+    # terminal result (or the successful read-back verification).
+    monkeypatch.setattr(journal_module, "_sync_directory", fail_terminal_sync)
+    result = service.execute(request)
+
+    assert sync_calls == 2
+    assert result.status is WriteExecutionStatus.UNCERTAIN
+    assert result.state is OperationState.WRITE_STARTED
+    assert result.code.endswith("JOURNAL_FAILED")
+    assert len(writer.calls) == 1
+    assert len(readback.calls) == expected_readbacks
+    assert len(list(service.approval_ledger.directory.glob("*.consumed"))) == 1
+
+    # os.replace precedes the failed directory sync, so the current file may
+    # contain the terminal event even though the caller must report UNCERTAIN.
+    journal_bytes = Path(request.operation_journal_path).read_bytes()
+    inspected = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert inspected.state in {OperationState.WRITE_STARTED, expected_terminal_state}
+    assert inspected.entries[-1].to_state in {OperationState.WRITE_STARTED, expected_terminal_state}
+
+    reopened = ExternalSPIWriteService(
+        intent_factory=service.intent_factory,
+        approval_ledger=WriteApprovalLedger(service.approval_ledger.directory),
+        evidence_provider=service.evidence_provider,
+        read_transport=readback,
+        writer=writer,
+        storage_inspector=service.storage_inspector,
+        durability_supported=lambda: True,
+    )
+    with pytest.raises(write_service_module.WriteExecutionError):
+        reopened._assert_prewrite_checkpoint(request)
+    with pytest.raises(Exception):
+        reopened.execute(request)
+    assert Path(request.operation_journal_path).read_bytes() == journal_bytes
+    assert len(writer.calls) == 1
+    assert len(readback.calls) == expected_readbacks
+
+
+def test_crash_after_durable_write_started_cannot_replay_after_reopen(tmp_path, monkeypatch):
+    class SimulatedProcessLoss(BaseException):
+        """Models process loss after the writer boundary is entered."""
+
+    writer = _FakeWriter()
+    writer.exception = SimulatedProcessLoss("simulated process loss before writer return")
+    service, request, _writer, readback = _service_request(tmp_path, monkeypatch, writer=writer)
+
+    with pytest.raises(SimulatedProcessLoss):
+        service.execute(request)
+
+    original_checkpoint = Path(request.operation_journal_path).read_bytes()
+    started = OperationJournal.inspect_checkpoint(request.operation_journal_path)
+    assert started.state is OperationState.WRITE_STARTED
+    assert started.entries[-1].code == "WRITE_STARTED"
+    assert len(writer.calls) == 1
+    assert readback.calls == []
+    start_record = json.loads(started.entries[-1].message)
+    approval_id = start_record["approval_id"]
+    assert (service.approval_ledger.directory / f"{approval_id}.consumed").is_file()
+    with pytest.raises(Exception):
+        WorkflowSession.resume(request.plan, request.operation_journal_path)
+
+    # A new process-local service and ledger reopen only the on-disk state.
+    reopened_ledger = WriteApprovalLedger(service.approval_ledger.directory)
+    reopened = ExternalSPIWriteService(
+        intent_factory=service.intent_factory,
+        approval_ledger=reopened_ledger,
+        evidence_provider=service.evidence_provider,
+        read_transport=readback,
+        writer=writer,
+        storage_inspector=service.storage_inspector,
+        durability_supported=lambda: True,
+    )
+    with pytest.raises(
+        write_service_module.WriteExecutionError,
+        match="checkpoint at write-started is not a supported resume point",
+    ):
+        reopened._assert_prewrite_checkpoint(request)
+    with pytest.raises(Exception):
+        reopened.execute(request)
+
+    assert Path(request.operation_journal_path).read_bytes() == original_checkpoint
+    assert OperationJournal.inspect_checkpoint(request.operation_journal_path).state is OperationState.WRITE_STARTED
+    assert len(writer.calls) == 1
+    assert readback.calls == []
+    assert (reopened_ledger.directory / f"{approval_id}.consumed").is_file()

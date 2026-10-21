@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Iterator, Protocol, cast
+from typing import Any, Callable, Iterator, Protocol, TypeGuard, cast
 
 from autoloader.flasher.backup_service import (
     BackupSetResult,
@@ -149,6 +149,21 @@ class _ApprovedWriteCapability:
     command_sha256: str
 
 
+@dataclass(frozen=True)
+class _ConsumedWriteInvocation:
+    """Exact subprocess inputs returned only after capability revalidation."""
+
+    command: FixedWriteCommand
+    cwd: str
+    env: dict[str, str]
+    stdin: int
+    close_fds: bool
+    shell: bool
+    capture_output: bool
+    text: bool
+    check: bool
+
+
 _WRITE_CAPABILITIES: dict[str, tuple[str, str, str, str]] = {}
 _WRITE_CAPABILITIES_LOCK = threading.Lock()
 
@@ -186,16 +201,21 @@ class SubprocessWriteCommandRunner:
     """Run only a service-minted command after rechecking its durable boundary."""
 
     def run(self, capability: object, timeout_seconds: int) -> subprocess.CompletedProcess[str]:
-        command = _consume_approved_write_capability(capability)
+        invocation = _consume_approved_write_capability(capability)
         if timeout_seconds <= 0:
             raise WriteExecutionError("writer timeout must be positive")
+        command = invocation.command
         return subprocess.run(
             [command.executable, *command.argv],
-            capture_output=True,
-            text=True,
-            check=False,
+            cwd=invocation.cwd,
+            env=dict(invocation.env),
+            stdin=invocation.stdin,
+            capture_output=invocation.capture_output,
+            text=invocation.text,
+            check=invocation.check,
             timeout=timeout_seconds,
-            shell=False,
+            shell=invocation.shell,
+            close_fds=invocation.close_fds,
         )
 
 
@@ -903,11 +923,7 @@ class ExternalSPIWriteService:
         initial: FreshWriteEvidence,
         current: FreshWriteEvidence,
     ) -> str:
-        command_payload = {
-            "executable": intent.command.executable,
-            "executable_sha256": intent.command.executable_sha256,
-            "argv": intent.command.argv,
-        }
+        command_payload = _fixed_command_payload(intent.command)
         payload = {
             "operation_id": intent.operation_id,
             "approval_id": token.approval_id,
@@ -958,6 +974,7 @@ class ExternalSPIWriteService:
             "backup_operation_id": intent.backup_operation_id,
             "primary_manifest_sha256": intent.primary_manifest_sha256,
             "recovery_manifest_sha256": intent.recovery_manifest_sha256,
+            "writer_execution_policy": command_payload["execution_policy"],
             "fixed_command_sha256": _digest_json(command_payload),
         }
         return _canonical_json(payload)
@@ -1139,17 +1156,14 @@ def _mint_approved_write_capability(
     except (OSError, json.JSONDecodeError) as exc:
         raise WriteExecutionError("write-start record or operation lock is unreadable") from exc
     command = intent.command
-    command_sha256 = _digest_json({
-        "executable": command.executable,
-        "executable_sha256": command.executable_sha256,
-        "argv": command.argv,
-    })
+    command_sha256 = _digest_json(_fixed_command_payload(command))
     if (
         latest.action != "external-spi-write"
         or latest.code != "WRITE_STARTED"
         or record.get("approval_id") != token.approval_id
         or record.get("intent_sha256") != intent.intent_sha256
         or record.get("fixed_command_sha256") != command_sha256
+        or not _valid_writer_execution_policy(record.get("writer_execution_policy"))
         or lock_record.get("operation_id") != request.operation_id
         or command.argv != ("-p", "ch341a_spi", "-c", intent.chip_name, "-w", intent.artifact_path)
     ):
@@ -1175,7 +1189,7 @@ def _mint_approved_write_capability(
     return capability
 
 
-def _consume_approved_write_capability(capability: object) -> FixedWriteCommand:
+def _consume_approved_write_capability(capability: object) -> _ConsumedWriteInvocation:
     """Revalidate and consume a private capability; raw argv is never accepted."""
     if type(capability) is not _ApprovedWriteCapability:
         raise WriteExecutionError("direct writer calls require a private one-use service capability")
@@ -1226,11 +1240,8 @@ def _consume_approved_write_capability(capability: object) -> FixedWriteCommand:
         lock_record = json.loads(lock_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise WriteExecutionError("write-start journal or operation lock is unreadable") from exc
-    command_sha256 = _digest_json({
-        "executable": command.executable,
-        "executable_sha256": command.executable_sha256,
-        "argv": command.argv,
-    })
+    command_payload = _fixed_command_payload(command)
+    command_sha256 = _digest_json(command_payload)
     if (
         journal.operation_id != capability.operation_id
         or latest.action != "external-spi-write"
@@ -1238,10 +1249,55 @@ def _consume_approved_write_capability(capability: object) -> FixedWriteCommand:
         or record.get("approval_id") != capability.approval_id
         or record.get("intent_sha256") != capability.intent_sha256
         or record.get("fixed_command_sha256") != command_sha256
+        or not _valid_writer_execution_policy(record.get("writer_execution_policy"))
         or lock_record.get("operation_id") != capability.operation_id
     ):
         raise WriteExecutionError("durable write-start evidence no longer matches the one-use command capability")
-    return command
+    policy = command_payload["execution_policy"]
+    if not _valid_writer_execution_policy(policy):
+        raise WriteExecutionError("durable writer execution policy is invalid")
+    return _ConsumedWriteInvocation(
+        command=command,
+        cwd=cast(str, policy["cwd"]),
+        env=cast(dict[str, str], policy["env"]),
+        stdin=subprocess.DEVNULL,
+        close_fds=cast(bool, policy["close_fds"]),
+        shell=cast(bool, policy["shell"]),
+        capture_output=cast(bool, policy["capture_output"]),
+        text=cast(bool, policy["text"]),
+        check=cast(bool, policy["check"]),
+    )
+
+
+def _writer_execution_policy_payload() -> dict[str, object]:
+    """Return the fixed, digest-bound subprocess policy for the physical writer."""
+    return {
+        "cwd": os.path.abspath(os.sep),
+        "env": {},
+        "stdin": "DEVNULL",
+        "close_fds": True,
+        "shell": False,
+        "capture_output": True,
+        "text": True,
+        "check": False,
+    }
+
+
+def _valid_writer_execution_policy(value: object) -> TypeGuard[dict[str, object]]:
+    expected = _writer_execution_policy_payload()
+    return type(value) is dict and _canonical_json(value) == _canonical_json(expected)
+
+
+def _fixed_command_payload(command: FixedWriteCommand) -> dict[str, object]:
+    return {
+        "executable": command.executable,
+        "executable_sha256": command.executable_sha256,
+        "tool_name": command.tool_name,
+        "tool_version": command.tool_version,
+        "tool_package_owner": command.tool_package_owner,
+        "argv": command.argv,
+        "execution_policy": _writer_execution_policy_payload(),
+    }
 
 
 def _hash_file_for_command_intent(capability: _ApprovedWriteCapability) -> str:

@@ -17,6 +17,7 @@ from autoloader.ui.screens.t430_handoff import T430HandoffScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
 from autoloader.ui.screens.post_reboot_evidence import PostRebootEvidenceScreen
+from autoloader.ui.screens.readiness_review import ReadinessReviewScreen
 from autoloader.application_controller import ApplicationController
 
 class AutoLoaderApp(App[None]):
@@ -46,6 +47,7 @@ class AutoLoaderApp(App[None]):
         "x_workflow_action": XWorkflowActionScreen,
         "write_confirmation": WriteConfirmationScreen,
         "post_reboot_evidence": PostRebootEvidenceScreen,
+        "readiness_review": ReadinessReviewScreen,
     }
 
     def __init__(self, *, controller: ApplicationController | None = None, **kwargs):

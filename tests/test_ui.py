@@ -33,7 +33,7 @@ def test_app_registers_only_v1_workflow_screens():
     expected = {
         "welcome", "model_select", "pathway_select", "rom_config", "build_progress",
         "flash_guide", "backup_screen", "verify_screen", "evidence_import", "t430_handoff", "x_workflow_action",
-        "write_confirmation", "post_reboot_evidence",
+        "write_confirmation", "post_reboot_evidence", "readiness_review",
     }
     assert set(app.SCREENS) == expected
     for screen in app.SCREENS.values():
@@ -206,6 +206,43 @@ def test_post_reboot_screen_submits_observations_through_shared_controller(monke
             assert "POST_REBOOT_EVIDENCE_PENDING_REVIEW" in app.screen.query_one(
                 "#post-status", Static
             ).render().plain
+
+    asyncio.run(runner())
+
+
+def test_readiness_review_screen_routes_checkpoint_through_shared_controller(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_request(action, **kwargs):
+        from autoloader.application_controller import ApplicationActionResult
+
+        calls.append((action, kwargs))
+        return ApplicationActionResult(
+            action,
+            ApplicationStatus.UNKNOWN,
+            "REVIEW_INPUTS_COMPLETE",
+            "Persisted inputs only; hardware readiness is not assessed.",
+            reasons=("UNKNOWN: current device state",),
+            evidence_refs=("checkpoint-sha256:synthetic",),
+        )
+
+    controller = ApplicationController()
+    controller.select_profile("x220-coreboot")
+    monkeypatch.setattr(controller, "request_action", fake_request)
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen("readiness_review")
+            app.screen.query_one("#readiness-checkpoint", Input).value = str(tmp_path / "terminal.json")
+            await pilot.click("#readiness-submit")
+            await pilot.pause()
+            assert calls == [(
+                ApplicationAction.REVIEW_READINESS,
+                {"profile_id": "x220-coreboot", "checkpoint_path": str(tmp_path / "terminal.json")},
+            )]
+            assert "REVIEW_INPUTS_COMPLETE" in app.screen.query_one("#readiness-status", Static).render().plain
+            assert "hardware readiness is not assessed" in app.screen.query_one("#readiness-status", Static).render().plain
 
     asyncio.run(runner())
 
@@ -593,7 +630,7 @@ def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
 def test_cli_commands_use_v1_profiles_and_remove_generic_build_options(tmp_path):
     help_result = CliRunner().invoke(cli, ["--help"])
     assert help_result.exit_code == 0
-    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "post-reboot-check", "build-rom", "usb", "build-usb", "backup", "verify", "flash"):
+    for command in ("run", "detect", "import-evidence", "status", "resume-checkpoint", "inspect-checkpoint", "post-reboot-check", "review-readiness", "build-rom", "usb", "build-usb", "backup", "verify", "flash"):
         assert command in help_result.output
 
     result = CliRunner().invoke(cli, ["build-rom", "--profile", "x200-libreboot"])
