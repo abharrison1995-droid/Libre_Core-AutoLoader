@@ -45,8 +45,14 @@ verified backup evidence, and no physical acceptance workflow has been run.
 The current-source VM reached systemd emergency mode under QEMU TCG. After
 the source bundle and test environment were made available, its native
 X220-focused selection passed 50 tests with 4 skipped (972 deselected). The
-guest bootstrap did not complete, so the full native suite and current-source
-image build/BIOS/UEFI product boot remain pending.
+exploratory full native suite stopped at about 7% after multiple errors and
+produced no JUnit; it is incomplete. Top-level CLI and `build-usb --help`
+passed after correcting scratch-tree ownership. Four current-source build
+attempts did not produce an ISO; the last stopped during mkinitcpio before an
+initramfs was complete. Native targeted mypy raised an internal error. Exact
+build logs and outcomes are in [current-source native Arch build
+evidence](evidence/native-arch-build-20261021/README.md). Current-source
+product ISO BIOS/UEFI boot remains open.
 
 ## Live USB runtime network profile update — 2026-10-20
 

@@ -1485,11 +1485,15 @@ record](evidence/x200-vboot-overlay-build-20261021/README.md).
 The X220 source-isolation correction at `8ea32c5` was accepted by SOL; focused
 Windows and Ubuntu WSL X220 checks each passed 39 tests. In a native Arch VM
 under QEMU TCG, the current-source X220 selection passed 50 tests with 4
-skipped (972 deselected). Native current-source build and full suite remain
-pending: the VM bootstrap did not complete, `build-usb --help` hit a
-root-owned extracted-source log path, and targeted mypy raised an internal
-error. Current-source Archiso build and product BIOS/UEFI app/service boot
-also remain pending. T430, X200, and X220 real-device workflows remain
+skipped (972 deselected). The exploratory full native suite stopped at about
+7% after errors and produced no JUnit. Top-level CLI and `build-usb --help`
+passed after correcting the extracted scratch tree's ownership. Four
+current-source Archiso build attempts did not produce an ISO; the final attempt
+reached the mkinitcpio keyboard hook and was stopped before an initramfs was
+complete. Native targeted mypy raised an internal error. Current-source
+Archiso build and product BIOS/UEFI app/service boot remain open; see [current
+native Arch build evidence](evidence/native-arch-build-20261021/README.md).
+T430, X200, and X220 real-device workflows remain
 **HARDWARE PENDING**; no probe, backup capture, firmware write, read-back,
 recovery, or hardware boot occurred. All firmware writes and
 hardware-specific recovery still require explicit human approval.

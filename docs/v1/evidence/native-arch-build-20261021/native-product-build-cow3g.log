@@ -1,0 +1,2 @@
+Error: [BUILD_BLOCKED] command failed (1): /usr/bin/mkarchiso -v -C /mnt/build-work-cow3g-8ea32c5/librecore-autoloader-89d3ed070dd1446f8799d5126b7dc2ce/pacman-snapshot.conf -w /mnt/build-work-cow3g-8ea32c5/librecore-autoloader-89d3ed070dd1446f8799d5126b7dc2ce/archiso-work -o /mnt/build-work-cow3g-8ea32c5/librecore-autoloader-89d3ed070dd1446f8799d5126b7dc2ce/image-output /mnt/build-work-cow3g-8ea32c5/librecore-autoloader-89d3ed070dd1446f8799d5126b7dc2ce/profile
+

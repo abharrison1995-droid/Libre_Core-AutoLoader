@@ -88,6 +88,23 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
   flashrom integration. Native-Linux package integration and physical SPI
   validation remain open.
 
+## Current-source native Arch checks — 2026-10-21
+
+- The current-source X220 selection passed 50 tests with 4 skipped and 972
+  deselected in an Arch QEMU TCG guest. The exploratory full suite showed
+  multiple errors at about 7%, was stopped without JUnit output, and is not a
+  pass. Native targeted mypy raised an internal error. Windows and Ubuntu WSL
+  full-suite/type-check results are recorded separately.
+- The top-level CLI and `build-usb --help` passed after the extracted scratch
+  source tree was assigned to the builder. Four current-source ISO attempts
+  did not produce an image. The last advanced into mkinitcpio, stopped at the
+  keyboard hook, and was interrupted before an initramfs or ISO existed. The
+  attempt logs and exact limits are in
+  [`native Arch build evidence`](evidence/native-arch-build-20261021/README.md).
+- Current-source product BIOS/UEFI app/service boot and the offline build
+  runner remain open. The offline production mode remains fail-closed. The
+  previously booted `be2fece` candidate is historical evidence only.
+
 ## Phase 02 acceptance-era limitations (updated for later phases)
 
 - Phase 08 connects model workflows to CLI/TUI. Explicit X200/X220 prepare/backup can perform read-only hardware probe/read operations, but none were exercised here. Phase 10B later added a guarded X200/X220 external SPI writer with independent full-chip read-back; this software path has not been exercised on hardware. T430 remains a human handoff. Internal SPI and raw restore/recovery remain blocked, and boot checks are unperformed. Phase 03 services and synthetic fixtures do not establish hardware results.
