@@ -103,9 +103,10 @@ def _prepare(tmp_path: Path, monkeypatch, *, accept_backup=True):
 def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry=None, operation_id=None):
     operation_id = operation_id or str(uuid.uuid4())
     run = tmp_path / operation_id
+    run.mkdir(parents=True, mode=0o700)
     logs = run / "logs"
     staged_dir = run / "artifacts"
-    logs.mkdir(parents=True)
+    logs.mkdir()
     staged_dir.mkdir()
     _, git_config_sha256 = _ensure_operation_git_config(run)
     staged = staged_dir / "coreboot.rom"
@@ -115,7 +116,10 @@ def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry
     generated_bytes = bytes(generated)
     staged.write_bytes(generated_bytes)
 
-    source = tmp_path / "synthetic-coreboot-source"
+    # A production X220 result retains the pinned build checkout inside the
+    # operation directory. Mirror that layout so reopen/workflow tests cover
+    # parser and raw-ROM paths after site-local backup slices are removed.
+    source = run / "work" / "coreboot-x220"
     (source / "build").mkdir(parents=True)
     (source / "util" / "ifdtool").mkdir(parents=True)
     (source / "util" / "cbfstool").mkdir(parents=True)
@@ -123,6 +127,14 @@ def _fake_result(tmp_path: Path, workflow, fake_pin, source_bytes, *, cbfs_entry
         path = source / Path(*Path(rel).parts)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
+    private_blobs = source / "site-local"
+    private_blobs.mkdir(mode=0o700)
+    for blob in workflow._blob_inputs:
+        (private_blobs / blob.name).write_bytes(blob.path.read_bytes())
+    assert {path.name for path in private_blobs.iterdir()} == {item.name for item in workflow._blob_inputs}
+    for path in private_blobs.iterdir():
+        path.unlink()
+    private_blobs.rmdir()
     ifd_binary = source / "util" / "ifdtool" / "ifdtool"
     cbfstool_binary = source / "util" / "cbfstool" / "cbfstool"
     ifd_binary.write_bytes(b"synthetic ifdtool executable")
@@ -274,6 +286,34 @@ def test_x220_positive_synthetic_path_stops_hardware_pending(tmp_path, monkeypat
     assert "No firmware write" in result.message
     assert workflow.resume_from_checkpoint().state.value == "backup-verified"
     assert original[:0x500000] == Path(backup.chips[0].first_path).read_bytes()[:0x500000]
+
+
+def test_x220_completed_result_reopens_and_accepts_retained_operation_checkout(tmp_path, monkeypatch):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    assert result.status is BuildStatus.COMPLETE
+    assert result.manifest is not None and result.manifest_path is not None
+
+    operation_root = result.manifest_path.parent
+    build_source = operation_root / "work" / "coreboot-x220"
+    raw_rom = build_source / "build" / "coreboot.rom"
+    ifdtool = build_source / "util" / "ifdtool" / "ifdtool"
+    cbfstool = build_source / "util" / "cbfstool" / "cbfstool"
+    assert not (build_source / "site-local").exists()
+    assert raw_rom.is_file()
+    assert ifdtool.is_file() and cbfstool.is_file()
+    assert hashlib.sha256(raw_rom.read_bytes()).hexdigest() == result.manifest.selected_artifact_sha256
+    assert hashlib.sha256(ifdtool.read_bytes()).hexdigest() == result.manifest.artifacts[0].region_inspection_tool.executable_sha256
+    assert hashlib.sha256(cbfstool.read_bytes()).hexdigest() == result.manifest.artifacts[0].cbfs_inspection.tool_sha256
+
+    reopened = ArtifactEngine().load_completed_result(result.manifest_path)
+    accepted = workflow.accept_artifact_result(reopened)
+
+    assert accepted.stage is X220WorkflowStage.STAGED, accepted.reasons
+    assert accepted.status == "STAGED/HARDWARE_PENDING"
+    assert accepted.proposed_external_spi_plan is not None
+    assert accepted.proposed_external_spi_plan.artifact_manifest_path == str(result.manifest_path.resolve())
+    assert not (build_source / "site-local").exists()
 
 
 def test_x220_persisted_operation_plan_roundtrips_provenance_and_tampering_blocks(

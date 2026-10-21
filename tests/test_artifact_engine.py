@@ -1667,9 +1667,16 @@ def _make_minimal_pinned_x220_checkout(tmp_path: Path, monkeypatch: pytest.Monke
     source = tmp_path / "pinned-x220-source"
     config_relative = "configs/builder/config.lenovo_x220"
     config_bytes = b"CONFIG_PAYLOAD_NONE=y\n"
-    config_path = source / config_relative
-    config_path.parent.mkdir(parents=True)
-    config_path.write_bytes(config_bytes)
+    source_payloads = {
+        config_relative: config_bytes,
+        "util/cbfstool/cbfs_image.c": b"synthetic pinned CBFS image parser source\n",
+        "util/cbfstool/cbfstool.c": b"synthetic pinned cbfstool source\n",
+        ".gitignore": b"/.config\n/build/\n/site-local/\n/util/ifdtool/ifdtool\n/util/cbfstool/cbfstool\n",
+    }
+    for relative_path, payload in source_payloads.items():
+        path = source / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(payload)
     git = shutil.which("git")
     if git is None:
         pytest.skip("UNVALIDATED: Git executable is unavailable for local clone isolation regression")
@@ -1682,7 +1689,7 @@ def _make_minimal_pinned_x220_checkout(tmp_path: Path, monkeypatch: pytest.Monke
         ("remote", "add", "origin", COREBOOT_2609.repository_url),
     ):
         subprocess.run([git, "-C", str(source), *args], check=True, capture_output=True, timeout=20)
-    subprocess.run([git, "-C", str(source), "add", config_relative], check=True, capture_output=True, timeout=20)
+    subprocess.run([git, "-C", str(source), "add", *source_payloads], check=True, capture_output=True, timeout=20)
     subprocess.run(
         [git, "-C", str(source), "commit", "--quiet", "-m", "synthetic pinned X220 source"],
         check=True,
@@ -1704,7 +1711,10 @@ def _make_minimal_pinned_x220_checkout(tmp_path: Path, monkeypatch: pytest.Monke
         COREBOOT_2609,
         revision=git_value("rev-parse", "HEAD"),
         tree_id=git_value("rev-parse", "HEAD^{tree}"),
-        files=(PinnedFile(config_relative, hashlib.sha256(config_bytes).hexdigest()),),
+        files=tuple(
+            PinnedFile(relative_path, hashlib.sha256(payload).hexdigest())
+            for relative_path, payload in sorted(source_payloads.items())
+        ),
     )
     recipe = replace(X220_COREBOOT, source=pin)
     monkeypatch.setattr(module, "X220_COREBOOT", recipe)
@@ -1872,6 +1882,130 @@ def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
     operation_source = result.manifest_path.parent / "work" / "coreboot-x220"
     assert not (operation_source / "site-local").exists()
     assert not result.artifacts
+
+
+def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    _module, recipe, engine, source, source_audit = _make_minimal_pinned_x220_checkout(tmp_path, monkeypatch)
+    backup_fixture_root = tmp_path / "backup-fixture"
+    backup_fixture_root.mkdir()
+    intent, backup, regions, blob_inputs, original = _make_x220_backup_fixture(backup_fixture_root)
+    monkeypatch.setattr(
+        module,
+        "validate_x220_backup_evidence",
+        lambda *_args: (original, SimpleNamespace()),
+    )
+    monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("fixture", "no tool executed"),))
+    request = BuildRequest(
+        recipe_id=recipe.recipe_id,
+        source_dir=source,
+        output_root=tmp_path / "artifact-output",
+        blob_inputs=blob_inputs,
+        expected_regions=regions,
+        observed_chip_capacity_bytes=recipe.expected_size_bytes,
+        backup_intent=intent,
+        backup_set=backup,
+    )
+    ifd_output = "\n".join((
+        "Flash Region 0 (Flash Descriptor): 00000000 - 00000fff",
+        "Flash Region 1 (GbE): 00001000 - 00002fff",
+        "Flash Region 2 (Intel ME): 00003000 - 004fffff",
+        "Flash Region 3 (BIOS): 00500000 - 007fffff",
+    ))
+    resolved_config = "\n".join(
+        f"{symbol}={value}" for symbol, value in recipe.config_expectations
+    ) + "\n"
+    successful_make_commands: list[tuple[str, ...]] = []
+
+    def record_command(argv, logs_dir, command_records, output="", exit_code=0):
+        log_path = Path(logs_dir) / f"{len(command_records) + 1:02d}.log"
+        content = f"$ {' '.join(argv)}\n{output}"
+        log_path.write_text(content, encoding="utf-8")
+        command_records.append(CommandRecord(
+            tuple(argv), exit_code, log_path.relative_to(Path(logs_dir).parent).as_posix(), hashlib.sha256(content.encode()).hexdigest()
+        ))
+
+    def fake_run_logged(argv, cwd, logs_dir, commands, **kwargs):
+        if argv[0] == "git":
+            operation_root = Path(logs_dir).parent
+            result = subprocess.run(
+                list(argv),
+                cwd=cwd,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env={
+                    "PATH": os.environ.get("PATH", ""),
+                    "GIT_CONFIG_GLOBAL": str(operation_root / "gitconfig"),
+                    "GIT_CONFIG_NOSYSTEM": "1",
+                },
+            )
+            record_command(argv, logs_dir, commands, result.stdout + result.stderr, result.returncode)
+            if result.returncode != 0:
+                raise RuntimeError(f"fixture Git command failed: {result.stderr}")
+            return None
+
+        if tuple(argv) == ("make", "olddefconfig"):
+            (Path(cwd) / ".config").write_text(resolved_config, encoding="utf-8", newline="\n")
+        elif tuple(argv) == ("make", "crossgcc-i386", "CPUS=1"):
+            pass
+        elif tuple(argv) == ("make", "-j1"):
+            build_source = Path(cwd)
+            (build_source / "util" / "ifdtool").mkdir(parents=True, exist_ok=True)
+            (build_source / "util" / "ifdtool" / "ifdtool").write_bytes(b"synthetic ifdtool executable")
+            (build_source / "util" / "cbfstool").mkdir(parents=True, exist_ok=True)
+            (build_source / "util" / "cbfstool" / "cbfstool").write_bytes(b"synthetic cbfstool executable")
+            generated = original[:0x500000] + (b"\xA7" * (3 * 1024 * 1024))
+            output_path = build_source / "build" / "coreboot.rom"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_bytes(generated)
+        else:
+            raise AssertionError(f"Unexpected fake build command: {argv!r}")
+        successful_make_commands.append(tuple(argv))
+        record_command(argv, logs_dir, commands)
+        return None
+
+    def fake_run_readonly(argv, cwd, logs_dir, commands, **kwargs):
+        if Path(argv[0]).name == "ifdtool":
+            output = ifd_output
+        else:
+            assert Path(argv[0]).name == "cbfstool"
+            output = "unexpected parser output after the Coreboot commands completed\n"
+        record_command(argv, logs_dir, commands, output)
+        return output
+
+    monkeypatch.setattr(engine, "_run_logged", fake_run_logged)
+    monkeypatch.setattr(engine, "_run_readonly", fake_run_readonly)
+    result = engine._build_linux(recipe, request)
+
+    assert successful_make_commands == [
+        ("make", "olddefconfig"),
+        ("make", "crossgcc-i386", "CPUS=1"),
+        ("make", "-j1"),
+    ]
+    assert result.status is BuildStatus.FAILED
+    assert result.code == "ARTIFACT_VALIDATION_FAILED"
+    assert "cbfstool output" in result.message.lower()
+    assert result.manifest is not None and result.manifest_path is not None
+    assert result.manifest.status == "failed"
+    assert result.manifest.failure_code == "ARTIFACT_VALIDATION_FAILED"
+    assert result.manifest.artifacts == ()
+    assert result.manifest.selected_artifact_relative_path is None
+    assert not result.artifacts
+    assert any(Path(command.argv[0]).name == "cbfstool" for command in result.manifest.commands)
+
+    operation_clone = result.manifest_path.parent / "work" / "coreboot-x220"
+    assert not (operation_clone / "site-local").exists()
+    assert (operation_clone / "build" / "coreboot.rom").is_file()
+    assert not (source / "site-local").exists()
+    assert not (source / ".config").exists()
+    assert engine.inspect_source(recipe.recipe_id, source) == source_audit
+    with pytest.raises(ValueError, match="Only a COMPLETE persisted artifact"):
+        ArtifactEngine().load_completed_result(result.manifest_path)
 
 
 def test_x220_backup_evidence_binds_blobs_to_matching_full_chip_backup(tmp_path: Path) -> None:
