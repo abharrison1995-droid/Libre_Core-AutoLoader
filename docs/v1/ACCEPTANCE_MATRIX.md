@@ -4,20 +4,49 @@
 
 ## Current-source software regression — 2026-10-21
 
-The latest full suite passed on Windows (**945 passed, 70 skipped**) and
-Ubuntu 26.04 WSL (**1,011 passed, 4 skipped**); both collected 1,015 tests
-with zero failures. Windows took 831.38 seconds; Ubuntu WSL took 670.76
-seconds. Full-project no-incremental mypy passed on 111 source files in
-Windows native mode, Windows Win32-targeted mode, and Ubuntu WSL. All skips
-remain unpassed. JUnit reports, hashes, and commands are in
+At commit `8ea32c5`, the latest full suite passed on Windows (**955 passed,
+71 skipped**) and Ubuntu 26.04 WSL (**1,022 passed, 4 skipped**); both
+collected 1,026 tests with zero failures. Windows took 1,687.79 seconds;
+Ubuntu WSL took 1,497.18 seconds. Full-project no-incremental mypy passed on
+111 source files in Windows native mode, Windows Win32-targeted mode, and
+Ubuntu WSL. All skips remain unpassed. JUnit reports, hashes, and commands are
+in
 [`software regression evidence`](evidence/software-regression-20261021/README.md).
 Ubuntu WSL is not native Linux.
 
-These tests do not establish a native-Linux build or Live USB boot. The pinned
-Libreboot 26.01 X200 upstream build and validation-only evidence cover 31 ROM
-variants in WSL; they do not create an ArtifactEngine `COMPLETE` artifact or
-prove a device-bound image is flash-ready. X220 ROM compilation and all three
-physical acceptance workflows remain open.
+The pinned Libreboot 26.01 X200 upstream build and validation-only evidence
+cover 31 ROM variants in WSL; they do not create an ArtifactEngine `COMPLETE`
+artifact or prove a device-bound image is flash-ready. The historical native
+Archiso candidate and BIOS/UEFI QEMU boot at `be2fece` are documented below;
+they do not validate the current source. X220 device-bound ROM compilation
+and all three physical acceptance workflows remain open.
+
+## Native Archiso candidate and QEMU boot — 2026-10-21
+
+At source revision `be2fece`, a native Arch Linux VM run passed **1,017 tests,
+2 skipped**, Windows-targeted mypy on 105 files, and CLI help gates. The pinned
+Archiso build produced a 1,017,458,688-byte ISO with SHA-256
+`a98e2c6039b28d5aad4359ebdbbaeaf2aecedc2135f3afdb01768e2c1cc401e5`. The
+candidate booted to the application interface under both SeaBIOS and
+UEFI/EDK2 QEMU runs. The gate wrapper exited 1 at the final FAT-volume
+`cp -a` because ownership preservation is unsupported; the copied ISO hash
+was independently verified. Detailed logs, JUnit XML, package pins, build
+provenance, and the screen capture are in [`native Archiso candidate evidence`](evidence/native-arch-iso-be2fece-20261021/README.md).
+
+This is a candidate from `be2fece`, not validation of subsequent source
+changes. QEMU boot is not a ThinkPad test. The welcome-screen wording was
+corrected in `b35a1ab`; the captured ISO predates that
+commit, so a current-source image still needs to be built and booted. The
+build-time offline launcher is still fail-closed and unvalidated. The X220
+source-isolation correction was accepted by SOL at `8ea32c5`; focused tests
+verify operation-owned source/ROM containment and reject symlinked or external
+checkouts. A real Coreboot ROM compile still requires fresh device topology and
+verified backup evidence, and no physical acceptance workflow has been run.
+The current-source VM reached systemd emergency mode under QEMU TCG. After
+the source bundle and test environment were made available, its native
+X220-focused selection passed 50 tests with 4 skipped (972 deselected). The
+guest bootstrap did not complete, so the full native suite and current-source
+image build/BIOS/UEFI product boot remain pending.
 
 ## Live USB runtime network profile update — 2026-10-20
 
@@ -152,7 +181,7 @@ SOL accepted the package-inventory correction; its acceptance checkpoint passed 
 
 The GRUB base commit/tree and ten exact ordered patch hashes remain pinned; each intermediate tree ID is checked through final tree `9e76050f8ab01306e51fb28ab88c1f8481c9e26a`. Generated `git am` commit IDs vary with committer metadata and are recorded per operation, then reopened against the exact base ancestry and pinned tree sequence. SOL accepted this software correction. Focused ArtifactEngine/X200/X220 checks passed 90 tests with 2 skipped; mypy passed for the three touched modules; diff-check passed. At this patch-chain checkpoint, Linux compilation and real manifest reopen were pending. The later X200 diagnostic passed structural validation but produced no ArtifactEngine COMPLETE manifest; X220 build and all hardware workflows remain pending.
 
-## Latest cross-platform full software regression — SOL accepted
+## Earlier cross-platform full software regression — SOL accepted
 
 SOL accepted the X200 Unifont manifest-portability correction and the synthetic-fixture isolation used by approval/controller policy tests. Build-time font source and package-owner/version checks remain strict; manifest reopen validates pinned source identity and the operation-owned staged bytes without relying on the original host-specific absolute path. Dedicated ArtifactEngine tests continue to exercise strict persisted-manifest validation.
 

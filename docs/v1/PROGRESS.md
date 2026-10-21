@@ -1453,12 +1453,12 @@ the generated-Coreboot-file inventory, shipped-header byte equality, bounded
 x86-64 ELF identity, schema-4 manifest reopen checks, and exact primary Vboot
 pin. The focused 7-test selection passed on Windows and Ubuntu WSL.
 
-The fresh full software suites passed on current source: Windows **945 passed,
-70 skipped** (1,015 collected; 831.38s; exit 0; JUnit SHA-256
-`fc23169ea17c9ce666e8604194c7452a5287bf39131406f3f3a7059779970f7f`) and
-Ubuntu 26.04 WSL **1,011 passed, 4 skipped** (1,015 collected; 670.76s; exit
-0; JUnit SHA-256
-`89245058bcab381a96608be87e7c70cfb4aa3f6a413997fac7532684efb441ff`).
+The current full software suites passed at commit `8ea32c5`: Windows **955
+passed, 71 skipped** (1,026 collected; 1,687.79s; exit 0; JUnit SHA-256
+`D4DB1CB8FDDDA43F07E928C451D18C75BD0266AF3543443ECEBB80BFC7AAF1D5`) and
+Ubuntu 26.04 WSL **1,022 passed, 4 skipped** (1,026 collected; 1,497.18s;
+exit 0; JUnit SHA-256
+`9BDE33AC8B3050D813ECD594A22E6F071CC42C308689C4582591F7CD9474951E`).
 Full-project no-incremental mypy passed on **111 source files** in Windows
 native mode, Windows Win32-targeted mode, and Ubuntu WSL. Skips remain
 unpassed. Commands and JUnit reports are in
@@ -1482,9 +1482,14 @@ the repository, or access hardware. The generated ROMs remain in Linux scratch
 and are not flash-ready artifacts. See the [X200 build and validation
 record](evidence/x200-vboot-overlay-build-20261021/README.md).
 
-Native Linux/Archiso build and current-source Live USB BIOS/UEFI app/service
-boot remain pending. The WSL/Windows VM diagnostics have not established a
-usable guest shell or successful product ISO boot. T430, X200, and X220 real
-device workflows remain **HARDWARE PENDING**; no probe, backup capture,
-firmware write, read-back, recovery, or hardware boot occurred. All firmware
-writes and hardware-specific recovery still require explicit human approval.
+The X220 source-isolation correction at `8ea32c5` was accepted by SOL; focused
+Windows and Ubuntu WSL X220 checks each passed 39 tests. In a native Arch VM
+under QEMU TCG, the current-source X220 selection passed 50 tests with 4
+skipped (972 deselected). Native current-source build and full suite remain
+pending: the VM bootstrap did not complete, `build-usb --help` hit a
+root-owned extracted-source log path, and targeted mypy raised an internal
+error. Current-source Archiso build and product BIOS/UEFI app/service boot
+also remain pending. T430, X200, and X220 real-device workflows remain
+**HARDWARE PENDING**; no probe, backup capture, firmware write, read-back,
+recovery, or hardware boot occurred. All firmware writes and
+hardware-specific recovery still require explicit human approval.

@@ -114,6 +114,37 @@ acceptance.
 The current-source wheel smoke is recorded separately in
 [`current-source wheel evidence`](../current-source-wheel-x200-null-overlap-20261021/README.md).
 
+## Fresh current-source suite after X220 source isolation — 2026-10-21
+
+The full suites ran against commit `8ea32c522a942a6367a3adce78b9efddbd64e521`.
+Both completed with zero failures or errors:
+
+| Environment | Result | Duration | JUnit SHA-256 |
+|---|---:|---:|---|
+| Windows `.venv` | 955 passed, 71 skipped; 1,026 collected | 1,687.79s | `D4DB1CB8FDDDA43F07E928C451D18C75BD0266AF3543443ECEBB80BFC7AAF1D5` |
+| Ubuntu 26.04 WSL | 1,022 passed, 4 skipped; 1,026 collected | 1,497.18s | `9BDE33AC8B3050D813ECD594A22E6F071CC42C308689C4582591F7CD9474951E` |
+
+JUnit files are `windows-x220-isolation-current.xml` and
+`ubuntu-x220-isolation-current.xml`. Windows used
+`.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider --basetemp=C:\pytest-lca-8ea32c5`;
+Ubuntu used the verified commit bundle cloned onto the authorized ext4
+workspace, with its Python environment and pytest temporary files there.
+Full-project no-incremental mypy passed on 111 files in Windows native,
+Windows `--platform win32`, and Ubuntu WSL modes. CLI and `build-usb` help
+passed in both environments. Every skip remains unpassed; Ubuntu WSL is not
+native Linux.
+
+The current-source X220-focused selection also passed in a native Arch Linux
+guest under QEMU TCG: **50 passed, 4 skipped, 972 deselected** (1,026
+collected; 1,351.88s; exit 0). Its JUnit report is
+`native-x220-current.xml`, SHA-256
+`92a10a31ae1831c5f157702191f8e5d82364f9142efd05249d46caeb3ac89e5b`. This is
+a native Linux software test in a virtual machine, not a Coreboot ROM build
+or hardware test. The guest's top-level CLI help passed. The `build-usb
+--help` check was blocked by the extracted source directory being owned by
+root while CLI logging tried to create its log there. A native targeted mypy
+retry raised an internal error, so native mypy is not claimed as passing.
+
 ## VM debug-shell diagnostics
 
 The related QEMU captures are archived separately:
@@ -128,7 +159,11 @@ or hardware workflow.
 
 ## Release boundary
 
-Native Linux/Archiso build and current-source product ISO validation remain
-pending. A successful product Live USB BIOS/UEFI app/service boot remains
-unproven. T430, X200, and X220 physical workflows remain **HARDWARE PENDING**.
-No hardware operation occurred in these runs.
+At current source, the Arch ISO VM reached systemd emergency mode under QEMU
+TCG. A native X220-focused software selection passed after the source bundle
+and test environment were made available. The live image still lacks the
+completed package bootstrap needed for the full native suite and product
+image build. The successful native build and BIOS/UEFI QEMU boot at `be2fece`
+remain historical candidate evidence only. Current-source Archiso build and
+product boot remain pending. T430, X200, and X220 physical workflows remain
+**HARDWARE PENDING**. No hardware operation occurred in these runs.

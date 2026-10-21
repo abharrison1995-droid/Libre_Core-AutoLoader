@@ -2,6 +2,13 @@
 
 This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707bc6395e`; it will be updated as fixes land.
 
+## Current open findings — 2026-10-21
+
+- Native Arch build and BIOS/UEFI QEMU boot reached the application interface at `be2fece`. The gate wrapper returned 1 because its final `cp -a` could not preserve ownership on FAT, although the copied ISO hash was verified. The candidate is not the final source build; see [native Archiso evidence](evidence/native-arch-iso-be2fece-20261021/README.md).
+- RESOLVED in `8ea32c5` and accepted by SOL: X220 build inputs, raw ROM, and tools are bound to the operation-owned `work/coreboot-x220` tree; the acceptance path rejects external or symlinked checkout paths. Focused Windows and Ubuntu WSL regressions passed (39 each) and targeted mypy passed on both. A real Coreboot ROM build and all hardware acceptance remain open.
+- Current-source full software suites passed at `8ea32c5`: Windows 955 passed/71 skipped, Ubuntu WSL 1,022 passed/4 skipped; mypy passed on 111 files in Windows native, Windows Win32, and Ubuntu WSL modes. In the QEMU TCG native Arch guest, the current-source X220-focused selection also passed (50 passed, 4 skipped, 972 deselected; 1,026 collected). Top-level CLI help passed. Native targeted mypy raised an internal error, and the `build-usb --help` attempt hit a root-owned extracted-source log path. Native full suite, current-source Archiso build, and product boot remain unvalidated. The historical `be2fece` image does not validate current source.
+- The three physical ThinkPad workflows remain pending. No physical SPI probe/read, backup, write, read-back, recovery, or hardware boot has been performed.
+
 | Priority | Issue at baseline | User impact | Phase 01 status | Remaining resolution |
 |---|---|---|---|---|
 | P0 | Orchestrator's build loop fabricates progress and completion without invoking a builder. | Can lead the UI to offer a flash step with a nonexistent ROM. | FIXED: explicit unavailable outcome; no completion or ROM path; regression tested. | The shared controller and Phase 04 artifact service are integrated. ArtifactEngine COMPLETE/device-bound build evidence remains pending and requires fresh device identity/topology plus complete backup/recovery prerequisites. |
