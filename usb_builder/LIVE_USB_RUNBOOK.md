@@ -725,6 +725,17 @@ compatibility; controlled disposable-VM package-input evidence is still
 required. Status: **CONTRACT IMPLEMENTED;
 DEPLOYMENT/COMPATIBILITY UNVALIDATED**.
 
+SOL accepted the separate production execution guard. A synthetic
+`SUPPORTED` response in the no-build test still stops with
+`OFFLINE_ROOTLESS_BUILD_RUNNER_UNAVAILABLE` before source/work/output
+creation, package/build commands, or online-runner selection. In production,
+earlier host or mount preflights may stop the operation first; if they pass,
+the absent launcher pin stops it with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`. The synthetic response does not
+validate a deployed launcher or `pacstrap -N`; offline build support remains
+unavailable and unvalidated. This build-time status is separate from the
+runtime network profile below, which has not been validated in a booted ISO.
+
 The future launcher identity requires exact root-owned setuid mode `04755`,
 with every parent directory root-owned and not writable by group or other.
 Its scratch parent must be a root-owned, non-link directory of exact mode
@@ -741,3 +752,33 @@ Windows-specific skips, 0 failures/errors** (811 collected; 1771.18s; exit
 unavailable until those gates are separately proved. The JUnit report and
 exact command are recorded in
 `docs/v1/evidence/software-regression-20261016/README.md`.
+
+## Live USB runtime network defaults — software-only update (2026-10-20)
+
+The source profile now ends both BIOS Syslinux and UEFI systemd-boot kernel
+argument lines with the sole `ip=off` argument. The image customization hook
+masks an explicit list of network activation services/sockets by linking each
+unit path to `/dev/null`. The AutoLoader service runs with `PrivateNetwork=yes`,
+`RestrictAddressFamilies=AF_UNIX`, `NoNewPrivileges=yes`, and a capability
+bounding set that excludes `CAP_SYS_ADMIN` and `CAP_NET_ADMIN`. The service's
+process tree is intended to remain isolated, while local console and USB
+workflows are intended to remain available; none of these runtime properties
+has been validated in a booted candidate image yet.
+
+Source preflight requires the exact boot arguments, mask-unit list and masking
+loop. Target-root publication requires the exact reviewed AutoLoader unit
+bytes, rejects every unreviewed `.conf` drop-in in the systemd unit and
+`system.control` search paths, rejects higher-priority complete-unit files and
+symlinked override paths, and on Linux verifies every expected mask link
+points to `/dev/null`. The candidate manifest records the policy and link
+checks. Focused Ubuntu WSL tests passed **21 cases** (350 deselected); an
+independent Arch WSL selection passed **15** (356 deselected). Native and
+Win32-targeted mypy passed for `build_usb.py`, and SOL accepted this
+software-only slice. The full regression suite has not been rerun after these
+runtime changes.
+
+This change has not been used to build or boot an ISO, so runtime behavior is
+unvalidated. It does not implement the build-time `--network-mode offline`
+launcher: that path still fails closed with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`. Native Linux build, BIOS/UEFI
+AutoLoader/service boot, and hardware validation remain pending.

@@ -273,6 +273,34 @@ ARCHISO_PROFILE_TEXT_INPUTS = (
     ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH,
     ARCHISO_USB_INITRAMFS_DERIVATIVE_RELATIVE_PATH,
 )
+NETWORK_DISABLED_SYSTEMD_UNITS = (
+    "NetworkManager.service",
+    "NetworkManager-dispatcher.service",
+    "NetworkManager-wait-online.service",
+    "avahi-daemon.service",
+    "avahi-daemon.socket",
+    "connman.service",
+    "dhcpcd.service",
+    "dhcpcd@.service",
+    "iwd.service",
+    "systemd-networkd.service",
+    "systemd-networkd.socket",
+    "systemd-networkd-wait-online.service",
+    "systemd-networkd-wait-online@.service",
+    "systemd-resolved.service",
+    "systemd-resolved.socket",
+    "systemd-timesyncd.service",
+    "systemd-timesyncd.socket",
+    "wpa_supplicant.service",
+    "wpa_supplicant@.service",
+)
+AUTOLOADER_NETWORK_POLICY = {
+    "PrivateNetwork": "yes",
+    "RestrictAddressFamilies": "AF_UNIX",
+    "CapabilityBoundingSet": "~CAP_SYS_ADMIN CAP_NET_ADMIN",
+    "NoNewPrivileges": "yes",
+}
+AUTOLOADER_SERVICE_SHA256 = "2fd94492c77eacd9fd72fee1f67661856c378b8d3c42727fd598a37cfe05a9d5"
 ARCHISO_V91_SOURCE_URL = (
     "https://github.com/archlinux/archiso/blob/"
     + ARCHISO_V91_SOURCE_COMMIT
@@ -1492,7 +1520,180 @@ def _profile_boot_modes(profile_dir: Path) -> tuple[str, ...]:
     for config_text in (syslinux, uefi):
         if "%INSTALL_DIR%" not in config_text or "%ARCH%" not in config_text or "%KERNEL_PARAMS%" not in config_text:
             raise BuildContractError("BIOS/UEFI boot entry is missing required Archiso profile placeholders")
+    _validate_offline_boot_arguments(profile_dir)
     return modes
+
+
+def _validate_offline_boot_arguments(profile_dir: Path) -> None:
+    """Require BIOS and UEFI entries to disable initramfs IP configuration."""
+    boot_lines = (
+        ("syslinux/archiso_sys-linux.cfg", "APPEND"),
+        ("efiboot/loader/entries/01-autoloader.conf", "options"),
+    )
+    for relative, directive in boot_lines:
+        try:
+            contents = (profile_dir / relative).read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise BuildContractError(f"offline boot configuration is unreadable: {relative}") from exc
+        lines = [
+            line.strip()
+            for line in contents.splitlines()
+            if line.strip().startswith(directive + " ")
+        ]
+        if len(lines) != 1:
+            raise BuildContractError(
+                f"{relative} must contain exactly one {directive} line with offline IP configuration"
+            )
+        arguments = lines[0].split()[1:]
+        if (
+            arguments.count("ip=off") != 1
+            or sum(argument.startswith("ip=") for argument in arguments) != 1
+            or arguments[-1:] != ["ip=off"]
+            or "%KERNEL_PARAMS%" not in arguments[:-1]
+        ):
+            raise BuildContractError(
+                f"{relative} must end its {directive} line with the sole ip=off argument"
+            )
+
+
+def _validate_service_network_policy(service_text: str, *, label: str) -> None:
+    current_section = ""
+    service_values: dict[str, list[str]] = {key: [] for key in AUTOLOADER_NETWORK_POLICY}
+    for raw_line in service_text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("#", ";")):
+            continue
+        section = re.fullmatch(r"\[([^]]+)\]", line)
+        if section is not None:
+            current_section = section.group(1)
+            continue
+        if current_section != "Service" or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if key in service_values:
+            service_values[key].append(value)
+    for key, expected in AUTOLOADER_NETWORK_POLICY.items():
+        if service_values[key] != [expected]:
+            raise BuildContractError(
+                f"{label} must set exactly {key}={expected} in one [Service] section"
+            )
+
+
+def _validate_profile_offline_runtime(profile_dir: Path) -> None:
+    """Require the pinned offline unit sandbox and exact network masks."""
+    service_path = profile_dir / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service"
+    hook_path = profile_dir / "airootfs" / "root" / "customize_airootfs.sh"
+    try:
+        service_bytes = service_path.read_bytes()
+        service_text = service_bytes.decode("utf-8")
+        hook_text = hook_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise BuildContractError("offline runtime service or customization hook is unreadable") from exc
+    _validate_service_network_policy(service_text, label="profile AutoLoader service")
+    if _sha256_bytes(service_bytes) != AUTOLOADER_SERVICE_SHA256:
+        raise BuildContractError("profile AutoLoader service differs from the exact reviewed unit bytes")
+
+    array_matches = list(
+        re.finditer(r"(?ms)^network_mask_units=\(\s*\n(.*?)^\)\s*$", hook_text)
+    )
+    if len(array_matches) != 1:
+        raise BuildContractError("customize hook must declare exactly one pinned network-mask unit list")
+    unit_names = tuple(
+        re.findall(r'^\s*"([^"\\]+)"\s*$', array_matches[0].group(1), flags=re.MULTILINE)
+    )
+    if unit_names != NETWORK_DISABLED_SYSTEMD_UNITS:
+        raise BuildContractError("customize hook network-mask units differ from the reviewed offline list")
+    required_mask_loop = (
+        'for unit in "${network_mask_units[@]}"; do\n'
+        '    ensure_systemd_link "/dev/null" "$systemd_dir/$unit"\n'
+        '    test -L "$systemd_dir/$unit"\n'
+        '    test "$(readlink -- "$systemd_dir/$unit")" = "/dev/null"\n'
+        "done"
+    )
+    if hook_text.count(required_mask_loop) != 1:
+        raise BuildContractError("customize hook does not create and verify exact offline network masks")
+
+
+def _reject_higher_priority_autoloader_unit_files(target_root: Path) -> None:
+    """Reject any higher-priority complete unit that could replace the pinned unit."""
+    relative_files = (
+        "etc/systemd/system.control/autoloader.service",
+        "run/systemd/system.control/autoloader.service",
+        "run/systemd/transient/autoloader.service",
+        "run/systemd/generator.early/autoloader.service",
+    )
+    for relative in relative_files:
+        path = target_root / relative
+        try:
+            _assert_no_link_components(path, include_leaf=False)
+        except BuildContractError as exc:
+            raise BuildContractError(
+                f"target root has an unsafe higher-priority AutoLoader unit path: {relative}"
+            ) from exc
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise BuildContractError(
+                f"target root higher-priority AutoLoader unit path cannot be inspected: {relative}"
+            ) from exc
+        attributes = getattr(info, "st_file_attributes", 0)
+        reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        if stat.S_ISLNK(info.st_mode) or attributes & reparse_flag:
+            kind = "symlink or reparse point"
+        elif stat.S_ISREG(info.st_mode):
+            kind = "regular file"
+        elif stat.S_ISDIR(info.st_mode):
+            kind = "directory"
+        else:
+            kind = "unexpected filesystem object"
+        raise BuildContractError(
+            f"target root contains an unreviewed higher-priority AutoLoader unit ({kind}): {relative}"
+        )
+
+
+def _reject_service_network_policy_dropins(target_root: Path) -> None:
+    """Reject every unreviewed effective drop-in for the AutoLoader service."""
+    unit_search_dirs = (
+        "etc/systemd/system.control",
+        "run/systemd/system.control",
+        "run/systemd/transient",
+        "run/systemd/generator.early",
+        "etc/systemd/system",
+        "run/systemd/system",
+        "run/systemd/generator",
+        "usr/local/lib/systemd/system",
+        "usr/lib/systemd/system",
+        "run/systemd/generator.late",
+    )
+    relative_dirs = tuple(
+        f"{base}/{unit}.d"
+        for base in unit_search_dirs
+        for unit in ("autoloader.service", "service")
+    )
+    for relative in relative_dirs:
+        directory = target_root / relative
+        try:
+            _assert_no_link_components(directory)
+        except BuildContractError as exc:
+            raise BuildContractError(f"target root has an unsafe AutoLoader service policy override path: {relative}") from exc
+        if not directory.exists() and not _is_reparse_or_symlink(directory):
+            continue
+        if _is_reparse_or_symlink(directory) or not directory.is_dir():
+            raise BuildContractError(f"target root has an unsafe AutoLoader service policy override path: {relative}")
+        for path in directory.iterdir():
+            try:
+                _assert_no_link_components(path)
+            except BuildContractError as exc:
+                raise BuildContractError(f"target root has an unsafe AutoLoader service policy override: {path}") from exc
+            if _is_reparse_or_symlink(path) or not path.is_file():
+                raise BuildContractError(f"target root has an unsafe AutoLoader service policy override: {path}")
+            if path.suffix != ".conf":
+                continue
+            raise BuildContractError(
+                f"target root contains an unreviewed AutoLoader service drop-in: {relative}/{path.name}"
+            )
 
 
 def _audit_profile_line_endings(profile_dir: Path, *, label: str = "profile") -> None:
@@ -1769,6 +1970,7 @@ def preflight(config: BuildConfig, *, host_platform: str | None = None) -> Prefl
     _audit_profile_tree(profile)
     package_names = _read_package_names(profile / "packages.x86_64")
     modes = _profile_boot_modes(profile)
+    _validate_profile_offline_runtime(profile)
     snapshot, raw_snapshot = _load_json(snapshot_path, "snapshot lock")
     snapshot_sha = _sha256_bytes(raw_snapshot)
     if snapshot.get("schema_version") != 1 or snapshot.get("architecture") != "x86_64":
@@ -3516,8 +3718,14 @@ def _validate_target_root_install(
         "etc/systemd/system/multi-user.target.d/autoloader.conf",
         "AutoLoader systemd activation drop-in",
     )
-    service = service_path.read_text(encoding="utf-8")
+    service_bytes = service_path.read_bytes()
+    service = service_bytes.decode("utf-8")
     activation = activation_path.read_text(encoding="utf-8")
+    if _sha256_bytes(service_bytes) != AUTOLOADER_SERVICE_SHA256:
+        raise BuildContractError("target root AutoLoader unit differs from the exact reviewed source bytes")
+    _validate_service_network_policy(service, label="target-root AutoLoader service")
+    _reject_higher_priority_autoloader_unit_files(target_root)
+    _reject_service_network_policy_dropins(target_root)
     required_service_lines = (
         "ExecStart=/opt/autoloader/start.sh",
         "After=getty@tty1.service",
@@ -3537,12 +3745,23 @@ def _validate_target_root_install(
             "AutoLoader multi-user enablement",
             "../autoloader.service",
         )
+        network_mask_links: dict[str, dict[str, str]] = {}
+        for unit in NETWORK_DISABLED_SYSTEMD_UNITS:
+            relative = f"etc/systemd/system/{unit}"
+            link = _require_rootfs_symlink(
+                target_root,
+                relative,
+                f"network activation mask for {unit}",
+                "/dev/null",
+            )
+            network_mask_links[unit] = {"path": relative, "target": os.readlink(link)}
         systemd_links = {
             "status": "CHECKED",
             "autoloader_enablement": {
                 "path": "etc/systemd/system/multi-user.target.wants/autoloader.service",
                 "target": os.readlink(enablement_link),
             },
+            "network_activation_masks": network_mask_links,
         }
     else:
         # Candidate production builds are Linux-only. Windows-hosted fake
@@ -3624,6 +3843,7 @@ def _validate_target_root_install(
         "distribution_metadata_sha256": _sha256_file(metadata_path),
         "entrypoint_metadata_sha256": _sha256_file(entry_points_path),
         "service_unit_sha256": _sha256_file(service_path),
+        "service_network_policy": dict(AUTOLOADER_NETWORK_POLICY),
         "service_activation_sha256": _sha256_file(activation_path),
         "startup_script_sha256": _sha256_file(start_script_path),
         "runtime_smoke": runtime_document,
@@ -3684,6 +3904,13 @@ def execute_build(
                 # launcher pin keeps offline execution closed before builder
                 # work/output creation or package/build commands.
                 raise BuildContractError(str(exc)) from exc
+            # The installed-policy contract currently authorizes only the
+            # no-build preflight. Even if a future deployment makes that probe
+            # return SUPPORTED, there is no reviewed fixed build-execution
+            # protocol yet. Never fall through to the online runner here.
+            raise BuildContractError(
+                "OFFLINE_ROOTLESS_BUILD_RUNNER_UNAVAILABLE: no reviewed fixed offline build runner is deployed"
+            )
     source = config.source_root.resolve(strict=True)
     profile = config.profile_dir.resolve(strict=True)
     output = config.output_dir.resolve(strict=True)

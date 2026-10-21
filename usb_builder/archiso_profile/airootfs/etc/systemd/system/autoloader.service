@@ -5,6 +5,10 @@ Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=~CAP_SYS_ADMIN CAP_NET_ADMIN
+NoNewPrivileges=yes
 ExecStart=/opt/autoloader/start.sh
 User=root
 StandardInput=tty-force

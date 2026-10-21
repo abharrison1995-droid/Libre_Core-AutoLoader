@@ -139,14 +139,14 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
         profile / "syslinux" / "archiso_sys-linux.cfg",
         "LINUX /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux\n"
         "INITRD /%INSTALL_DIR%/boot/%ARCH%/initramfs-linux.img\n"
-        "APPEND archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS%\n",
+        "APPEND archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS% ip=off\n",
     )
     _write(profile / "efiboot" / "loader" / "loader.conf", "default 01-autoloader.conf\n")
     _write(
         profile / "efiboot" / "loader" / "entries" / "01-autoloader.conf",
         "linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux\n"
         "initrd /%INSTALL_DIR%/boot/%ARCH%/initramfs-linux.img\n"
-        "options archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS%\n",
+        "options archisobasedir=%INSTALL_DIR% %KERNEL_PARAMS% ip=off\n",
     )
     _write(
         profile / build_usb.ARCHISO_INITRAMFS_CONFIG_RELATIVE_PATH,
@@ -161,12 +161,29 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
         'COMPRESSION_OPTIONS=(-9e)\n',
     )
     _write_executable(profile / "airootfs" / "opt" / "autoloader" / "start.sh", "#!/bin/bash\nexit 0\n")
-    _write(
-        profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service",
-        "[Unit]\nDescription=AutoLoader\nAfter=getty@tty1.service\nConflicts=getty@tty1.service\n\n"
-        "[Service]\nExecStart=/opt/autoloader/start.sh\nRestart=no\nStandardOutput=journal+console\n",
+    service_path = profile / "airootfs" / "etc" / "systemd" / "system" / "autoloader.service"
+    service_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        build_usb.DEFAULT_PROFILE / "airootfs/etc/systemd/system/autoloader.service",
+        service_path,
     )
-    _write_executable(profile / "airootfs" / "root" / "customize_airootfs.sh", "#!/bin/bash\nexit 0\n")
+    mask_units = "\n".join(f'    "{unit}"' for unit in build_usb.NETWORK_DISABLED_SYSTEMD_UNITS)
+    mask_loop = (
+        'for unit in "${network_mask_units[@]}"; do\n'
+        '    ensure_systemd_link "/dev/null" "$systemd_dir/$unit"\n'
+        '    test -L "$systemd_dir/$unit"\n'
+        '    test "$(readlink -- "$systemd_dir/$unit")" = "/dev/null"\n'
+        "done"
+    )
+    hook = (
+        "#!/bin/bash\n"
+        "network_mask_units=(\n"
+        f"{mask_units}\n"
+        ")\n"
+        f"{mask_loop}\n"
+        "exit 0\n"
+    )
+    _write_executable(profile / "airootfs" / "root" / "customize_airootfs.sh", hook)
     lock = root / "usb_builder" / "snapshot.lock.json"
     lock.parent.mkdir(parents=True, exist_ok=True)
     lock.write_text(
@@ -305,6 +322,61 @@ def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
     }
     assert set(lock["required_boot_modes"]) == build_usb.REQUIRED_BOOT_MODES
     assert set(build_usb._profile_boot_modes(profile)) >= build_usb.REQUIRED_BOOT_MODES
+
+
+@pytest.mark.parametrize(
+    ("relative", "directive"),
+    [
+        ("syslinux/archiso_sys-linux.cfg", "APPEND"),
+        ("efiboot/loader/entries/01-autoloader.conf", "options"),
+    ],
+)
+def test_bios_and_uefi_boot_entries_disable_initramfs_ip_configuration(tmp_path, relative, directive):
+    profile, _ = _make_source(tmp_path / "source")
+    path = profile / relative
+    text = path.read_text(encoding="utf-8")
+    assert f"{directive} " in text
+    assert text.rstrip().endswith("ip=off")
+    build_usb._validate_offline_boot_arguments(profile)
+
+
+@pytest.mark.parametrize(
+    ("relative", "directive", "replacement"),
+    [
+        ("syslinux/archiso_sys-linux.cfg", "APPEND", ""),
+        ("syslinux/archiso_sys-linux.cfg", "APPEND", " ip=dhcp"),
+        ("efiboot/loader/entries/01-autoloader.conf", "options", ""),
+        ("efiboot/loader/entries/01-autoloader.conf", "options", " ip=dhcp"),
+    ],
+)
+def test_boot_entry_rejects_missing_or_network_enabled_ip_argument(tmp_path, relative, directive, replacement):
+    profile, _ = _make_source(tmp_path / "source")
+    path = profile / relative
+    path.write_text(path.read_text(encoding="utf-8").replace(" ip=off", replacement), encoding="utf-8")
+    with pytest.raises(build_usb.BuildContractError, match="sole ip=off"):
+        build_usb._validate_offline_boot_arguments(profile)
+
+
+@pytest.mark.parametrize("mutation", ["service", "mask-list", "mask-loop"])
+def test_source_preflight_requires_exact_offline_service_and_mask_policy(tmp_path, mutation):
+    config = _config(tmp_path)
+    if mutation == "service":
+        path = config.profile_dir / "airootfs/etc/systemd/system/autoloader.service"
+        path.write_bytes(
+            path.read_text(encoding="utf-8")
+            .replace("PrivateNetwork=yes", "PrivateNetwork=no")
+            .encode("utf-8")
+        )
+    else:
+        path = config.profile_dir / "airootfs/root/customize_airootfs.sh"
+        text = path.read_text(encoding="utf-8")
+        if mutation == "mask-list":
+            text = text.replace(build_usb.NETWORK_DISABLED_SYSTEMD_UNITS[0], "not-a-network-unit.service", 1)
+        else:
+            text = text.replace('test "$(readlink -- "$systemd_dir/$unit")" = "/dev/null"\n', "", 1)
+        path.write_bytes(text.encode("utf-8"))
+    with pytest.raises(build_usb.BuildContractError, match="AutoLoader service|network.mask"):
+        build_usb.preflight(config, host_platform="linux")
 
 
 def test_checked_in_snapshot_pins_rootless_archiso_helper_contract():
@@ -1358,6 +1430,12 @@ class _FakeBuilder:
         cli_help_output: str | None = None,
         runtime_help_width: int = build_usb.TARGET_ROOT_CLI_HELP_WIDTH,
         omit_systemd_symlink: str | None = None,
+        add_network_policy_dropin: bool = False,
+        mutate_target_network_policy: bool = False,
+        mutate_target_service: str = "",
+        add_service_dropin: str | None = None,
+        service_dropin_symlink: str | None = None,
+        higher_priority_unit_override: tuple[str, str] | None = None,
     ) -> None:
         self.calls: list[list[str]] = []
         self.call_kwargs: list[dict[str, Any]] = []
@@ -1385,6 +1463,12 @@ class _FakeBuilder:
         self.cli_help_output = cli_help_output
         self.runtime_help_width = runtime_help_width
         self.omit_systemd_symlink = omit_systemd_symlink
+        self.add_network_policy_dropin = add_network_policy_dropin
+        self.mutate_target_network_policy = mutate_target_network_policy
+        self.mutate_target_service = mutate_target_service
+        self.add_service_dropin = add_service_dropin
+        self.service_dropin_symlink = service_dropin_symlink
+        self.higher_priority_unit_override = higher_priority_unit_override
         self.pacman_conf_content = ""
 
     def __call__(self, command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
@@ -1645,18 +1729,32 @@ class _FakeBuilder:
             destination = root / "etc/systemd/system/autoloader.service"
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_service, destination)
+            if self.mutate_target_network_policy:
+                with destination.open("a", encoding="utf-8") as stream:
+                    stream.write("\n[Service]\nPrivateNetwork=no\n")
+            if self.mutate_target_service:
+                with destination.open("a", encoding="utf-8") as stream:
+                    stream.write(self.mutate_target_service)
         if self.activation:
             source_activation = staged_profile / "airootfs/etc/systemd/system/multi-user.target.d/autoloader.conf"
             destination = root / "etc/systemd/system/multi-user.target.d/autoloader.conf"
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_activation, destination)
         if sys.platform == "linux":
-            systemd_links = (
+            systemd_links = [
                 (
                     "autoloader_enablement",
                     "etc/systemd/system/multi-user.target.wants/autoloader.service",
                     "../autoloader.service",
                 ),
+            ]
+            systemd_links.extend(
+                (
+                    f"network_mask:{unit}",
+                    f"etc/systemd/system/{unit}",
+                    "/dev/null",
+                )
+                for unit in build_usb.NETWORK_DISABLED_SYSTEMD_UNITS
             )
             for link_name, relative, target in systemd_links:
                 if link_name == self.omit_systemd_symlink:
@@ -1664,6 +1762,30 @@ class _FakeBuilder:
                 link = root / relative
                 link.parent.mkdir(parents=True, exist_ok=True)
                 link.symlink_to(target)
+        if self.add_network_policy_dropin:
+            dropin = root / "etc/systemd/system/autoloader.service.d/10-network.conf"
+            _write(dropin, "[Service]\nPrivateNetwork=no\n")
+        if self.add_service_dropin is not None:
+            dropin = root / self.add_service_dropin
+            _write(dropin, "[Service]\nEnvironment=LC_TEST=1\n")
+        if self.service_dropin_symlink is not None:
+            dropin_dir = root / self.service_dropin_symlink
+            dropin_dir.parent.mkdir(parents=True, exist_ok=True)
+            dropin_dir.symlink_to(root / "etc/systemd/system", target_is_directory=True)
+        if self.higher_priority_unit_override is not None:
+            relative, kind = self.higher_priority_unit_override
+            unit_path = root / relative
+            unit_path.parent.mkdir(parents=True, exist_ok=True)
+            if kind == "regular":
+                _write(unit_path, "[Service]\nExecStart=+/bin/sh\n")
+            elif kind == "directory":
+                unit_path.mkdir()
+            elif kind == "symlink":
+                unit_path.symlink_to(root / "etc/systemd/system/autoloader.service")
+            elif kind == "dangling-symlink":
+                unit_path.symlink_to(root / "missing/autoloader.service")
+            else:
+                raise AssertionError(f"unknown higher-priority override fixture kind: {kind}")
 
 
 def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path):
@@ -1796,13 +1918,17 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     assert manifest["target_root_install"]["runtime_smoke"]["runtime_imports"] == sorted(
         build_usb.REQUIRED_RUNTIME_IMPORTS
     )
+    assert manifest["target_root_install"]["service_network_policy"] == build_usb.AUTOLOADER_NETWORK_POLICY
     if sys.platform == "linux":
-        assert manifest["target_root_install"]["systemd_links"] == {
-            "status": "CHECKED",
-            "autoloader_enablement": {
-                "path": "etc/systemd/system/multi-user.target.wants/autoloader.service",
-                "target": "../autoloader.service",
-            },
+        links = manifest["target_root_install"]["systemd_links"]
+        assert links["status"] == "CHECKED"
+        assert links["autoloader_enablement"] == {
+            "path": "etc/systemd/system/multi-user.target.wants/autoloader.service",
+            "target": "../autoloader.service",
+        }
+        assert links["network_activation_masks"] == {
+            unit: {"path": f"etc/systemd/system/{unit}", "target": "/dev/null"}
+            for unit in build_usb.NETWORK_DISABLED_SYSTEMD_UNITS
         }
     else:
         assert manifest["target_root_install"]["systemd_links"]["status"] == (
@@ -2347,9 +2473,13 @@ def test_candidate_build_fails_closed_when_target_install_or_service_is_missing(
     ("omitted_link", "expected_error"),
     [
         ("autoloader_enablement", "AutoLoader multi-user enablement symlink"),
+        (
+            "network_mask:NetworkManager.service",
+            "network activation mask for NetworkManager.service symlink",
+        ),
     ],
 )
-def test_candidate_build_fails_closed_when_systemd_enablement_link_is_missing(
+def test_candidate_build_fails_closed_when_required_systemd_link_is_missing(
     tmp_path: Path,
     omitted_link: str,
     expected_error: str,
@@ -2372,6 +2502,162 @@ def test_candidate_build_fails_closed_when_systemd_enablement_link_is_missing(
         )
 
     assert list(config.output_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    ("builder_options", "expected_error"),
+    [
+        ({"mutate_target_network_policy": True}, "target root AutoLoader unit differs from the exact reviewed source bytes"),
+        ({"add_network_policy_dropin": True}, "unreviewed AutoLoader service drop-in"),
+    ],
+)
+def test_candidate_build_rejects_target_root_network_policy_weakening(
+    tmp_path: Path,
+    builder_options: dict[str, Any],
+    expected_error: str,
+) -> None:
+    config = _config(tmp_path)
+    runner = _FakeBuilder(**builder_options)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(build_usb.BuildContractError, match=expected_error):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+
+    assert list(config.output_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "directive",
+    (
+        "NetworkNamespacePath=/run/netns/host\n",
+        "ExecStart=+/bin/sh\n",
+        "ExecStartPre=+/usr/bin/id\n",
+    ),
+)
+def test_candidate_build_rejects_unreviewed_base_service_directives(tmp_path, directive):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(mutate_target_service=f"\n[Service]\n{directive}")
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(
+        build_usb.BuildContractError,
+        match="target root AutoLoader unit differs from the exact reviewed source bytes",
+    ):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+
+    assert list(config.output_dir.iterdir()) == []
+    assert not (config.output_dir / "build-provenance.json").exists()
+
+
+@pytest.mark.parametrize(
+    "relative_dropin",
+    (
+        "etc/systemd/system.control/autoloader.service.d/10-extra.conf",
+        "run/systemd/system.control/service.d/10-extra.conf",
+        "run/systemd/system/autoloader.service.d/10-extra.conf",
+        "usr/lib/systemd/system/service.d/10-extra.conf",
+    ),
+)
+def test_candidate_build_rejects_any_unreviewed_effective_service_dropin(tmp_path, relative_dropin):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(add_service_dropin=relative_dropin)
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(build_usb.BuildContractError, match="unreviewed AutoLoader service drop-in"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+
+    assert list(config.output_dir.iterdir()) == []
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="target-root POSIX symlink contract")
+def test_candidate_build_rejects_symlinked_system_control_service_dropin_path(tmp_path):
+    config = _config(tmp_path)
+    runner = _FakeBuilder(
+        service_dropin_symlink="etc/systemd/system.control/autoloader.service.d"
+    )
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(build_usb.BuildContractError, match="unsafe AutoLoader service policy override path"):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+
+    assert list(config.output_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    ("relative_unit", "kind"),
+    (
+        ("etc/systemd/system.control/autoloader.service", "regular"),
+        ("run/systemd/generator.early/autoloader.service", "regular"),
+        ("run/systemd/system.control/autoloader.service", "directory"),
+        ("run/systemd/transient/autoloader.service", "dangling-symlink"),
+        ("etc/systemd/system.control/autoloader.service", "symlink"),
+    ),
+)
+def test_candidate_build_rejects_higher_priority_autoloader_unit_paths(tmp_path, relative_unit, kind):
+    if kind in {"symlink", "dangling-symlink"} and sys.platform != "linux":
+        pytest.skip("target-root POSIX symlink contract")
+    config = _config(tmp_path)
+    runner = _FakeBuilder(higher_priority_unit_override=(relative_unit, kind))
+    fake_tools = tmp_path / "fake-tools"
+    fake_tools.mkdir()
+    fake_mkarchiso = fake_tools / "mkarchiso"
+    _write_executable(fake_mkarchiso, "synthetic mkarchiso executable fixture\n")
+
+    with pytest.raises(
+        build_usb.BuildContractError,
+        match="unreviewed higher-priority AutoLoader unit",
+    ):
+        build_usb.execute_build(
+            config,
+            host_platform="linux",
+            mkarchiso_path=str(fake_mkarchiso),
+            runner=runner,
+            mountpoints_reader=lambda: (),
+            clock=lambda: 1_800_000_000,
+        )
+
+    assert list(config.output_dir.iterdir()) == []
+    assert not (config.output_dir / "build-provenance.json").exists()
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="target-root POSIX symlink contract")
@@ -4390,6 +4676,69 @@ def test_production_offline_build_stays_closed_after_rootless_preflight(tmp_path
     assert list(config.work_parent.iterdir()) == []
 
 
+def test_production_offline_build_never_uses_online_runner_after_supported_probe(tmp_path, monkeypatch):
+    config = _offline_config(tmp_path)
+    host = SimpleNamespace(
+        uid=1000,
+        arch_install_scripts_package_version=build_usb.EXPECTED_ARCH_INSTALL_SCRIPTS_VERSION,
+        trusted_tools=(
+            SimpleNamespace(name="pacstrap", path="/usr/bin/pacstrap", sha256="a" * 64),
+            SimpleNamespace(name="arch-chroot", path="/usr/bin/arch-chroot", sha256="b" * 64),
+        ),
+    )
+    mount = {"status": "SUPPORTED", "probe": "synthetic-rootless-mount-report"}
+    offline_probe_calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(build_usb, "_rootless_archiso_host_preflight", lambda **_kwargs: host)
+    monkeypatch.setattr(build_usb, "_assert_rootless_process_state", lambda _host: None)
+    monkeypatch.setattr(build_usb, "_rootless_archiso_mount_preflight", lambda *_args, **_kwargs: mount)
+
+    def accepted_synthetic_probe(**kwargs):
+        offline_probe_calls.append(kwargs)
+        # Represents the strict validator's synthetic success fixture. It is
+        # test data only and provides no real deployment or compatibility proof.
+        return {
+            "schema": build_usb.rootless_offline_preflight.REPORT_SCHEMA,
+            "status": "SUPPORTED",
+            "probe_token": "e" * 64,
+            "launcher_sha256": "f" * 64,
+            "network": {"namespace_interfaces": ["lo"], "ipv4_routes": [], "ipv6_routes": []},
+        }
+
+    monkeypatch.setattr(build_usb.rootless_offline_preflight, "preflight", accepted_synthetic_probe)
+    online_calls: list[str] = []
+
+    def reject_online_path(*_args, **_kwargs):
+        online_calls.append("called")
+        raise AssertionError("offline build must never select the online runner")
+
+    monkeypatch.setattr(build_usb, "_rootless_online_network_isolation", reject_online_path)
+    monkeypatch.setattr(build_usb, "_rootless_online_runner", reject_online_path)
+    command_calls: list[str] = []
+
+    def reject_build_command(*_args, **_kwargs):
+        command_calls.append("command")
+        raise AssertionError("offline build must not invoke package or build commands")
+
+    monkeypatch.setattr(build_usb, "_run_command", reject_build_command)
+    monkeypatch.setattr(build_usb.shutil, "which", reject_build_command)
+    monkeypatch.setattr(build_usb.subprocess, "run", reject_build_command)
+
+    with pytest.raises(
+        build_usb.BuildContractError,
+        match="OFFLINE_ROOTLESS_BUILD_RUNNER_UNAVAILABLE",
+    ):
+        build_usb.execute_build(config, host_platform="linux", runner=build_usb.subprocess.run)
+
+    assert len(offline_probe_calls) == 1
+    assert offline_probe_calls[0]["host"] is host
+    assert offline_probe_calls[0]["mount"] is mount
+    assert online_calls == []
+    assert command_calls == []
+    assert list(config.output_dir.iterdir()) == []
+    assert list(config.work_parent.iterdir()) == []
+    assert not (config.output_dir / "build-provenance.json").exists()
+
+
 def test_rootless_online_runner_sanitizes_environment_and_stdio(monkeypatch, tmp_path):
     host = SimpleNamespace(uid=1000, username="builder")
     monkeypatch.setattr(build_usb, "_rootless_build_home", lambda _host: "/home/builder")
@@ -5192,6 +5541,12 @@ def test_rootfs_service_logs_startup_without_root_shell_or_restart_loop():
     assert "Conflicts=getty@tty1.service" in service
     assert "Restart=no" in service
     assert "journal+console" in service
+    build_usb._validate_service_network_policy(service, label="checked-in AutoLoader service")
+    assert "PrivateNetwork=yes" in service
+    assert "RestrictAddressFamilies=AF_UNIX" in service
+    assert "CapabilityBoundingSet=~CAP_SYS_ADMIN CAP_NET_ADMIN" in service
+    assert "NoNewPrivileges=yes" in service
+    build_usb._validate_offline_boot_arguments(profile)
     assert "journalctl -u autoloader.service" in startup
     assert "exec /opt/autoloader/venv/bin/python -m autoloader run" in startup
     assert "exec /bin/bash" not in startup
@@ -5199,6 +5554,12 @@ def test_rootfs_service_logs_startup_without_root_shell_or_restart_loop():
     assert "dialog" not in startup
     assert "--no-index" in hook and "--no-deps" in hook
     assert 'ensure_systemd_link "../autoloader.service"' in hook
+    network_list = hook.split("network_mask_units=(\n", 1)[1].split("\n)", 1)[0]
+    assert tuple(re.findall(r'^\s*"([^"\\]+)"\s*$', network_list, flags=re.MULTILINE)) == (
+        build_usb.NETWORK_DISABLED_SYSTEMD_UNITS
+    )
+    assert 'ensure_systemd_link "/dev/null" "$systemd_dir/$unit"' in hook
+    assert 'test "$(readlink -- "$systemd_dir/$unit")" = "/dev/null"' in hook
     assert "systemd-nsresourced" not in hook
     assert not enabled.exists(), "activation drop-in is generated in the isolated staging profile"
     assert not (profile / "airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf").exists()

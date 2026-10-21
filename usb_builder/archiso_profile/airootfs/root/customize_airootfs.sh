@@ -24,6 +24,10 @@ test -x /opt/autoloader/start.sh
 test -f /etc/systemd/system/autoloader.service
 test -f /etc/systemd/system/multi-user.target.d/autoloader.conf
 grep -Fxq 'Wants=autoloader.service' /etc/systemd/system/multi-user.target.d/autoloader.conf
+grep -Fxq 'PrivateNetwork=yes' /etc/systemd/system/autoloader.service
+grep -Fxq 'RestrictAddressFamilies=AF_UNIX' /etc/systemd/system/autoloader.service
+grep -Fxq 'CapabilityBoundingSet=~CAP_SYS_ADMIN CAP_NET_ADMIN' /etc/systemd/system/autoloader.service
+grep -Fxq 'NoNewPrivileges=yes' /etc/systemd/system/autoloader.service
 
 systemd_dir="/etc/systemd/system"
 ensure_systemd_link() {
@@ -48,6 +52,35 @@ mkdir -p "$systemd_dir/multi-user.target.wants"
 ensure_systemd_link "../autoloader.service" "$systemd_dir/multi-user.target.wants/autoloader.service"
 test -L "$systemd_dir/multi-user.target.wants/autoloader.service"
 test "$(readlink -- "$systemd_dir/multi-user.target.wants/autoloader.service")" = "../autoloader.service"
+
+# Stop automatic network configuration in the live image. The AutoLoader
+# service is additionally isolated to its own network namespace below.
+network_mask_units=(
+    "NetworkManager.service"
+    "NetworkManager-dispatcher.service"
+    "NetworkManager-wait-online.service"
+    "avahi-daemon.service"
+    "avahi-daemon.socket"
+    "connman.service"
+    "dhcpcd.service"
+    "dhcpcd@.service"
+    "iwd.service"
+    "systemd-networkd.service"
+    "systemd-networkd.socket"
+    "systemd-networkd-wait-online.service"
+    "systemd-networkd-wait-online@.service"
+    "systemd-resolved.service"
+    "systemd-resolved.socket"
+    "systemd-timesyncd.service"
+    "systemd-timesyncd.socket"
+    "wpa_supplicant.service"
+    "wpa_supplicant@.service"
+)
+for unit in "${network_mask_units[@]}"; do
+    ensure_systemd_link "/dev/null" "$systemd_dir/$unit"
+    test -L "$systemd_dir/$unit"
+    test "$(readlink -- "$systemd_dir/$unit")" = "/dev/null"
+done
 
 /opt/autoloader/venv/bin/autoloader --help >/dev/null
 /opt/autoloader/venv/bin/python - "${wheels[0]}" <<'PY'
