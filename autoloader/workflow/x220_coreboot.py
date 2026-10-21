@@ -63,6 +63,7 @@ from autoloader.workflow.types import (
 )
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_X220_OPERATION_BUILD_SOURCE = PurePosixPath("work/coreboot-x220")
 _REGION_ROWS = (
     "Flash Region 0 (Flash Descriptor): 00000000 - 00000fff",
     "Flash Region 1 (GbE): 00001000 - 00002fff",
@@ -623,10 +624,32 @@ class X220CorebootWorkflow:
         generated_path = Path(generated_commands[0][2])
         if generated_path.name != "coreboot.rom" or generated_path.parent.name != "build":
             raise ValueError("X220 generated output path differs from the pinned build/coreboot.rom target")
-        source_root_unresolved = generated_path.parents[1]
-        if _path_has_link_component(source_root_unresolved) or not source_root_unresolved.is_dir():
-            raise ValueError("X220 generated source root is unsafe")
-        source_root = source_root_unresolved.resolve(strict=True)
+        expected_source_root = operation_root.joinpath(*_X220_OPERATION_BUILD_SOURCE.parts)
+        expected_raw_image = expected_source_root / "build" / "coreboot.rom"
+        if (
+            _path_has_link_component(expected_source_root)
+            or not expected_source_root.is_dir()
+            or not generated_path.is_absolute()
+            or _path_has_link_component(generated_path)
+            or not generated_path.is_file()
+            or _path_has_link_component(expected_raw_image)
+            or not expected_raw_image.is_file()
+        ):
+            raise ValueError("X220 operation-owned Coreboot source or generated image is missing or unsafe")
+        source_root = expected_source_root.resolve(strict=True)
+        try:
+            source_relative_to_operation = source_root.relative_to(operation_root)
+            generated_resolved = generated_path.resolve(strict=True)
+            expected_generated_resolved = expected_raw_image.resolve(strict=True)
+        except (OSError, ValueError) as exc:
+            raise ValueError("X220 operation-owned Coreboot source path cannot be resolved safely") from exc
+        if (
+            source_relative_to_operation != Path(*_X220_OPERATION_BUILD_SOURCE.parts)
+            or generated_resolved != expected_generated_resolved
+        ):
+            raise ValueError(
+                "X220 generated source root must be the operation-owned work/coreboot-x220 checkout"
+            )
         if manifest.source_files != tuple((item.path, item.sha256) for item in COREBOOT_2609.files):
             raise ValueError("X220 manifest pinned source-file set differs from Coreboot 26.09")
         for path, digest in manifest.source_files:

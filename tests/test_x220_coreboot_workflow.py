@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import uuid
 from dataclasses import asdict, replace
 from datetime import datetime, timedelta, timezone
@@ -314,6 +315,81 @@ def test_x220_completed_result_reopens_and_accepts_retained_operation_checkout(t
     assert accepted.proposed_external_spi_plan is not None
     assert accepted.proposed_external_spi_plan.artifact_manifest_path == str(result.manifest_path.resolve())
     assert not (build_source / "site-local").exists()
+
+
+def test_x220_rejects_checksum_valid_manifest_using_external_pinned_checkout(tmp_path, monkeypatch):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    assert result.manifest is not None and result.manifest_path is not None
+
+    operation_root = result.manifest_path.parent
+    operation_source = operation_root / "work" / "coreboot-x220"
+    external_source = tmp_path / "external-valid-coreboot-checkout"
+    shutil.copytree(operation_source, external_source)
+    for pinned_file in fake_pin.files:
+        copied = external_source / Path(*Path(pinned_file.path).parts)
+        assert copied.is_file()
+        assert hashlib.sha256(copied.read_bytes()).hexdigest() == pinned_file.sha256
+
+    external_raw = external_source / "build" / "coreboot.rom"
+    commands = []
+    for command in result.manifest.commands:
+        argv = list(command.argv)
+        changed = False
+        tool_name = Path(argv[0]).name
+        if tool_name == "ifdtool":
+            argv[0] = str(external_source / "util" / "ifdtool" / "ifdtool")
+            if Path(argv[2]).name == "coreboot.rom":
+                argv[2] = str(external_raw)
+            changed = True
+        elif tool_name == "cbfstool":
+            argv[0] = str(external_source / "util" / "cbfstool" / "cbfstool")
+            argv[1] = str(external_raw)
+            changed = True
+
+        if not changed:
+            commands.append(command)
+            continue
+        log_path = operation_root / Path(*Path(command.log_relative_path).parts)
+        log_bytes = log_path.read_bytes()
+        _old_header, separator, output = log_bytes.partition(b"\n")
+        assert separator == b"\n"
+        updated_log = ("$ " + " ".join(argv) + "\n").encode("utf-8") + output
+        log_path.write_bytes(updated_log)
+        commands.append(replace(
+            command,
+            argv=tuple(argv),
+            log_sha256=hashlib.sha256(updated_log).hexdigest(),
+        ))
+
+    forged_manifest = replace(result.manifest, commands=tuple(commands))
+    checksum_valid_result = _rewrite_manifest(result, forged_manifest)
+    reopened = ArtifactEngine().load_completed_result(checksum_valid_result.manifest_path)
+    blocked = workflow.accept_artifact_result(reopened)
+
+    assert blocked.stage is X220WorkflowStage.BLOCKED
+    assert any("operation-owned work/coreboot-x220" in reason for reason in blocked.reasons)
+
+
+def test_x220_rejects_symlink_component_in_operation_owned_checkout(tmp_path, monkeypatch):
+    workflow, _backup, _original, fake_pin, source_bytes, _module = _prepare(tmp_path, monkeypatch)
+    result = _fake_result(tmp_path / "artifact", workflow, fake_pin, source_bytes)
+    operation_source = result.manifest_path.parent / "work" / "coreboot-x220"
+    path_type = type(operation_source)
+    real_is_symlink = path_type.is_symlink
+
+    def report_checkout_as_symlink(path):
+        if path == operation_source:
+            return True
+        return real_is_symlink(path)
+
+    # Simulate a symlink/junction report portably, including Windows systems
+    # where creating directory links may require elevated privileges.
+    monkeypatch.setattr(path_type, "is_symlink", report_checkout_as_symlink)
+    blocked = workflow.accept_artifact_result(result)
+
+    assert blocked.stage is X220WorkflowStage.BLOCKED
+    assert any("operation-owned Coreboot source" in reason and "unsafe" in reason for reason in blocked.reasons)
 
 
 def test_x220_persisted_operation_plan_roundtrips_provenance_and_tampering_blocks(

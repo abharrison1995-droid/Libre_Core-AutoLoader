@@ -22,6 +22,7 @@ from autoloader.rom_builder.artifact_engine import (
     X220_COREBOOT,
     ArtifactEngine,
     ArtifactManifest,
+    BackupProvenanceRecord,
     BuildRequest,
     BuildStatus,
     CBFSInspectionRecord,
@@ -1781,8 +1782,6 @@ def test_x220_isolated_checkout_stages_and_removes_blobs_without_mutating_caller
 def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure_stage: str
 ) -> None:
-    import autoloader.rom_builder.artifact_engine as module
-
     _module, recipe, engine, source, source_audit = _make_minimal_pinned_x220_checkout(tmp_path, monkeypatch)
     from autoloader.rom_builder.artifact_engine import BlobInput
 
@@ -1812,7 +1811,7 @@ def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
         backup_set=SimpleNamespace(),  # type: ignore[arg-type]
     )
     monkeypatch.setattr(
-        module,
+        _module,
         "validate_x220_backup_evidence",
         lambda *_args: (b"synthetic original backup", SimpleNamespace()),
     )
@@ -1884,7 +1883,7 @@ def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
     assert not result.artifacts
 
 
-def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_result(
+def test_x220_fake_engine_failure_stays_failed_and_valid_output_publishes_complete(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import autoloader.rom_builder.artifact_engine as module
@@ -1893,10 +1892,25 @@ def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_r
     backup_fixture_root = tmp_path / "backup-fixture"
     backup_fixture_root.mkdir()
     intent, backup, regions, blob_inputs, original = _make_x220_backup_fixture(backup_fixture_root)
+    intent = replace(
+        intent,
+        source_url=recipe.source.repository_url,
+        source_revision=recipe.source.revision,
+        source_tree_id=recipe.source.tree_id,
+    )
+    synthetic_provenance = BackupProvenanceRecord(
+        operation_id=backup.operation_id,
+        profile_id=backup.profile_id,
+        primary_manifest_sha256=backup.primary_manifest_sha256,
+        recovery_manifest_sha256=backup.recovery_manifest_sha256,
+        original_chip_sha256=backup.chips[0].first_sha256,
+        build_intent_sha256=hashlib.sha256(b"synthetic fixture build intent").hexdigest(),
+        preserved_regions=("gbe", "ifd", "me"),
+    )
     monkeypatch.setattr(
         module,
         "validate_x220_backup_evidence",
-        lambda *_args: (original, SimpleNamespace()),
+        lambda *_args: (original, synthetic_provenance),
     )
     monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("fixture", "no tool executed"),))
     request = BuildRequest(
@@ -1919,6 +1933,7 @@ def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_r
         f"{symbol}={value}" for symbol, value in recipe.config_expectations
     ) + "\n"
     successful_make_commands: list[tuple[str, ...]] = []
+    cbfs_output = "unexpected parser output after the Coreboot commands completed\n"
 
     def record_command(argv, logs_dir, command_records, output="", exit_code=0):
         log_path = Path(logs_dir) / f"{len(command_records) + 1:02d}.log"
@@ -1974,7 +1989,7 @@ def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_r
             output = ifd_output
         else:
             assert Path(argv[0]).name == "cbfstool"
-            output = "unexpected parser output after the Coreboot commands completed\n"
+            output = cbfs_output
         record_command(argv, logs_dir, commands, output)
         return output
 
@@ -2006,6 +2021,26 @@ def test_x220_cbfs_parser_failure_after_build_commands_cannot_publish_complete_r
     assert engine.inspect_source(recipe.recipe_id, source) == source_audit
     with pytest.raises(ValueError, match="Only a COMPLETE persisted artifact"):
         ArtifactEngine().load_completed_result(result.manifest_path)
+
+    # A valid parser result from the same fake command boundary exercises the
+    # positive publication path through ArtifactEngine itself, without a real
+    # compiler or hardware input.
+    cbfs_output = "\n".join((
+        "Name\tOffset\tType\tMetadata Size\tData Size\tTotal Size",
+        "fallback/payload\t0x0\tpayload\t0x10\t0x1000\t0x1010",
+    ))
+    complete = engine._build_linux(recipe, request)
+    assert complete.status is BuildStatus.COMPLETE, complete.message
+    assert complete.manifest is not None and complete.manifest_path is not None
+    assert complete.manifest.status == "complete"
+    reopened_complete = ArtifactEngine().load_completed_result(complete.manifest_path)
+    assert reopened_complete.status is BuildStatus.COMPLETE
+    assert reopened_complete.manifest is not None
+    assert reopened_complete.manifest.selected_artifact_sha256 == complete.manifest.selected_artifact_sha256
+    complete_source = complete.manifest_path.parent / "work" / "coreboot-x220"
+    assert not (complete_source / "site-local").exists()
+    assert (complete_source / "build" / "coreboot.rom").is_file()
+    assert engine.inspect_source(recipe.recipe_id, source) == source_audit
 
 
 def test_x220_backup_evidence_binds_blobs_to_matching_full_chip_backup(tmp_path: Path) -> None:
