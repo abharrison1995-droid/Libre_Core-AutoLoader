@@ -135,16 +135,23 @@ passed 50 tests with 4 skipped (972 deselected), and top-level plus
 `build-usb --help` passed. An exploratory full native suite stopped at about
 7% after errors with no JUnit; native targeted mypy raised an internal error.
 The four current-source Archiso build attempts produced no ISO; subsequent
-startup retries 3–13 were diagnostics, not native build/test gates, and also
+startup retries 3–14 were diagnostics, not native build/test gates, and also
 produced no ISO. Retry13 reached only a systemd debug shell: read-only `id` and
 `lsblk` showed root and the expected ISO, workspace, results, and read-only
 source devices. At that query snapshot, 88 jobs were pending around
 `systemd-nsresourced` and tmpfiles; later in the transcript systemd printed
 `[FAILED] Failed to start Namespace Resource Manager` (cause not established).
 No normal live boot, rootless preflight,
-native build gate, or product ISO passed. The ISO hash was unchanged. See
-[current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md)
-and the [retry13 transcript and result](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+native build gate, or product ISO passed. Retry14 then ran a 600.376-second
+observation-only diagnostic with the same ISO and fresh workspace/results
+overlays. The live stop-marker scanner did not strip ANSI escapes; the separate
+post-run normalized audit found four Namespace Resource Manager failures,
+zero normal startup target markers, and zero emergency/fatal markers. Its cause
+is unknown. ISO, kernel, initramfs, and source-image before/after hash records
+matched; free space stayed at 153.786 GiB. No guest input or native test/build
+ran. See the [current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md),
+[retry13 transcript and result](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
+and [retry14 observation bundle](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
 Native build remains open until normal userspace and the reviewed rootless
 preflight are ready. Hardware remains pending for all three devices.
 

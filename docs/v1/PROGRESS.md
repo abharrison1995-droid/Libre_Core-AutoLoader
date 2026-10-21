@@ -1524,3 +1524,24 @@ rootless preflight must pass before the native build gate can continue. The
 full transcript, exact arguments, helper hashes, selected retry6 screenshot,
 and run result are in the [retry13 evidence bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md)
 and the [native build evidence index](evidence/native-arch-build-20261021/README.md).
+
+### Native Arch startup observation-only follow-up — retry14
+
+Retry14 followed retry13's later Namespace Resource Manager failure with a
+bounded generic Arch ISO observation. QEMU 10.2.1 ran under TCG multi-thread
+with 4 vCPUs and 6144 MiB for 600.376 seconds, then exited 0 after QMP quit.
+The ISO and source were read-only, workspace/results used fresh overlays, and
+there was no network, passthrough, or guest input. Free space stayed at
+153.786 GiB; raw serial output was 10,040 bytes.
+
+The live stop-marker scanner did not remove ANSI escapes, so its null match is
+not evidence that terminal markers were absent. The separate post-run
+ANSI-stripped audit found four Namespace Resource Manager failures, zero
+normal startup target markers, and zero emergency/fatal terminal markers. The
+cause is unknown. Before/after input-hash records match for the ISO, kernel,
+initramfs, and source image. No native tests, rootless preflight,
+current-source build, or product ISO ran; no device or hardware was accessed.
+Native Linux startup/build gates remain open. The raw and normalized captures,
+audit, exact arguments, and checksums are in the [retry14 evidence
+bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md)
+and [native evidence index](evidence/native-arch-build-20261021/README.md).

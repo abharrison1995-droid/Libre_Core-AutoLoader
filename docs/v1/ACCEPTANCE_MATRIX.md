@@ -25,18 +25,22 @@ Current-source native Arch status: the focused X220 selection passed 50 tests,
 4 skipped, and 972 deselected; top-level and `build-usb --help` passed. The
 exploratory full native suite stopped at about 7% after errors without JUnit,
 and native targeted mypy raised an internal error. Four current-source
-Archiso build attempts produced no ISO; subsequent startup retries 3–13 were
+Archiso build attempts produced no ISO; subsequent startup retries 3–14 were
 diagnostics rather than build/test gates and also produced no ISO. Retry13
 reached only a systemd debug shell: read-only `id` and `lsblk` showed root and
 the expected device map. At that query snapshot, 88 systemd jobs remained
 pending around `systemd-nsresourced` and tmpfiles; later in the transcript
 systemd printed `[FAILED] Failed to start Namespace Resource Manager` (cause
-not established). The ISO hash was unchanged. No normal live
-boot, rootless preflight, current-source build gate, or product ISO passed.
-The native build remains open until normal userspace and the reviewed
-rootless preflight are ready. Details and hashes are in [current-source native
-Arch evidence](evidence/native-arch-build-20261021/README.md) and the
-[retry13 diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+not established). Retry14 then observed the generic ISO for 600.376 seconds
+with no guest input. Its live stop-marker scanner did not strip ANSI; a
+post-run normalized audit found four Namespace Resource Manager failures, zero
+normal startup target markers, and zero emergency/fatal markers. The cause is
+unknown. ISO, kernel, initramfs, and source-image before/after hashes matched;
+free space stayed at 153.786 GiB. No normal live boot, rootless preflight,
+current-source build gate, or product ISO passed. Details and hashes are in
+[current-source native Arch evidence](evidence/native-arch-build-20261021/README.md),
+the [retry13 diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
+and the [retry14 observation bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
 
 ## Historical native Archiso candidate and QEMU boot — source revision `be2fece`
 
@@ -62,9 +66,12 @@ verified backup evidence, and no physical acceptance workflow has been run.
 The current-source debug-shell diagnostic reached only a systemd shell, not a
 normal live boot. It showed root identity and the expected ISO, workspace,
 results, and read-only source map, but 88 jobs remained pending around
-`systemd-nsresourced` and tmpfiles. No native suite/build gate or product ISO
-passed; see the current-source status above and the [retry13 evidence
-bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+`systemd-nsresourced` and tmpfiles at the query snapshot. The later transcript
+recorded a Namespace Resource Manager failure; retry14's post-run scan found
+four such failure markers without establishing cause. No native suite/build
+gate or product ISO passed; see the current-source status above, the [retry13
+evidence bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
+and [retry14 evidence](evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md).
 
 ## Live USB runtime network profile update — 2026-10-20
 

@@ -1,0 +1,137 @@
+[    2.306718] virt/tdx: TDX not supported by the host platform
+:: running early hook [udev]
+Starting systemd-udevd version 262-1-arch
+:: running early hook [archiso_pxe_nbd]
+:: running hook [udev]
+:: Triggering uevents...
+:: running hook [memdisk]
+:: running hook [archiso]
+:: running hook [archiso_loop_mnt]
+:: running hook [archiso_pxe_common]
+:: running hook [archiso_pxe_nbd]
+:: running hook [archiso_pxe_http]
+:: running hook [archiso_pxe_nfs]
+:: Mounting '/dev/sr0' to '/run/archiso/bootmnt'
+:: Device '/dev/sr0' mounted successfully.
+:: Mounting /run/archiso/cowspace (tmpfs) filesystem, size=256M...
+:: Mounting '/dev/loop0' to '/run/archiso/airootfs'
+:: Device '/dev/loop0' mounted successfully.
+:: running late hook [archiso_pxe_common]
+:: running cleanup hook [udev]
++q6E616D6578104
+Welcome to Arch Linux!
+
+3008;start=3a983bfa68154ca586be3b76aa5be6f2;user=root;hostname=archiso;machineid=f92b1f498a544bbbbaeac36ad03545bb;bootid=5e5efc0f0a0e4451b25685750e1a00ee;pid=1;pidfdid=1;comm=systemd;type=boot[  OK  ] Created slice Slice /system/dirmngr.
+[  OK  ] Created slice Slice /system/getty.
+[  OK  ] Created slice Slice /system/gpg-agent.
+[  OK  ] Created slice Slice /system/gpg-agent-browser.
+[  OK  ] Created slice Slice /system/gpg-agent-extra.
+[  OK  ] Created slice Slice /system/gpg-agent-ssh.
+[  OK  ] Created slice Slice /system/keyboxd.
+[  OK  ] Created slice Slice /system/modprobe.
+[  OK  ] Created slice User and Session Slice.
+[  OK  ] Started Dispatch Password Requests to Console Directory Watch.
+[  OK  ] Started Forward Password Requests to Wall Directory Watch.
+[  OK  ] Set up automount Arbitrary Executa…ormats File System Automount Point.
+[  OK  ] Reached target Local dm-clone Devices.
+[  OK  ] Reached target Image Downloads.
+[  OK  ] Reached target Local Integrity Protected Volumes.
+[  OK  ] Reached target Path Units.
+[  OK  ] Reached target Remote Encrypted Volumes.
+[  OK  ] Reached target Remote File Systems.
+[  OK  ] Reached target Remote Integrity Protected Volumes.
+[  OK  ] Reached target Remote Verity Protected Volumes.
+[  OK  ] Reached target Slice Units.
+[  OK  ] Reached target Swaps.
+[  OK  ] Reached target Local Verity Protected Volumes.
+[  OK  ] Listening on Device-mapper event daemon FIFOs.
+[  OK  ] Listening on LVM2 poll daemon socket.
+[  OK  ] Listening on Query the User Interactively for a Password.
+[  OK  ] Listening on Process Core Dump Socket.
+[  OK  ] Listening on Credential Encryption/Decryption.
+[  OK  ] Listening on Disk Encryption Enrollment Service Socket.
+[  OK  ] Listening on Factory Reset Management.
+[  OK  ] Listening on Hostname Service Socket.
+[  OK  ] Listening on Journal Audit Socket.
+[  OK  ] Listening on Journal Socket (/dev/log).
+[  OK  ] Listening on Journal Sockets.
+[  OK  ] Listening on DDI File System Mounter Socket.
+[  OK  ] Listening on Console Output Muting Service Socket.
+[  OK  ] Listening on Network Management Metrics Varlink Socket.
+[  OK  ] Listening on Network Management Varlink Socket.
+[  OK  ] Listening on Network Management Netlink Socket.
+[  OK  ] Listening on Namespace Resource Manager Socket.
+[  OK  ] Listening on Disk Repartitioning Service Socket.
+[  OK  ] Listening on Report System Basic Metrics Socket.
+[  OK  ] Listening on CGroup Report Varlink Socket.
+[  OK  ] Listening on Report Files Metrics Socket.
+[  OK  ] Listening on Report Signing Socket (Local Software Key).
+[  OK  ] Listening on System Report Socket.
+[  OK  ] Listening on Resolve Monitor Varlink Socket.
+[  OK  ] Listening on Resolve Service Varlink Socket.
+[  OK  ] Listening on Simple Block Device Backed Storage Provider.
+[  OK  ] Listening on Simple File System Backed Storage Provider.
+[  OK  ] Listening on System Install Tool.
+[  OK  ] Listening on System Updates.
+[  OK  ] Listening on udev Kernel Socket.
+[  OK  ] Listening on udev Varlink Socket.
+[  OK  ] Listening on User Database Manager Socket.
+         Mounting Huge Pages File System...
+         Mounting POSIX Message Queue File System...
+         Mounting Kernel Debug File System...
+         Mounting Kernel Trace File System...
+         Mounting Temporary Directory /tmp...
+[  OK  ] Started Early root shell on /dev/ttyS0 FOR DEBUGGING ONLY.
+10478         Starting Create List of Static Device Nodes...
+         Starting Monitoring of LVM2 mirror…ing dmeventd or progress polling...
+104         Mounting Kernel Configuration File System...
+78         Mounting FUSE Control File System...
+3008;start=7d5b07bc964049d1bfac373c8af6d73f;user=root;hostname=archiso;machineid=f92b1f498a544bbbbaeac36ad03545bb;bootid=5e5efc0f0a0e4451b25685750e1a00ee;pid=472;pidfdid=151;comm=(sh);servicename=debug-shell.service;invocationid=96ab8e4050c14218967ef51be40854f8;type=service         Starting Journal Service...
+         Starting Load Kernel Modules...
+         Starting Generate Network Units from Kernel Command Line...
+         Starting Remount Root and Kernel File Systems...
+         Starting Wait Until Kernel Time Synchronized...
+[  OK  ] Reached target Local Encrypted Volumes.
+         Starting Load udev Rules from Credentials...
+         Starting Coldplug All udev Devices...
+sh-5.3# [  OK  ] Mounted Huge Pages File System.
+[  OK  ] Mounted POSIX Message Queue File System.
+[  OK  ] Mounted Kernel Debug File System.
+[  OK  ] Mounted Kernel Trace File System.
+[  OK  ] Mounted Temporary Directory /tmp.
+[  OK  ] Finished Create List of Static Device Nodes.
+[  OK  ] Mounted Kernel Configuration File System.
+[  OK  ] Mounted FUSE Control File System.
+         Starting Create Static Device Nodes in /dev gracefully...
+[  OK  ] Finished Generate Network Units from Kernel Command Line.
+[  OK  ] Reached target Preparation for Network.
+[  OK  ] Listening on Network Management Resolve Hook Socket.
+[  OK  ] Finished Remount Root and Kernel File Systems.
+         Starting Load/Save OS Random Seed...
+[  OK  ] Finished Load udev Rules from Credentials.
+[  OK  ] Finished Load/Save OS Random Seed.
+[  OK  ] Finished Load Kernel Modules.
+         Starting Apply Kernel Variables...
+[  OK  ] Finished Monitoring of LVM2 mirror…using dmeventd or progress polling.
+[  OK  ] Started Journal Service.
+         Starting Flush Journal to Persistent Storage...
+[  OK  ] Finished Apply Kernel Variables.
+[  OK  ] Finished Flush Journal to Persistent Storage.
+         Starting User Database Manager...
+[  OK  ] Started User Database Manager.
+         Starting Load Kernel Module tun...
+[  OK  ] Finished Load Kernel Module tun.
+         Starting Namespace Resource Manager...
+[  OK  ] Finished Coldplug All udev Devices.
+[FAILED] Failed to start Namespace Resource Manager.
+See 'systemctl status systemd-nsresourced.service' for details.
+         Starting Namespace Resource Manager...
+[FAILED] Failed to start Namespace Resource Manager.
+See 'systemctl status systemd-nsresourced.service' for details.
+         Starting Namespace Resource Manager...
+[FAILED] Failed to start Namespace Resource Manager.
+See 'systemctl status systemd-nsresourced.service' for details.
+         Starting Namespace Resource Manager...
+[FAILED] Failed to start Namespace Resource Manager.
+See 'systemctl status systemd-nsresourced.service' for details.
+         Starting Namespace Resource Manager...

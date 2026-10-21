@@ -1,0 +1,10 @@
+Retry14: bounded observation after retry13's later Namespace Resource Manager failure.
+Purpose: observe whether the generic Arch ISO reaches a systemd normal startup target or an emergency/fatal terminal outcome after the previously captured 88-job snapshot.
+No guest commands or serial input are sent. QEMU stdin is DEVNULL and serial is output-only.
+Inputs: same verified Arch 2026.10.01 ISO and its extracted kernel/initramfs as retry13.
+Devices: fresh operation-owned workspace/results QCOW2 overlays backed by existing workspace/results images; source image read-only.
+QEMU: version 10.2.1, TCG multi-thread, 4 vCPU, 6144 MiB RAM, 600-second cap.
+Network: none. USB, SPI programmer, physical disk, and all host device passthrough: none.
+Early stop: systemd reaches Multi-User System/Graphical Interface, emergency/power terminal target, kernel panic, or a host safety limit (120 GiB free-space floor, 64 MiB serial output cap). Otherwise stop at 600 seconds. No login prompt is required because getty auto-start is disabled.
+This is a generic ISO startup diagnostic only. It cannot pass the current-source product ISO, app/service, native build, or hardware gates.
+

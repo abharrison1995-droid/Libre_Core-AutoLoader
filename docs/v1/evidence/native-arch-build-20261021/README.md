@@ -77,6 +77,24 @@ self-contained [retry13 evidence bundle](boot-diagnostic-retry13-direct-kernel/R
 The selected small retry6 screenshot shows the earlier initramfs udev wait;
 retry13 used serial-only display and has no VGA capture.
 
+## Follow-up startup observation (retry14)
+
+Retry14 followed the later retry13 serial observation of a Namespace Resource
+Manager failure. It used the generic Arch 2026.10.01 ISO, QEMU 10.2.1 TCG
+multi-thread with 4 vCPUs and 6144 MiB, a read-only ISO and source image, and
+fresh workspace/results overlays. It used no network, passthrough, or guest
+input. At the 600-second cap, QMP quit QEMU; it exited 0 after 600.376 seconds.
+Free space stayed at 153.786 GiB and raw serial output was 10,040 bytes.
+
+The live stop-marker scan did not strip ANSI escapes, so its null match does
+not establish that terminal markers were absent. The separate post-run
+ANSI-stripped audit found four Namespace Resource Manager failures, zero
+normal startup target markers, and zero emergency/fatal markers. It does not
+establish a cause. Before/after hash records match for the ISO, kernel,
+initramfs, and source image. No native tests, rootless preflight, current-source
+build, product ISO, or hardware workflow ran. The detailed captures and hashes
+are in the [retry14 observation bundle](boot-diagnostic-retry14-observation-only/README.md).
+
 ## Captures
 
 - `native-build-usb-help.log` — successful current-source command help.
@@ -95,6 +113,9 @@ retry13 used serial-only display and has no VGA capture.
 - `boot-diagnostic-retry13-direct-kernel/` — exact direct-kernel launch,
   PTY input/output, read-only guest observations, helper hashes, and a small
   retry6 screenshot; see its `SHA256SUMS`.
+- `boot-diagnostic-retry14-observation-only/` — bounded post-failure generic
+  ISO observation, raw and normalized serial, post-run marker audit, exact
+  arguments and input hash records; see its `SHA256SUMS`.
 - `SHA256SUMS` — hashes for the top-level captured files and this README;
   each retry directory also carries its own manifest.
 
