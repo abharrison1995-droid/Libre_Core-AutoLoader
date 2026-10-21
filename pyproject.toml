@@ -20,7 +20,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "mypy",
-    "types-psutil"
+    "types-psutil",
+    "setuptools",
+    "wheel"
 ]
 
 [project.scripts]
@@ -33,5 +35,6 @@ testpaths = ["tests"]
 include = ["autoloader*", "usb_builder*"]
 
 [tool.setuptools.package-data]
+"autoloader.flasher" = ["data/RECOVERY_RUNBOOK.md"]
 "autoloader.rom_builder" = ["patches/*.patch"]
 "usb_builder" = ["patches/*.patch"]

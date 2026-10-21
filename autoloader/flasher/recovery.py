@@ -20,6 +20,8 @@ from autoloader.workflow.types import (
 
 from .backup_service import BackupManifestError, BackupManifestStore, BackupSetResult
 
+_RECOVERY_RUNBOOK_SHA256 = "c043f462cae1710828314e8585298b10210a36264d635e7673968a9e9f20967d"
+
 
 @dataclass(frozen=True)
 class RecoveryReadinessRecord:
@@ -105,9 +107,8 @@ class RecoveryReadinessService:
         for label, event in (("primary", primary_event), ("recovery", recovery_event)):
             if event is not None:
                 _validate_manifest_plan(event, plan, reasons, label)
-        runbook_rel = "docs/v1/RECOVERY_RUNBOOK.md"
-        repo_root = Path(__file__).resolve().parents[2]
-        if not (repo_root / runbook_rel).is_file():
+        runbook_path = _installed_recovery_runbook_path()
+        if not _installed_recovery_runbook_is_valid():
             reasons.append("model-specific recovery runbook is missing from the installation")
         method = self._METHODS.get(plan.profile_id)
         if method is None:
@@ -125,12 +126,29 @@ class RecoveryReadinessService:
             recovery_manifest_sha256=backup.recovery_manifest_sha256,
             primary_volume_id=backup.primary_storage.volume_id,
             recovery_volume_id=backup.recovery_storage.volume_id,
-            runbook=runbook_rel,
+            runbook=str(runbook_path),
             recovery_method=method,
             recovery_write_enabled=False,
             hardware_recovery_tested=False,
             reasons=tuple(reasons),
         )
+
+
+def _installed_recovery_runbook_path() -> Path:
+    """Return the concrete package-data path shown in readiness records."""
+    return Path(__file__).resolve().parent / "data" / "RECOVERY_RUNBOOK.md"
+
+
+def _installed_recovery_runbook_is_valid() -> bool:
+    """Require the reviewed runbook as package data in source and wheel installs."""
+    try:
+        resource = _installed_recovery_runbook_path()
+        if resource.is_symlink() or not resource.is_file():
+            return False
+        content = resource.read_bytes()
+    except (OSError, RuntimeError):
+        return False
+    return hashlib.sha256(content).hexdigest() == _RECOVERY_RUNBOOK_SHA256
 
 
 def _verified_event(

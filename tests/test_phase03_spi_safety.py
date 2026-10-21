@@ -7,12 +7,13 @@ import os
 import tempfile
 from dataclasses import replace
 from datetime import datetime, timezone
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
 
 from autoloader.exceptions import BackupUnavailableError
-from autoloader.flasher import backup_service
+from autoloader.flasher import backup_service, recovery as recovery_module
 from autoloader.flasher.backup import BackupManager
 from autoloader.flasher.backup_service import (
     BackupCaptureError,
@@ -436,8 +437,46 @@ def test_backup_service_captures_complete_persistent_x200_set_and_recovery_readi
 
     readiness = RecoveryReadinessService().evaluate(plan, result)
     assert readiness.status == "ready", readiness.reasons
+    assert readiness.runbook == str(
+        Path(recovery_module.__file__).resolve().parent / "data" / "RECOVERY_RUNBOOK.md"
+    )
+    assert Path(readiness.runbook).is_file()
+    assert Path(readiness.runbook).read_bytes() == files("autoloader.flasher").joinpath(
+        "data", "RECOVERY_RUNBOOK.md"
+    ).read_bytes()
     assert readiness.recovery_write_enabled is False
     assert readiness.hardware_recovery_tested is False
+
+
+def test_recovery_runbook_is_bundled_and_matches_reviewed_v1_document():
+    source = Path(__file__).resolve().parents[1] / "docs" / "v1" / "RECOVERY_RUNBOOK.md"
+    bundled = files("autoloader.flasher").joinpath("data", "RECOVERY_RUNBOOK.md")
+
+    assert bundled.is_file()
+    assert bundled.read_bytes() == source.read_bytes()
+
+
+@pytest.mark.parametrize("runbook_bytes", [None, b"changed recovery guidance\n"])
+def test_recovery_readiness_blocks_missing_or_changed_installed_runbook(
+    tmp_path, monkeypatch, runbook_bytes
+):
+    resource_path = tmp_path / "installed-package" / "autoloader" / "flasher" / "data" / "RECOVERY_RUNBOOK.md"
+    if runbook_bytes is not None:
+        resource_path.parent.mkdir(parents=True)
+        resource_path.write_bytes(runbook_bytes)
+    monkeypatch.setattr(recovery_module, "_installed_recovery_runbook_path", lambda: resource_path)
+    plan = _make_x200(tmp_path)
+    content = _payload(4 * MIB, 31)
+    transport = FakeTransport([_probe_line("W25Q32.V", len(content))], {len(content): content})
+    probes = _probe(transport)
+    service, primary, recovery_store = _make_service(tmp_path, transport)
+    result = _capture(service, plan, probes, primary, recovery_store)
+
+    readiness = RecoveryReadinessService().evaluate(plan, result)
+
+    assert readiness.status == "blocked"
+    assert readiness.runbook == str(resource_path)
+    assert any("recovery runbook is missing from the installation" in reason for reason in readiness.reasons)
 
 
 def test_backup_reopen_rejects_operation_artifact_drift_before_reusing_backup(tmp_path):
