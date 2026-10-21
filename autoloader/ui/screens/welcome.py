@@ -30,11 +30,16 @@ class WelcomeScreen(Screen[None]):
                 yield Static(f"In development · Version {VERSION}", id="version")
                 yield Static(
                     "This in-development tool provides ThinkPad detection and firmware workflow guidance.\n"
-                    "ROM building, backup capture, and physical writes are unavailable in this release candidate.",
+                    "Guarded X200/X220 ROM builds and write workflows require their evidence checks and explicit approval.\n"
+                    "Physical-device validation remains pending.",
                     id="description",
                     classes="warning"
                 )
-                yield Static("Not run; choose a profile or use Detect Device.", id="detection-status", classes="warning")
+                yield Static(
+                    "Not run; choose Start Guided Setup to review device detection options.",
+                    id="detection-status",
+                    classes="warning",
+                )
             
             with Horizontal(classes="button-container"):
                 yield Button("Start Guided Setup", variant="primary", id="btn-start")
@@ -56,7 +61,7 @@ class WelcomeScreen(Screen[None]):
                 status_widget.remove_class("warning")
                 status_widget.add_class("success")
             else:
-                status_widget.update("Not run; choose a profile or use Detect Device.")
+                status_widget.update("Not run; choose Start Guided Setup to review device detection options.")
         except Exception as e:
             logger.debug(f"Could not update welcome detection status: {e}")
 
@@ -72,6 +77,7 @@ class WelcomeScreen(Screen[None]):
             self.app.notify("Advanced Options not yet implemented.")
         elif event.button.id == "btn-about":
             self.app.notify(
-                f"Libre_Core AutoLoader v{VERSION} (in development). Firmware writes are unavailable.\n"
+                f"Libre_Core AutoLoader v{VERSION} (in development). Firmware workflows are evidence-gated; "
+                "physical-device validation remains pending.\n"
                 "Created for ThinkPad firmware workflow development."
             )

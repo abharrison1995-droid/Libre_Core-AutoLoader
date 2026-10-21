@@ -100,6 +100,7 @@ _X200_UBOOT_PATCH_INPUTS = (
 _X200_UBOOT_OVERLAY_INPUT = (_X200_UBOOT_OVERLAY_PATH.rsplit("/", 1)[1], _X200_UBOOT_OVERLAY_SHA256)
 _X200_UBOOT_PATCH_STACK = _X200_UBOOT_PATCH_INPUTS + (_X200_UBOOT_OVERLAY_INPUT,)
 _X200_UBOOT_LBMK_BUILD_ROOT = "work/lbmk"
+_X220_COREBOOT_BUILD_ROOT = "work/coreboot-x220"
 _X200_UBOOT_SOURCE_RELATIVE_PATH = "work/lbmk/src/u-boot/x86_64"
 _X200_GRUB_FONT_SOURCE_PATH = "/usr/share/fonts/opentype/unifont/unifont.otf"
 _X200_GRUB_FONT_SOURCE_SHA256 = "0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d"
@@ -2558,6 +2559,11 @@ class ArtifactEngine:
         run_id = str(uuid.uuid4())
         run_dir = output_root / run_id
         run_dir.mkdir(parents=True, exist_ok=False)
+        if recipe is X220_COREBOOT:
+            # The operation tree contains backup-derived descriptor/ME/GbE
+            # data while Coreboot is running. Keep it private even when the
+            # caller's output root is more broadly accessible.
+            run_dir.chmod(0o700)
         logs_dir = run_dir / "logs"
         logs_dir.mkdir()
         commands: list[CommandRecord] = []
@@ -2572,6 +2578,8 @@ class ArtifactEngine:
         x200_grub_font: X200GrubFontEvidence | None = None
         x200_nested_repository_evidence: tuple[X200NestedRepositoryEvidence, ...] | None = None
         x200_unifont_path: Path | None = None
+        x220_build_source_audit: SourceAudit | None = None
+        x220_inputs_staged = False
         failure_code: str | None = None
         failure_detail: str | None = None
         git_config_sha256: str | None = None
@@ -2594,9 +2602,18 @@ class ArtifactEngine:
                 )
                 self._stage_x200_vboot_compat_overlay(build_source)
             if recipe is X220_COREBOOT:
-                self._stage_x220_inputs(source, prepared_blobs, blob_hashes)
-                seed_path = source / ".config"
-                source_config = (source / recipe.config_file).read_text(encoding="utf-8")
+                build_source, x220_build_source_audit = self._prepare_x220_coreboot_build_source(
+                    recipe,
+                    source,
+                    run_dir,
+                    logs_dir,
+                    commands,
+                    source_audit,
+                )
+                self._stage_x220_inputs(build_source, prepared_blobs, blob_hashes)
+                x220_inputs_staged = True
+                seed_path = build_source / ".config"
+                source_config = (build_source / recipe.config_file).read_text(encoding="utf-8")
                 if source_config.count("CONFIG_PAYLOAD_NONE=y") != 1:
                     raise ValueError("Pinned X220 upstream seed changed its payload-none setting")
                 seed = source_config.replace(
@@ -2607,11 +2624,11 @@ class ArtifactEngine:
                 if seed_path.exists():
                     raise ValueError("Stale Coreboot .config exists; use a fresh pinned source checkout")
                 seed_path.write_text(seed, encoding="utf-8", newline="\n")
-                self._run_logged(("make", "olddefconfig"), source, logs_dir, commands)
-                resolved_config = (source / ".config").read_text(encoding="utf-8")
+                self._run_logged(("make", "olddefconfig"), build_source, logs_dir, commands)
+                resolved_config = (build_source / ".config").read_text(encoding="utf-8")
                 resolved_config_hash = validate_recipe_config(recipe, resolved_config)
-                self._run_logged(("make", "crossgcc-i386", f"CPUS={request.cpu_count}"), source, logs_dir, commands)
-                self._run_logged(("make", f"-j{request.cpu_count}"), source, logs_dir, commands)
+                self._run_logged(("make", "crossgcc-i386", f"CPUS={request.cpu_count}"), build_source, logs_dir, commands)
+                self._run_logged(("make", f"-j{request.cpu_count}"), build_source, logs_dir, commands)
             else:
                 self._run_logged(
                     recipe.build_command,
@@ -2648,25 +2665,25 @@ class ArtifactEngine:
             if recipe is X220_COREBOOT:
                 if not selected_raw.is_file() or selected_raw.is_symlink():
                     raise ValueError(f"Expected pinned output is missing or unsafe: {recipe.output_relative_path}")
-                parser = source / "util" / "ifdtool" / "ifdtool"
+                parser = build_source / "util" / "ifdtool" / "ifdtool"
                 if parser.is_symlink() or not parser.is_file():
                     raise ValueError("Pinned-source ifdtool executable is missing or unsafe")
                 region_inspection_tool = ToolEvidence(
-                    relative_path=parser.relative_to(source).as_posix(),
+                    relative_path=parser.relative_to(build_source).as_posix(),
                     executable_sha256=sha256_file(parser),
                     source_repository_url=source_audit.repository_url,
-                    source_revision=source_audit.revision,
-                    source_tree_id=source_audit.tree_id,
+                    source_revision=x220_build_source_audit.revision if x220_build_source_audit else source_audit.revision,
+                    source_tree_id=x220_build_source_audit.tree_id if x220_build_source_audit else source_audit.tree_id,
                 )
                 if request.backup_set is None:
                     raise ValueError("X220 backup set disappeared before original descriptor validation")
                 original_path = Path(request.backup_set.chips[0].first_path)
                 original_map_output = self._run_readonly(
-                    (str(parser), "-d", str(original_path)), source, logs_dir, commands
+                    (str(parser), "-d", str(original_path)), build_source, logs_dir, commands
                 )
                 original_regions = parse_ifdtool_regions(original_map_output, recipe.expected_size_bytes)
                 compare_region_maps(original_regions, request.expected_regions)
-                output = self._run_readonly((str(parser), "-d", str(selected_raw)), source, logs_dir, commands)
+                output = self._run_readonly((str(parser), "-d", str(selected_raw)), build_source, logs_dir, commands)
                 regions = parse_ifdtool_regions(output, recipe.expected_size_bytes)
                 compare_region_maps(regions, request.expected_regions)
                 if original_x220_backup is None:
@@ -2757,6 +2774,27 @@ class ArtifactEngine:
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
             failure_code = "ARTIFACT_VALIDATION_FAILED"
             failure_detail = str(exc)
+        finally:
+            if recipe is X220_COREBOOT and build_source != source:
+                stage_path = build_source / "site-local"
+                if stage_path.exists() or stage_path.is_symlink() or x220_inputs_staged:
+                    try:
+                        self._discard_x220_staged_inputs(
+                            build_source,
+                            prepared_blobs,
+                            blob_hashes,
+                            require_present=x220_inputs_staged,
+                        )
+                    except (OSError, ValueError) as exc:
+                        failure_code = "ARTIFACT_VALIDATION_FAILED"
+                        failure_detail = f"Private X220 blob cleanup failed: {exc}"
+                try:
+                    final_original_audit = self.inspect_source(recipe.recipe_id, source)
+                    if final_original_audit != source_audit:
+                        raise ValueError("Original pinned X220 Coreboot checkout changed during isolated build")
+                except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+                    failure_code = "ARTIFACT_VALIDATION_FAILED"
+                    failure_detail = f"Original X220 source revalidation failed: {exc}"
 
         # Post-command validation can take a long time and touches upstream
         # output paths. Recheck the operation-scoped identity at the final
@@ -2777,6 +2815,15 @@ class ArtifactEngine:
                     final_nested_evidence = self._validate_lbmk_nested_coreboot(build_source, logs_dir, commands)
                     if final_nested_evidence != x200_nested_repository_evidence:
                         raise ValueError("X200 nested source provenance changed at artifact publication")
+                if recipe is X220_COREBOOT:
+                    if x220_build_source_audit is None:
+                        raise ValueError("X220 artifact publication lacks an isolated Coreboot source audit")
+                    final_build_audit = self.inspect_source(recipe.recipe_id, build_source)
+                    if final_build_audit != x220_build_source_audit:
+                        raise ValueError("Isolated X220 Coreboot source changed outside ignored operation outputs")
+                    final_original_audit = self.inspect_source(recipe.recipe_id, source)
+                    if final_original_audit != source_audit:
+                        raise ValueError("Original pinned X220 Coreboot checkout changed during isolated build")
             except (OSError, ValueError) as exc:
                 failure_code = "ARTIFACT_VALIDATION_FAILED"
                 failure_detail = f"Final artifact evidence validation failed before publication: {exc}"
@@ -4085,15 +4132,100 @@ class ArtifactEngine:
         destination_dir = source / "site-local"
         if destination_dir.exists():
             raise ValueError("Stale site-local blob directory exists; refusing to overwrite it")
-        destination_dir.mkdir()
+        if destination_dir.is_symlink():
+            raise ValueError("X220 site-local blob directory must not be a symlink")
+        destination_dir.mkdir(mode=0o700)
         for item, source_path in sorted(inputs, key=lambda pair: pair[0].name):
             target = destination_dir / item.name
-            with source_path.open("rb") as input_file, target.open("xb") as output_file:
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(target, flags, 0o600)
+            with source_path.open("rb") as input_file, os.fdopen(descriptor, "wb") as output_file:
                 shutil.copyfileobj(input_file, output_file)
             digest = sha256_file(target)
             if digest != item.sha256:
                 raise ValueError(f"Staged blob changed during copy: {item.name}")
             blob_hashes.append((item.name, digest))
+
+    def _prepare_x220_coreboot_build_source(
+        self,
+        recipe: ArtifactRecipe,
+        source: Path,
+        run_dir: Path,
+        logs_dir: Path,
+        commands: list[CommandRecord],
+        source_audit: SourceAudit,
+    ) -> tuple[Path, SourceAudit]:
+        """Make a private operation-local checkout for all X220 writes/builds."""
+        if recipe.recipe_id != X220_COREBOOT.recipe_id or recipe.kind is not RecipeKind.COREBOOT:
+            raise ValueError("An isolated X220 Coreboot checkout is limited to the pinned X220 recipe")
+        if self.inspect_source(recipe.recipe_id, source) != source_audit:
+            raise ValueError("Original pinned X220 Coreboot checkout changed before cloning")
+        operation_root = run_dir.resolve(strict=True)
+        run_dir.chmod(0o700)
+        build_source = operation_root.joinpath(*PurePosixPath(_X220_COREBOOT_BUILD_ROOT).parts)
+        if build_source.exists() or build_source.is_symlink():
+            raise ValueError("Disposable X220 Coreboot checkout destination already exists")
+        build_source.parent.mkdir(parents=True, exist_ok=False)
+        self._run_logged(
+            ("git", "clone", "--no-hardlinks", "--no-local", "--quiet", str(source), str(build_source)),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        self._run_logged(
+            ("git", "-C", str(build_source), "checkout", "--detach", recipe.source.revision),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        self._run_logged(
+            ("git", "-C", str(build_source), "remote", "set-url", "origin", recipe.source.repository_url),
+            source.parent,
+            logs_dir,
+            commands,
+        )
+        _assert_no_symlink_components(build_source, root=operation_root)
+        cloned_audit = self.inspect_source(recipe.recipe_id, build_source)
+        if cloned_audit != source_audit:
+            raise ValueError("Disposable X220 Coreboot clone differs from the exact pinned source audit")
+        self._assert_no_stale_outputs(recipe, build_source)
+        return build_source, cloned_audit
+
+    @staticmethod
+    def _discard_x220_staged_inputs(
+        build_source: Path,
+        inputs: Sequence[tuple[BlobInput, Path]],
+        blob_hashes: Sequence[tuple[str, str]],
+        *,
+        require_present: bool,
+    ) -> None:
+        """Verify and remove only this operation's staged original-chip slices."""
+        expected = {item.name: item.sha256 for item, _source_path in inputs}
+        recorded = dict(blob_hashes)
+        if set(expected) != {"descriptor.bin", "me.bin", "gbe.bin"}:
+            raise ValueError("X220 staged-blob cleanup lacks the exact descriptor/ME/GbE inputs")
+        stage_dir = build_source / "site-local"
+        if not stage_dir.exists() and not stage_dir.is_symlink():
+            if require_present:
+                raise ValueError("X220 private site-local staging directory disappeared before cleanup")
+            return
+        if stage_dir.is_symlink() or not stage_dir.is_dir():
+            raise ValueError("X220 private site-local staging directory is missing or unsafe")
+        _assert_no_symlink_components(stage_dir, root=build_source)
+        entries = tuple(stage_dir.iterdir())
+        observed: dict[str, str] = {}
+        safe_entries = True
+        for path in entries:
+            if path.is_symlink() or not path.is_file():
+                safe_entries = False
+                continue
+            observed[path.name] = sha256_file(path)
+        inventory_matches = safe_entries and observed == expected and recorded == expected
+        shutil.rmtree(stage_dir)
+        if stage_dir.exists() or stage_dir.is_symlink():
+            raise ValueError("X220 private blob staging directory remains after cleanup")
+        if not inventory_matches:
+            raise ValueError("X220 private staged blobs changed or unexpected files were added")
 
     def _run_logged(
         self,

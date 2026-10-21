@@ -1660,6 +1660,217 @@ def _make_x220_backup_fixture(tmp_path: Path):
     return intent, backup, regions, tuple(blob_inputs), original
 
 
+def _make_minimal_pinned_x220_checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Create a local Git fixture with the production X220 source identity shape."""
+    import autoloader.rom_builder.artifact_engine as module
+
+    source = tmp_path / "pinned-x220-source"
+    config_relative = "configs/builder/config.lenovo_x220"
+    config_bytes = b"CONFIG_PAYLOAD_NONE=y\n"
+    config_path = source / config_relative
+    config_path.parent.mkdir(parents=True)
+    config_path.write_bytes(config_bytes)
+    git = shutil.which("git")
+    if git is None:
+        pytest.skip("UNVALIDATED: Git executable is unavailable for local clone isolation regression")
+    subprocess.run([git, "init", "--quiet", str(source)], check=True, capture_output=True, timeout=20)
+    for args in (
+        ("config", "user.name", "X220 source fixture"),
+        ("config", "user.email", "x220-source-fixture@example.invalid"),
+        ("config", "core.autocrlf", "false"),
+        ("config", "commit.gpgsign", "false"),
+        ("remote", "add", "origin", COREBOOT_2609.repository_url),
+    ):
+        subprocess.run([git, "-C", str(source), *args], check=True, capture_output=True, timeout=20)
+    subprocess.run([git, "-C", str(source), "add", config_relative], check=True, capture_output=True, timeout=20)
+    subprocess.run(
+        [git, "-C", str(source), "commit", "--quiet", "-m", "synthetic pinned X220 source"],
+        check=True,
+        capture_output=True,
+        timeout=20,
+    )
+
+    def git_value(*args: str) -> str:
+        result = subprocess.run(
+            [git, "-C", str(source), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        return result.stdout.strip()
+
+    pin = replace(
+        COREBOOT_2609,
+        revision=git_value("rev-parse", "HEAD"),
+        tree_id=git_value("rev-parse", "HEAD^{tree}"),
+        files=(PinnedFile(config_relative, hashlib.sha256(config_bytes).hexdigest()),),
+    )
+    recipe = replace(X220_COREBOOT, source=pin)
+    monkeypatch.setattr(module, "X220_COREBOOT", recipe)
+    monkeypatch.setattr(module, "ARTIFACT_RECIPES", {recipe.recipe_id: recipe})
+    engine = ArtifactEngine()
+    audit = engine.inspect_source(recipe.recipe_id, source)
+    return module, recipe, engine, source, audit
+
+
+def test_x220_isolated_checkout_stages_and_removes_blobs_without_mutating_caller_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from autoloader.rom_builder.artifact_engine import BlobInput
+
+    _module, recipe, engine, source, source_audit = _make_minimal_pinned_x220_checkout(tmp_path, monkeypatch)
+    operation = tmp_path / "operation"
+    operation.mkdir()
+    logs = operation / "logs"
+    logs.mkdir()
+    _ensure_operation_git_config(operation)
+    commands: list[CommandRecord] = []
+    build_source, build_audit = engine._prepare_x220_coreboot_build_source(
+        recipe, source, operation, logs, commands, source_audit
+    )
+
+    assert build_source == operation / "work" / "coreboot-x220"
+    assert build_audit == source_audit
+    assert build_source != source
+    assert engine.inspect_source(recipe.recipe_id, source) == source_audit
+    assert engine.inspect_source(recipe.recipe_id, build_source) == source_audit
+    assert not (source / "site-local").exists()
+    assert not (source / ".config").exists()
+
+    blob_payloads = {
+        "descriptor.bin": b"fixture descriptor slice",
+        "me.bin": b"fixture management-engine slice",
+        "gbe.bin": b"fixture gigabit-ethernet slice",
+    }
+    prepared = []
+    for name, payload in blob_payloads.items():
+        input_path = tmp_path / name
+        input_path.write_bytes(payload)
+        prepared.append((BlobInput(name, input_path, hashlib.sha256(payload).hexdigest()), input_path))
+    recorded: list[tuple[str, str]] = []
+    engine._stage_x220_inputs(build_source, prepared, recorded)
+    private_site_local = build_source / "site-local"
+    assert {path.name: path.read_bytes() for path in private_site_local.iterdir()} == blob_payloads
+    assert not (source / "site-local").exists()
+    assert not any((source / name).exists() for name in blob_payloads)
+
+    engine._discard_x220_staged_inputs(build_source, prepared, recorded, require_present=True)
+    assert not private_site_local.exists()
+    assert engine.inspect_source(recipe.recipe_id, source) == source_audit
+    assert subprocess.run(
+        [shutil.which("git") or "git", "-C", str(source), "status", "--porcelain=v1", "--untracked-files=all"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    ).stdout == ""
+
+
+@pytest.mark.parametrize("failure_stage", ("staging", "olddefconfig"))
+def test_x220_build_failure_keeps_backup_blobs_out_of_caller_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure_stage: str
+) -> None:
+    import autoloader.rom_builder.artifact_engine as module
+
+    _module, recipe, engine, source, source_audit = _make_minimal_pinned_x220_checkout(tmp_path, monkeypatch)
+    from autoloader.rom_builder.artifact_engine import BlobInput
+
+    blobs = []
+    for name, payload in (
+        ("descriptor.bin", b"fixture descriptor slice"),
+        ("me.bin", b"fixture management-engine slice"),
+        ("gbe.bin", b"fixture gigabit-ethernet slice"),
+    ):
+        path = tmp_path / f"input-{name}"
+        path.write_bytes(payload)
+        blobs.append(BlobInput(name, path, hashlib.sha256(payload).hexdigest()))
+    regions = (
+        RegionEvidence("ifd", 0, 0x1000),
+        RegionEvidence("gbe", 0x1000, 0x3000),
+        RegionEvidence("me", 0x3000, 0x500000),
+        RegionEvidence("bios", 0x500000, X220_COREBOOT.expected_size_bytes),
+    )
+    request = BuildRequest(
+        recipe_id=recipe.recipe_id,
+        source_dir=source,
+        output_root=tmp_path / "artifact-output",
+        blob_inputs=tuple(blobs),
+        expected_regions=regions,
+        observed_chip_capacity_bytes=recipe.expected_size_bytes,
+        backup_intent=SimpleNamespace(),  # type: ignore[arg-type]
+        backup_set=SimpleNamespace(),  # type: ignore[arg-type]
+    )
+    monkeypatch.setattr(
+        module,
+        "validate_x220_backup_evidence",
+        lambda *_args: (b"synthetic original backup", SimpleNamespace()),
+    )
+    monkeypatch.setattr(engine, "_toolchain_versions", lambda: (("fixture", "no tool executed"),))
+    seen_make_cwd: list[Path] = []
+
+    if failure_stage == "staging":
+        original_stage = engine._stage_x220_inputs
+
+        def fail_during_stage(build_source, prepared, recorded):
+            # The request hash was checked before operation setup. Mutate a
+            # later source after the first staged copy so finally exercises
+            # cleanup of a partial private inventory.
+            changed_input = next(path for item, path in prepared if item.name == "gbe.bin")
+            changed_input.write_bytes(b"changed after request preflight")
+            original_stage(build_source, prepared, recorded)
+
+        monkeypatch.setattr(engine, "_stage_x220_inputs", fail_during_stage)
+
+    def fail_at_olddefconfig(argv, cwd, logs_dir, commands, **kwargs):
+        if argv[0] == "git":
+            operation_git_config = Path(logs_dir).parent / "gitconfig"
+            result = subprocess.run(
+                list(argv),
+                cwd=cwd,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env={
+                    "PATH": os.environ.get("PATH", ""),
+                    "GIT_CONFIG_GLOBAL": str(operation_git_config),
+                    "GIT_CONFIG_NOSYSTEM": "1",
+                },
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"fixture git command failed: {result.stderr}")
+            return None
+        if tuple(argv) == ("make", "olddefconfig"):
+            assert failure_stage == "olddefconfig"
+            seen_make_cwd.append(Path(cwd))
+            staged = Path(cwd) / "site-local"
+            assert {path.name for path in staged.iterdir()} == {"descriptor.bin", "me.bin", "gbe.bin"}
+            assert not (source / "site-local").exists()
+            assert not (source / ".config").exists()
+            raise RuntimeError("injected X220 config failure; no firmware build run")
+        raise AssertionError(f"Unexpected child command for {failure_stage}: {argv!r}")
+
+    monkeypatch.setattr(engine, "_run_logged", fail_at_olddefconfig)
+    result = engine._build_linux(recipe, request)
+
+    assert result.status is BuildStatus.FAILED
+    assert result.code == "ARTIFACT_VALIDATION_FAILED"
+    if failure_stage == "olddefconfig":
+        assert "injected X220 config failure" in result.message
+        assert len(seen_make_cwd) == 1
+        assert seen_make_cwd[0].is_relative_to(result.manifest_path.parent / "work" / "coreboot-x220")
+    else:
+        assert "Private X220 blob cleanup failed" in result.message
+        assert seen_make_cwd == []
+    assert not (source / "site-local").exists()
+    assert not (source / ".config").exists()
+    assert engine.inspect_source(recipe.recipe_id, source) == source_audit
+    operation_source = result.manifest_path.parent / "work" / "coreboot-x220"
+    assert not (operation_source / "site-local").exists()
+    assert not result.artifacts
+
+
 def test_x220_backup_evidence_binds_blobs_to_matching_full_chip_backup(tmp_path: Path) -> None:
     intent, backup, regions, blob_inputs, original = _make_x220_backup_fixture(tmp_path)
     observed, provenance = validate_x220_backup_evidence(intent, backup, regions, blob_inputs)

@@ -620,9 +620,16 @@ def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
             await pilot.pause()
             assert "in development" in app.screen.query_one("#version", Static).render().plain.lower()
             assert VERSION in app.screen.query_one("#version", Static).render().plain
-            assert "unavailable" in app.screen.query_one("#description", Static).render().plain.lower()
+            description = app.screen.query_one("#description", Static).render().plain.lower()
+            assert "guarded x200/x220 rom builds" in description
+            assert "explicit approval" in description
+            assert "physical-device validation remains pending" in description
+            assert "unavailable" not in description
             assert "not run" in app.screen.query_one("#detection-status", Static).render().plain.lower()
-            assert "detect device" in app.screen.query_one("#detection-status", Static).render().plain.lower()
+            detection_status = app.screen.query_one("#detection-status", Static).render().plain.lower()
+            assert "start guided setup" in detection_status
+            assert "detect device" not in detection_status
+            assert app.screen.query_one("#btn-start", Button).label == "Start Guided Setup"
 
     asyncio.run(runner())
 
