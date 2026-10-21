@@ -306,7 +306,7 @@ ARCHISO_V91_SOURCE_URL = (
     + ARCHISO_V91_SOURCE_COMMIT
     + "/archiso/mkarchiso"
 )
-EXPECTED_SNAPSHOT_DATE = "2026-09-29"
+EXPECTED_SNAPSHOT_DATE = "2026-09-30"
 REQUIRED_RUNTIME_IMPORTS = ("autoloader", "click", "psutil", "rich", "textual")
 TARGET_ROOT_CLI_HELP_WIDTH = 78
 SNAPSHOT_REPOSITORIES = ("core", "extra")

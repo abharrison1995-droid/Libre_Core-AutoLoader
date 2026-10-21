@@ -130,8 +130,8 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
     _write(
         profile / "pacman.conf",
         "[options]\nSigLevel = Required DatabaseOptional\nLocalFileSigLevel = Required\n\n"
-        "[core]\nServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch\n\n"
-        "[extra]\nServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch\n",
+        "[core]\nServer = https://archive.archlinux.org/repos/2026/09/30/$repo/os/$arch\n\n"
+        "[extra]\nServer = https://archive.archlinux.org/repos/2026/09/30/$repo/os/$arch\n",
     )
     _write(profile / "syslinux" / "syslinux.cfg", "INCLUDE archiso_sys.cfg\n")
     _write(profile / "syslinux" / "archiso_sys.cfg", "DEFAULT arch\nINCLUDE archiso_sys-linux.cfg\n")
@@ -192,8 +192,8 @@ def _make_source(root: Path, *, pinned: bool = True) -> tuple[Path, Path]:
                 "schema_version": 1,
                 "distribution": "Arch Linux",
                 "architecture": "x86_64",
-                "snapshot_date": "2026-09-29",
-                "repository_base": "https://archive.archlinux.org/repos/2026/09/29",
+                "snapshot_date": "2026-09-30",
+                "repository_base": "https://archive.archlinux.org/repos/2026/09/30",
                 "archiso_package": "archiso",
                 "archiso_version": "91-1",
                 "rootless_builder": dict(build_usb.ROOTLESS_BUILDER_LOCK),
@@ -306,8 +306,8 @@ def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
     lock, raw = build_usb._load_json(build_usb.DEFAULT_SNAPSHOT, "snapshot lock")
     profile = build_usb.DEFAULT_PROFILE
     build_usb._validate_online_pacman_config(profile, lock)
-    assert lock["snapshot_date"] == "2026-09-29"
-    assert lock["repository_base"] == "https://archive.archlinux.org/repos/2026/09/29"
+    assert lock["snapshot_date"] == "2026-09-30"
+    assert lock["repository_base"] == "https://archive.archlinux.org/repos/2026/09/30"
     assert build_usb._sha256_bytes(raw) == hashlib.sha256(raw).hexdigest()
     assert lock["snapshot_pin_status"] == "fixed-candidate"
     assert lock["release_validation_status"] == "pending-linux-build-and-qemu"
@@ -317,8 +317,8 @@ def test_checked_in_lock_profile_and_official_archive_url_are_consistent():
         build_usb.ARCHISO_USB_INITRAMFS_DERIVATIVE_SHA256
     )
     assert lock["repository_database_sha256"] == {
-        "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
-        "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1",
+        "core": "08d52f5e83f72a9e9f8464441da87b9a399f4decc7110fcfa3825f7c0af42dd2",
+        "extra": "d2262e9def7afc76960c5242624cc14029afa47a9407acd84a29aed3a44f1663",
     }
     assert set(lock["required_boot_modes"]) == build_usb.REQUIRED_BOOT_MODES
     assert set(build_usb._profile_boot_modes(profile)) >= build_usb.REQUIRED_BOOT_MODES
@@ -1280,11 +1280,11 @@ def test_offline_repository_is_copied_and_reverified_before_use(tmp_path):
     ("redirect_to", "expected_error"),
     [
         (
-            "http://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db",
+            "http://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/core.db",
             "exact official archive host",
         ),
         (
-            "https://archive.archlinux.org.attacker.invalid/repos/2026/09/29/core/os/x86_64/core.db",
+            "https://archive.archlinux.org.attacker.invalid/repos/2026/09/30/core/os/x86_64/core.db",
             "exact official archive host",
         ),
         (
@@ -1292,7 +1292,7 @@ def test_offline_repository_is_copied_and_reverified_before_use(tmp_path):
             "exact requested archive resource path",
         ),
         (
-            "https://archive.archlinux.org/repos/2026/09/29/extra/os/x86_64/extra.db",
+            "https://archive.archlinux.org/repos/2026/09/30/extra/os/x86_64/extra.db",
             "exact requested archive resource path",
         ),
     ],
@@ -1321,14 +1321,14 @@ def test_candidate_rejects_snapshot_redirect_outside_exact_locked_resource(tmp_p
     "redirect_to",
     [
         "https://archive.archlinux.org/repos/2026/09/28/core/os/x86_64/core.db",
-        "https://archive.archlinux.org/repos/2026/09/29/extra/os/x86_64/extra.db",
-        "http://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db",
+        "https://archive.archlinux.org/repos/2026/09/30/extra/os/x86_64/extra.db",
+        "http://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/core.db",
     ],
 )
 def test_snapshot_fetcher_rejects_same_host_or_downgrade_redirect_before_following(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, redirect_to: str
 ) -> None:
-    requested = "https://archive.archlinux.org/repos/2026/09/29/core/os/x86_64/core.db"
+    requested = "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/core.db"
     destination = tmp_path / "core.db"
     followed: list[str] = []
 
@@ -1883,7 +1883,7 @@ def test_fake_builder_records_candidate_iso_and_boot_pending_provenance(tmp_path
     assert database_evidence["core"]["signature_final_url"] is None
     assert database_evidence["extra"]["signature_present"] is False
     assert "Server = file://" in runner.pacman_conf_content
-    assert "CacheServer = https://archive.archlinux.org/repos/2026/09/29/$repo/os/$arch" in runner.pacman_conf_content
+    assert "CacheServer = https://archive.archlinux.org/repos/2026/09/30/$repo/os/$arch" in runner.pacman_conf_content
     assert runner.pacman_conf_content.count("Server = file://") == 2
     assert manifest["host"]["mkarchiso"]["sha256"] == _sha(fake_mkarchiso)
     assert manifest["host"]["mkarchiso"]["package_owner_output"].endswith("owned by archiso 91-1")

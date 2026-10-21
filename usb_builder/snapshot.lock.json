@@ -2,8 +2,8 @@
   "schema_version": 1,
   "distribution": "Arch Linux",
   "architecture": "x86_64",
-  "snapshot_date": "2026-09-29",
-  "repository_base": "https://archive.archlinux.org/repos/2026/09/29",
+  "snapshot_date": "2026-09-30",
+  "repository_base": "https://archive.archlinux.org/repos/2026/09/30",
   "archiso_package": "archiso",
   "archiso_version": "91-1",
   "rootless_builder": {
@@ -187,8 +187,8 @@
   },
   "packages_x86_64_sha256": "7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd",
   "repository_database_sha256": {
-    "core": "bb477fc11a9f3c19f3da2eced7869ab98c84c7d33dece62807458fdca43d018a",
-    "extra": "399231e477e0aaf0afe0a79dd1cd82695236ba8259e454219b4254898112aed1"
+    "core": "08d52f5e83f72a9e9f8464441da87b9a399f4decc7110fcfa3825f7c0af42dd2",
+    "extra": "d2262e9def7afc76960c5242624cc14029afa47a9407acd84a29aed3a44f1663"
   },
   "package_signature_policy": "Required DatabaseOptional",
   "wheel_build_backend": {

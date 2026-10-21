@@ -45,7 +45,7 @@ as `/usr/sbin -> bin`. It never resolves a guest absolute link against the host
 filesystem. Root escapes, cycles, missing targets, and traversal through a
 non-directory component fail closed.
 
-The 2026-09-29 lock pins the exact SHA-256 of both `core.db` and `extra.db`.
+The 2026-09-30 lock pins the exact SHA-256 of both `core.db` and `extra.db`.
 The archive currently publishes no detached signature for either database.
 The builder stages those exact bytes and configures them as the sole pacman
 `Server`; package archives use `CacheServer`, which pacman does not use for
@@ -251,10 +251,13 @@ no-writer behavior were not observed in a booted guest.
 
 The pinned Archiso 91-1 releng package list and its `mkinitcpio-archiso` package
 show that the configured hooks require runtime packages missing from this
-profile. The exact locked 2026-09-29 core/extra database hashes were verified
-while checking that the required packages exist in the snapshot. The accepted
-package correction now pins the base and per-hook package map, includes the
-required packages in the profile and records them in build provenance. Its
+profile. At that historical package-correction checkpoint, the then-configured
+2026-09-29 core/extra database hashes were used while checking package
+availability. That date contains Archiso 90-1 and cannot satisfy the current
+Archiso 91-1 pin. The active lock now uses 2026-09-30, whose core/extra
+databases retain the pinned rootless helper versions. The accepted package
+correction now pins the base and per-hook package map, includes the required
+packages in the profile and records them in build provenance. Its
 canonical LF package-list SHA-256 is
 `7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd`.
 Focused USB tests pass 105 on Arch (2 skipped) and 94 on Windows (13 skipped);
@@ -606,8 +609,10 @@ shadow 4.20.0.arch1-1 and libcap 2.78-1. For the pinned shadow archive,
 binary/hash/owner are pinned. The signed shadow and libcap package archives,
 signature hashes and helper hashes are recorded in `snapshot.lock.json`.
 
-The read-only helper/package provenance was verified against the locked
-2026-09-29 core database. The Arch WSL distro cannot satisfy the production
+At that historical checkpoint, read-only helper/package provenance was
+verified against the then-configured 2026-09-29 core database. That date
+contains Archiso 90-1 and was superseded for the active Archiso 91-1 lock by
+the 2026-09-30 snapshot. The Arch WSL distro cannot satisfy the production
 preflight: it runs as UID 0, has no delegated subuid/subgid mappings, and its
 map helpers have no file capabilities. Production `execute_build` rejected
 root before command or output/work creation at that earlier checkpoint. No
