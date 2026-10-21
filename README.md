@@ -82,7 +82,7 @@ SOL accepted a separately pinned USB initramfs derivative that removes only `kms
 
 ### Current derivative candidate b2 (2026-10-14)
 
-Candidate b2 was built from clean USB-only snapshot commit `1197d9040a39d6da012f459b8bb1f45385ee0072`, tree `d2588ddff4f0c5d4115565f47360314553106d38`. Its ISO is 1,012,215,808 bytes with SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`. Target-root installation and packaged CLI checks passed. Inspection of the 79 MiB initramfs confirmed the `kms`-omitting derivative with PXE hooks retained. Same-hash BIOS (310s) and UEFI (922s) QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Later direct-kernel diagnostics captured some read-only systemd state but established no root cause and do not pass normal BIOS/UEFI startup acceptance. The earlier root-oriented Arch WSL production-mount preflight stopped at devtmpfs with `EPERM` before candidate-build work/output; that checkpoint is superseded by the later non-root Archiso `-N` preflight path. The current native online build and boot gates are underway; the offline runner remains unavailable, and physical USB checks remain pending. The ISO and evidence are not hardware validation.
+Candidate b2 was built from clean USB-only snapshot commit `1197d9040a39d6da012f459b8bb1f45385ee0072`, tree `d2588ddff4f0c5d4115565f47360314553106d38`. Its ISO is 1,012,215,808 bytes with SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`. Target-root installation and packaged CLI checks passed. Inspection of the 79 MiB initramfs confirmed the `kms`-omitting derivative with PXE hooks retained. Same-hash BIOS (310s) and UEFI (922s) QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Later direct-kernel diagnostics captured some read-only systemd state but established no root cause and do not pass normal BIOS/UEFI startup acceptance. The earlier root-oriented Arch WSL production-mount preflight stopped at devtmpfs with `EPERM` before candidate-build work/output; that checkpoint is superseded by the later non-root Archiso `-N` preflight path. Current-source native attempts and their incomplete boot diagnostics are summarized below; no current-source product ISO was produced. The offline runner remains unavailable, and physical USB checks remain pending. The ISO and evidence are not hardware validation.
 
 Successful candidate publication places the ISO, build logs, provenance and `SHA256SUMS` together inside `candidate-bundle` through one atomic directory rename. When Archiso deletes its target sync database files, provenance records the pinned Archiso 91-1 source/config invariant and exact staged database hashes as `SOURCE_LEVEL_INVARIANT_ONLY`; retained database files, when present, are independently hashed and compared.
 
@@ -129,6 +129,24 @@ temporary-path run failed in an X200 sidecar fixture and is diagnostic only,
 not a release result. Native Linux/Archiso build, current-source product ISO
 and Live USB app/service boot remain pending, as do all three hardware
 workflows. No hardware operation occurred.
+
+Current-source native Arch work remains incomplete. The focused X220 selection
+passed 50 tests with 4 skipped (972 deselected), and top-level plus
+`build-usb --help` passed. An exploratory full native suite stopped at about
+7% after errors with no JUnit; native targeted mypy raised an internal error.
+The four current-source Archiso build attempts produced no ISO; subsequent
+startup retries 3–13 were diagnostics, not native build/test gates, and also
+produced no ISO. Retry13 reached only a systemd debug shell: read-only `id` and
+`lsblk` showed root and the expected ISO, workspace, results, and read-only
+source devices. At that query snapshot, 88 jobs were pending around
+`systemd-nsresourced` and tmpfiles; later in the transcript systemd printed
+`[FAILED] Failed to start Namespace Resource Manager` (cause not established).
+No normal live boot, rootless preflight,
+native build gate, or product ISO passed. The ISO hash was unchanged. See
+[current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md)
+and the [retry13 transcript and result](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+Native build remains open until normal userspace and the reviewed rootless
+preflight are ready. Hardware remains pending for all three devices.
 
 ## Earlier current-source software regression — 2026-10-20
 

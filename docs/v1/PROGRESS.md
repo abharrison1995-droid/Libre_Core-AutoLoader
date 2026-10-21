@@ -1497,3 +1497,30 @@ T430, X200, and X220 real-device workflows remain
 **HARDWARE PENDING**; no probe, backup capture, firmware write, read-back,
 recovery, or hardware boot occurred. All firmware writes and
 hardware-specific recovery still require explicit human approval.
+
+### Native Arch startup diagnostic follow-up — retry13
+
+After the four incomplete current-source Archiso build attempts, later startup
+retries 3–13 did not produce an ISO or complete the native full-suite/build
+gates. Retry13 used the verified generic Arch 2026.10.01 ISO with its
+hash-verified kernel/initramfs, QEMU 10.2.1 TCG, fresh workspace/results
+overlays, no NIC, and read-only ISO/source attachments. The ISO hash remained
+`684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5` before
+and after.
+
+Retry13 reached a systemd debug shell, not a normal live login. Read-only `id`
+reported root and `lsblk` showed the expected ISO, workspace, results, and
+read-only source device map. At the query snapshot, `systemctl list-jobs`
+reported 88 pending jobs; `systemd-nsresourced` and early tmpfiles setup were
+activating, and the later tmpfiles `/dev` setup was inactive. Later in the
+serial transcript, systemd printed the failure `[FAILED] Failed to start Namespace Resource Manager`.
+The journal showed repeated successful BPF-related
+syscalls from nsresourced. These observations are diagnostic only and do not
+establish a root cause.
+The QEMU runner exited 0 after 250.142 seconds via QMP shutdown. No native
+test suite, rootless preflight, package operation, current-source build, or
+product ISO ran in this diagnostic. Normal userspace and the reviewed
+rootless preflight must pass before the native build gate can continue. The
+full transcript, exact arguments, helper hashes, selected retry6 screenshot,
+and run result are in the [retry13 evidence bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md)
+and the [native build evidence index](evidence/native-arch-build-20261021/README.md).

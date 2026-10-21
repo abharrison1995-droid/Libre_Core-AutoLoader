@@ -50,6 +50,33 @@ No physical device was accessed. T430, X200, and X220 hardware workflows
 remain pending, and writes and hardware-specific recovery still require
 explicit human authorization.
 
+## Follow-up startup diagnostic (retry13)
+
+After the four incomplete current-source build attempts, a bounded generic
+Arch ISO startup diagnostic used the ISO's hash-verified kernel and initramfs
+with the exact base arguments `archisobasedir=arch
+archisosearchuuid=2026-10-01-14-49-03-00` and reviewed serial/debug-shell
+arguments. It used QEMU 10.2.1 TCG, a read-only ISO, no NIC, fresh scratch
+overlays, and a read-only source image. Retry13 reached a systemd debug shell
+and allowed only read-only `id`, `lsblk`, systemd job/status, and journal
+queries. At the query snapshot, the guest reported root identity and the
+expected device map and had 88 pending jobs: `systemd-nsresourced` and early
+tmpfiles setup were activating, while the later tmpfiles `/dev` setup was
+inactive. Later in the serial transcript, systemd printed
+`[FAILED] Failed to start Namespace Resource Manager`. The journal showed
+repeated successful BPF-related syscalls by nsresourced. These observations
+do not establish a root cause.
+
+The QEMU runner exited 0 after 250.142 seconds when stopped through QMP. The
+ISO SHA-256 matched before and after. This did not reach normal userspace or a
+normal login, and no native test suite, rootless preflight, package
+operation, current-source build, product ISO, or hardware workflow ran. It is
+not a native build or product boot pass. A native build remains open until
+normal userspace and the reviewed rootless preflight are ready. See the
+self-contained [retry13 evidence bundle](boot-diagnostic-retry13-direct-kernel/README.md).
+The selected small retry6 screenshot shows the earlier initramfs udev wait;
+retry13 used serial-only display and has no VGA capture.
+
 ## Captures
 
 - `native-build-usb-help.log` — successful current-source command help.
@@ -63,5 +90,11 @@ explicit human authorization.
   four attempts.
 - `pacman-sync.log`, `pacman-install.log`, and `pinned-packages.txt` — guest
   bootstrap and installed package records.
-- `SHA256SUMS` — hashes for all captured files and this README.
+- `boot-diagnostic-retry6-tty2/` and `boot-diagnostic-retry5/` — earlier
+  bounded startup captures with their own checksum manifests.
+- `boot-diagnostic-retry13-direct-kernel/` — exact direct-kernel launch,
+  PTY input/output, read-only guest observations, helper hashes, and a small
+  retry6 screenshot; see its `SHA256SUMS`.
+- `SHA256SUMS` — hashes for the top-level captured files and this README;
+  each retry directory also carries its own manifest.
 

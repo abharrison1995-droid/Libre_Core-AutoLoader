@@ -1,0 +1,61 @@
+{
+  "attempt": "current-source-native-arch-retry13-direct-kernel",
+  "classification": "generic-Arch-ISO diagnostic only; incomplete normal boot",
+  "qemu": {
+    "package": "Debian 1:10.2.1+ds-1ubuntu3.2",
+    "version": "10.2.1",
+    "accelerator": "TCG multi-thread",
+    "vcpus": 4,
+    "memory_mib": 6144,
+    "wall_cap_seconds": 600,
+    "runner_elapsed_seconds": 250.142,
+    "runner_exit": 0,
+    "stopped_by": "QMP host quit after bounded read-only observations"
+  },
+  "iso": {
+    "path": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/iso-boot/archlinux-2026.10.01-x86_64.iso",
+    "sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+    "sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+    "attachment": "read-only CD-ROM"
+  },
+  "direct_kernel_inputs": {
+    "kernel_member": "arch/boot/x86_64/vmlinuz-linux",
+    "kernel_sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+    "initramfs_member": "arch/boot/x86_64/initramfs-linux.img",
+    "initramfs_sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+    "kernel_arguments": "archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=ttyS0,115200n8 systemd.getty_auto=0 systemd.debug_shell systemd.default_debug_tty=ttyS0"
+  },
+  "isolation_and_devices": {
+    "network": "none",
+    "usb_or_programmer_passthrough": false,
+    "physical_disk_passthrough": false,
+    "source_image": "attached read-only",
+    "scratch": "fresh workspace and results qcow2 overlays"
+  },
+  "guest_observation": {
+    "debug_shell_marker": "[ OK ] Started Early root shell on /dev/ttyS0 FOR DEBUGGING ONLY",
+    "stable_prompt": "sh-5.3#",
+    "normal_login_or_boot": false,
+    "commands": [
+      "id",
+      "lsblk",
+      "systemctl --no-pager list-jobs",
+      "systemctl --no-pager status systemd-nsresourced.service systemd-tmpfiles-setup-dev-early.service systemd-tmpfiles-setup-dev.service",
+      "journalctl -b --no-pager -n 100"
+    ],
+    "identity": "uid=0(root) gid=0(root) groups=0(root)",
+    "device_map": "sr0 is the read-only ISO; vda is the 80 GiB workspace overlay; vdb is the 4 GiB results overlay; vdc is the 256 MiB read-only source image",
+    "pending_jobs": 88,
+    "service_state_at_query_snapshot": "systemd-nsresourced and systemd-tmpfiles-setup-dev-early were activating; systemd-tmpfiles-setup-dev was inactive",
+    "later_transcript_observation": "[FAILED] Failed to start Namespace Resource Manager",
+    "root_cause": "NOT_ESTABLISHED",
+    "journal_observation": "repeated successful BPF-related syscalls were logged for systemd-nsresourced; this does not establish root cause"
+  },
+  "gate_results": {
+    "native_test_suite": "NOT_RUN",
+    "rootless_preflight": "NOT_RUN",
+    "current_source_product_build": "NOT_RUN",
+    "product_iso": "NOT_PRODUCED",
+    "hardware": "NOT_ACCESSED"
+  }
+}

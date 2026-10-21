@@ -40,8 +40,17 @@ current native targeted mypy attempt raised an internal error. Top-level CLI
 help and `build-usb --help` now pass; the latter passed after correcting the
 extracted scratch tree's ownership. Four current-source product build attempts
 did not produce an ISO: the last advanced to the mkinitcpio keyboard hook and
-was stopped before completing an initramfs. See [current-source native Arch
-build evidence](evidence/native-arch-build-20261021/README.md).
+was stopped before completing an initramfs. Subsequent startup retries 3–13
+were diagnostics rather than native build/test gates and also produced no
+ISO. Retry13 reached only a systemd debug shell; read-only `id` and `lsblk`
+showed root and the expected ISO/workspace/results/read-only-source devices.
+At that query snapshot, 88 jobs remained pending around `systemd-nsresourced`
+and tmpfiles; later the transcript recorded the failure `[FAILED] Failed to start Namespace Resource Manager` (cause not established). The ISO hash was
+unchanged. No normal live boot or rootless preflight passed. See
+[current-source native Arch build evidence](evidence/native-arch-build-20261021/README.md)
+and the [retry13 transcript/result](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+The current-source build remains open until normal userspace and the reviewed
+rootless preflight are ready.
 The build-time offline launcher remains fail-closed. No physical firmware
 operation or hardware recovery has been performed; all three device workflows
 remain pending and require explicit human authorization for writes and

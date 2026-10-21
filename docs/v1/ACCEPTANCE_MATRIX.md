@@ -21,7 +21,24 @@ Archiso candidate and BIOS/UEFI QEMU boot at `be2fece` are documented below;
 they do not validate the current source. X220 device-bound ROM compilation
 and all three physical acceptance workflows remain open.
 
-## Native Archiso candidate and QEMU boot — 2026-10-21
+Current-source native Arch status: the focused X220 selection passed 50 tests,
+4 skipped, and 972 deselected; top-level and `build-usb --help` passed. The
+exploratory full native suite stopped at about 7% after errors without JUnit,
+and native targeted mypy raised an internal error. Four current-source
+Archiso build attempts produced no ISO; subsequent startup retries 3–13 were
+diagnostics rather than build/test gates and also produced no ISO. Retry13
+reached only a systemd debug shell: read-only `id` and `lsblk` showed root and
+the expected device map. At that query snapshot, 88 systemd jobs remained
+pending around `systemd-nsresourced` and tmpfiles; later in the transcript
+systemd printed `[FAILED] Failed to start Namespace Resource Manager` (cause
+not established). The ISO hash was unchanged. No normal live
+boot, rootless preflight, current-source build gate, or product ISO passed.
+The native build remains open until normal userspace and the reviewed
+rootless preflight are ready. Details and hashes are in [current-source native
+Arch evidence](evidence/native-arch-build-20261021/README.md) and the
+[retry13 diagnostic](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
+
+## Historical native Archiso candidate and QEMU boot — source revision `be2fece`
 
 At source revision `be2fece`, a native Arch Linux VM run passed **1,017 tests,
 2 skipped**, Windows-targeted mypy on 105 files, and CLI help gates. The pinned
@@ -42,17 +59,12 @@ source-isolation correction was accepted by SOL at `8ea32c5`; focused tests
 verify operation-owned source/ROM containment and reject symlinked or external
 checkouts. A real Coreboot ROM compile still requires fresh device topology and
 verified backup evidence, and no physical acceptance workflow has been run.
-The current-source VM reached systemd emergency mode under QEMU TCG. After
-the source bundle and test environment were made available, its native
-X220-focused selection passed 50 tests with 4 skipped (972 deselected). The
-exploratory full native suite stopped at about 7% after multiple errors and
-produced no JUnit; it is incomplete. Top-level CLI and `build-usb --help`
-passed after correcting scratch-tree ownership. Four current-source build
-attempts did not produce an ISO; the last stopped during mkinitcpio before an
-initramfs was complete. Native targeted mypy raised an internal error. Exact
-build logs and outcomes are in [current-source native Arch build
-evidence](evidence/native-arch-build-20261021/README.md). Current-source
-product ISO BIOS/UEFI boot remains open.
+The current-source debug-shell diagnostic reached only a systemd shell, not a
+normal live boot. It showed root identity and the expected ISO, workspace,
+results, and read-only source map, but 88 jobs remained pending around
+`systemd-nsresourced` and tmpfiles. No native suite/build gate or product ISO
+passed; see the current-source status above and the [retry13 evidence
+bundle](evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md).
 
 ## Live USB runtime network profile update — 2026-10-20
 
