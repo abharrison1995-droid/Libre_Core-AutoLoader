@@ -748,15 +748,99 @@ Its scratch parent must be a root-owned, non-link directory of exact mode
 scratch child is checked as caller-owned mode `0700`. This does not validate an
 ISO build, boot, ROM, or hardware workflow.
 
-SOL accepted the contract. The independent Arch Linux WSL2 focused selection
-passed **53 tests in 3.15s**, and mypy passed on the two touched source files.
-The current-source Arch WSL2 non-root full suite passed **809 tests, 2
-Windows-specific skips, 0 failures/errors** (811 collected; 1771.18s; exit
-0). This WSL result does not establish a deployed launcher or operational
-`pacstrap -N` package-input compatibility; offline execution remains
-unavailable until those gates are separately proved. The JUnit report and
-exact command are recorded in
+The packaged `rootless_offline_launcher.c` is currently only a protocol stub.
+Its compile-time tests check the fixed 14-argument syntax. A production build
+with valid arguments still exits unavailable before reading account/sub-ID,
+namespace, mountinfo, or tool evidence; it does not create namespaces, mount
+anything, execute a child, or emit a `SUPPORTED` report. No setuid installation
+or production pin was added. These checks validate parser behavior only; they
+do not implement or prove the offline launcher, and the existing production
+offline-build gates remain closed.
+
+### Separate sealed-VM worker contract (prototype only)
+
+`offline_vm_worker.py` and `offline_vm_guest_worker.py` define a separate,
+versioned request/result contract for a future no-network build VM. The host
+argv is fixed to QEMU TCG with `-nic none`, no host shares or device
+passthrough, four read-only worker/request/source/package disks, and dedicated
+scratch/output disks. Host execution requires an unprivileged account with
+empty effective/permitted/ambient capabilities, fixed environment and working
+directory, closed inherited descriptors, a bounded wall time, process-group
+cleanup, and before/after hashes for every read-only input. The guest validates
+its fixed disk roles, mounts, interfaces, routes, profile inventory, and worker
+image marker.
+
+This is a contract prototype, not a deployed builder. The production worker
+pin is unset, `build_usb.py` does not call it, and the guest deliberately
+returns `BUILD_BACKEND_UNAVAILABLE` without running package or build commands.
+The protocol's candidate-ISO check is structural only and cannot publish a
+validated builder result. It still needs the USB builder's target-root and
+provenance checks, plus its BIOS and UEFI validation gates. Native no-NIC
+package/build evidence and a reviewed exact QEMU/worker deployment are also
+required. The pre-existing rootless launcher and offline build gates remain
+independently closed.
+
+The candidate publication protocol is ordered to detect a masked guest failure:
+the guest first copies and flushes the ISO payload, then publishes the bound
+service result, receipt, and header. It writes and flushes the operation-bound
+commit slot, and only after that flush returns writes a terminal slot recording
+that the commit flush returned. After QEMU exits, the host flushes the held
+output-image descriptor, then requires the terminal slot and independently
+checks the commit/header bindings, ISO digest, and boot descriptors. Readable
+commit bytes without the terminal slot are rejected, including when systemd
+could make QEMU exit successfully after a failed service. Fake tests cover
+commit-flush failure, host-flush failure, and terminal publication. This is
+software-only evidence; the ordering has not been exercised in the sealed VM.
+
+### Historical rootless namespace regression (separate from the VM worker)
+
+The earlier SOL acceptance and Arch Linux WSL2 results in this paragraph apply
+only to the rootless namespace contract above, not to the sealed-VM worker.
+That historical focused selection passed **53 tests in 3.15s**, and its
+current-source non-root full suite passed **809 tests, 2 Windows-specific
+skips, 0 failures/errors** (811 collected; 1771.18s; exit 0). These WSL results
+do not establish a deployed launcher or operational `pacstrap -N`
+package-input compatibility; the rootless offline build remains unavailable.
+The JUnit report and exact command are recorded in
 `docs/v1/evidence/software-regression-20261016/README.md`.
+
+### Earlier protocol-only sealed-VM worker checkpoint — 2026-10-22
+
+At this contract-only checkpoint, the user-approved policy permitted
+`NoNewPrivileges=0` only inside the sealed, no-network guest; the host remained
+unprivileged with empty effective, permitted, and ambient capabilities. That
+revision had no guest executor. SOL accepted the unavailable contract
+prototype only. Focused tests passed **17/17** in Ubuntu WSL.
+An earlier Windows run on the preceding code revision passed **11 tests with
+6 Linux-only skips**. The latest Windows attempt on the final revision
+completed **10 passed, 6 skipped, 1 failed** (17 collected); the last fixture
+failed with `ENOSPC` while creating a 64 MiB scratch file after C: space fell
+to 16 KiB. This was an environment storage error, not an assertion failure,
+and the final Windows selection is not fully passed. Native and
+Win32-targeted mypy passed for both worker modules. No VM, package
+installation, ISO build, or hardware operation was run. The worker candidate
+still requires the USB builder's target-root, provenance, BIOS, and UEFI
+validation gates; all production offline-build gates remain closed.
+
+### Guest executor implementation slice — unavailable prototype only (2026-10-22)
+
+The separate prototype now contains a fixed `mkarchiso` executor, a hash-bound
+pacstrap status-preserving overlay, local signed-package/repository checks, and
+an NNP=1 preflight service that hands a one-shot request to a fixed systemd
+path/service pair. The packaged builder service specifies NNP=0 only inside
+the intended sealed no-network guest, with empty effective/permitted/ambient
+capabilities and the exact reviewed capability bounding mask. The host adapter
+remains a fixed QEMU no-NIC runner with read-only inputs and a dedicated output
+volume. The default guest entrypoint still returns unavailable, the deployment
+pin is absent, and `build_usb.py` does not call this prototype.
+
+The focused executor/host selection passed **32 tests** in Ubuntu WSL, and
+targeted mypy passed on five source modules. This validates deterministic
+software checks only. The service units have not been installed or run in a
+sealed guest; pacstrap `-N`, package installation, `mkarchiso`, candidate
+target-root/provenance/BIOS/UEFI validation, and output-volume acceptance remain
+unproven. No VM was launched, no build or package operation ran, and no
+hardware operation occurred. Production offline execution remains closed.
 
 ## Live USB runtime network defaults — software-only update (2026-10-20)
 
@@ -787,3 +871,24 @@ unvalidated. It does not implement the build-time `--network-mode offline`
 launcher: that path still fails closed with
 `OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`. Native Linux build, BIOS/UEFI
 AutoLoader/service boot, and hardware validation remain pending.
+
+## Offline VM evidence-volume prototype
+
+A separate, non-publishing evidence-volume parser/extractor is documented in
+[`docs/v1/offline-vm-evidence-prototype.md`](../docs/v1/offline-vm-evidence-prototype.md).
+It does not enable the offline builder or establish a real build's evidence
+size; the production deployment pin and build route remain unavailable.
+
+The focused prototype suite now passes **40 tests** in Ubuntu WSL, with
+targeted mypy passing on the parser and tests. SOL reviewed the transport
+prototype. Target-root symlinks are transported as hashed targets, checked
+for lexical resolution within the image. Literal `/dev/null` is accepted only
+at the exact systemd mask paths in `NETWORK_DISABLED_SYSTEMD_UNITS`; symlinks
+are created only after regular files using no-follow directory descriptors.
+Compatibility with an actual mkarchiso target root remains
+unmeasured. Command status, package inventory, provenance and target-root
+meaning still require semantic validation in a future integration. If
+extraction reports failure, marker cleanup problems are surfaced; future
+consumers must require successful extraction and fresh validation rather than
+trust a marker alone. These are synthetic transport and failure-injection
+checks, not sealed-VM, build, ISO, boot, or firmware evidence.

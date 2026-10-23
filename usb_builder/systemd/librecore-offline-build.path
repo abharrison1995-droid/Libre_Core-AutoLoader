@@ -1,0 +1,9 @@
+[Unit]
+Description=One-shot trigger for LibreCore sealed offline V1 image builder
+
+[Path]
+PathExists=/run/librecore-scratch/build-invocation.json
+Unit=librecore-offline-build.service
+
+[Install]
+WantedBy=multi-user.target
