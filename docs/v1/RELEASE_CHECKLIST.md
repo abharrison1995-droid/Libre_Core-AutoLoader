@@ -4,8 +4,15 @@ At commit `8ea32c5`, the latest full regression passed on Windows (**955
 passed, 71 skipped**; 1,026 collected; 1,687.79s; exit 0) and Ubuntu 26.04 WSL
 (**1,022 passed, 4 skipped**; 1,026 collected; 1,497.18s; exit 0).
 Full-project no-incremental mypy passed on 111 source files in Windows native
-mode, Windows Win32-targeted mode, and Ubuntu WSL. All skips remain unpassed.
+mode, Windows Win32-targeted mode, and Ubuntu WSL. All skips in this historical
+`8ea32c5` regression remain unpassed.
 JUnit reports, hashes, and commands are in [`2026-10-21 software regression evidence`](evidence/software-regression-20261021/README.md).
+
+The final Linux run in the earlier [worker regression evidence bundle](evidence/software-regression-worker-20261022/README.md), after the TUI challenge-readiness test change, passed **1,146 tests, skipped 4** (1,150 collected; 758.975s; zero failures) in Ubuntu 26.04 WSL2. Full-project mypy passed on 116 source files; both CLI help checks and `git diff --check` passed. This result was superseded by the later 2026-10-23 source-pinned 33-module aggregate: **1,221 passed, 4 skipped** (see the latest software-regression row below).
+
+On current Windows source, the UI selection passed 58 with 1 skip and the cancellation race passed 1/1; the full Windows suite was not rerun because C: had only 186,892,288 bytes free. The previous 1,088-test full Windows result is for its recorded 2026-10-22 snapshot, not this final source. Exact reports and input hashes for the 1,146-test run are in the earlier bundle.
+The WSL run is software-only; the sealed build VM and all three real-device
+workflows remain open.
 
 The latest current-source wheel smoke passed in Ubuntu 26.04 WSL, including
 four pinned patch resources, extracted imports, and CLI help. It verifies
@@ -73,7 +80,7 @@ recovery.
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Latest software regression | SOFTWARE TESTED — PASS; RELEASE VALIDATION OPEN | At `8ea32c5`, Windows: 955 passed, 71 skipped; Ubuntu 26.04 WSL: 1,022 passed, 4 skipped; 1,026 collected in each, zero failures/errors. Full-project mypy passed on 111 source files in Windows native, Windows Win32-targeted, and Ubuntu WSL modes. All skips remain unpassed. Exact JUnit reports, hashes and commands are in [`2026-10-21 software regression evidence`](evidence/software-regression-20261021/README.md). Ubuntu is WSL, not a native Linux VM. |
+| Latest software regression | 1,221 PASSED, 4 LINUX SKIPPED (2 LATER PASSED SEPARATELY ON WINDOWS); SEALED VM, WINDOWS FULL-SUITE AND HARDWARE ACCEPTANCE OPEN | Current source at `94abf88` plus working-tree inputs: Ubuntu 26.04 WSL2 ran all 33 top-level modules from the first module as a fresh execution (with `RESUME` unset), each with a fresh pytest temporary root; aggregate JUnit totals are 1,225 tests, 1,221 passed, 4 skipped, 0 failures/errors; the source-pinned runner exited 0. The Linux aggregate's four skips are two Windows-only contracts and two Arch pacman ownership/preflight tests marked `UNVALIDATED` in WSL. The two Windows-only nodes were subsequently run in a separate native-Windows Python 3.12.14 check with process-only `core.longpaths` Git configuration: 2 passed, exit 0. Only the two Arch ownership/preflight skips remain unvalidated; the focused Windows check does not change the Linux aggregate and is not a Windows full-suite pass. Earlier unsupported UNC/long-path temporary-root attempts are excluded from the passing counts. No single-process whole-suite pass is claimed because an earlier attempt exhausted `/dev/shm`. Full-project mypy passed in native Linux and `--platform win32` modes on 117 source files; top-level, `flash`, and `build-rom` CLI help, Windows Python import smoke, and `git diff --check` passed. The focused worker/evidence selection passed 171 tests. The current Windows full suite was not rerun because C: space remains constrained. Exact module logs, JUnit, manifests, counts, and skip reasons are in the [2026-10-23 offline worker regression record](evidence/offline-worker-regression-20261023/README.md); the separate Windows follow-up command/output/status and excluded diagnostics are recorded there as well. The README records the WSL invocation, while `module-run.exit` records the runner status separately; the then-current `module-run.log` lacks the invocation, per-module commands, and wrapper pipeline status. The harness now records those details on future fresh runs. `RESUME=1` is refused before touching existing results, manifests, or logs, and retained-module continuation is disabled. Ubuntu is WSL, not the sealed build VM. |
 | Native Archiso candidate | HISTORICAL CANDIDATE AND QEMU BOOT PASS AT `be2fece`; CURRENT-SOURCE BUILD/BOOT OPEN | Native Arch test suite at `be2fece`: 1,017 passed, 2 skipped; Windows-targeted mypy passed on 105 files; CLI help passed. That ISO booted to the application interface in BIOS and UEFI QEMU. The harness exited 1 at the final FAT ownership-preserving copy; the copied candidate hash was verified. At current source, the Arch QEMU guest passed the focused X220 selection (50 passed, 4 skipped, 972 deselected); top-level and `build-usb --help` passed. An exploratory full suite stopped at about 7% after errors, without JUnit. Four current-source builds did not produce an ISO; the last stopped during mkinitcpio. Native targeted mypy raised an internal error. [`Historical evidence`](evidence/native-arch-iso-be2fece-20261021/README.md); [`current build evidence`](evidence/native-arch-build-20261021/README.md); [`current software evidence`](evidence/software-regression-20261021/README.md). |
 | Meaningful safety branch coverage | SOFTWARE TESTED — 85% TARGET MET; WRITER SOFTWARE REVIEW COMPLETE; POSIX PHYSICAL VALIDATION OPEN | Latest accumulated coverage is 577/678 branches (85.1%) across the fixed compatibility, engine, authorization, journal, backup, and backup-service denominator. Write-approval, write-service, and post-reboot rates remain separate and lower. The two fake-only crash/replay tests are included in the final Windows and Ubuntu WSL full suites. SOL's read-only audit found no new software blocker and accepted the crash/replay coverage. Residual missed branches and their categories are in [`safety coverage evidence`](evidence/safety-coverage-20261017/README.md). This does not prove real POSIX directory fsync, flashrom against a physical device, physical read-back, or boot; those gates remain open. |
 | Application and CLI launch cleanly | SOFTWARE TESTED | Phase 03 final independent evidence at `448766a`: SOL reran 124 tests in 79.59s, mypy clean on 86 source files, CLI help passed, and the tree was clean. This software evidence does not include physical hardware validation. |
@@ -108,6 +115,14 @@ recovery.
 | Pinned upstream firmware builds and generated-image evidence | PARTIAL — X200 WSL UPSTREAM DIAGNOSTIC PASSED; RELEASE GATES OPEN | The pinned Libreboot 26.01 X200 upstream build exited zero and produced 31 expected 4 MiB ROM variants. A later validation-only run checked all 31 against pinned size and CBFS structure, including null-row interval overlap checks. This did not publish an ArtifactEngine `COMPLETE` manifest, copy an image into the repository, or establish a device-bound/flash-ready artifact. A real X220 Coreboot ROM build, native Linux build/ISO gates, and all hardware-derived image checks remain open. Current identity, topology and verified backup/recovery evidence remain mandatory before hardware operations. See [`X200 upstream evidence`](evidence/x200-vboot-overlay-build-20261021/README.md). |
 
 V1 cannot be marked complete while any release-blocking software check or any of the three hardware workflows remains pending.
+
+The 2026-10-23 33-module aggregate is a historical capture of the source bytes
+listed in its original manifest. After capture, whitespace-only cleanup
+removed trailing spaces from six static-check command rows and one extra final
+blank line from five worker source/test files. The focused post-cleanup worker
+selection passed 171 tests; the original full-suite artifacts and manifest
+were preserved unchanged. See the [whitespace cleanup follow-up](evidence/offline-worker-regression-20261023/whitespace-cleanup-followup.md)
+for current hashes and the diff check.
 
 ## Earlier release-candidate gate snapshot — commit 6cabb23d, 2026-10-16
 
@@ -386,3 +401,79 @@ a flash-ready artifact. The T430, X200, and X220
 real-device workflows remain **HARDWARE PENDING**. No physical write or
 hardware-specific recovery operation has occurred; those actions still
 require explicit human authorization.
+
+## Sealed-VM worker prototype — 2026-10-22
+
+The approved guest-only `NoNewPrivileges=0` boundary is recorded in
+[`D-009`](DECISIONS.md). The current worker is an **unavailable prototype**:
+the default guest entrypoint returns `BUILD_BACKEND_UNAVAILABLE`; the separate
+fixed executor prototype described below is not wired into `build_usb.py` and
+has no production deployment pin. The current-source full suite passed with zero failures/errors:
+Ubuntu 26.04 WSL2 passed 1,084 and skipped 4; Windows passed 994 and skipped
+94, with 1,088 collected on each platform. Linux full-project mypy passed on
+113 source files and both CLI help commands passed. Worker-focused tests
+passed 17/17 in WSL and 11/11 Windows-applicable cases (6 Linux-only skips).
+The Linux and Windows skips are enumerated in the linked regression evidence;
+all remain unpassed. SOL accepted the unavailable prototype only. No sealed
+VM build, product ISO, or hardware operation ran. All three real-device
+workflows remain **HARDWARE PENDING**.
+
+### Guest executor implementation follow-up — 2026-10-22
+
+The separate unavailable prototype now includes a fixed guest `mkarchiso`
+executor and an NNP=1 preflight to NNP=0 sealed-guest systemd handoff, plus a
+fixed host QEMU adapter and candidate validation entrypoint. The four packaged
+unit resources match their embedded bytes. Its focused executor/host selection
+passed 32 tests in Ubuntu WSL; targeted mypy passed on five source modules and
+`git diff --check` passed. No deployment pin or `build_usb.py` integration was
+added. The unit pair has not run in a sealed VM, and package installation,
+`pacstrap -N`, `mkarchiso`, candidate target-root/provenance/BIOS/UEFI checks,
+and ISO validation remain open. This is not an offline-build pass; no VM/build,
+ISO, or hardware operation occurred.
+
+### Worker deployment gate assessment — 2026-10-23
+
+The guest remains unavailable. The native Windows host has no QEMU executable;
+QEMU 10.2.1 is available only in Ubuntu WSL, where `systemd-detect-virt`
+reports `wsl`. There is no bootable worker image or reviewed QEMU/image pin in
+the repository, and the approved Linux workspace partition was absent from
+WSL at the latest read-only recheck. No guest or build was run. The existing
+fixed QEMU contract specifies TCG, `-nic none`, block devices only, and a
+guest-local NNP=1 preflight followed by the fixed NNP=0 systemd builder unit;
+these source rules have not been proven against an installed image.
+
+Release remains gated on building a bootable worker image from the exact
+package lock, pinning the image and supported QEMU executable, and exercising
+them on a package-matched Linux host. The run must verify that the guest has no
+NIC, device passthrough, or writable host share; that NNP=0 is confined to the
+fixed guest systemd service after NNP=1 preflight; and that locked
+`pacstrap -N`, `mkarchiso`, target-root/provenance checks, and BIOS/UEFI boot
+validation complete. Independent review of those operational captures is
+required before setting `PRODUCTION_WORKER_DEPLOYMENT` or connecting the path
+to `build_usb.py`. No physical firmware operation is included.
+
+### Offline VM environment follow-up — 2026-10-23
+
+The user subsequently authorized read-only inspection of the Linux partition
+and a new private VM workspace there. The ext4 partition had about 137 GiB
+free; only the new workspace directory and diagnostic screen captures were
+written, and the partition was remounted read-only afterward. This supersedes
+the earlier absent-mount observation as the current environment state.
+
+QEMU 10.2.1 in Ubuntu WSL ran the official-hash-verified Arch 2026.10.01 ISO
+under unprivileged TCG with no guest NIC, passthrough, writable host share, or
+disk. One screen capture reached the Arch welcome text; a later roughly
+213-second console check remained on the early `Probing EDD` / TDX screen, and
+the injected `uname` had no observable result. This is inconsistent screen
+progress, **not a verified guest boot**. QEMU's KVM accelerator also failed
+with `No such device` despite process-only access to `/dev/kvm`, so this host
+is limited to TCG for the current attempt. The images and SHA-256 values are in
+the [VM ISO diagnostic](evidence/vm-iso-tcg-diagnostic-20261023/README.md).
+
+The worker image, exact locked package installation, systemd preflight and
+builder execution, `pacstrap -N`, `mkarchiso`, target-root/provenance
+validation, and BIOS/UEFI guest boot remain untested. Keep the worker
+unavailable and do not set `PRODUCTION_WORKER_DEPLOYMENT` until these checks
+are performed and reviewed on a stable package-matched Linux VM. The separate
+T430, X200, and X220 hardware acceptance remains deferred; physical writes
+and recovery still require explicit authorization.

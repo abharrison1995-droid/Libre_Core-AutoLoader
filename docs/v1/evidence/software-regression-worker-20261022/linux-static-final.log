@@ -1,0 +1,8 @@
+Python 3.14.4
+Linux 6.18.54.1-microsoft-standard-WSL2
+autoloader/detection/bios.py:44: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+autoloader/flasher/flashrom.py:322: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+autoloader/flasher/flashrom.py:323: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+Success: no issues found in 116 source files
+CLI help: PASS
+build-usb help: PASS

@@ -1,0 +1,76 @@
+...............sssss......ss........................s................... [  6%]
+....................s...........................s....................... [ 13%]
+......................s.................s.ss..sss....................... [ 19%]
+.........................................................s.............. [ 26%]
+........................................................................ [ 33%]
+............ssssssssssssssss............sssssssssssssssss............... [ 39%]
+.....................................s.................................. [ 46%]
+.......................................................................s [ 52%]
+................ssssssssssss............................................ [ 59%]
+................................s......................sssss............ [ 66%]
+..ss.........s...ssss..................................s.......ss....... [ 72%]
+........................................................................ [ 79%]
+....s.....................s........................s.........sss........ [ 86%]
+....sss................................................................. [ 92%]
+...........................................sss.....s.................... [ 99%]
+........                                                                 [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_application_controller.py:441: positive approval persistence requires POSIX directory fsync; production remains fail-closed on Windows
+SKIPPED [4] tests\test_application_controller.py:546: durable operation-journal success fixtures require POSIX directory fsync; production remains fail-closed on Windows
+SKIPPED [1] tests\test_artifact_engine.py:392: Host cannot create symlinks for this negative case: [WinError 1314] A required privilege is not held by the client: 'C:\\q\\lcw221022\\test_x200_generated_file_captu2\\work\\lbmk\\src\\coreboot\\default\\util\\cbfstool\\fmd_parser.h_shipped' -> 'C:\\q\\lcw221022\\test_x200_generated_file_captu2\\work\\lbmk\\src\\coreboot\\default\\util\\cbfstool\\fmd_parser.h'
+SKIPPED [1] tests\test_artifact_engine.py:400: Host cannot create directory symlinks for this negative case: [WinError 1314] A required privilege is not held by the client: 'C:\\q\\lcw221022\\test_x200_generated_file_captu3\\outside-util' -> 'C:\\q\\lcw221022\\test_x200_generated_file_captu3\\work\\lbmk\\src\\coreboot\\default\\util'
+SKIPPED [1] tests\test_artifact_engine.py:1223: Symlink creation is unavailable for this test host: [WinError 1314] A required privilege is not held by the client: 'C:\\q\\lcw221022\\test_x200_uboot_cache_origin_b0\\disposable-lbmk\\cache\\clone\\source.denx.de\\u-boot\\u-boot.git' -> 'C:\\q\\lcw221022\\test_x200_uboot_cache_origin_b0\\linked-lbmk\\cache\\clone\\source.denx.de\\u-boot\\u-boot.git'
+SKIPPED [1] tests\test_artifact_engine.py:2753: UNVALIDATED: POSIX permission bits are not meaningful on Windows
+SKIPPED [1] tests\test_device_readiness.py:122: symlink creation is unavailable on this host
+SKIPPED [1] tests\test_live_iso_host_package_context.py:35: the disposable guest helper is Linux-only
+SKIPPED [1] tests\test_offline_vm_worker.py:151: descriptor/fchmod policy is POSIX-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:192: approved worker storage policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:200: mountinfo filesystem policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:231: process-group semantics are Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:288: Linux worker path validation is POSIX-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:312: opened-inode pass_fds policy is Linux-specific
+SKIPPED [1] tests\test_phase03_spi_safety.py:1150: Windows symlink creation depends on account privilege
+SKIPPED [1] tests\test_post_reboot_evidence.py:200: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:237: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:275: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:297: production sidecar durability requires POSIX directory fsync
+SKIPPED [5] tests\test_post_reboot_evidence.py:323: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:359: production sidecar durability requires POSIX directory fsync
+SKIPPED [3] tests\test_post_reboot_evidence.py:390: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:409: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:434: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_recovery_runbook_package.py:16: wheel smoke requires the already-installed setuptools and wheel build tools
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:57: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:63: C launcher protocol uses POSIX process semantics
+SKIPPED [13] tests\test_rootless_offline_launcher_source.py:72: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:118: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:135: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_preflight.py:445: UNVALIDATED: process-group cleanup requires POSIX signals
+SKIPPED [1] tests\test_ui.py:1066: positive approval/journal persistence requires POSIX directory fsync; production remains fail-closed on Windows
+SKIPPED [1] tests\test_usb_builder.py:466: symlink creation is not available in this test environment
+SKIPPED [1] tests\test_usb_builder.py:472: staging requires POSIX ownership and mode semantics
+SKIPPED [4] tests\test_usb_builder.py:515: staging requires POSIX ownership and mode semantics
+SKIPPED [5] tests\test_usb_builder.py:536: shell status proof requires POSIX process semantics
+SKIPPED [1] tests\test_usb_builder.py:586: process-group timeout proof requires POSIX signals
+SKIPPED [1] tests\test_usb_builder.py:1028: symlink creation is unavailable on this host
+SKIPPED [1] tests\test_usb_builder.py:2111: Linux usrmerge executable path contract
+SKIPPED [1] tests\test_usb_builder.py:2152: target-root uses POSIX symlink semantics
+SKIPPED [1] tests\test_usb_builder.py:2174: target-root uses POSIX symlink semantics
+SKIPPED [2] tests\test_usb_builder.py:2204: Linux Archiso ownership contract
+SKIPPED [2] tests\test_usb_builder.py:2471: target-root POSIX symlink contract
+SKIPPED [1] tests\test_usb_builder.py:2602: target-root POSIX symlink contract
+SKIPPED [2] tests\test_usb_builder.py:2638: target-root POSIX symlink contract
+SKIPPED [2] tests\test_usb_builder.py:2663: target-root POSIX symlink contract
+SKIPPED [1] tests\test_usb_builder.py:3192: requires Linux process groups and /proc
+SKIPPED [1] tests\test_usb_builder.py:3287: UNVALIDATED: host lacks Linux util-linux unshare
+SKIPPED [1] tests\test_usb_builder.py:3343: UNVALIDATED: host lacks Linux util-linux unshare
+SKIPPED [1] tests\test_usb_builder.py:4206: real mapped user namespaces are Linux-only
+SKIPPED [1] tests\test_usb_builder.py:4532: real Linux /dev character-node inspection
+SKIPPED [1] tests\test_usb_builder.py:5050: requires Linux process groups and /proc
+SKIPPED [2] tests\test_usb_builder.py:5185: Linux executable ownership contract
+SKIPPED [1] tests\test_usb_builder.py:5223: Linux pacman ownership contract
+SKIPPED [1] tests\test_usb_builder.py:5342: POSIX symlink test
+SKIPPED [2] tests\test_usb_builder.py:5360: POSIX symlink test
+SKIPPED [3] tests\test_x200_mac.py:62: successful durable MAC artifact publication requires POSIX directory fsync; production remains fail-closed on Windows
+SKIPPED [1] tests\test_x200_mac.py:132: the final positive MAC artifact publication requires POSIX directory fsync; production remains fail-closed on Windows
+994 passed, 94 skipped in 962.03s (0:16:02)

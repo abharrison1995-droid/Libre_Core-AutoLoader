@@ -2,17 +2,34 @@
 
 `Software tested` means exercised by automated tests or a non-destructive build. `Hardware pending` means no real-device evidence is present in this repository baseline.
 
+## Superseded 1,146-test Linux result — 2026-10-23
+
+The final Linux run in the earlier worker regression bundle passed **1,146
+tests, skipped 4** (1,150 collected; zero failures). It has since been
+superseded by the later source-pinned 33-module worker regression, which
+passed **1,221 tests, skipped 4**; see the [latest worker regression
+record](evidence/offline-worker-regression-20261023/README.md). Current-source
+no-incremental mypy passed on 116 files, and both CLI help checks passed.
+Windows current-source coverage passed the UI selection (**58 passed, 1
+skipped**) and the focused cancellation race (**1/1**); the full Windows suite
+was not rerun because available C: storage was insufficient. Source hashes,
+exact reports, skip reasons, and the reconstructed-test provenance for the
+superseded result are recorded in the [earlier regression bundle](evidence/software-regression-worker-20261022/README.md).
+This is WSL software evidence, not a sealed build VM, current Live USB build,
+ROM build, physical flash, read-back, recovery, or boot test. The current
+worker/Archiso gates and T430, X200, and X220 hardware acceptance remain open.
+
 ## Current-source software regression — 2026-10-21
 
-At commit `8ea32c5`, the latest full suite passed on Windows (**955 passed,
-71 skipped**) and Ubuntu 26.04 WSL (**1,022 passed, 4 skipped**); both
-collected 1,026 tests with zero failures. Windows took 1,687.79 seconds;
-Ubuntu WSL took 1,497.18 seconds. Full-project no-incremental mypy passed on
-111 source files in Windows native mode, Windows Win32-targeted mode, and
-Ubuntu WSL. All skips remain unpassed. JUnit reports, hashes, and commands are
-in
-[`software regression evidence`](evidence/software-regression-20261021/README.md).
-Ubuntu WSL is not native Linux.
+The latest full suite ran against base commit `94abf88` with the guided
+workflow form and tests in the working tree. Windows passed **983 tests, 71
+skipped**; Ubuntu 26.04 WSL passed **1,050 tests, 4 skipped**; both collected
+1,054 tests with zero failures or errors. Full-project mypy passed on 105
+source files in Windows native mode, Windows Win32-targeted mode, and Ubuntu
+WSL; Windows CLI and `build-usb --help` smoke checks passed. All skips remain
+unpassed. Run details and source hashes are in [`software regression
+evidence`](evidence/software-regression-20261021/README.md). Ubuntu WSL is not
+native Linux.
 
 The pinned Libreboot 26.01 X200 upstream build and validation-only evidence
 cover 31 ROM variants in WSL; they do not create an ArtifactEngine `COMPLETE`

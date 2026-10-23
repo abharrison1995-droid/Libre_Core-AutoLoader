@@ -3,6 +3,59 @@
 This folder consolidates the current Windows and Ubuntu WSL software results.
 It contains no hardware, firmware-write, or successful product-ISO evidence.
 
+## Latest working-tree regression after guided workflow form — 2026-10-21
+
+The run used base commit `94abf88b4d894c15c1d960f541da30c5a3e6659a` plus the
+two current working-tree files listed below. It collected 1,054 tests in each
+environment and completed without failures or errors.
+
+| Environment | Result | Duration |
+|---|---:|---:|
+| Windows `.venv` | 983 passed, 71 skipped; 1,054 total | 967.37s |
+| Ubuntu 26.04 WSL, source and temp files on ext4 | 1,050 passed, 4 skipped; 1,054 total | 749.45s |
+
+The Windows command was:
+
+```powershell
+.venv\Scripts\python.exe -m pytest -q --basetemp C:\lcv1
+```
+
+The Ubuntu command used the Linux-filesystem source snapshot and ext4 temporary
+directory:
+
+```sh
+TMPDIR=/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/linux-test-tmp-20261021 \
+  /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/linux-test-venv-20261021/bin/python \
+  -m pytest -q \
+  --basetemp=/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/linux-test-tmp-20261021/pytest-v1-run2
+```
+
+Current source file SHA-256 values:
+
+- `autoloader/ui/screens/x_workflow_action.py` — `C9AE81B78EBE1F14469B0643E2F0987385421D986B4868947AA56CB04D031882`
+- `tests/test_ui.py` — `02ED80126FE6028B6E1046D606F3EFCB82F76B0B6A356566AB3E904F0D4B42D6`
+- Combined binary diff from the base commit — `0539f167ae92e2a7470a9ce8d37f98e495d394ab28454c62600d14c49948aeb3`
+
+Full-project no-incremental mypy passed on all **105 source files** in Windows
+native mode, Windows `--platform win32` mode, and Ubuntu WSL. Windows CLI and
+`build-usb --help` smoke checks also exited 0. Pytest did not emit JUnit XML
+for this run; the counts and durations above are the captured process
+summaries. All 71 Windows skips and 4 Ubuntu skips remain unpassed.
+
+The Windows fail-fast diagnostic first used a long temporary path and stopped
+when Git could not create a nested hook file. The isolated failing test passed
+with the short `C:\\lcv1` base, followed by the full Windows pass above. The
+initial Ubuntu attempt from `/mnt/c` is excluded because Windows-mounted
+filesystem semantics caused permission-sensitive tests to fail. A later run
+filled WSL's 4-GB `/tmp`; it stopped with an internal pytest error. The
+successful Ubuntu run used a Linux source snapshot on the authorized ext4
+workspace and placed pytest's full temporary tree there.
+
+These are software-only results. The current-source Archiso build and Live
+USB BIOS/UEFI app/service boot remain open. T430 1vyrain, X200 Libreboot, and
+X220 Coreboot hardware workflows remain **HARDWARE PENDING**. No physical SPI
+probe, firmware write, recovery, read-back, or hardware boot was performed.
+
 ## Earlier full-suite checkpoint (before the schema-4 follow-up)
 
 | Environment | Result | Duration | Notes |

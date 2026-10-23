@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="1" tests="59" time="81.064" timestamp="2026-10-23T12:15:58.492023+01:00" hostname="DESKTOP-RUNVSTR"><testcase classname="tests.test_ui" name="test_app_registers_only_v1_workflow_screens" time="0.149" /><testcase classname="tests.test_ui" name="test_screens_mount_without_hardware_input_or_false_success" time="5.660" /><testcase classname="tests.test_ui" name="test_profile_selection_ui_contains_only_the_three_v1_profiles" time="0.644" /><testcase classname="tests.test_ui" name="test_generic_rom_base_payload_and_ec_chooser_paths_are_absent" time="1.497" /><testcase classname="tests.test_ui" name="test_pathway_actions_and_status_come_from_controller" time="2.888" /><testcase classname="tests.test_ui" name="test_post_reboot_screen_submits_observations_through_shared_controller" time="2.235" /><testcase classname="tests.test_ui" name="test_readiness_review_screen_routes_checkpoint_through_shared_controller" time="0.923" /><testcase classname="tests.test_ui" name="test_post_reboot_screen_guides_model_specific_timestamped_observations[x200-libreboot-required_checks0-True]" time="1.239" /><testcase classname="tests.test_ui" name="test_post_reboot_screen_guides_model_specific_timestamped_observations[x220-coreboot-required_checks1-False]" time="1.455" /><testcase classname="tests.test_ui" name="test_post_reboot_screen_guides_model_specific_timestamped_observations[t430-1vyrain-required_checks2-False]" time="1.486" /><testcase classname="tests.test_ui" name="test_post_reboot_cli_uses_shared_boot_check_controller" time="0.040" /><testcase classname="tests.test_ui" name="test_pathway_refreshes_controller_status_after_child_workflow_screen_returns" time="1.920" /><testcase classname="tests.test_ui" name="test_xworkflow_screen_submits_explicit_typed_request_through_shared_controller" time="1.748" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_serializes_existing_schema_for_each_action[prepare]" time="1.688" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_serializes_existing_schema_for_each_action[accept-verified-backup]" time="1.630" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_serializes_existing_schema_for_each_action[build]" time="1.690" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_serializes_existing_schema_for_each_action[accept-completed-artifact]" time="1.657" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_serializes_existing_schema_for_each_action[resume]" time="1.503" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-checkpoint-workflow checkpoint path]" time="1.557" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-actor-operator name]" time="1.514" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-attested-at-UTC attestation time]" time="1.509" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-programmer-external SPI programmer]" time="1.278" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-voltage-mv-measured voltage]" time="1.543" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-instrument-id-instrument identifier]" time="1.524" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-test-points-verified-both required VCC test points]" time="1.487" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-interface-verified-programmer interface]" time="1.352" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-wiring-verified-wiring]" time="1.532" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-primary-persistent-primary backup destination]" time="1.523" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-recovery-persistent-separate recovery destination]" time="1.559" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-source-directory-source checkout]" time="1.372" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-output-root-output root]" time="1.496" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_missing_fields_before_controller_work[x-cpu-count-CPU count]" time="1.464" /><testcase classname="tests.test_ui" name="test_xworkflow_each_action_rejects_missing_attestation_before_controller_work[prepare]" time="1.500" /><testcase classname="tests.test_ui" name="test_xworkflow_each_action_rejects_missing_attestation_before_controller_work[accept-verified-backup]" time="1.335" /><testcase classname="tests.test_ui" name="test_xworkflow_each_action_rejects_missing_attestation_before_controller_work[build]" time="1.512" /><testcase classname="tests.test_ui" name="test_xworkflow_each_action_rejects_missing_attestation_before_controller_work[accept-completed-artifact]" time="1.597" /><testcase classname="tests.test_ui" name="test_xworkflow_each_action_rejects_missing_attestation_before_controller_work[resume]" time="1.593" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_out_of_policy_numbers_before_controller_work[x-voltage-mv-3299-exactly 3300 mV]" time="1.470" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_out_of_policy_numbers_before_controller_work[x-voltage-mv-3301-exactly 3300 mV]" time="1.529" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_out_of_policy_numbers_before_controller_work[x-cpu-count-0-from 1 through 256]" time="1.560" /><testcase classname="tests.test_ui" name="test_xworkflow_guided_form_rejects_out_of_policy_numbers_before_controller_work[x-cpu-count-257-from 1 through 256]" time="1.563" /><testcase classname="tests.test_ui" name="test_xworkflow_active_worker_blocks_back_key_and_quit_until_result_is_visible" time="1.667" /><testcase classname="tests.test_ui" name="test_evidence_import_screen_is_candidate_only_and_uses_controller" time="0.773" /><testcase classname="tests.test_ui" name="test_evidence_import_screen_persists_an_explicit_candidate_record" time="0.713" /><testcase classname="tests.test_ui" name="test_t430_resume_control_routes_a_checkpoint_path_through_controller" time="1.434" /><testcase classname="tests.test_ui" name="test_t430_stage_tui_and_cli_submit_same_controller_action" time="1.318" /><testcase classname="tests.test_ui" name="test_welcome_and_app_do_not_detect_implicitly" time="0.399" /><testcase classname="tests.test_ui" name="test_cli_commands_use_v1_profiles_and_remove_generic_build_options" time="0.023" /><testcase classname="tests.test_ui" name="test_cli_readback_and_hardware_commands_fail_closed_with_shared_codes" time="0.091" /><testcase classname="tests.test_ui" name="test_cli_and_tui_share_action_codes_and_authoritative_profile_status" time="0.057" /><testcase classname="tests.test_ui" name="test_cli_flash_collects_live_tty_fields_and_routes_through_controller" time="0.027" /><testcase classname="tests.test_ui" name="test_cli_t430_flash_rejected_before_external_spi_prompts" time="0.012" /><testcase classname="tests.test_ui" name="test_cli_candidate_evidence_import_remains_unknown_and_strict" time="0.243" /><testcase classname="tests.test_ui" name="test_cli_t430_resume_uses_the_shared_controller_checkpoint_route" time="0.046" /><testcase classname="tests.test_ui" name="test_app_profile_selection_routes_through_controller_and_rejects_non_v1" time="0.037" /><testcase classname="tests.test_ui" name="test_dedicated_tui_write_challenge_is_screen_bound_one_use_and_routes_shared_controller" time="0.002"><skipped type="pytest.skip" message="positive approval/journal persistence requires POSIX directory fsync; production remains fail-closed on Windows">C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_ui.py:1066: positive approval/journal persistence requires POSIX directory fsync; production remains fail-closed on Windows</skipped></testcase><testcase classname="tests.test_ui" name="test_tui_cancel_or_unmount_wakes_actual_service_worker_without_writer_call" time="2.407"><failure message="subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_wak0\\service\\artifact\\33d21a3a-2c80-4b29-83c1-e1f253f0b3e8\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet']' returned non-zero exit status 128.">tmp_path = WindowsPath('C:/Users/Alex/AppData/Local/Temp/lc-autoloader-ui-20261023/test_tui_cancel_or_unmount_wak0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000017C4C67B3E0&gt;
+
+    def test_tui_cancel_or_unmount_wakes_actual_service_worker_without_writer_call(tmp_path, monkeypatch):
+        import threading
+    
+        import autoloader.workflow.journal as journal_module
+        import autoloader.workflow.write_approval as approval_module
+        from tests.test_phase10b_write_service import _service_request
+    
+        monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(approval_module, "_sync_directory", lambda _path: None)
+        monkeypatch.setattr(journal_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(journal_module, "_sync_directory", lambda _path: None)
+&gt;       service, request, writer, _readback = _service_request(tmp_path / "service", monkeypatch)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_ui.py:1288: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_phase10b_write_service.py:207: in _service_request
+    plan, _intent, backup_service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
+                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_phase10a_write_approval.py:169: in _prepared_write
+    synthetic_artifact = _fake_complete_result(
+tests\test_x200_libreboot_workflow.py:400: in _fake_complete_result
+    _write_fake_generated_coreboot_tree(run_dir, coreboot_evidence)
+tests\test_x200_libreboot_workflow.py:359: in _write_fake_generated_coreboot_tree
+    subprocess.run(["git", "-C", str(fsp), "init", "--quiet"], check=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_wak0\\ser...0b3e8\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet'],)
+kwargs = {}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output &amp; stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+&gt;               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_wak0\\service\\artifact\\33d21a3a-2c80-4b29-83c1-e1f253f0b3e8\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet']' returned non-zero exit status 128.
+
+..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\subprocess.py:571: CalledProcessError</failure></testcase><testcase classname="tests.test_ui" name="test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption" time="1.934"><failure message="subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_rev0\\service\\artifact\\9ccd3d0b-c00a-461b-b3de-f99eccf1f84f\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet']' returned non-zero exit status 128.">tmp_path = WindowsPath('C:/Users/Alex/AppData/Local/Temp/lc-autoloader-ui-20261023/test_tui_cancel_or_unmount_rev0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000017C4C9E0B00&gt;
+
+    def test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption(tmp_path, monkeypatch):
+        """A phrase click cannot race an unmount into consuming approval later."""
+        import threading
+    
+        import autoloader.workflow.journal as journal_module
+        import autoloader.workflow.write_approval as approval_module
+        from tests.test_phase10b_write_service import _service_request
+    
+        monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(approval_module, "_sync_directory", lambda _path: None)
+        monkeypatch.setattr(journal_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(journal_module, "_sync_directory", lambda _path: None)
+&gt;       service, request, writer, _readback = _service_request(tmp_path / "service", monkeypatch)
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_ui.py:1344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_phase10b_write_service.py:207: in _service_request
+    plan, _intent, backup_service, probe, backup, readiness, _transport, paths, operation_id = _prepared_write(tmp_path)
+                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_phase10a_write_approval.py:169: in _prepared_write
+    synthetic_artifact = _fake_complete_result(
+tests\test_x200_libreboot_workflow.py:400: in _fake_complete_result
+    _write_fake_generated_coreboot_tree(run_dir, coreboot_evidence)
+tests\test_x200_libreboot_workflow.py:359: in _write_fake_generated_coreboot_tree
+    subprocess.run(["git", "-C", str(fsp), "init", "--quiet"], check=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = False, timeout = None, check = True
+popenargs = (['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_rev0\\ser...1f84f\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet'],)
+kwargs = {}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output &amp; stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+&gt;               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['git', '-C', 'C:\\Users\\Alex\\AppData\\Local\\Temp\\lc-autoloader-ui-20261023\\test_tui_cancel_or_unmount_rev0\\service\\artifact\\9ccd3d0b-c00a-461b-b3de-f99eccf1f84f\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c', 'init', '--quiet']' returned non-zero exit status 128.
+
+..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\subprocess.py:571: CalledProcessError</failure></testcase><testcase classname="tests.test_ui" name="test_staged_flash_action_opens_dedicated_confirmation_screen" time="1.847" /></testsuite></testsuites>
