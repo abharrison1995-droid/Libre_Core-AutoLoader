@@ -1374,11 +1374,28 @@ def test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption
 
                 thread = threading.Thread(target=run_service, daemon=True)
                 thread.start()
-                for _ in range(100):
+                details = screen.query_one("#write-challenge-details", Static)
+                deadline = asyncio.get_running_loop().time() + 30.0
+                rendered = details.render().plain
+                while (
+                    "Type exactly:" not in rendered
+                    and thread.is_alive()
+                    and asyncio.get_running_loop().time() < deadline
+                ):
                     await pilot.pause(0.05)
-                    if "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain:
-                        break
-                assert "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain
+                    rendered = details.render().plain
+                if "Type exactly:" not in rendered:
+                    bridge.invalidate("test timed out waiting for the service challenge to render")
+                    for _ in range(100):
+                        if not thread.is_alive():
+                            break
+                        await pilot.pause(0.05)
+                    assert "Type exactly:" in rendered, (
+                        f"service challenge did not render; worker alive={thread.is_alive()} "
+                        f"screen status={screen.query_one('#write-screen-status', Static).render().plain!r} "
+                        f"challenge status={screen.query_one('#write-challenge-status', Static).render().plain!r} "
+                        f"errors={errors!r}"
+                    )
                 challenge = screen._challenge
                 assert challenge is not None
                 screen.query_one("#write-challenge-phrase", Input).value = challenge.exact_phrase
