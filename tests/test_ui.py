@@ -26,6 +26,7 @@ from autoloader.ui.screens.verify_screen import VerifyScreen
 from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
 from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
 from autoloader.__main__ import cli
+from autoloader.flasher.flashrom import ProgrammerType
 
 
 def test_app_registers_only_v1_workflow_screens():
@@ -381,14 +382,220 @@ def test_xworkflow_screen_submits_explicit_typed_request_through_shared_controll
         async with app.run_test() as pilot:
             await app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))
             await pilot.pause()
-            app.screen.query_one("#x-checkpoint", Input).value = str(tmp_path / "new-session.json")
-            app.screen.query_one("#x-request", TextArea).text = '{"version":1,"purpose":"test fixture"}'
+            screen = app.screen
+            _fill_xworkflow_form(screen, tmp_path / "new-session.json", tmp_path)
+            assert not screen.query("#x-request")
+            assert not screen.query(TextArea)
             await pilot.click("#x-submit")
             await pilot.pause(0.2)
             assert calls and calls[0][0] is ApplicationAction.PREPARE
             assert calls[0][1]["checkpoint_path"] == str(tmp_path / "new-session.json")
-            assert calls[0][1]["request_document"] == '{"version":1,"purpose":"test fixture"}'
+            request = json.loads(calls[0][1]["request_document"])
+            assert request == _expected_xworkflow_request(tmp_path)
             assert "FAKE_BLOCKED" in app.screen.query_one("#x-action-status", Static).render().plain
+
+    asyncio.run(runner())
+
+
+def _expected_xworkflow_request(tmp_path):
+    return {
+        "version": 1,
+        "actor": "Operator Example",
+        "attested_at": "2026-10-21T14:35:00Z",
+        "programmer": ProgrammerType.CH341A.value,
+        "measured_voltage_mv": 3300,
+        "interface_verified": True,
+        "wiring_verified": True,
+        "instrument_id": "meter-serial-123",
+        "measurement_test_point": "chip_vcc_and_programmer_vcc",
+        "primary_directory": str(tmp_path / "backup-primary"),
+        "recovery_directory": str(tmp_path / "backup-recovery"),
+        "primary_persistent_confirmed": True,
+        "recovery_persistent_confirmed": True,
+        "source_directory": str(tmp_path / "source"),
+        "output_root": str(tmp_path / "output"),
+        "cpu_count": 4,
+    }
+
+
+def _fill_xworkflow_form(screen, checkpoint, tmp_path, *, omit=None):
+    values = {
+        "x-checkpoint": str(checkpoint),
+        "x-actor": "Operator Example",
+        "x-attested-at": "2026-10-21T14:35:00Z",
+        "x-voltage-mv": "3300",
+        "x-instrument-id": "meter-serial-123",
+        "x-primary-directory": str(tmp_path / "backup-primary"),
+        "x-recovery-directory": str(tmp_path / "backup-recovery"),
+        "x-source-directory": str(tmp_path / "source"),
+        "x-output-root": str(tmp_path / "output"),
+        "x-cpu-count": "4",
+    }
+    for widget_id, value in values.items():
+        if widget_id != omit:
+            screen.query_one(f"#{widget_id}", Input).value = value
+    if omit != "x-programmer":
+        screen.query_one("#x-programmer", Select).value = ProgrammerType.CH341A.value
+    for widget_id in (
+        "x-test-points-verified",
+        "x-interface-verified",
+        "x-wiring-verified",
+        "x-primary-persistent",
+        "x-recovery-persistent",
+    ):
+        if widget_id != omit:
+            screen.query_one(f"#{widget_id}", Checkbox).value = True
+
+
+@pytest.mark.parametrize(
+    "action",
+    (
+        ApplicationAction.PREPARE,
+        ApplicationAction.ACCEPT_BACKUP,
+        ApplicationAction.BUILD,
+        ApplicationAction.ACCEPT_ARTIFACT,
+        ApplicationAction.RESUME,
+    ),
+)
+def test_xworkflow_guided_form_serializes_existing_schema_for_each_action(monkeypatch, tmp_path, action):
+    from autoloader.application_controller import ApplicationActionResult
+
+    controller = ApplicationController()
+    controller.select_profile("x220-coreboot")
+    calls = []
+
+    def fake_request(submitted_action, **kwargs):
+        calls.append((submitted_action, kwargs))
+        return ApplicationActionResult(
+            submitted_action, ApplicationStatus.NOT_PERFORMED, "FAKE_BLOCKED", "fake response"
+        )
+
+    monkeypatch.setattr(controller, "request_action", fake_request)
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen(XWorkflowActionScreen(action))
+            await pilot.pause()
+            _fill_xworkflow_form(app.screen, tmp_path / "checkpoint.json", tmp_path)
+            assert not app.screen.query("#x-request")
+            assert not app.screen.query(TextArea)
+            await pilot.click("#x-submit")
+            await pilot.pause(0.2)
+
+        assert len(calls) == 1
+        assert calls[0][0] is action
+        assert calls[0][1]["profile_id"] == "x220-coreboot"
+        assert calls[0][1]["checkpoint_path"] == str(tmp_path / "checkpoint.json")
+        assert json.loads(calls[0][1]["request_document"]) == _expected_xworkflow_request(tmp_path)
+
+    asyncio.run(runner())
+
+
+@pytest.mark.parametrize(
+    ("missing", "message"),
+    (
+        ("x-checkpoint", "workflow checkpoint path"),
+        ("x-actor", "operator name"),
+        ("x-attested-at", "UTC attestation time"),
+        ("x-programmer", "external SPI programmer"),
+        ("x-voltage-mv", "measured voltage"),
+        ("x-instrument-id", "instrument identifier"),
+        ("x-test-points-verified", "both required VCC test points"),
+        ("x-interface-verified", "programmer interface"),
+        ("x-wiring-verified", "wiring"),
+        ("x-primary-persistent", "primary backup destination"),
+        ("x-recovery-persistent", "separate recovery destination"),
+        ("x-source-directory", "source checkout"),
+        ("x-output-root", "output root"),
+        ("x-cpu-count", "CPU count"),
+    ),
+)
+def test_xworkflow_guided_form_rejects_missing_fields_before_controller_work(
+    monkeypatch, tmp_path, missing, message
+):
+    controller = ApplicationController()
+    controller.select_profile("x200-libreboot")
+    calls = []
+    monkeypatch.setattr(controller, "request_action", lambda *args, **kwargs: calls.append((args, kwargs)))
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))
+            await pilot.pause()
+            screen = app.screen
+            _fill_xworkflow_form(screen, tmp_path / "checkpoint.json", tmp_path, omit=missing)
+            await pilot.click("#x-submit")
+            await pilot.pause(0.1)
+            assert calls == []
+            assert message.lower() in screen.query_one("#x-action-status", Static).render().plain.lower()
+
+    asyncio.run(runner())
+
+
+@pytest.mark.parametrize(
+    "action",
+    (
+        ApplicationAction.PREPARE,
+        ApplicationAction.ACCEPT_BACKUP,
+        ApplicationAction.BUILD,
+        ApplicationAction.ACCEPT_ARTIFACT,
+        ApplicationAction.RESUME,
+    ),
+)
+def test_xworkflow_each_action_rejects_missing_attestation_before_controller_work(
+    monkeypatch, tmp_path, action
+):
+    controller = ApplicationController()
+    controller.select_profile("x220-coreboot")
+    calls = []
+    monkeypatch.setattr(controller, "request_action", lambda *args, **kwargs: calls.append((args, kwargs)))
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen(XWorkflowActionScreen(action))
+            await pilot.pause()
+            screen = app.screen
+            _fill_xworkflow_form(screen, tmp_path / "checkpoint.json", tmp_path, omit="x-attested-at")
+            await pilot.click("#x-submit")
+            await pilot.pause(0.1)
+            assert calls == []
+            assert "UTC attestation time" in screen.query_one("#x-action-status", Static).render().plain
+
+    asyncio.run(runner())
+
+
+@pytest.mark.parametrize(
+    ("widget_id", "value", "message"),
+    (
+        ("x-voltage-mv", "3299", "exactly 3300 mV"),
+        ("x-voltage-mv", "3301", "exactly 3300 mV"),
+        ("x-cpu-count", "0", "from 1 through 256"),
+        ("x-cpu-count", "257", "from 1 through 256"),
+    ),
+)
+def test_xworkflow_guided_form_rejects_out_of_policy_numbers_before_controller_work(
+    monkeypatch, tmp_path, widget_id, value, message
+):
+    controller = ApplicationController()
+    controller.select_profile("x200-libreboot")
+    calls = []
+    monkeypatch.setattr(controller, "request_action", lambda *args, **kwargs: calls.append((args, kwargs)))
+
+    async def runner():
+        app = AutoLoaderApp(controller=controller)
+        async with app.run_test() as pilot:
+            await app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))
+            await pilot.pause()
+            screen = app.screen
+            _fill_xworkflow_form(screen, tmp_path / "checkpoint.json", tmp_path)
+            screen.query_one(f"#{widget_id}", Input).value = value
+            await pilot.click("#x-submit")
+            await pilot.pause(0.1)
+            assert calls == []
+            assert message.lower() in screen.query_one("#x-action-status", Static).render().plain.lower()
 
     asyncio.run(runner())
 
@@ -416,8 +623,7 @@ def test_xworkflow_active_worker_blocks_back_key_and_quit_until_result_is_visibl
             await app.push_screen(XWorkflowActionScreen(ApplicationAction.PREPARE))
             await pilot.pause()
             screen = app.screen
-            screen.query_one("#x-checkpoint", Input).value = str(tmp_path / "new-session.json")
-            screen.query_one("#x-request", TextArea).text = '{"version":1,"purpose":"test fixture"}'
+            _fill_xworkflow_form(screen, tmp_path / "new-session.json", tmp_path)
             await pilot.click("#x-submit")
             for _ in range(20):
                 await pilot.pause(0.05)
