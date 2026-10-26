@@ -1,0 +1,15 @@
+{
+  "result": "LIVE_ISO_SERIAL_SHELL_AND_READONLY_CHECKS_PASS",
+  "guest_readonly_checks_sent": true,
+  "guest_readonly_checks_observed": true,
+  "serial_shell_prompt_seen": true,
+  "timed_out": false,
+  "timeout_seconds": 600,
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "kernel_sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+  "initramfs_sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+  "qemu_version": "QEMU emulator version 11.1.2\r\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "qemu_exit": "0",
+  "finished_utc": "2026-10-25T15:01:54.3115510Z"
+}

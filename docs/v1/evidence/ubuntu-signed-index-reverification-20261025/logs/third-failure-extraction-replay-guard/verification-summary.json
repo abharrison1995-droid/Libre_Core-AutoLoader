@@ -1,0 +1,68 @@
+{
+  "arch_material_acquired": false,
+  "captured_utc": "2026-10-25T22:18:19.598465+00:00",
+  "downloaded_payload_execution": false,
+  "error": "ValueError: refusing pre-existing extraction target: /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv",
+  "inputs": {
+    "gpg_2.4.8-4ubuntu3.1_amd64.deb": {
+      "sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "size": 636848,
+      "verified": true
+    },
+    "gpgv_2.4.8-4ubuntu3.1_amd64.deb": {
+      "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "size": 155072,
+      "verified": true
+    },
+    "resolute-main-Packages.xz": {
+      "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24",
+      "size": 1480032,
+      "verified": true
+    },
+    "resolute-updates-main-Packages.xz": {
+      "sha256": "553c802aee13bedfcf262a111a16b41918ea3a8b1dc98c2fd49c465883af27e4",
+      "size": 744388,
+      "verified": true
+    },
+    "resolute-updates_InRelease": {
+      "sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad",
+      "size": 137401,
+      "verified": true
+    },
+    "resolute_InRelease": {
+      "sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c",
+      "size": 135549,
+      "verified": true
+    },
+    "ubuntu-archive-keyring.gpg": {
+      "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+      "size": 3607,
+      "verified": true
+    },
+    "ubuntu-keyring_2023.11.28.1build1_all.deb": {
+      "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "size": 11228,
+      "verified": true
+    }
+  },
+  "package_installation": false,
+  "package_records": [],
+  "proposal_only": true,
+  "runtime": {},
+  "schema": "ubuntu-signed-index-reverification-v1",
+  "signatures": [],
+  "source_manifests": {
+    "prior_apt": {
+      "entries": 104,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/SHA256SUMS",
+      "verified": true
+    },
+    "windows_tls": {
+      "entries": 46,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/windows-tls-corroboration-20261025/SHA256SUMS",
+      "verified": true
+    }
+  },
+  "stage_a_authorized": false,
+  "status": "FAILED"
+}

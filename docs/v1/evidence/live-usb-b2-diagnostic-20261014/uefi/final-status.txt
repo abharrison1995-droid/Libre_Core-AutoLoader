@@ -1,0 +1,13 @@
+mode=UEFI
+iso_sha256=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_unchanged_before_after=true
+qemu_exit_code=0 (normal HMP quit at bounded timeout; emulator exit only)
+elapsed_seconds=307.8
+kernel_args=attempted, but initial screenshots showed OVMF display not initialized; systemd-boot menu edit and kernel cmdline remain unconfirmed
+serial_bytes=6021; content showed OVMF/systemd-boot menu only, no Linux/systemd service diagnostics
+vga_120s=Archiso initramfs mounted /dev/sr0 and /dev/loop0, completed hooks, displayed Welcome to Arch Linux
+vga_300s=systemd userspace progressing; systemd-loop instance failed to attach PCI/ATA sr0 block device to loopback block device; virtual-console setup still starting
+TTY2=blank/no login prompt
+application=not observed
+service_status_or_journal=not retrieved; no usable guest shell confirmed
+classification=QEMU emulator boot only; NOT application/service validation and NOT hardware validation

@@ -1,0 +1,35 @@
+Retry16 candidate: read-only Namespace Resource Manager inspection
+
+Status: PREPARED FOR REVIEW; NOT LAUNCHED.
+
+Purpose
+- Reobserve the verified generic Arch 2026.10.01 ISO after retry13/retry14 Namespace Resource Manager failure evidence.
+- Once both gates pass, issue exactly three read-only commands about systemd-nsresourced and the early tmpfiles unit, capturing their output through the serial PTY.
+
+Fixed inputs and QEMU configuration
+- ISO: /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/iso-boot/archlinux-2026.10.01-x86_64.iso, SHA-256 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5.
+- Kernel: retry13 vmlinuz-linux, SHA-256 8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901.
+- Initramfs: retry13 initramfs-linux.img, SHA-256 35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52.
+- Read-only source image SHA-256 0751078e2a362361212ddde66377766cf056d3f18bd4af923959f2ad628b194b.
+- Kernel arguments are exactly `archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=ttyS0,115200n8 systemd.getty_auto=0 systemd.debug_shell systemd.default_debug_tty=ttyS0`.
+- QEMU 10.2.1, TCG multi-thread, 4 vCPUs, 6144 MiB, 600-second wall cap. ISO and source are read-only. New workspace/results qcow2 overlays are backed by the existing native build/results images. `-nic none`; no USB, programmer, physical disk, or host passthrough.
+- The QEMU serial backend is a bidirectional PTY. QEMU stdout and stderr are merged into one nonblocking pipe so the PTY announcement is captured and neither pipe can fill unattended. The runner records raw serial output, merged QEMU stdout/stderr, and timestamped transmitted lines. The merged QEMU output is capped at 2 MiB. It sends no bytes until the serial PTY is opened and the gates pass.
+
+Input gate and command policy
+1. Require the exact first failure line `[FAILED] Failed to start Namespace Resource Manager.` in ANSI-normalized serial output.
+2. Require a fresh, final `sh-5.3#` prompt after that failure and no serial output for 1.5 seconds. Any other prompt shape, emergency/fatal marker, QEMU exit, storage floor, capture cap, or timeout stops before sending queries.
+3. Only then transmit these exact commands in this order, each once, and wait for a fresh stable prompt after each:
+   - `systemctl show systemd-nsresourced.service -p ActiveState -p SubState -p Result -p ExecMainCode -p ExecMainStatus -p NRestarts -p TimeoutStartUSec -p After -p Requires -p Wants --no-pager`
+   - `journalctl -b -u systemd-nsresourced.service -o short-monotonic --no-pager`
+   - `systemctl status systemd-nsresourced.service systemd-tmpfiles-setup-dev-early.service --no-pager`
+4. Per-query timeout is 90 seconds and captured serial output is capped at 1 MiB per query; total serial capture is capped at 64 MiB. The overall wall cap is 600 seconds and free-space floor is 120 GiB. Stop after all three queries return, any query limit/failure, an unexpected prompt/fatal marker, QEMU exit, or a safety cap.
+
+Identity/device scope
+- The exact root debug-shell prompt and fixed QEMU argument/device list are required. This candidate intentionally does not issue `id`, `lsblk`, or any other guest command outside the three-item allowlist. Thus it does not independently verify the guest's runtime device enumeration; this limitation is explicit in the run result.
+- This is a generic ISO diagnostic only. It cannot establish normal boot, native tests, rootless preflight, product build/ISO, or hardware status.
+
+Artifacts
+- `observe_retry16.py`: bounded QEMU/PTY observer; writes the run result, event log, raw serial, merged QEMU output, input transcript, and before/after hashes.
+- `retry16_gate.py`: pure gate/parser helpers.
+- `test_retry16_gate.py`: no-QEMU gate tests.
+- `launch_retry16.sh`: exact launch wrapper to review. Do not execute until SOL reviews the frozen files and parent authorizes the one bounded diagnostic.

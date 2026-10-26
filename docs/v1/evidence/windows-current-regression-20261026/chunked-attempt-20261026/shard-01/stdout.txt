@@ -1,0 +1,5 @@
+...............sssss.....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_application_controller.py:441: positive approval persistence requires POSIX directory fsync; production remains fail-closed on Windows
+SKIPPED [4] tests\test_application_controller.py:546: durable operation-journal success fixtures require POSIX directory fsync; production remains fail-closed on Windows
+20 passed, 5 skipped in 4.84s

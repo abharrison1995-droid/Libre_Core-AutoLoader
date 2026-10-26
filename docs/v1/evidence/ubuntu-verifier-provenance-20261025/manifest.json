@@ -1,0 +1,213 @@
+{
+  "apt_policy": {
+    "filtered_config": [
+      "Acquire::AllowInsecureRepositories \"0\";",
+      "Acquire::AllowWeakRepositories \"0\";",
+      "Acquire::AllowDowngradeToInsecureRepositories \"0\";"
+    ]
+  },
+  "apt_sources": {
+    "/etc/apt/sources.list.d/ubuntu.sources": {
+      "content": "# See http://help.ubuntu.com/community/UpgradeNotes for how to upgrade to\n# newer versions of the distribution.\n\n## Ubuntu distribution repository\n##\n## The following settings can be adjusted to configure which packages to use from Ubuntu.\n## Mirror your choices (except for URIs and Suites) in the security section below to\n## ensure timely security updates.\n##\n## Types: Append deb-src to enable the fetching of source package.\n## URIs: A URL to the repository (you may add multiple URLs)\n## Suites: The following additional suites can be configured\n##   <name>-updates   - Major bug fix updates produced after the final release of the\n##                      distribution.\n##   <name>-backports - software from this repository may not have been tested as\n##                      extensively as that contained in the main release, although it includes\n##                      newer versions of some applications which may provide useful features.\n##                      Also, please note that software in backports WILL NOT receive any review\n##                      or updates from the Ubuntu security team.\n## Components: Aside from main, the following components can be added to the list\n##   restricted  - Software that may not be under a free license, or protected by patents.\n##   universe    - Community maintained packages. Software in this repository receives maintenance\n##                 from volunteers in the Ubuntu community, or a 10 year security maintenance\n##                 commitment from Canonical when an Ubuntu Pro subscription is attached.\n##   multiverse  - Community maintained of restricted. Software from this repository is\n##                 ENTIRELY UNSUPPORTED by the Ubuntu team, and may not be under a free\n##                 licence. Please satisfy yourself as to your rights to use the software.\n##                 Also, please note that software in multiverse WILL NOT receive any\n##                 review or updates from the Ubuntu security team.\n##\n## See the sources.list(5) manual page for further settings.\nTypes: deb\nURIs: http://archive.ubuntu.com/ubuntu/\nSuites: resolute resolute-updates resolute-backports\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\n## Ubuntu security updates. Aside from URIs and Suites,\n## this should mirror your choices in the previous section.\nTypes: deb\nURIs: http://security.ubuntu.com/ubuntu/\nSuites: resolute-security\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n",
+      "sha256": "d848e90ed2dd1696138929943c7f403cdcd6698f1d6bd615b8808508d1d0db5f"
+    },
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/ubuntu-main.sources": {
+      "content": "Types: deb\nURIs: http://archive.ubuntu.com/ubuntu/\nSuites: resolute resolute-updates\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.ubuntu.com/ubuntu/\nSuites: resolute-security\nComponents: main\nArchitectures: amd64\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n",
+      "sha256": "5ff74375d7604e7178c37c964bc1e45c5d1b893a7e8b1bcbdb376cbe6ccf5271"
+    }
+  },
+  "captured_utc_epoch": 1792960943,
+  "environment": {
+    "architecture": "amd64",
+    "c_free_bytes_after": 6832021504,
+    "c_free_bytes_before": 6838935552,
+    "c_free_bytes_delta": -6914048,
+    "c_reserve_at_least_5gib": true,
+    "release": "Ubuntu 26.04.1 LTS"
+  },
+  "environment_override_names": {
+    "APT_CONFIG": "unset",
+    "APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE": "unset",
+    "DEBIAN_FRONTEND": "unset",
+    "GNUPGHOME": "unset",
+    "GPG_AGENT_INFO": "unset",
+    "HTTPS_PROXY": "unset",
+    "HTTP_PROXY": "unset",
+    "LD_LIBRARY_PATH": "unset",
+    "LD_PRELOAD": "unset",
+    "NO_PROXY": "unset",
+    "http_proxy": "unset",
+    "https_proxy": "unset",
+    "no_proxy": "unset"
+  },
+  "installed_verifier": {
+    "gpgv_package_owner": "gpgv",
+    "gpgv_path": "/usr/bin/gpgv",
+    "gpgv_sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+    "keyring_package_owner": "ubuntu-keyring",
+    "keyring_path": "/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+    "keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+  },
+  "package_indexes": [
+    {
+      "expanded_size": 7581722,
+      "path": "indices/resolute-main-Packages.xz",
+      "relative_release_path": "main/binary-amd64/Packages.xz",
+      "release_sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c",
+      "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24",
+      "signed_inrelease": "apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+      "size": 1480032,
+      "verified": true
+    },
+    {
+      "expanded_size": 3961836,
+      "path": "indices/resolute-updates-main-Packages.xz",
+      "relative_release_path": "main/binary-amd64/Packages.xz",
+      "release_sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad",
+      "sha256": "553c802aee13bedfcf262a111a16b41918ea3a8b1dc98c2fd49c465883af27e4",
+      "signed_inrelease": "apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "size": 744388,
+      "verified": true
+    },
+    {
+      "expanded_size": 3192760,
+      "path": "indices/resolute-security-main-Packages.xz",
+      "relative_release_path": "main/binary-amd64/Packages.xz",
+      "release_sha256": "0906ae28d31d437746319391102155c28a72428f5fc50b824a925075853842a2",
+      "sha256": "c9f4f90adfc5fcb1228e0aea6369c868ffa227b005782a1738ecdbb47fc46d56",
+      "signed_inrelease": "apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_InRelease",
+      "size": 606180,
+      "verified": true
+    }
+  ],
+  "packages": [
+    {
+      "architecture": "amd64",
+      "curl_path": "/usr/bin/curl",
+      "curl_sha256": "b618fe7feb3283395f79f4ca97eebd921295d88285aa7de9eac54beaca4e7bb9",
+      "download_exit": 0,
+      "download_log": "logs/download-gpgv.log",
+      "download_url": "http://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "downloaded_sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "dpkg_deb_path": "/usr/bin/dpkg-deb",
+      "dpkg_deb_sha256": "66a1f5c65bc66cf20a35eb0695bf783bfb365bc80a45006d8a9d97fd406536e0",
+      "extract_log": "logs/extract-gpgv.log",
+      "extracted_file": {
+        "mode_octal": "0o777",
+        "path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/bin/gpgv",
+        "sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+        "size": 302296
+      },
+      "extracted_matches_installed": true,
+      "filename": "pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "index": "resolute-updates-main-Packages.xz",
+      "installed_file": {
+        "mode_octal": "0o755",
+        "path": "/usr/bin/gpgv",
+        "sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+        "size": 302296
+      },
+      "installed_package_owner": "gpgv: /usr/bin/gpgv",
+      "installed_path": "/usr/bin/gpgv",
+      "name": "gpgv",
+      "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "signed_inrelease": "archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "size": 155072,
+      "version": "2.4.8-4ubuntu3.1"
+    },
+    {
+      "architecture": "amd64",
+      "curl_path": "/usr/bin/curl",
+      "curl_sha256": "b618fe7feb3283395f79f4ca97eebd921295d88285aa7de9eac54beaca4e7bb9",
+      "download_exit": 0,
+      "download_log": "logs/download-gpg.log",
+      "download_url": "http://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "downloaded_sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "dpkg_deb_path": "/usr/bin/dpkg-deb",
+      "dpkg_deb_sha256": "66a1f5c65bc66cf20a35eb0695bf783bfb365bc80a45006d8a9d97fd406536e0",
+      "extract_log": "logs/extract-gpg.log",
+      "extracted_file": {
+        "mode_octal": "0o777",
+        "path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/bin/gpg",
+        "sha256": "c8f3dc07a34ab0a0a081368b482724b79a2a6d6b7aa856741c09edf7af854754",
+        "size": 1186456
+      },
+      "extracted_matches_installed": true,
+      "filename": "pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "index": "resolute-updates-main-Packages.xz",
+      "installed_file": {
+        "mode_octal": "0o755",
+        "path": "/usr/bin/gpg",
+        "sha256": "c8f3dc07a34ab0a0a081368b482724b79a2a6d6b7aa856741c09edf7af854754",
+        "size": 1186456
+      },
+      "installed_package_owner": "gpg: /usr/bin/gpg",
+      "installed_path": "/usr/bin/gpg",
+      "name": "gpg",
+      "sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "signed_inrelease": "archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "size": 636848,
+      "version": "2.4.8-4ubuntu3.1"
+    },
+    {
+      "architecture": "all",
+      "curl_path": "/usr/bin/curl",
+      "curl_sha256": "b618fe7feb3283395f79f4ca97eebd921295d88285aa7de9eac54beaca4e7bb9",
+      "download_exit": 0,
+      "download_log": "logs/download-ubuntu-keyring.log",
+      "download_url": "http://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "downloaded_sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "dpkg_deb_path": "/usr/bin/dpkg-deb",
+      "dpkg_deb_sha256": "66a1f5c65bc66cf20a35eb0695bf783bfb365bc80a45006d8a9d97fd406536e0",
+      "extract_log": "logs/extract-ubuntu-keyring.log",
+      "extracted_file": {
+        "mode_octal": "0o777",
+        "path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+        "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+        "size": 3607
+      },
+      "extracted_matches_installed": true,
+      "filename": "pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "index": "resolute-main-Packages.xz",
+      "installed_file": {
+        "mode_octal": "0o644",
+        "path": "/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+        "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+        "size": 3607
+      },
+      "installed_package_owner": "ubuntu-keyring: /usr/share/keyrings/ubuntu-archive-keyring.gpg",
+      "installed_path": "/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+      "name": "ubuntu-keyring",
+      "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "signed_inrelease": "archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+      "size": 11228,
+      "version": "2023.11.28.1build1"
+    }
+  ],
+  "releases": [
+    {
+      "gpgv_command_log": "logs/gpgv-archive-ubuntu-com_ubuntu_dists_resolute_InRelease.log",
+      "gpgv_exit": 0,
+      "path": "apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+      "sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c",
+      "trust_root": "installed /usr/share/keyrings/ubuntu-archive-keyring.gpg (provisioning not independently verified)"
+    },
+    {
+      "gpgv_command_log": "logs/gpgv-archive-ubuntu-com_ubuntu_dists_resolute-updates_InRelease.log",
+      "gpgv_exit": 0,
+      "path": "apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad",
+      "trust_root": "installed /usr/share/keyrings/ubuntu-archive-keyring.gpg (provisioning not independently verified)"
+    },
+    {
+      "gpgv_command_log": "logs/gpgv-security-ubuntu-com_ubuntu_dists_resolute-security_InRelease.log",
+      "gpgv_exit": 0,
+      "path": "apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_InRelease",
+      "sha256": "0906ae28d31d437746319391102155c28a72428f5fc50b824a925075853842a2",
+      "trust_root": "installed /usr/share/keyrings/ubuntu-archive-keyring.gpg (provisioning not independently verified)"
+    }
+  ],
+  "schema": "ubuntu-verifier-provenance-v1",
+  "status": "PROPOSAL_REVIEW_REQUIRED",
+  "trust_boundary": "InRelease signatures and package/index digests are checked using the Ubuntu archive keyring already installed in this WSL image and the installed gpgv binary itself is the verifier. This bundle does not independently authenticate the provisioning of either host component; therefore it is a verifier-provenance proposal, not an accepted bootstrap trust root. No Arch keys, packages, or signatures are acquired or imported."
+}

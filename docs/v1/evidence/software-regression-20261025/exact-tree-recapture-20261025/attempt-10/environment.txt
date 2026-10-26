@@ -1,0 +1,48 @@
+utc=2026-10-26T01:33:29Z
+Linux DESKTOP-RUNVSTR 6.18.54.1-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Tue Oct  6 19:13:07 UTC 2026 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04.1 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           6.0G     0  6.0G   0% /tmp
+Python 3.14.4
+pytest 9.1.1
+mypy 2.4.0 (compiled: yes)
+ast_serialize==0.13.0
+click==8.5.0
+coverage==7.16.2
+iniconfig==2.3.1
+-e git+https://github.com/abharrison1995-droid/Libre_Core-AutoLoader.git@2e28a81b11e6a4fe97472ed0dadb8ea71429127b#egg=libre_core_autoloader
+librt==0.16.0
+linkify-it-py==2.2.0
+markdown-it-py==4.2.0
+mdit-py-plugins==0.6.1
+mdurl==0.1.2
+mypy==2.4.0
+mypy_extensions==1.1.0
+packaging==26.3
+pathspec==1.1.1
+platformdirs==4.13.0
+pluggy==1.7.0
+psutil==7.2.2
+Pygments==2.21.0
+pytest==9.1.1
+pytest-cov==7.1.0
+rich==15.0.0
+setuptools==84.2.1
+textual==8.2.8
+types-psutil==7.2.2.20260906
+typing_extensions==4.16.0
+wheel==0.48.0
+pytest_tmp=/tmp/librecore-autoloader-v1-exact-tests-20261026-r7/pytest
+system_tmp=/tmp/librecore-autoloader-v1-exact-tests-20261026-r7/system-tmp

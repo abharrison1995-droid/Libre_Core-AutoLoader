@@ -1,0 +1,2 @@
+socket=/tmp/lc-b2-run9-hmp.sock
+kept open from launch

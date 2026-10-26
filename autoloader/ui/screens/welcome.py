@@ -4,6 +4,7 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Static, Button, Header, Footer
 from textual.containers import Container, Center, Horizontal
+from autoloader.config import VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +27,19 @@ class WelcomeScreen(Screen[None]):
         with Container(classes="container"):
             with Center():
                 yield Static(ASCII_LOGO, classes="header-text")
-                yield Static("Version 1.0.0", id="version")
+                yield Static(f"In development · Version {VERSION}", id="version")
                 yield Static(
-                    "This tool guides you through the process of modifying your ThinkPad firmware.\n"
-                    "It supports backing up, building, and flashing Libreboot, Coreboot, and more.",
+                    "This in-development tool provides ThinkPad detection and firmware workflow guidance.\n"
+                    "Guarded X200/X220 ROM builds and write workflows require their evidence checks and explicit approval.\n"
+                    "Physical-device validation remains pending.",
                     id="description",
-                    classes="success"
+                    classes="warning"
                 )
-                yield Static("Auto-detection: No ThinkPad detected.", id="detection-status", classes="warning")
+                yield Static(
+                    "Not run; choose Start Guided Setup to review device detection options.",
+                    id="detection-status",
+                    classes="warning",
+                )
             
             with Horizontal(classes="button-container"):
                 yield Button("Start Guided Setup", variant="primary", id="btn-start")
@@ -55,7 +61,7 @@ class WelcomeScreen(Screen[None]):
                 status_widget.remove_class("warning")
                 status_widget.add_class("success")
             else:
-                status_widget.update("Auto-detection: No ThinkPad detected (Manual Selection Available).")
+                status_widget.update("Not run; choose Start Guided Setup to review device detection options.")
         except Exception as e:
             logger.debug(f"Could not update welcome detection status: {e}")
 
@@ -70,4 +76,8 @@ class WelcomeScreen(Screen[None]):
         elif event.button.id == "btn-advanced":
             self.app.notify("Advanced Options not yet implemented.")
         elif event.button.id == "btn-about":
-            self.app.notify("Libre_Core AutoLoader v1.0.0\nCreated for ThinkPad firmware modifications.")
+            self.app.notify(
+                f"Libre_Core AutoLoader v{VERSION} (in development). Firmware workflows are evidence-gated; "
+                "physical-device validation remains pending.\n"
+                "Created for ThinkPad firmware workflow development."
+            )

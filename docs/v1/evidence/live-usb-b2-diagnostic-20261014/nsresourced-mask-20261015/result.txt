@@ -1,0 +1,14 @@
+start_utc=2026-10-15T17:34:29.179221+00:00
+end_utc=2026-10-15T17:39:11.578144+00:00
+elapsed_seconds=282.40
+qemu_exit=0
+stop_reason=bounded diagnostic stopped by HMP quit near 280 seconds (hard cap 300 seconds)
+iso_unchanged=True
+kernel_sha256=8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+initramfs_sha256=c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090
+network_device=none
+writable_disk=none
+firmware_writer=none
+controller_exit=1
+controller_exception=ConnectionResetError while reading HMP response after "quit"
+

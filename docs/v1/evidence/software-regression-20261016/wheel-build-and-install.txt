@@ -1,0 +1,22 @@
+Package wheel build and isolated target install — 2026-10-16
+
+Environment: Ubuntu 26.04 WSL2, Python 3.14.4, isolated candidate venv.
+
+The current package sources (pyproject.toml, README.md, LICENSE, autoloader/,
+and usb_builder/) were copied to `/dev/shm/librecore-wheel-src-20261016`.
+`pip wheel --no-deps --no-build-isolation` built
+`libre_core_autoloader-0.1.0-py3-none-any.whl` in `/dev/shm`.
+
+Result: exit 0; 371,855 bytes; 115 archive entries; SHA-256
+`2103d6e3758c1767de8a4c73e00da44118e42153782b988fecc5ed5350f41c70`.
+
+The wheel installed successfully with `pip install --no-deps --target` into
+`/dev/shm/librecore-wheel-install-20261016`. From `/`, imports resolved to
+that installed target. `importlib.resources` found both
+`autoloader/rom_builder/patches/0009-x86-use-output-target-for-efi.patch`
+and `usb_builder/patches/arch-install-scripts-31-2-pacstrap-status.patch`.
+
+Build, wheel, pip cache, and target install were confined to `/dev/shm`; the
+repository and persistent WSL filesystem were not modified by this check. It
+validates packaging/import/resource discovery only. It is not a ROM, ISO,
+hardware, writer, or boot test.

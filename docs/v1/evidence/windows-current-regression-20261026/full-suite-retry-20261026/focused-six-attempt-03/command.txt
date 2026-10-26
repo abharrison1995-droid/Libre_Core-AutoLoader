@@ -1,0 +1,9 @@
+Process environment:
+  TEMP=TMP=TMPDIR=C:\w\lcwin-focused3-20261026\system-tmp
+  GIT_TEMPLATE_DIR=C:\w\lcwin-focused3-20261026\git-template-empty
+  GIT_CONFIG_COUNT=1
+  GIT_CONFIG_KEY_0=core.longpaths
+  GIT_CONFIG_VALUE_0=true
+
+Command:
+  .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp C:\w\lcwin-focused3-20261026\pytest --junitxml docs\v1\evidence\windows-current-regression-20261026\full-suite-retry-20261026\focused-six-attempt-03\junit.xml -vv --color=no tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_refuses_closure_claim tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_cleans_failed_write tests/test_offline_vm_worker.py::test_worker_rejects_preexisting_output_header_before_qemu tests/test_offline_vm_worker.py::test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands tests/test_offline_vm_worker.py::test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry tests/test_offline_vm_worker.py::test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result tests/test_offline_vm_worker.py::test_fixed_guest_evidence_rejects_wrong_package_inventory

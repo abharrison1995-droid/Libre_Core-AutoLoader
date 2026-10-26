@@ -1,0 +1,79 @@
+{
+  "c_free_after_bytes": 6040076288,
+  "c_free_before_bytes": 6041030656,
+  "c_free_before_launch_bytes": 6041030656,
+  "c_free_floor_bytes": 2147483648,
+  "c_free_floor_preserved": true,
+  "diagnostic_complete": false,
+  "evidence_files": {},
+  "expected_source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "guest_probe_sha256": "49aeb606c9b35720f8d2246c8083820eb480ef1010e003daaf9e5f06e00a37b7",
+  "hardware_or_firmware_validation": false,
+  "iso_label_output": "ARCH_202610",
+  "iso_path": "/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_unchanged": true,
+  "network": "QEMU user-mode NIC with restrict=on; no forwarding or host access configured",
+  "offline_launcher_status": "OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE; not invoked",
+  "output_dir": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry2",
+  "output_filesystem_type": "ext4",
+  "output_parent_chain": [
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 493,
+      "path": "/var",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 1023,
+      "path": "/var/tmp",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 65534,
+      "mode": 448,
+      "path": "/var/tmp/lcvm",
+      "uid": 65534
+    }
+  ],
+  "package_install_or_sync_invoked": false,
+  "product_build_invoked": false,
+  "purpose": "disposable generic Arch live guest and rootless preflight only",
+  "qemu_version": "QEMU emulator version 11.1.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "runner_error": "RunnerError: source checkout contains changes beyond the eight reviewed evidence files",
+  "runner_invocation": {
+    "argv": [
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py",
+      "--output-dir",
+      "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry2"
+    ],
+    "capabilities_and_no_new_privs": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1"
+    },
+    "egid": 65534,
+    "euid": 65534,
+    "gid": 65534,
+    "home": "/var/tmp/lcvm",
+    "path": "/usr/bin:/bin",
+    "supplementary_groups": [],
+    "tmpdir": "/var/tmp/lcvm",
+    "uid": 65534
+  },
+  "runner_sha256": "754d3ef0241cd65b45debc0a6d31e22eb1ff69c9b88ed1565816d4b73f52ef86",
+  "schema_version": 1,
+  "scratch_allocated_bytes_after": null,
+  "scratch_format": "raw sparse file, exact maximum virtual size 3 GiB",
+  "source_share_read_only": true,
+  "status": "INCOMPLETE",
+  "wall_limit_seconds": 300
+}

@@ -1,0 +1,2 @@
+socket=/tmp/lc-stock-arch-direct-20261015-hmp.sock
+connected and held open from VM startup

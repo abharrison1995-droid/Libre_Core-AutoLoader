@@ -1,0 +1,13 @@
+ssssssssssssssssss.......                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [3] tests\test_offline_vm_worker.py:2589: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2620: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [2] tests\test_offline_vm_worker.py:2656: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [4] tests\test_offline_vm_worker.py:2679: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [2] tests\test_offline_vm_worker.py:2729: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2754: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2764: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2786: private database snapshot ownership is a POSIX contract
+SKIPPED [2] tests\test_offline_vm_worker.py:2823: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2839: guest service E2E requires Linux private-directory ownership and mode semantics
+7 passed, 18 skipped in 1.24s

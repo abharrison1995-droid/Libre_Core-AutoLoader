@@ -1,0 +1,5 @@
+Attempt-08 cleanup follow-up
+
+The full pytest run exited 0. The runner's original cleanup.exit is 2 because unprivileged removal of root-owned pytest fixture files from its private scratch failed; the original cleanup.log and cleanup.exit are preserved.
+
+The exact target was /tmp/librecore-autoloader-v1-exact-tests-20261026-r5. Before removal, WSL root verified that realpath resolved to that exact path, that it was not a symlink, that its parent was /tmp, and that it contained only the attempt-08 pytest and system temporary directories (400 KiB total). WSL root then removed only that path. A post-removal check confirmed that it no longer existed and /tmp had 0 used bytes. The separate source snapshot path was already absent. No repository or user data was removed.

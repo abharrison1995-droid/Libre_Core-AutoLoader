@@ -1,0 +1,8 @@
+sssssssssssssssss.......                                                 [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:57: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:63: C launcher protocol uses POSIX process semantics
+SKIPPED [13] tests\test_rootless_offline_launcher_source.py:72: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:118: C launcher protocol uses POSIX process semantics
+SKIPPED [1] tests\test_rootless_offline_launcher_source.py:135: C launcher protocol uses POSIX process semantics
+7 passed, 17 skipped in 0.43s

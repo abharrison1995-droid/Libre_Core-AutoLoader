@@ -1,0 +1,6 @@
+prelaunch=not_started
+date_utc=2026-10-26
+reason=the first WSL shell remounted /tmp to 6 GiB but /run/user/1000 was absent, so the combined df preflight exited before the root test launcher was invoked
+tests_executed=none
+hardware_activity=none
+next_action=create /run/user/1000 as alex:alex mode 0700 and launch the reviewed wrapper in the same WSL shell, after repeating tmpfs and evidence-space checks

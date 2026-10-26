@@ -1,0 +1,4 @@
+tmpfs_size_kib=6291456
+tmpfs_available_kib=6291456
+snapshot_filesystem_available_kib=804088
+evidence_filesystem_available_kib=3574324

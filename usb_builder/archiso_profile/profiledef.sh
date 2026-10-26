@@ -5,12 +5,10 @@ iso_name="libre_core_autoloader"
 iso_label="AUTOLOADER"
 iso_publisher="Libre_Core <https://github.com/Libre-Core>"
 iso_application="Libre_Core AutoLoader USB Live Environment"
-iso_version="$(date +%Y%m%d)"
+iso_version="2026.09.29"
 install_dir="arch"
 buildmodes=('iso')
-bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito'
-           'uefi-ia32.systemd-boot.esp' 'uefi-x64.systemd-boot.esp'
-           'uefi-ia32.systemd-boot.eltorito' 'uefi-x64.systemd-boot.eltorito')
+bootmodes=('bios.syslinux' 'uefi.systemd-boot')
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
@@ -20,4 +18,5 @@ file_permissions=(
   ["/etc/shadow"]="0:0:400"
   ["/opt/autoloader/start.sh"]="0:0:755"
   ["/etc/systemd/system/autoloader.service"]="0:0:644"
+  ["/root/customize_airootfs.sh"]="0:0:700"
 )

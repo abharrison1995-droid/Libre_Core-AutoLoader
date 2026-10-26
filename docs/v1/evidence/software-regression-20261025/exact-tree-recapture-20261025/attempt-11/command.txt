@@ -1,0 +1,4 @@
+WSL command:
+  bash /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-11/run.sh
+
+Inner command and exact pytest options are preserved in run.sh. All pytest and system temporary files are directed to a unique /tmp tmpfs directory; the JUnit report and combined output are written into this evidence directory.

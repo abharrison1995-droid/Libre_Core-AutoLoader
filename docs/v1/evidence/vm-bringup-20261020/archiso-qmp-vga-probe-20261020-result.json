@@ -1,0 +1,33 @@
+{
+  "started_utc": "2026-10-20T22:03:40Z",
+  "source_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "qemu_pid": 77356,
+  "qmp_greeting": {
+    "QMP": {
+      "version": {
+        "qemu": {
+          "micro": 1,
+          "minor": 2,
+          "major": 10
+        },
+        "package": "Debian 1:10.2.1+ds-1ubuntu3.2"
+      },
+      "capabilities": [
+        "oob"
+      ]
+    }
+  },
+  "initial_screen": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/vm-bringup-20261020/archiso-qmp-vga-probe-20261020-before.ppm",
+  "keyboard_actions": [],
+  "guest_command_observed": false,
+  "termination": "operator_requested_qmp_quit",
+  "qemu_status_at_initial_screen": {
+    "status": "running",
+    "running": true
+  },
+  "qemu_seconds_at_initial_screen": 152.088,
+  "source_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "source_hash_unchanged": true,
+  "qemu_returncode": 0,
+  "elapsed_seconds": 214.277
+}

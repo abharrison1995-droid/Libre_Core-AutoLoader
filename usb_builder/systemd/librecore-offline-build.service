@@ -1,0 +1,34 @@
+[Unit]
+Description=LibreCore sealed offline V1 image builder
+After=local-fs.target
+RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs
+ConditionPathExists=/run/librecore-scratch/build-invocation.json
+ConditionPathExists=!/run/librecore-scratch/build-service-started.json
+ConditionPathExists=!/run/librecore-scratch/build-service-result.json
+ConditionPathExists=!/run/librecore-scratch/build-service-result-ready.json
+
+[Service]
+Type=oneshot
+User=fwbuild
+Group=fwbuild
+WorkingDirectory=/
+Environment=PATH=/usr/bin:/bin
+Environment=HOME=/run/librecore-worker
+Environment=LANG=C
+Environment=LC_ALL=C
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONOPTIMIZE=0
+ExecStart=/usr/bin/python -B -m usb_builder.offline_vm_build_service
+NoNewPrivileges=no
+CapabilityBoundingSet=CAP_SETUID CAP_SETGID
+AmbientCapabilities=
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs
+ReadWritePaths=/run/librecore-scratch
+KillMode=control-group
+RuntimeMaxSec=4h
+TimeoutStartSec=4h
+TimeoutStopSec=5s

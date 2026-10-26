@@ -28,6 +28,7 @@ class BIOSInfo:
     date: Optional[str]
     vendor: Optional[str]
     is_stock_lenovo: bool
+    raw_version: Optional[str] = None
 
 def parse_bios_version_from_dmidecode(dmidecode_out: str) -> Optional[str]:
     match = re.search(r"Version:\s*([^\n]+)", dmidecode_out)
@@ -103,7 +104,8 @@ class BIOSDetector:
             version=parsed_version,
             date=bios_date or None,
             vendor=bios_vendor or None,
-            is_stock_lenovo=is_lenovo
+            is_stock_lenovo=is_lenovo,
+            raw_version=bios_version or None,
         )
 
     def detect_windows(self) -> BIOSInfo:
@@ -148,7 +150,8 @@ class BIOSDetector:
             version=parsed_version,
             date=date,
             vendor=vendor,
-            is_stock_lenovo=is_lenovo
+            is_stock_lenovo=is_lenovo,
+            raw_version=version,
         )
 
     def detect(self, force_refresh: bool = False) -> BIOSInfo:

@@ -1,0 +1,49 @@
+{
+  "attempt": "current-source-native-arch-retry14-post-failure-observation",
+  "classification": "generic Arch ISO observation-only diagnostic; not a product build or hardware test",
+  "started_utc": "2026-10-21T20:15:21.013424+00:00",
+  "finished_utc": "2026-10-21T20:25:21.389695+00:00",
+  "elapsed_seconds": 600.376,
+  "stop_reason": "600-second observation cap",
+  "terminal_match": null,
+  "qemu": {
+    "version": "QEMU emulator version 10.2.1 (Debian 1:10.2.1+ds-1ubuntu3.2)",
+    "accelerator": "TCG multi-thread",
+    "vcpus": 4,
+    "memory_mib": 6144,
+    "wall_cap_seconds": 600,
+    "exit_code": 0
+  },
+  "guest_input": "none; stdin was DEVNULL and serial was output-only file backend",
+  "network": "none",
+  "passthrough": false,
+  "iso": {
+    "path": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/iso-boot/archlinux-2026.10.01-x86_64.iso",
+    "attachment": "read-only CD-ROM",
+    "sha256_expected": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5"
+  },
+  "kernel": {
+    "path": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/attempt-current-retry13-direct-kernel/vmlinuz-linux",
+    "sha256_expected": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901"
+  },
+  "initramfs": {
+    "path": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/attempt-current-retry13-direct-kernel/initramfs-linux.img",
+    "sha256_expected": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52"
+  },
+  "virtual_devices": {
+    "workspace": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/attempt-current-retry14-post-failure-observation/arch-workspace-overlay.qcow2",
+    "backing": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/arch-v1-build.qcow2",
+    "results": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/attempt-current-retry14-post-failure-observation/results-overlay.qcow2",
+    "backing_results": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/results-8ea32c5.img",
+    "source": "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/native-arch-build-20261021/source-8ea32c5.img",
+    "source_attachment": "read-only"
+  },
+  "kernel_arguments": "archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=ttyS0,115200n8 systemd.getty_auto=0 systemd.debug_shell systemd.default_debug_tty=ttyS0",
+  "gate_results": {
+    "native_test_suite": "NOT_RUN",
+    "rootless_preflight": "NOT_RUN",
+    "current_source_product_build": "NOT_RUN",
+    "product_iso": "NOT_PRODUCED",
+    "hardware": "NOT_ACCESSED"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": "PASS_ALL_FUNCTION_SHARDS",
+  "expected_tests": 1392,
+  "expected_shard_cases": 1392,
+  "executed_tests": 1392,
+  "shards_expected": 61,
+  "shards_completed": 61,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 274,
+  "passed": 1118,
+  "source_manifest_entries": 204,
+  "source_manifest_unchanged": true,
+  "source_manifest_before_sha256": "ea6c662f697f48dcf7e80bc29b6ac5eb87065091dd26313d47f92469a1c3a942",
+  "source_manifest_after_sha256": "ea6c662f697f48dcf7e80bc29b6ac5eb87065091dd26313d47f92469a1c3a942",
+  "c_free_final_bytes": 5064740864,
+  "started_utc": "2026-10-26T10:52:39.6197238Z",
+  "completed_utc": "2026-10-26T11:12:58.0986163Z"
+}

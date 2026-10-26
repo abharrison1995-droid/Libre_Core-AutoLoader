@@ -1,0 +1,7 @@
+mode=UEFI
+qemu_exit=0
+elapsed_seconds=307.8
+iso_sha256_before=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_sha256_after=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_unchanged=True
+serial_bytes=6021

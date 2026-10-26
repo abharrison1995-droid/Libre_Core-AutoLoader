@@ -1,0 +1,3 @@
+connected_at_monotonic=310.268
+socket=/tmp/lc-b2-vnc-run8-hmp.sock
+connection=kept open from launch through run

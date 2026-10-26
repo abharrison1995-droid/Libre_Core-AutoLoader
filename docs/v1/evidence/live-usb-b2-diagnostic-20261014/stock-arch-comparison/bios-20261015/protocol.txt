@@ -1,0 +1,1 @@
+Control comparison only, not Libre_Core product acceptance. QEMU boots the official stock ISO through its normal BIOS entry. The guest receives no input. HMP is used only for read-only status and complete VGA screendumps. The host stops QEMU at the 600s cap.

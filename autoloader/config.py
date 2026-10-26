@@ -3,11 +3,15 @@
 import json
 import os
 from dataclasses import dataclass, field
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Optional
 
 PROJECT_NAME = "Libre_Core AutoLoader"
-VERSION = "0.1.0"
+try:
+    VERSION = version("libre-core-autoloader")
+except PackageNotFoundError:
+    VERSION = "0+unknown"
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent

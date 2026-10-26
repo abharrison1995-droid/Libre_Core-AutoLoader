@@ -9,9 +9,8 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
-from datetime import datetime
 
-from autoloader.exceptions import FlashError, BackupVerificationError
+from autoloader.exceptions import BackupUnavailableError, BackupVerificationError
 from .flashrom import FlashromRunner, ProgrammerType
 
 logger = logging.getLogger(__name__)
@@ -46,10 +45,13 @@ def is_degenerate_dump(data: bytes) -> bool:
     zero_count = data.count(b"\x00")
     if ff_count == total or zero_count == total:
         return True
-    # If practically entire file is 0xFF or 0x00 (>= 99.9% on large files) and entropy is near 0
-    if (ff_count / total >= 0.999 or zero_count / total >= 0.999) and calculate_entropy(data) < 0.05:
+    # Count dominant blank values in optimized bytes operations. Sampling for
+    # entropy can alias periodic firmware data into a constant-looking sample
+    # (for example, a 64-byte pattern sampled every 128 bytes), so do not use
+    # approximate entropy to reject a candidate backup.
+    if ff_count / total >= 0.999 or zero_count / total >= 0.999:
         return True
-    return calculate_entropy(data) < 0.02
+    return False
 
 
 @dataclass
@@ -78,14 +80,20 @@ class BackupManager:
             with open(self.manifest_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if not isinstance(data, list):
-                    logger.warning(f"Manifest at {self.manifest_file} is not a list (got {type(data).__name__}), resetting.")
-                    return []
+                    raise BackupVerificationError(
+                        f"Manifest at {self.manifest_file} is malformed; refusing to reset or trust it."
+                    )
+                if any(not isinstance(item, dict) for item in data):
+                    raise BackupVerificationError(
+                        f"Manifest at {self.manifest_file} contains a malformed entry; refusing to trust it."
+                    )
                 return data
         except FileNotFoundError:
             return []
         except json.JSONDecodeError as e:
-            logger.warning(f"Manifest at {self.manifest_file} corrupted, resetting manifest: {e}")
-            return []
+            raise BackupVerificationError(
+                f"Manifest at {self.manifest_file} is corrupted; refusing to reset or trust it: {e}"
+            ) from e
 
     def _save_manifest(self, data: List[Dict]):
         """Atomically saves manifest data to prevent state loss on interruption."""
@@ -113,73 +121,11 @@ class BackupManager:
         layout_region: Optional[str] = None,
         extra_args: Optional[List[str]] = None
     ) -> BackupResult:
-        if programmer == ProgrammerType.INTERNAL and layout_region is None:
-            layout_region = "bios"
-
-        date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path1 = self.backup_dir / f"{model}_{date_str}_{chip_label}_backup1.rom"
-        path2 = self.backup_dir / f"{model}_{date_str}_{chip_label}_backup2.rom"
-
-        logger.info(f"Creating first backup at {path1}")
-        res1 = self.runner.read_rom(
-            programmer,
-            str(path1),
-            chip_name=chip_name,
-            layout_region=layout_region,
-            extra_args=extra_args
+        del model, programmer, chip_label, chip_name, layout_region, extra_args
+        raise BackupUnavailableError(
+            "Single-chip backup capture is disabled. Use the evidence-bound multi-chip backup service; "
+            "no hardware was read."
         )
-        if not res1.success:
-            raise FlashError(f"First backup failed: {res1.log_output}")
-        
-        # Immediate validation of first read
-        data1 = path1.read_bytes()
-        if is_degenerate_dump(data1):
-            raise BackupVerificationError(
-                f"First backup read from {programmer.value} is blank or corrupted (all 0xFF/0x00). "
-                "Check SPI clip connection and seating."
-            )
-        
-        logger.info(f"Creating second backup at {path2}")
-        res2 = self.runner.read_rom(
-            programmer,
-            str(path2),
-            chip_name=chip_name,
-            layout_region=layout_region,
-            extra_args=extra_args
-        )
-        if not res2.success:
-            raise FlashError(f"Second backup failed: {res2.log_output}")
-        
-        data2 = path2.read_bytes()
-        if is_degenerate_dump(data2):
-            raise BackupVerificationError(
-                f"Second backup read from {programmer.value} is blank or corrupted (all 0xFF/0x00). "
-                "Check SPI clip connection and seating."
-            )
-        
-        match, sha = self.verify_backup_pair(path1, path2)
-        chip_info = chip_name or res1.chip_name or "Unknown"
-
-        if match:
-            logger.info("Backups match perfectly.")
-            manifest = self._load_manifest()
-            manifest.append({
-                "model": model,
-                "date": date_str,
-                "chip_label": chip_label,
-                "path1": str(path1),
-                "path2": str(path2),
-                "sha256": sha,
-                "chip_info": chip_info
-            })
-            self._save_manifest(manifest)
-        else:
-            logger.warning("Backups do NOT match. Bad clip connection? Retrying is recommended.")
-            raise BackupVerificationError(
-                f"Backup verification failed: Pass 1 ({path1.name}) and Pass 2 ({path2.name}) hashes do not match."
-            )
-        
-        return BackupResult(str(path1), str(path2), sha, match, chip_info)
 
     def verify_backup_pair(self, path1: Path, path2: Path) -> Tuple[bool, str]:
         path1 = Path(path1)
@@ -205,35 +151,6 @@ class BackupManager:
         layout_region: Optional[str] = None,
         extra_args: Optional[List[str]] = None
     ) -> bool:
-        if programmer == ProgrammerType.INTERNAL and layout_region is None:
-            layout_region = "bios"
-
-        path = Path(backup_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Backup {backup_path} not found.")
-        
-        data = path.read_bytes()
-        if is_degenerate_dump(data):
-            raise BackupVerificationError(f"Cannot restore from blank or degenerate backup: {backup_path}")
-            
-        logger.warning(f"Restoring backup {backup_path} to {programmer.value}")
-        res = self.runner.write_rom(
-            programmer,
-            backup_path,
-            chip_name=chip_name,
-            layout_region=layout_region,
-            extra_args=extra_args
-        )
-        if not res.success:
-            logger.error(f"Restore write failed: {res.log_output}")
-            return False
-            
-        logger.info("Verifying restored ROM against backup...")
-        verify_res = self.runner.verify_rom(
-            programmer,
-            backup_path,
-            chip_name=chip_name,
-            layout_region=layout_region,
-            extra_args=extra_args
-        )
-        return verify_res.success
+        del backup_path, programmer, chip_name, layout_region, extra_args
+        logger.warning("Physical restoration is disabled; no backup file was read and no write was attempted.")
+        return False

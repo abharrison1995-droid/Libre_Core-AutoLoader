@@ -1,0 +1,898 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html class="gl-system ui-gray with-top-bar with-header page-with-panels with-gl-container-queries  user-logged-out" lang="en">
+<head prefix="og: http://ogp.me/ns#">
+<meta charset="utf-8">
+<meta content="IE=edge" http-equiv="X-UA-Compatible">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>upgpkg: 20260909-1: new upstream release (56acf30f) · Commits · Arch Linux / Packaging / Packages / archlinux-keyring · GitLab</title>
+<link as="font" crossorigin="" href="/assets/gitlab-sans/GitLabSans-9892dc17af892e03de41625c0ee325117a3b8ee4ba6005f3a3eac68510030aed.woff2" rel="preload">
+<link as="font" crossorigin="" href="/assets/gitlab-sans/GitLabSans-Italic-f96f17332d67b21ada2dfba5f0c0e1d5801eab99330472057bf18edd93d4ccf7.woff2" rel="preload">
+<link as="font" crossorigin="" href="/assets/gitlab-mono/GitLabMono-29c2152dac8739499dd0fe5cd37a486ebcc7d4798c9b6d3aeab65b3172375b05.woff2" rel="preload">
+<link as="font" crossorigin="" href="/assets/gitlab-mono/GitLabMono-Italic-af36701a2188df32a9dcea12e0424c380019698d4f76da9ad8ea2fd59432cf83.woff2" rel="preload">
+
+<script>
+//<![CDATA[
+window.gon={};gon.math_rendering_limits_enabled=true;gon.features={"allowIframesInMarkdown":false,"useMermaidV12":false};
+//]]>
+</script>
+
+<script>
+//<![CDATA[
+const root = document.documentElement;
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  root.classList.add('gl-dark');
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (e.matches) {
+    root.classList.add('gl-dark');
+  } else {
+    root.classList.remove('gl-dark');
+  }
+});
+
+//]]>
+</script>
+<script>
+//<![CDATA[
+var gl = window.gl || {};
+gl.startup_calls = {"/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diffs_stats":{},"/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diff_files_metadata":{},"/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/discussions":{}};
+gl.startup_graphql_calls = null;
+
+if (gl.startup_calls && window.fetch) {
+  Object.keys(gl.startup_calls).forEach(apiCall => {
+   gl.startup_calls[apiCall] = {
+      fetchCall: fetch(apiCall, {
+        // Emulate XHR for Rails AJAX request checks
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        // fetch won’t send cookies in older browsers, unless you set the credentials init option.
+        // We set to `same-origin` which is default value in modern browsers.
+        // See https://github.com/whatwg/fetch/pull/585 for more information.
+        credentials: 'same-origin'
+      })
+    };
+  });
+}
+if (gl.startup_graphql_calls && window.fetch) {
+  const headers = {"X-CSRF-Token":"izlMRY-j1j_lDAN76eGAVLa2fChsAKm9XBoKajL4UKpWzALCyOWHu2xPMosuVJ05TCAeP5V0r7qPIp3TEPf0UA","x-gitlab-feature-category":"source_code_management"};
+  const url = `https://gitlab.archlinux.org/api/graphql`
+
+  const opts = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    }
+  };
+
+  gl.startup_graphql_calls = gl.startup_graphql_calls.map(call => ({
+    ...call,
+    fetchCall: fetch(url, {
+      ...opts,
+      credentials: 'same-origin',
+      body: JSON.stringify(call)
+    })
+  }))
+}
+
+
+//]]>
+</script>
+
+
+
+<meta content="light dark" name="color-scheme">
+<link rel="stylesheet" href="/assets/application-47e4b6a04f27178ca0c9b6a86de6a2a44be190153a9bdbe4f9e17d1bf8f63255.css" media="(prefers-color-scheme: light)" />
+<link rel="stylesheet" href="/assets/application_dark-0aa39f30c25b3673379016ee682c7bfbfdc0abf7859195fa101d2ebe8a645731.css" media="(prefers-color-scheme: dark)" />
+<link rel="stylesheet" href="/assets/page_bundles/pipelines-bf81a398231227b122311d7789dd277fb16757499b12acb3c7e588e7790b727d.css" /><link rel="stylesheet" href="/assets/page_bundles/merge_requests-39f040d2398252c53f098d3a76c124d3ff475f2374ced7a47c45f68aa20f8c5d.css" /><link rel="stylesheet" href="/assets/page_bundles/commit_rapid_diffs-af0b6f4e6f2def8be42ee3fba8a010ca1fb90686b4e1ccb3fda6266194719470.css" /><link rel="stylesheet" href="/assets/page_bundles/commit_description-9e7efe20f0cef17d0606edabfad0418e9eb224aaeaa2dae32c817060fa60abcc.css" /><link rel="stylesheet" href="/assets/page_bundles/rapid_diffs-24e898b419a1e35a52a57c4886648cde220d40fe2622ccf29dd023dc63a838d7.css" /><link rel="stylesheet" href="/assets/page_bundles/design_management-4765252040ab8edacfb27d7015bf41527629b0dc4fdacd1f1bc9d3f65cecae1b.css" /><link rel="stylesheet" href="/assets/page_bundles/issuable_list-7a33f8b5a79c609e4bac7e1fa1c5553962adf726cd700fbead1f9e974c41e7c9.css" /><link rel="stylesheet" href="/assets/page_bundles/issues_list-1d9cdbbaf9469f9073c410dc7a7f2543b02071773aa332daf63803eaaec87e62.css" /><link rel="stylesheet" href="/assets/page_bundles/issues_show-ec954ae4932e0bfe7383adee3c75f53c5985c6edea62c7ae4370cb1f6e85a91a.css" /><link rel="stylesheet" href="/assets/page_bundles/notes_shared-bd75305a90734f71761e8d13c4286994caf487acb52219ee52dcc65c0c3f6a05.css" /><link rel="stylesheet" href="/assets/page_bundles/work_items-b2f575a41145c7ff2490084c75138aab201b2593b93846f5812aec8cfb2a6ca2.css" />
+<link rel="stylesheet" href="/assets/tailwind-6a43fc7e8c6ebcace906db6ce746e89a74c26e270b3a5b16618a4b888a21db81.css" />
+
+
+<link rel="stylesheet" href="/assets/fonts-deb7ad1d55ca77c0172d8538d53442af63604ff490c74acc2859db295c125bdb.css" />
+<link rel="stylesheet" href="/assets/highlight/themes/white-2a02e7cdb193dcec5b8068ad0a57aee70b1cd0888c8d1dbe8ab5996651334922.css" media="(prefers-color-scheme: light)" />
+<link rel="stylesheet" href="/assets/highlight/themes/dark-7fbedc840cde3d684b77966ee3740cd6cf4ba7c26a807b7c8701223af70f772f.css" media="(prefers-color-scheme: dark)" />
+
+<script src="/assets/webpack/runtime.99bd454a.bundle.js" defer="defer"></script>
+<script src="/assets/webpack/main.29a3eea2.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/tracker.1eb446cb.chunk.js" defer="defer"></script>
+<script>
+//<![CDATA[
+window.snowplowOptions = {"namespace":"gl","hostname":"gitlab.archlinux.org:443","postPath":"/-/collect_events","forceSecureTracker":true,"appId":"gitlab_sm"};
+gl = window.gl || {};
+gl.snowplowStandardContext = {"schema":"iglu:com.gitlab/gitlab_standard/jsonschema/1-1-8","data":{"environment":"self-managed","source":"gitlab-rails","client_type":"api","correlation_id":"01M5TK8G96VTKCWZ916MPX1G98","extra":{},"user_id":null,"global_user_id":null,"user_type":null,"is_gitlab_team_member":null,"namespace_id":11323,"ultimate_parent_namespace_id":23,"project_id":32405,"feature_enabled_by_namespace_ids":null,"realm":"self-managed","deployment_type":"self-managed","context_generated_at":"2026-10-25T22:35:21.450Z","organization_id":1}};
+gl.snowplowPseudonymizedPageUrl = "https://gitlab.archlinux.org/namespace11323/project32405/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046";
+gl.maskedDefaultReferrerUrl = null;
+gl.ga4MeasurementId = 'G-ENFH3X7M5Y';
+gl.duoEvents = ["ai_question_category","block_slack_duo_mention","perform_completion_worker","receive_slack_duo_mention","process_gitlab_duo_question","agent_platform_session_created","agent_platform_session_dropped","agent_platform_session_finished","agent_platform_session_resumed","agent_platform_session_started","agent_platform_session_stopped","ai_response_time","approve_tool_duo_chat","assign_duo_suggested_reviewer","cancel_session_from_session_pill","cleanup_stuck_agent_platform_session","click_ai_catalog_button_duo_rail","click_analyze_with_duo_on_analytics_dashboard","click_dap_trial_or_paid_empty_state_agent","click_dap_trial_or_paid_empty_state_explore_agents_link","click_dap_trial_or_paid_empty_state_prompt","click_delete_ai_catalog_item_button","click_disable_ai_catalog_item_button","click_duo_agentic_identity_verification_empty_state_verify_account","click_duo_agentic_not_available_empty_state_buy_credits","click_duo_agentic_not_available_empty_state_learn_more","click_duo_agentic_not_available_empty_state_learn_more_credits","click_duo_agentic_not_available_empty_state_start_trial","click_duo_agentic_subscription_expired_learn_more","click_duo_agentic_subscription_expired_upgrade","click_duo_agentic_trial_expired_learn_more","click_duo_agentic_trial_expired_upgrade","click_duo_quick_action","click_duplicate_ai_catalog_item_button","click_enable_ai_catalog_item_button","click_purchase_seats_button_group_duo_pro_home_page","click_through_flow_widget","click_through_session_pill","close_vulnerability_resolution_merge_request","code_suggestion_accepted_in_ide","code_suggestion_rejected_in_ide","code_suggestion_shown_in_ide","code_suggestions_connection_details_rate_limit_exceeded","code_suggestions_direct_access_rate_limit_exceeded","code_suggestions_rate_limit_exceeded","complete_duo_chat_response","create_ai_catalog_item","create_ai_catalog_item_consumer","create_ai_self_hosted_model","create_duo_suggested_reviewers","create_vulnerability_resolution_merge_request","default_answer","delete_ai_catalog_item","delete_ai_catalog_item_consumer","delete_ai_self_hosted_model","deny_tool_duo_chat","detected_high_comment_temperature","detected_repeated_high_comment_temperature","dismiss_sast_vulnerability_false_positive_analysis","dismiss_secret_detection_vulnerability_false_positive_analysis","duo_workflow_workload_completed","enable_duo_code_review_by_default_marked_pending","encounter_duo_code_review_error_during_review","error_answer","excluded_files_from_duo_code_review","execute_llm_method","explain_code","explain_vulnerability","filter_ai_fp","find_no_issues_duo_code_review_after_review","find_nothing_to_review_duo_code_review_on_mr","finish_duo_workflow_execution","finish_mcp_tool_call","finish_vulnerability_bulk_duo_workflow","fix_code","fix_pipeline_suggestion_applied","fix_pipeline_suggestion_posted","forced_high_temperature_commenting","generate_merge_commit_message","generate_resolve_dependency_bump_pipeline","i_quickactions_q","include_repository_xray_data_into_code_generation_prompt","ingest_ai_audit_events_batch","maximize_duo_chat_panel","mention_gitlabduo_in_mr_comment","merge_vulnerability_resolution_merge_request","minimize_duo_chat_panel","navigate_retry_alternative_duo_agentic_chat","post_comment_duo_code_review_on_diff","process_gitlab_duo_slash_command","publish_duo_code_review_comments","react_thumbs_down_on_duo_code_review_comment","react_thumbs_up_on_duo_code_review_comment","recommend_tool_duo_chat","refactor_code","report_duo_chat_token_usage","reported_sast_vulnerability_false_positive_analysis","reported_secret_detection_vulnerability_false_positive_analysis","request_ask_help","request_duo_chat_response","request_duo_vulnerability_resolution","request_review_duo_code_review_on_mr_by_author","request_review_duo_code_review_on_mr_by_non_author","requested_comment_temperature","resize_duo_chat_panel","resolve_feature_discovery_search","restore_ai_catalog_item","retry_duo_workflow_execution","retry_failed_duo_agentic_chat","retry_message_duo_agentic_chat","retry_succeeded_duo_agentic_chat","select_duo_agentic_chat_predefined_prompt","start_duo_workflow_execution","start_mcp_tool_call","start_vulnerability_bulk_duo_workflow","submit_dap_trial_or_paid_empty_state_message","submit_gitlab_duo_question","submit_slash_command_duo_agentic_chat","summarize_new_merge_request","summarize_review","tokens_per_embedding","tokens_per_user_request_prompt","tokens_per_user_request_response","tool_failed_duo_chat","tool_succeeded_duo_chat","trigger_ai_catalog_item","trigger_resolve_dependency_bump_workflow","trigger_sast_vulnerability_fp_detection_workflow","trigger_sast_vulnerability_resolution_workflow","trigger_secret_detection_vulnerability_fp_detection_workflow","trigger_slack_duo","troubleshoot_job","update_ai_catalog_item","update_ai_catalog_item_consumer","update_ai_self_hosted_model","update_model_selection_feature","update_self_hosted_ai_feature_to_vendored_model","view_ai_catalog_item","view_ai_catalog_item_index","view_ai_catalog_project_catalog","view_ai_catalog_project_managed","view_dap_trial_or_paid_empty_state","view_duo_agentic_identity_verification_empty_state","view_duo_agentic_not_available_empty_state","view_duo_agentic_subscription_expired_empty_state","view_duo_agentic_trial_expired_empty_state","write_tests"];
+gl.onlySendDuoEvents = true;
+
+
+//]]>
+</script>
+
+
+
+<script src="/assets/webpack/commons-graphql_explorer-pages.admin.application_settings.general-pages.admin.application_settings.s-758764d0.4e03df81.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.abuse_reports.show-pages.dashboard.issues-pages.dashboard.issues.vue3-pages.dash-2a5e5aa7.07c857b3.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.application_settings.service_accounts-pages.explore.ai_catalog-pages.explore.ana-dd0b1cb0.abc48cc4.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.abuse_reports.show-pages.dashboard.issues-pages.dashboard.issues.vue3-pages.dash-e0bb97e5.0fbb5a91.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-duo_panel-duo_panel.vue3-pages.dashboard.home-pages.registrations.new-pages.root-pages.root.-808e6e09.466080f8.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.deploy_keys.index-pages.admin.deploy_keys.index.vue3-pages.admin.groups.index-pa-cdd82189.51b0f93b.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.abuse_reports.show-pages.dashboard.issues-pages.dashboard.work_items-pages.group-0292a3cb.b360417c.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.dashboard.home-pages.projects.snippets.show-pages.projects.snippets.show.vue3-pages.ro-3e3d840b.db458a62.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/0dcf7166.fee24f6c.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.search.show-pages.search.show.vue3-super_sidebar-super_sidebar.vue3.e1ab1d65.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-super_sidebar-super_sidebar.vue3.af160680.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.search.show-super_sidebar.e9a2615d.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-duo_panel-super_sidebar.7b4ae165.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/super_sidebar.f9056fa7.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/prosemirror.04be8805.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-duo_panel-pages.admin.ai.amazon_q_settings-pages.admin.application_settings.general-pages.ad-f030cbec.f0146904.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.projects-pages.projects.activity-pages.projects.activity.vue3-pages.projects.alert_man-eb7e1b50.3d5e7bfc.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.groups-pages.groups.achievements-pages.groups.activity-pages.groups.analytics.ci_cd_an-269a47d8.4549d4e9.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-initGFMInput-pages.admin.organizations.settings.general-pages.admin.organizations.settings.g-4b5c98eb.5f5427b6.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.organizations.settings.general-pages.admin.organizations.settings.general.vue3-p-3cef5dff.e5204c10.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.organizations.settings.general-pages.admin.organizations.settings.general.vue3-p-7690fffd.a4c2ceca.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-initGFMInput-pages.admin.organizations.settings.general-pages.admin.topics.edit-pages.admin.-dcb58fc9.40ac1505.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.organizations.settings.general-pages.admin.topics.edit-pages.admin.topics.new-pa-0865f66a.7eefe45c.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.admin.organizations.settings.general-pages.admin.topics.edit-pages.admin.topics.new-pa-b9bc411d.1760e108.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/0f3371d1.26d78ba4.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-jira_connect_app-pages.admin.application_settings.service_accounts-pages.admin.impersonation-0231790c.96649375.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/32327915.1380fd7d.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/commons-pages.groups.saved_views.show-pages.groups.wikis-pages.groups.wikis.diff-pages.groups.wikis.-fe4a20a3.009cc0f2.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/93b7e950.989ddc9a.chunk.js" defer="defer"></script>
+<script src="/assets/webpack/pages.projects.commit.rapid_diffs.d025b54b.chunk.js" defer="defer"></script>
+
+<meta content="object" property="og:type">
+<meta content="GitLab" property="og:site_name">
+<meta content="upgpkg: 20260909-1: new upstream release (56acf30f) · Commits · Arch Linux / Packaging / Packages / archlinux-keyring · GitLab" property="og:title">
+<meta content="Arch Linux PGP keyring packages: archlinux-keyring voa-verifiers-arch" property="og:description">
+<meta content="https://gitlab.archlinux.org/assets/twitter_card-570ddb06edf56a2312253c5872489847a0f385112ddbcd71ccfa1570febab5d2.jpg" property="og:image">
+<meta content="64" property="og:image:width">
+<meta content="64" property="og:image:height">
+<meta content="https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046" property="og:url">
+<meta content="summary" property="twitter:card">
+<meta content="upgpkg: 20260909-1: new upstream release (56acf30f) · Commits · Arch Linux / Packaging / Packages / archlinux-keyring · GitLab" property="twitter:title">
+<meta content="Arch Linux PGP keyring packages: archlinux-keyring voa-verifiers-arch" property="twitter:description">
+<meta content="https://gitlab.archlinux.org/assets/twitter_card-570ddb06edf56a2312253c5872489847a0f385112ddbcd71ccfa1570febab5d2.jpg" property="twitter:image">
+
+<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="ZQGK6Joa5yFW5dS4me9e2a4a7ooi7dCjqx4k5vl_AgK49MRv3Vy2pd-m5UheWkO0VIyMnduZ1qR4JrNf23Cm-A" />
+<meta name="csp-nonce" />
+<meta name="action-cable-url" content="/-/cable" />
+<link crossorigin="use-credentials" href="/-/manifest.json" rel="manifest">
+<link rel="icon" type="image/png" href="/uploads/-/system/appearance/favicon/1/lol3.png" id="favicon" data-original-href="/uploads/-/system/appearance/favicon/1/lol3.png" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/uploads/-/system/appearance/pwa_icon/1/apple-touch-icon-144x144.png?width=192" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/uploads/-/system/appearance/pwa_icon/1/apple-touch-icon-144x144.png?width=192" sizes="192x192" />
+<link rel="apple-touch-icon" type="image/x-icon" href="/uploads/-/system/appearance/pwa_icon/1/apple-touch-icon-144x144.png?width=512" sizes="512x512" />
+<link crossorigin="use-credentials" href="/search/opensearch.xml" rel="search" title="Search GitLab" type="application/opensearchdescription+xml">
+
+
+
+
+<meta content="Arch Linux PGP keyring packages: archlinux-keyring voa-verifiers-arch" name="description">
+<meta content="#ECECEF" media="(prefers-color-scheme: light)" name="theme-color">
+<meta content="#232227" media="(prefers-color-scheme: dark)" name="theme-color">
+</head>
+
+<body class="tab-width-8 gl-browser-generic gl-platform-other" data-group="packages" data-group-full-path="archlinux/packaging/packages" data-namespace-id="11323" data-page="projects:commit:show" data-page-type-id="56acf30f9492d6b6e9cc7c16fd1d969afc462046" data-project="archlinux-keyring" data-project-full-path="archlinux/packaging/packages/archlinux-keyring" data-project-id="32405">
+<div id="js-tooltips-container"></div>
+<script>
+//<![CDATA[
+gl = window.gl || {};
+gl.GfmAutoComplete = gl.GfmAutoComplete || {};
+gl.GfmAutoComplete.dataSources = {"epics":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/epics","iterations":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/iterations","vulnerabilities":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/vulnerabilities","members":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/members?type=Commit\u0026type_id=56acf30f9492d6b6e9cc7c16fd1d969afc462046","issues":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/issues","mergeRequests":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/merge_requests","labels":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/labels?type=Commit\u0026type_id=56acf30f9492d6b6e9cc7c16fd1d969afc462046","milestones":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/milestones","commands":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/commands?type=Commit\u0026type_id=56acf30f9492d6b6e9cc7c16fd1d969afc462046","snippets":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/snippets","contacts":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/contacts?type=Commit\u0026type_id=56acf30f9492d6b6e9cc7c16fd1d969afc462046","wikis":"/archlinux/packaging/packages/archlinux-keyring/-/autocomplete_sources/wikis"};
+
+
+//]]>
+</script>
+<script>
+//<![CDATA[
+gl = window.gl || {};
+gl.client = {"isGeneric":true,"isOther":true};
+
+
+//]]>
+</script>
+
+
+<header class="super-topbar js-super-topbar"></header>
+<div class="layout-page js-page-layout page-with-super-sidebar">
+<script>
+//<![CDATA[
+const outer = document.createElement('div');
+outer.style.visibility = 'hidden';
+outer.style.overflow = 'scroll';
+document.body.appendChild(outer);
+const inner = document.createElement('div');
+outer.appendChild(inner);
+const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+outer.parentNode.removeChild(outer);
+document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+
+//]]>
+</script><aside class="js-super-sidebar super-sidebar super-sidebar-loading" data-command-palette="{&quot;project_files_url&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/files/main?format=json&quot;,&quot;project_blob_url&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/blob/main&quot;}" data-is-saas="false" data-sidebar="{&quot;is_logged_in&quot;:false,&quot;compare_plans_url&quot;:&quot;https://about.gitlab.com/pricing&quot;,&quot;current_menu_items&quot;:[{&quot;id&quot;:&quot;project_overview&quot;,&quot;title&quot;:&quot;archlinux-keyring&quot;,&quot;entity_id&quot;:32405,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring&quot;,&quot;link_classes&quot;:&quot;shortcuts-project&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;manage_menu&quot;,&quot;title&quot;:&quot;Manage&quot;,&quot;icon&quot;:&quot;users&quot;,&quot;avatar_shape&quot;:&quot;rect&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/activity&quot;,&quot;is_active&quot;:false,&quot;items&quot;:[{&quot;id&quot;:&quot;activity&quot;,&quot;title&quot;:&quot;Activity&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/activity&quot;,&quot;link_classes&quot;:&quot;shortcuts-project-activity&quot;,&quot;description&quot;:&quot;Track what your team is working on and stay informed of changes&quot;,&quot;library_icon&quot;:&quot;history&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;members&quot;,&quot;title&quot;:&quot;Members&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/project_members&quot;,&quot;description&quot;:&quot;Control who has access to your project and what they can do&quot;,&quot;library_icon&quot;:&quot;users&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;labels&quot;,&quot;title&quot;:&quot;Labels&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/labels&quot;,&quot;description&quot;:&quot;Organize and categorize work across your project with consistent labels&quot;,&quot;library_icon&quot;:&quot;labels&quot;,&quot;is_active&quot;:false}],&quot;separated&quot;:false},{&quot;id&quot;:&quot;plan_menu&quot;,&quot;title&quot;:&quot;Plan&quot;,&quot;icon&quot;:&quot;planning&quot;,&quot;avatar_shape&quot;:&quot;rect&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/work_items&quot;,&quot;is_active&quot;:false,&quot;items&quot;:[{&quot;id&quot;:&quot;project_issue_list&quot;,&quot;title&quot;:&quot;Work items&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/work_items&quot;,&quot;link_classes&quot;:&quot;shortcuts-issues has-sub-items&quot;,&quot;pill_count_field&quot;:&quot;openWorkItemsCount&quot;,&quot;pill_count_dynamic&quot;:false,&quot;description&quot;:&quot;Plan, track, and manage work in one place&quot;,&quot;library_icon&quot;:&quot;work-items&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;boards&quot;,&quot;title&quot;:&quot;Issue boards&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/boards&quot;,&quot;link_classes&quot;:&quot;shortcuts-issue-boards&quot;,&quot;description&quot;:&quot;Visualize and manage work with kanban-style boards&quot;,&quot;library_icon&quot;:&quot;work-item-issue-board&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;milestones&quot;,&quot;title&quot;:&quot;Milestones&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/milestones&quot;,&quot;description&quot;:&quot;Plan releases and group work into time-based phases&quot;,&quot;library_icon&quot;:&quot;milestone&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;iterations&quot;,&quot;title&quot;:&quot;Iterations&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/cadences&quot;,&quot;description&quot;:&quot;Group issues into time-boxed cycles to plan and track sprints&quot;,&quot;tier&quot;:&quot;premium&quot;,&quot;library_icon&quot;:&quot;iteration&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;project_wiki&quot;,&quot;title&quot;:&quot;Wiki&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/wikis&quot;,&quot;link_classes&quot;:&quot;shortcuts-wiki&quot;,&quot;description&quot;:&quot;Create and manage documentation&quot;,&quot;library_icon&quot;:&quot;book&quot;,&quot;is_active&quot;:false}],&quot;separated&quot;:false},{&quot;id&quot;:&quot;code_menu&quot;,&quot;title&quot;:&quot;Code&quot;,&quot;icon&quot;:&quot;code&quot;,&quot;avatar_shape&quot;:&quot;rect&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/merge_requests&quot;,&quot;is_active&quot;:true,&quot;items&quot;:[{&quot;id&quot;:&quot;project_merge_request_list&quot;,&quot;title&quot;:&quot;Merge requests&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/merge_requests&quot;,&quot;link_classes&quot;:&quot;shortcuts-merge_requests&quot;,&quot;pill_count_field&quot;:&quot;openMergeRequestsCount&quot;,&quot;pill_count_dynamic&quot;:false,&quot;description&quot;:&quot;Collaborate on code changes with built-in review tools&quot;,&quot;library_icon&quot;:&quot;merge-request&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;files&quot;,&quot;title&quot;:&quot;Repository&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/tree/main&quot;,&quot;link_classes&quot;:&quot;shortcuts-tree&quot;,&quot;description&quot;:&quot;Browse and manage repository files and code&quot;,&quot;library_icon&quot;:&quot;repository&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;branches&quot;,&quot;title&quot;:&quot;Branches&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/branches&quot;,&quot;description&quot;:&quot;Manage project branches and branch protection&quot;,&quot;library_icon&quot;:&quot;branch&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;commits&quot;,&quot;title&quot;:&quot;Commits&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commits/main?ref_type=heads&quot;,&quot;link_classes&quot;:&quot;shortcuts-commits&quot;,&quot;description&quot;:&quot;View commit history and changes&quot;,&quot;library_icon&quot;:&quot;commit&quot;,&quot;is_active&quot;:true},{&quot;id&quot;:&quot;tags&quot;,&quot;title&quot;:&quot;Tags&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/tags&quot;,&quot;description&quot;:&quot;Create and manage release tags&quot;,&quot;library_icon&quot;:&quot;tag&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;graphs&quot;,&quot;title&quot;:&quot;Repository graph&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/network/main?ref_type=heads&quot;,&quot;link_classes&quot;:&quot;shortcuts-network&quot;,&quot;description&quot;:&quot;Visualize repository commit history and branches&quot;,&quot;library_icon&quot;:&quot;repository-graph&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;compare&quot;,&quot;title&quot;:&quot;Compare revisions&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/compare?from=main\u0026to=main&quot;,&quot;description&quot;:&quot;Compare changes between revisions&quot;,&quot;library_icon&quot;:&quot;comparison&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;file_locks&quot;,&quot;title&quot;:&quot;Locked files&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/path_locks&quot;,&quot;description&quot;:&quot;Manage file locks to prevent conflicting changes&quot;,&quot;tier&quot;:&quot;premium&quot;,&quot;library_icon&quot;:&quot;doc-locked&quot;,&quot;is_active&quot;:false}],&quot;separated&quot;:false},{&quot;id&quot;:&quot;deploy_menu&quot;,&quot;title&quot;:&quot;Deploy&quot;,&quot;icon&quot;:&quot;deployments&quot;,&quot;avatar_shape&quot;:&quot;rect&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/ml/models&quot;,&quot;is_active&quot;:false,&quot;items&quot;:[{&quot;id&quot;:&quot;model_registry&quot;,&quot;title&quot;:&quot;Model registry&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/ml/models&quot;,&quot;description&quot;:&quot;Store and manage machine learning models&quot;,&quot;library_icon&quot;:&quot;model-registry&quot;,&quot;is_active&quot;:false}],&quot;separated&quot;:false},{&quot;id&quot;:&quot;analyze_menu&quot;,&quot;title&quot;:&quot;Analyze&quot;,&quot;icon&quot;:&quot;chart&quot;,&quot;avatar_shape&quot;:&quot;rect&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/value_stream_analytics&quot;,&quot;is_active&quot;:false,&quot;items&quot;:[{&quot;id&quot;:&quot;cycle_analytics&quot;,&quot;title&quot;:&quot;Value stream analytics&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/value_stream_analytics&quot;,&quot;link_classes&quot;:&quot;shortcuts-project-cycle-analytics&quot;,&quot;description&quot;:&quot;Analyze value stream and cycle time&quot;,&quot;library_icon&quot;:&quot;value-stream-analytics&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;contributors&quot;,&quot;title&quot;:&quot;Contributor analytics&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/graphs/main?ref_type=heads&quot;,&quot;description&quot;:&quot;Track and view member contributions and activity&quot;,&quot;library_icon&quot;:&quot;contributor-analytics&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;repository_analytics&quot;,&quot;title&quot;:&quot;Repository analytics&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/graphs/main/charts&quot;,&quot;link_classes&quot;:&quot;shortcuts-repository-charts&quot;,&quot;description&quot;:&quot;Analyze repository coverage, statistics, and metrics&quot;,&quot;library_icon&quot;:&quot;repository-analytics&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;code_review&quot;,&quot;title&quot;:&quot;Code review analytics&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/analytics/code_reviews&quot;,&quot;description&quot;:&quot;Measure code review efficiency and merge request throughput&quot;,&quot;tier&quot;:&quot;premium&quot;,&quot;library_icon&quot;:&quot;code-review-analytics&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;issues&quot;,&quot;title&quot;:&quot;Issue analytics&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/analytics/issues_analytics&quot;,&quot;description&quot;:&quot;Track issue metrics, trends, and throughput&quot;,&quot;tier&quot;:&quot;premium&quot;,&quot;library_icon&quot;:&quot;work-item-issue-analytics&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;insights&quot;,&quot;title&quot;:&quot;Insights&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/insights/&quot;,&quot;link_classes&quot;:&quot;shortcuts-project-insights&quot;,&quot;description&quot;:&quot;View insights and build custom charts and reports&quot;,&quot;tier&quot;:&quot;ultimate&quot;,&quot;library_icon&quot;:&quot;bulb&quot;,&quot;is_active&quot;:false},{&quot;id&quot;:&quot;model_experiments&quot;,&quot;title&quot;:&quot;Model experiments&quot;,&quot;link&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/ml/experiments&quot;,&quot;description&quot;:&quot;Track and manage machine learning experiments&quot;,&quot;library_icon&quot;:&quot;machine-learning&quot;,&quot;is_active&quot;:false}],&quot;separated&quot;:false}],&quot;current_context_header&quot;:&quot;Project&quot;,&quot;support_path&quot;:&quot;https://support.gitlab.com&quot;,&quot;display_whats_new&quot;:false,&quot;show_version_check&quot;:null,&quot;search&quot;:{&quot;search_context&quot;:{&quot;group&quot;:{&quot;id&quot;:11323,&quot;name&quot;:&quot;Packages&quot;,&quot;full_name&quot;:&quot;Arch Linux / Packaging / Packages&quot;},&quot;group_metadata&quot;:{&quot;issues_path&quot;:&quot;/groups/archlinux/packaging/packages/-/issues&quot;,&quot;mr_path&quot;:&quot;/groups/archlinux/packaging/packages/-/merge_requests&quot;},&quot;project&quot;:{&quot;id&quot;:32405,&quot;name&quot;:&quot;archlinux-keyring&quot;},&quot;project_metadata&quot;:{&quot;mr_path&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/merge_requests&quot;,&quot;issues_path&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/issues&quot;},&quot;code_search&quot;:true,&quot;scope&quot;:null,&quot;for_snippets&quot;:null}},&quot;panel_type&quot;:&quot;project&quot;,&quot;shortcut_links&quot;:[{&quot;title&quot;:&quot;Snippets&quot;,&quot;href&quot;:&quot;/explore/snippets&quot;,&quot;css_class&quot;:&quot;dashboard-shortcuts-snippets&quot;},{&quot;title&quot;:&quot;Groups&quot;,&quot;href&quot;:&quot;/explore/groups&quot;,&quot;css_class&quot;:&quot;dashboard-shortcuts-groups&quot;},{&quot;title&quot;:&quot;Projects&quot;,&quot;href&quot;:&quot;/explore/projects&quot;,&quot;css_class&quot;:&quot;dashboard-shortcuts-projects&quot;}],&quot;has_terms&quot;:false,&quot;allow_signup&quot;:&quot;false&quot;,&quot;pinned_items&quot;:[&quot;project_overview&quot;,&quot;members&quot;,&quot;project_issue_list&quot;,&quot;branches&quot;,&quot;project_merge_request_list&quot;,&quot;pipelines&quot;]}"></aside>
+
+<div class="broadcast-wrapper gl-rounded-lg gl-overflow-hidden">
+
+<div class="gl-broadcast-message banner js-broadcast-notification-5 light-red" data-broadcast-banner data-testid="banner-broadcast-message" role="alert">
+<div class="gl-broadcast-message-content">
+<div class="gl-broadcast-message-icon">
+<svg class="s16" data-testid="bullhorn-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#bullhorn"></use></svg>
+</div>
+<div class="gl-broadcast-message-text">
+<h2 class="gl-sr-only">Admin message</h2>
+<p>Due to an influx of spam, we have had to require each new account to be manually approved. Please register an account and then write an email to <a href="mailto:accountsupport@archlinux.org">accountsupport@archlinux.org</a> to get it approved. Sorry for the inconvenience.</p>
+</div>
+</div>
+<button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary gl-broadcast-message-dismiss js-dismiss-current-broadcast-notification" aria-label="Close" data-id="5" data-expire-date="2036-03-15T17:53:09Z" data-cookie-key="hide_broadcast_message_5" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="close-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#close"></use></svg>
+
+</button>
+</div>
+
+
+
+
+</div>
+<div class="panels-container gl-flex gl-gap-3">
+<div class="content-panels gl-flex-1 gl-w-full gl-flex gl-gap-0 gl-relative js-content-panels gl-@container/content-panels">
+<div class="paneled-view static-panel js-static-panel js-paneled-view content-wrapper">
+<div class="panel-header">
+<div class="panel-header-inner js-panel-header-inner">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Arch Linux","item":"https://gitlab.archlinux.org/archlinux"},{"@type":"ListItem","position":2,"name":"Packaging","item":"https://gitlab.archlinux.org/archlinux/packaging"},{"@type":"ListItem","position":3,"name":"Packages","item":"https://gitlab.archlinux.org/archlinux/packaging/packages"},{"@type":"ListItem","position":4,"name":"archlinux-keyring","item":"https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring"},{"@type":"ListItem","position":5,"name":"Commits","item":"https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commits/main"},{"@type":"ListItem","position":6,"name":"56acf30f","item":"https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046"}]}
+
+
+</script>
+<div data-testid="breadcrumb-links" id="js-vue-page-breadcrumbs-wrapper">
+<div data-breadcrumbs-json="[{&quot;text&quot;:&quot;Arch Linux&quot;,&quot;href&quot;:&quot;/archlinux&quot;,&quot;avatarPath&quot;:&quot;/uploads/-/system/group/avatar/23/iconfinder_archlinux_386451.png?v=1773960182&quot;},{&quot;text&quot;:&quot;Packaging&quot;,&quot;href&quot;:&quot;/archlinux/packaging&quot;,&quot;avatarPath&quot;:&quot;/uploads/-/system/group/avatar/11322/arch-package.png?v=1773960314&quot;},{&quot;text&quot;:&quot;Packages&quot;,&quot;href&quot;:&quot;/archlinux/packaging/packages&quot;,&quot;avatarPath&quot;:&quot;/uploads/-/system/group/avatar/11323/arch-package.png?v=1773960314&quot;},{&quot;text&quot;:&quot;archlinux-keyring&quot;,&quot;href&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring&quot;,&quot;avatarPath&quot;:null},{&quot;text&quot;:&quot;Commits&quot;,&quot;href&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commits/main&quot;,&quot;avatarPath&quot;:null},{&quot;text&quot;:&quot;56acf30f&quot;,&quot;href&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046&quot;,&quot;avatarPath&quot;:null}]" id="js-vue-page-breadcrumbs"></div>
+<div id="js-injected-page-breadcrumbs"></div>
+</div>
+<div id="js-page-breadcrumbs-extra"></div>
+
+
+
+<div class="panel-header-inner-actions">
+
+
+<div class="panel-header-inner-actions-portal-target js-panel-actions-portal-target"></div>
+</div>
+</div>
+</div>
+<div class="panel-content">
+<div class="panel-content-inner js-static-panel-inner">
+<div class="alert-wrapper alert-wrapper-top-space gl-flex gl-flex-col gl-gap-3 container-fluid container-limited">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class=" project-highlight-puc">
+<main class="content gl-@container/panel" id="content-body" itemscope itemtype="http://schema.org/SoftwareSourceCode">
+<div id="js-drawer-container"></div>
+<div class="flash-container flash-container-page sticky" data-testid="flash-container">
+<div id="js-global-alerts"></div>
+</div>
+
+
+
+
+
+
+
+
+<div class="container-fluid container-limited">
+<div class="page-content-header">
+<div class="header-main-content">
+<a class="gl-badge badge badge-pill badge-success signature-badge gl-inline-flex gl-align-middle" data-content="GPG Key ID:
+&lt;span class=&quot;gl-font-monospace&quot;&gt;6D42BDD116E0068F&lt;/span&gt;
+&lt;a class=&quot;gl-link gl-block gl-mt-3&quot; href=&quot;/help/user/project/repository/signed_commits/_index.md&quot;&gt;Learn about signing commits&lt;/a&gt;
+" data-html="true" data-placement="bottom" data-title="&lt;div class=&quot;signature-popover&quot;&gt;
+&lt;div&gt;
+&lt;strong&gt;
+Verified commit
+&lt;/strong&gt;
+&lt;p class=&quot;gl-my-3&quot;&gt;
+This commit was signed with a verified signature and the committer email was verified to belong to the same user.
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+" data-toggle="popover" data-triggers="click blur" href="#" role="button" tabindex="0"><span class="gl-badge-content">Verified</span></a>
+
+
+
+<strong>
+Commit
+<span class="commit-sha" data-testid="commit-sha-content">56acf30f</span>
+</strong>
+<button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary " title="Copy commit SHA" aria-label="Copy commit SHA" aria-live="polite" data-toggle="tooltip" data-placement="bottom" data-container="body" data-html="true" data-clipboard-text="56acf30f9492d6b6e9cc7c16fd1d969afc462046" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="copy-to-clipboard-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#copy-to-clipboard"></use></svg>
+
+</button>
+<span class="gl-hidden @sm/panel:gl-inline">authored</span>
+<time class="js-timeago" title="Sep 9, 2026 7:47am" datetime="2026-09-09T07:47:14Z" tabindex="0" aria-label="Sep 9, 2026 7:47am" data-toggle="tooltip" data-placement="top" data-container="body">Sep 09, 2026</time>
+<span>by</span>
+<strong>
+<a href="/eworm"><img alt="Christian Hesse&#39;s avatar" src="https://secure.gravatar.com/avatar/ab7cdf4615e57ef8ea0be8f9ead4e8b1e175a4184184c71a825a6f59ebd66c34?s=96&amp;d=identicon" class="avatar s24 gl-hidden @sm/panel:gl-inline-block" title="Christian Hesse"></a>
+<a class="commit-author-link js-user-link" data-user-id="74" href="/eworm"><span class="commit-author-name">Christian Hesse</span></a>
+</strong>
+<span class="user-status-emoji has-tooltip" title="Arch for the world!" data-html="true" data-placement="top"><gl-emoji title="winking face with tongue" data-name="stuck_out_tongue_winking_eye" data-unicode-version="6.0">😜</gl-emoji></span>
+</div>
+<a class="gl-button btn btn-md btn-default gl-mr-3 gl-w-full @sm/panel:gl-w-auto gl-mb-3 @sm/panel:gl-mb-0" href="/archlinux/packaging/packages/archlinux-keyring/-/tree/56acf30f9492d6b6e9cc7c16fd1d969afc462046"><span class="gl-button-text">
+Browse files
+</span>
+
+</a>
+<div data-can-cherry-pick="" data-can-email-patches="true" data-can-revert="" data-can-tag="false" data-email-patches-path="/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046.patch" data-new-project-tag-path="/archlinux/packaging/packages/archlinux-keyring/-/tags/new?ref=56acf30f9492d6b6e9cc7c16fd1d969afc462046" data-plain-diff-path="/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046.diff" id="js-commit-options-dropdown"></div>
+</div>
+<div class="commit-box" data-project-path="/archlinux/packaging/packages/archlinux-keyring">
+<header class="gl-flex gl-flex-wrap gl-items-center gl-justify-between gl-gap-y-3 gl-mt-2 gl-mb-5 commit-title">
+<div class="gl-flex gl-flex-wrap gl-justify-between gl-gap-x-5 gl-gap-y-3 gl-w-full @md/panel:gl-flex-nowrap">
+<h1 class="gl-heading-1 !gl-m-0" data-testid="page-heading">
+upgpkg: 20260909-1: new upstream release
+</h1>
+</div>
+</header>
+</div>
+<div class="info-well">
+<div class="well-segment">
+<div class="icon-container commit-icon">
+<svg class="s16 gl-fill-icon-default" data-testid="commit-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#commit"></use></svg>
+</div>
+<span class="gl-text-default">parent</span>
+<a class="commit-sha" href="/archlinux/packaging/packages/archlinux-keyring/-/commit/276e8e09ee1ee3626dfd71a1f3effac7d76dde06">276e8e09</a>
+</div>
+<div class="gl-border-t gl-border-t-section" data-commit-sha="56acf30f" data-full-path="archlinux/packaging/packages/archlinux-keyring" id="js-commit-branches-and-tags">
+<div class="well-segment">
+<svg class="s16 gl-fill-icon-default gl-ml-2 gl-mr-3" data-testid="branch-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#branch"></use></svg>
+<span class="gl-spinner-container gl-align-middle" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span>
+</div>
+<div class="well-segment">
+<svg class="s16 gl-fill-icon-default gl-ml-2 gl-mr-3" data-testid="tag-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#tag"></use></svg>
+<span class="gl-spinner-container gl-align-middle" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span>
+</div>
+</div>
+<div class="well-segment merge-request-info">
+<div class="icon-container">
+<svg class="s16 gl-fill-icon-default" data-testid="merge-request-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#merge-request"></use></svg>
+</div>
+<span class="commit-info" data-project-commit-path="/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/merge_requests.json" id="js-commit-merge-requests">
+<span class="gl-spinner-container gl-align-middle" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span>
+</span>
+</div>
+</div>
+
+
+</div>
+<div class="container-fluid container-limited js-fixed-layout">
+<article aria-label="Changes view" class="rd-app" data-app-data="{&quot;diffs_stream_url&quot;:null,&quot;reload_stream_url&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diffs_stream&quot;,&quot;diffs_stats_endpoint&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diffs_stats&quot;,&quot;diff_files_endpoint&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diff_files_metadata&quot;,&quot;should_sort_metadata_files&quot;:false,&quot;show_whitespace&quot;:false,&quot;diff_view_type&quot;:&quot;inline&quot;,&quot;diff_file_endpoint&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/diff_file&quot;,&quot;update_user_endpoint&quot;:&quot;/api/v4/user/preferences&quot;,&quot;linked_file_data&quot;:null,&quot;lazy&quot;:false,&quot;initial_file&quot;:null,&quot;file_by_file_mode&quot;:false,&quot;user_permissions&quot;:{&quot;can_create_note&quot;:false},&quot;discussions_endpoint&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046/discussions&quot;,&quot;noteable_type&quot;:&quot;Commit&quot;,&quot;preview_markdown_endpoint&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/preview_markdown&quot;,&quot;register_path&quot;:&quot;/users/sign_up?redirect_to_referer=yes&quot;,&quot;sign_in_path&quot;:&quot;/users/sign_in?redirect_to_referer=yes&quot;,&quot;report_abuse_path&quot;:&quot;/-/abuse_reports/add_category&quot;,&quot;markdown_docs_path&quot;:&quot;/help/user/markdown.md&quot;}" data-rapid-diffs>
+<header aria-label="View controls" class="rd-app-header">
+<div class="rd-app-file-browser-toggle">
+<div data-file-browser-toggle></div>
+</div>
+<div data-after-browser-toggle></div>
+<div class="rd-app-settings">
+<div data-view-settings></div>
+</div>
+</header>
+<div class="rd-app-body">
+<div class="rd-app-sidebar" data-file-browser style="">
+<div class="rd-app-sidebar-loading" data-testid="rd-file-browser-loading">
+<div class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</div>
+</div>
+</div>
+<section aria-label="Diff files" class="rd-app-content">
+<div class="rd-app-diffs-list">
+
+<div class="rd-app-content-header" data-hidden-files-warning></div>
+<div class="rd-app-diffs-list-loading-overlay" data-diffs-overlay></div>
+<div class="flash-container" data-diffs-list-alert></div>
+<div data-diffs-list>
+<script>
+//<![CDATA[
+requestAnimationFrame(() => { window.performance.mark('rapid-diffs-first-diff-file-shown') })
+
+//]]>
+</script><diff-file class="rd-diff-file-component" data-file-data="{&quot;viewer&quot;:&quot;text_inline&quot;,&quot;diff_lines_path&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/.SRCINFO/diff_lines&quot;,&quot;old_path&quot;:&quot;.SRCINFO&quot;,&quot;new_path&quot;:&quot;.SRCINFO&quot;}" data-testid="rd-diff-file" id="b491fea2261e4902876b05a8eb6702965e2e5869">
+<article aria-labelledby="b491fea22-heading" class="rd-diff-file" data-virtual="text_inline" style="--virtual-total-rows: 26">
+<div class="rd-diff-file-header-sticky">
+<header aria-label="Diff file controls" class="rd-diff-file-header" data-testid="rd-diff-file-header">
+<div class="rd-diff-file-toggle"><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-diff-file-toggle-button has-tooltip" title="Hide file contents" data-opened="" data-click="toggleFile" aria-label="Hide file contents" aria-expanded="true" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="chevron-down-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#chevron-down"></use></svg>
+
+</button><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-diff-file-toggle-button has-tooltip" title="Show file contents" data-closed="" data-click="toggleFile" aria-label="Show file contents" aria-expanded="false" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="chevron-right-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#chevron-right"></use></svg>
+
+</button></div><div class="rd-diff-file-header-main"><h2 class="rd-diff-file-title" id="b491fea22-heading"><a class="rd-diff-file-link has-tooltip" title="Open file in new tab" target="_blank" href="/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/.SRCINFO">.SRCINFO</a></h2><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-copy-path" title="Copy file path" aria-label="Copy file path" aria-live="polite" data-toggle="tooltip" data-placement="top" data-container="body" data-html="true" data-boundary="viewport" data-testid="rd-diff-file-copy-clipboard" data-clipboard-text="{&quot;text&quot;:&quot;.SRCINFO&quot;,&quot;gfm&quot;:&quot;`.SRCINFO`&quot;}" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="copy-to-clipboard-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#copy-to-clipboard"></use></svg>
+
+</button></div><div class="rd-diff-file-info">
+<div aria-label="Added 3 lines. Removed 3 lines." class="rd-diff-file-stats" data-testid="rd-diff-file-stats">
+<span class="rd-stats-added">+3</span>
+<span class="rd-stats-removed">−3</span>
+</div>
+
+<div class="rd-diff-file-options-menu">
+<div data-options-menu>
+<script type="application/json">
+[{"text":"View file at %{codeStart}%{commit}%{codeEnd}","messageData":{"commit":"56acf30f"},"href":"/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/.SRCINFO","extraAttrs":{"target":"_blank"}},{"text":"Show full file","extraAttrs":{"data-click":"showFullFile","data-full":false}}]
+</script>
+<button data-click="toggleOptionsMenu" aria-label="Show options" type="button" class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary "><svg class="s16 gl-icon gl-button-icon " data-testid="ellipsis_v-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#ellipsis_v"></use></svg>
+
+</button>
+</div>
+</div>
+</div>
+</header>
+</div>
+
+<details class="rd-diff-file-details" data-file-body="" open><summary></summary><div class="flash-container rd-diff-file-error"></div>
+
+<div class="rd-diff-file-body" data-testid="rd-diff-file-body">
+<table class="rd-text-view-root code-syntax-highlight-theme">
+<caption class="gl-sr-only">Changes for .SRCINFO: 3 added lines, 3 removed lines.</caption>
+<thead class="gl-sr-only">
+<tr>
+<th scope="col">Original line number</th>
+<th scope="col">Diff line number</th>
+<th scope="col">Diff line</th>
+</tr>
+</thead>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 7">
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_1">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="1" aria-label="1" href="#line_b491fea22_1"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="1" aria-label="1" href="#line_b491fea22_1"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="1" data-gfm-ignore="true"></span><div data-line-inline-findings="1" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">pkgbase = archlinux-keyring</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_2">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="2" aria-label="2" href="#line_b491fea22_2"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="2" aria-label="2" href="#line_b491fea22_2"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="2" data-gfm-ignore="true"></span><div data-line-inline-findings="2" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	pkgdesc = Arch Linux PGP keyring</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_3">
+<td class="rd-line-number" data-change="removed" data-position="old"><a class="rd-line-link" data-line-number="3" aria-label="3" href="#line_b491fea22_3"></a></td>
+<td class="rd-line-number rd-line-number-empty" data-change="removed" data-position="new"></td>
+<td class="rd-line-content" data-change="removed" data-gfm-source="true"><pre class="rd-line-text"><span class="line" data-lang="plaintext">	pkgver = 2026090<span class="idiff left right deletion">2</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_A3">
+<td class="rd-line-number rd-line-number-empty" data-change="added" data-position="old"></td>
+<td class="rd-line-number" data-change="added" data-position="new"><a class="rd-line-link" data-line-number="3" aria-label="3" href="#line_b491fea22_A3"></a></td>
+<td class="rd-line-content" data-change="added" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="3" data-gfm-ignore="true"></span><div data-line-inline-findings="3" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	pkgver = 2026090<span class="idiff left right addition">9</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_4">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="4" aria-label="4" href="#line_b491fea22_4"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="4" aria-label="4" href="#line_b491fea22_4"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="4" data-gfm-ignore="true"></span><div data-line-inline-findings="4" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	pkgrel = 1</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_5">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="5" aria-label="5" href="#line_b491fea22_5"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="5" aria-label="5" href="#line_b491fea22_5"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="5" data-gfm-ignore="true"></span><div data-line-inline-findings="5" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	url = https://gitlab.archlinux.org/archlinux/archlinux-keyring/</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_6">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="6" aria-label="6" href="#line_b491fea22_6"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="6" aria-label="6" href="#line_b491fea22_6"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="6" data-gfm-ignore="true"></span><div data-line-inline-findings="6" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	arch = any</span>
+</pre></td>
+</tr>
+
+</tbody>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 9">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show hidden lines" data-click="expandLines" data-expand-direction="both" aria-label="Show hidden lines"><span data-visible-when="idle"><svg class="s16" data-testid="expand-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content">@@ -13,7 +13,7 @@ pkgbase = archlinux-keyring</td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_13">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="13" aria-label="13" href="#line_b491fea22_13"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="13" aria-label="13" href="#line_b491fea22_13"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="13" data-gfm-ignore="true"></span><div data-line-inline-findings="13" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	makedepends = pkgconf</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_14">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="14" aria-label="14" href="#line_b491fea22_14"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="14" aria-label="14" href="#line_b491fea22_14"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="14" data-gfm-ignore="true"></span><div data-line-inline-findings="14" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	makedepends = systemd</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_15">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="15" aria-label="15" href="#line_b491fea22_15"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="15" aria-label="15" href="#line_b491fea22_15"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="15" data-gfm-ignore="true"></span><div data-line-inline-findings="15" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	makedepends = voa</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_16">
+<td class="rd-line-number" data-change="removed" data-position="old"><a class="rd-line-link" data-line-number="16" aria-label="16" href="#line_b491fea22_16"></a></td>
+<td class="rd-line-number rd-line-number-empty" data-change="removed" data-position="new"></td>
+<td class="rd-line-content" data-change="removed" data-gfm-source="true"><pre class="rd-line-text"><span class="line" data-lang="plaintext">	source = archlinux-keyring::git+https://gitlab.archlinux.org/archlinux/archlinux-keyring.git?signed#tag=2026090<span class="idiff left right deletion">2</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_A16">
+<td class="rd-line-number rd-line-number-empty" data-change="added" data-position="old"></td>
+<td class="rd-line-number" data-change="added" data-position="new"><a class="rd-line-link" data-line-number="16" aria-label="16" href="#line_b491fea22_A16"></a></td>
+<td class="rd-line-content" data-change="added" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="16" data-gfm-ignore="true"></span><div data-line-inline-findings="16" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	source = archlinux-keyring::git+https://gitlab.archlinux.org/archlinux/archlinux-keyring.git?signed#tag=2026090<span class="idiff left right addition">9</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_17">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="17" aria-label="17" href="#line_b491fea22_17"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="17" aria-label="17" href="#line_b491fea22_17"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="17" data-gfm-ignore="true"></span><div data-line-inline-findings="17" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = 02FD1C7A934E614545849F19A6234074498E9CEE</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_18">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="18" aria-label="18" href="#line_b491fea22_18"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="18" aria-label="18" href="#line_b491fea22_18"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="18" data-gfm-ignore="true"></span><div data-line-inline-findings="18" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = F00B96D15228013FFC9C9D0393B11DAA4C197E3D</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_19">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="19" aria-label="19" href="#line_b491fea22_19"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="19" aria-label="19" href="#line_b491fea22_19"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="19" data-gfm-ignore="true"></span><div data-line-inline-findings="19" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = 991F6E3F0765CF6295888586139B09DA5BF0D338</span>
+</pre></td>
+</tr>
+
+</tbody>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 9">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show hidden lines" data-click="expandLines" data-expand-direction="both" aria-label="Show hidden lines"><span data-visible-when="idle"><svg class="s16" data-testid="expand-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content">@@ -21,7 +21,7 @@ pkgbase = archlinux-keyring</td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_21">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="21" aria-label="21" href="#line_b491fea22_21"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="21" aria-label="21" href="#line_b491fea22_21"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="21" data-gfm-ignore="true"></span><div data-line-inline-findings="21" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = B4B759625D4633430B74877059E43E106B247368</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_22">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="22" aria-label="22" href="#line_b491fea22_22"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="22" aria-label="22" href="#line_b491fea22_22"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="22" data-gfm-ignore="true"></span><div data-line-inline-findings="22" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = E240B57E2C4630BA768E2F26FC1B547C8D8172C8</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_23">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="23" aria-label="23" href="#line_b491fea22_23"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="23" aria-label="23" href="#line_b491fea22_23"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="23" data-gfm-ignore="true"></span><div data-line-inline-findings="23" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	validpgpkeys = C100346676634E80C940FB9E9C02FF419FECBE16</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_24">
+<td class="rd-line-number" data-change="removed" data-position="old"><a class="rd-line-link" data-line-number="24" aria-label="24" href="#line_b491fea22_24"></a></td>
+<td class="rd-line-number rd-line-number-empty" data-change="removed" data-position="new"></td>
+<td class="rd-line-content" data-change="removed" data-gfm-source="true"><pre class="rd-line-text"><span class="line" data-lang="plaintext">	sha256sums = <span class="idiff left right deletion">82ff1983f134d6f8d4cf9cff7b578357bf02987db3909256dc49776fedb7b407</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_A24">
+<td class="rd-line-number rd-line-number-empty" data-change="added" data-position="old"></td>
+<td class="rd-line-number" data-change="added" data-position="new"><a class="rd-line-link" data-line-number="24" aria-label="24" href="#line_b491fea22_A24"></a></td>
+<td class="rd-line-content" data-change="added" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="24" data-gfm-ignore="true"></span><div data-line-inline-findings="24" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	sha256sums = <span class="idiff left right addition">0b9fe486d3e644114752ef5b65a927411ca35c18c8d28a857a466ee6c6759af6</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_25">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="25" aria-label="25" href="#line_b491fea22_25"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="25" aria-label="25" href="#line_b491fea22_25"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="25" data-gfm-ignore="true"></span><div data-line-inline-findings="25" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext"></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_26">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="26" aria-label="26" href="#line_b491fea22_26"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="26" aria-label="26" href="#line_b491fea22_26"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="26" data-gfm-ignore="true"></span><div data-line-inline-findings="26" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">pkgname = archlinux-keyring</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_b491fea22_27">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="27" aria-label="27" href="#line_b491fea22_27"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="27" aria-label="27" href="#line_b491fea22_27"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="27" data-gfm-ignore="true"></span><div data-line-inline-findings="27" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="plaintext">	install = archlinux-keyring.install</span>
+</pre></td>
+</tr>
+
+</tbody>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 1">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show lines after" data-click="expandLines" data-expand-direction="down" aria-label="Show lines after"><span data-visible-when="idle"><svg class="s16" data-testid="expand-down-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand-down"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content"></td>
+</tr>
+
+</tbody>
+</table>
+
+</div>
+</details>
+</article>
+<diff-file-mounted></diff-file-mounted>
+</diff-file>
+<diff-file class="rd-diff-file-component" data-file-data="{&quot;viewer&quot;:&quot;text_inline&quot;,&quot;diff_lines_path&quot;:&quot;/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/PKGBUILD/diff_lines&quot;,&quot;old_path&quot;:&quot;PKGBUILD&quot;,&quot;new_path&quot;:&quot;PKGBUILD&quot;}" data-testid="rd-diff-file" id="9b9baac1eb9b72790eef5540a1685306fc43fd6c">
+<article aria-labelledby="9b9baac1e-heading" class="rd-diff-file" data-virtual="text_inline" style="--virtual-total-rows: 19">
+<div class="rd-diff-file-header-sticky">
+<header aria-label="Diff file controls" class="rd-diff-file-header" data-testid="rd-diff-file-header">
+<div class="rd-diff-file-toggle"><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-diff-file-toggle-button has-tooltip" title="Hide file contents" data-opened="" data-click="toggleFile" aria-label="Hide file contents" aria-expanded="true" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="chevron-down-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#chevron-down"></use></svg>
+
+</button><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-diff-file-toggle-button has-tooltip" title="Show file contents" data-closed="" data-click="toggleFile" aria-label="Show file contents" aria-expanded="false" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="chevron-right-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#chevron-right"></use></svg>
+
+</button></div><div class="rd-diff-file-header-main"><h2 class="rd-diff-file-title" id="9b9baac1e-heading"><a class="rd-diff-file-link has-tooltip" title="Open file in new tab" target="_blank" href="/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/PKGBUILD">PKGBUILD</a></h2><button class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary rd-copy-path" title="Copy file path" aria-label="Copy file path" aria-live="polite" data-toggle="tooltip" data-placement="top" data-container="body" data-html="true" data-boundary="viewport" data-testid="rd-diff-file-copy-clipboard" data-clipboard-text="{&quot;text&quot;:&quot;PKGBUILD&quot;,&quot;gfm&quot;:&quot;`PKGBUILD`&quot;}" type="button"><svg class="s16 gl-icon gl-button-icon " data-testid="copy-to-clipboard-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#copy-to-clipboard"></use></svg>
+
+</button></div><div class="rd-diff-file-info">
+<div aria-label="Added 2 lines. Removed 2 lines." class="rd-diff-file-stats" data-testid="rd-diff-file-stats">
+<span class="rd-stats-added">+2</span>
+<span class="rd-stats-removed">−2</span>
+</div>
+
+<div class="rd-diff-file-options-menu">
+<div data-options-menu>
+<script type="application/json">
+[{"text":"View file at %{codeStart}%{commit}%{codeEnd}","messageData":{"commit":"56acf30f"},"href":"/archlinux/packaging/packages/archlinux-keyring/-/blob/56acf30f9492d6b6e9cc7c16fd1d969afc462046/PKGBUILD","extraAttrs":{"target":"_blank"}},{"text":"Show full file","extraAttrs":{"data-click":"showFullFile","data-full":false}}]
+</script>
+<button data-click="toggleOptionsMenu" aria-label="Show options" type="button" class="gl-button btn btn-icon btn-sm btn-default btn-default-tertiary "><svg class="s16 gl-icon gl-button-icon " data-testid="ellipsis_v-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#ellipsis_v"></use></svg>
+
+</button>
+</div>
+</div>
+</div>
+</header>
+</div>
+
+<details class="rd-diff-file-details" data-file-body="" open><summary></summary><div class="flash-container rd-diff-file-error"></div>
+
+<div class="rd-diff-file-body" data-testid="rd-diff-file-body">
+<table class="rd-text-view-root code-syntax-highlight-theme">
+<caption class="gl-sr-only">Changes for PKGBUILD: 2 added lines, 2 removed lines.</caption>
+<thead class="gl-sr-only">
+<tr>
+<th scope="col">Original line number</th>
+<th scope="col">Diff line number</th>
+<th scope="col">Diff line</th>
+</tr>
+</thead>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 9">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show lines before" data-click="expandLines" data-expand-direction="up" aria-label="Show lines before"><span data-visible-when="idle"><svg class="s16" data-testid="expand-up-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand-up"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content">@@ -5,7 +5,7 @@</td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_5">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="5" aria-label="5" href="#line_9b9baac1e_5"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="5" aria-label="5" href="#line_9b9baac1e_5"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="5" data-gfm-ignore="true"></span><div data-line-inline-findings="5" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgbase</span><span class="o">=</span>archlinux-keyring</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_6">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="6" aria-label="6" href="#line_9b9baac1e_6"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="6" aria-label="6" href="#line_9b9baac1e_6"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="6" data-gfm-ignore="true"></span><div data-line-inline-findings="6" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgname</span><span class="o">=(</span>archlinux-keyring</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_7">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="7" aria-label="7" href="#line_9b9baac1e_7"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="7" aria-label="7" href="#line_9b9baac1e_7"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="7" data-gfm-ignore="true"></span><div data-line-inline-findings="7" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell">         voa-verifiers-arch<span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_8">
+<td class="rd-line-number" data-change="removed" data-position="old"><a class="rd-line-link" data-line-number="8" aria-label="8" href="#line_9b9baac1e_8"></a></td>
+<td class="rd-line-number rd-line-number-empty" data-change="removed" data-position="new"></td>
+<td class="rd-line-content" data-change="removed" data-gfm-source="true"><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgver</span><span class="o">=</span>2026090<span class="idiff left right deletion">2</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_A8">
+<td class="rd-line-number rd-line-number-empty" data-change="added" data-position="old"></td>
+<td class="rd-line-number" data-change="added" data-position="new"><a class="rd-line-link" data-line-number="8" aria-label="8" href="#line_9b9baac1e_A8"></a></td>
+<td class="rd-line-content" data-change="added" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="8" data-gfm-ignore="true"></span><div data-line-inline-findings="8" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgver</span><span class="o">=</span>2026090<span class="idiff left right addition">9</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_9">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="9" aria-label="9" href="#line_9b9baac1e_9"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="9" aria-label="9" href="#line_9b9baac1e_9"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="9" data-gfm-ignore="true"></span><div data-line-inline-findings="9" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgrel</span><span class="o">=</span>1</span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_10">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="10" aria-label="10" href="#line_9b9baac1e_10"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="10" aria-label="10" href="#line_9b9baac1e_10"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="10" data-gfm-ignore="true"></span><div data-line-inline-findings="10" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">pkgdesc</span><span class="o">=</span><span class="s1">'Arch Linux PGP keyring'</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_11">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="11" aria-label="11" href="#line_9b9baac1e_11"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="11" aria-label="11" href="#line_9b9baac1e_11"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="11" data-gfm-ignore="true"></span><div data-line-inline-findings="11" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nb">arch</span><span class="o">=(</span><span class="s1">'any'</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+
+</tbody>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 9">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show hidden lines" data-click="expandLines" data-expand-direction="both" aria-label="Show hidden lines"><span data-visible-when="idle"><svg class="s16" data-testid="expand-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content">@@ -14,7 +14,7 @@ license=(&#39;GPL-3.0-or-later&#39;)</td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_14">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="14" aria-label="14" href="#line_9b9baac1e_14"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="14" aria-label="14" href="#line_9b9baac1e_14"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="14" data-gfm-ignore="true"></span><div data-line-inline-findings="14" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">makedepends</span><span class="o">=(</span><span class="s1">'git'</span> <span class="s1">'python'</span> <span class="s1">'sequoia-sq'</span> <span class="s1">'pkgconf'</span> <span class="s1">'systemd'</span> <span class="s1">'voa'</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_15">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="15" aria-label="15" href="#line_9b9baac1e_15"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="15" aria-label="15" href="#line_9b9baac1e_15"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="15" data-gfm-ignore="true"></span><div data-line-inline-findings="15" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">checkdepends</span><span class="o">=(</span><span class="s1">'python-coverage'</span> <span class="s1">'python-pytest'</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_16">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="16" aria-label="16" href="#line_9b9baac1e_16"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="16" aria-label="16" href="#line_9b9baac1e_16"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="16" data-gfm-ignore="true"></span><div data-line-inline-findings="16" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nb">source</span><span class="o">=(</span><span class="s2">"archlinux-keyring::git+https://gitlab.archlinux.org/archlinux/archlinux-keyring.git?signed#tag=</span><span class="k">${</span><span class="nv">pkgver</span><span class="k">}</span><span class="s2">"</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_17">
+<td class="rd-line-number" data-change="removed" data-position="old"><a class="rd-line-link" data-line-number="17" aria-label="17" href="#line_9b9baac1e_17"></a></td>
+<td class="rd-line-number rd-line-number-empty" data-change="removed" data-position="new"></td>
+<td class="rd-line-content" data-change="removed" data-gfm-source="true"><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">sha256sums</span><span class="o">=(</span><span class="s1">'<span class="idiff left right deletion">82ff1983f134d6f8d4cf9cff7b578357bf02987db3909256dc49776fedb7b407</span>'</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_A17">
+<td class="rd-line-number rd-line-number-empty" data-change="added" data-position="old"></td>
+<td class="rd-line-number" data-change="added" data-position="new"><a class="rd-line-link" data-line-number="17" aria-label="17" href="#line_9b9baac1e_A17"></a></td>
+<td class="rd-line-content" data-change="added" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="17" data-gfm-ignore="true"></span><div data-line-inline-findings="17" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">sha256sums</span><span class="o">=(</span><span class="s1">'<span class="idiff left right addition">0b9fe486d3e644114752ef5b65a927411ca35c18c8d28a857a466ee6c6759af6</span>'</span><span class="o">)</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_18">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="18" aria-label="18" href="#line_9b9baac1e_18"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="18" aria-label="18" href="#line_9b9baac1e_18"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="18" data-gfm-ignore="true"></span><div data-line-inline-findings="18" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell"><span class="nv">validpgpkeys</span><span class="o">=(</span><span class="s1">'02FD1C7A934E614545849F19A6234074498E9CEE'</span>  <span class="c"># Christian Hesse &lt;eworm@archlinux.org&gt;</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_19">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="19" aria-label="19" href="#line_9b9baac1e_19"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="19" aria-label="19" href="#line_9b9baac1e_19"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="19" data-gfm-ignore="true"></span><div data-line-inline-findings="19" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell">              <span class="s1">'F00B96D15228013FFC9C9D0393B11DAA4C197E3D'</span>  <span class="c"># Christian Heusel &lt;gromit@archlinux.org&gt;</span></span>
+</pre></td>
+</tr>
+<tr class="rd-hunk-lines rd-hunk-lines-inline" data-hunk-lines data-testid="hunk-lines-inline" id="line_9b9baac1e_20">
+<td class="rd-line-number" data-position="old"><a class="rd-line-link" data-line-number="20" aria-label="20" href="#line_9b9baac1e_20"></a></td>
+<td class="rd-line-number" data-position="new"><a class="rd-line-link" data-line-number="20" aria-label="20" href="#line_9b9baac1e_20"></a></td>
+<td class="rd-line-content" data-gfm-source="true"><span class="has-tooltip" data-line-coverage="20" data-gfm-ignore="true"></span><div data-line-inline-findings="20" data-gfm-ignore="true"></div><pre class="rd-line-text"><span class="line" data-lang="shell">              <span class="s1">'991F6E3F0765CF6295888586139B09DA5BF0D338'</span>  <span class="c"># David Runge &lt;dvzrv@archlinux.org&gt;</span></span>
+</pre></td>
+</tr>
+
+</tbody>
+<tbody class="rd-text-view-content" style="--virtual-total-rows: 1">
+<tr class="rd-hunk-header rd-hunk-header-inline" data-hunk-header>
+<td class="rd-hunk-header-buttons" colspan="2"><button type="button" class="rd-expand-lines-button has-tooltip" title="Show lines after" data-click="expandLines" data-expand-direction="down" aria-label="Show lines after"><span data-visible-when="idle"><svg class="s16" data-testid="expand-down-icon"><use href="/assets/icons-557611e974a59dbbc29ee0980dc4bc97610b136af3a30b5c715d47d566317bc5.svg#expand-down"></use></svg></span><span data-visible-when="loading"><span class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-sm gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</span></span></button></td>
+<td class="rd-hunk-header-content"></td>
+</tr>
+
+</tbody>
+</table>
+
+</div>
+</details>
+</article>
+<diff-file-mounted></diff-file-mounted>
+</diff-file>
+
+<script>
+//<![CDATA[
+requestAnimationFrame(() => {
+  window.performance.mark('rapid-diffs-list-loaded');
+  window.performance.measure('rapid-diffs-list-loading', 'rapid-diffs-first-diff-file-shown', 'rapid-diffs-list-loaded');
+})
+
+//]]>
+</script></div>
+<div data-file-by-file-navigation></div>
+<div class="rd-app-diffs-loading" data-list-loading hidden>
+<div class="gl-spinner-container" role="status"><span aria-hidden class="gl-spinner gl-spinner-lg gl-spinner-dark !gl-align-text-bottom"></span><span class="gl-sr-only !gl-absolute">Loading</span>
+</div>
+</div>
+<div data-commit-timeline></div>
+
+</div>
+</section>
+</div>
+</article>
+
+</div>
+
+
+</main>
+</div>
+
+
+</div>
+
+
+</div>
+</div>
+<div class="paneled-view-portal" id="contextual-panel-portal"></div>
+</div>
+</div>
+
+
+</div>
+
+
+<script>
+//<![CDATA[
+if ('loading' in HTMLImageElement.prototype) {
+  document.querySelectorAll('img.lazy').forEach(img => {
+    img.loading = 'lazy';
+    let imgUrl = img.dataset.src;
+    // Only adding width + height for avatars for now
+    // Keep this logic in sync with appendWidthToAvatarUrl in
+    // app/assets/javascripts/vue_shared/components/user_avatar/utils.js
+    if (imgUrl.indexOf('/avatar/') > -1 && !imgUrl.includes('width=')) {
+      const targetWidth = img.getAttribute('width') || img.width;
+      imgUrl += imgUrl.includes('?') ? `&width=${targetWidth}` : `?width=${targetWidth}`;
+    }
+    img.src = imgUrl;
+    img.removeAttribute('data-src');
+    img.classList.remove('lazy');
+    img.classList.add('js-lazy-loaded');
+    img.dataset.testid = 'js-lazy-loaded-content';
+  });
+}
+
+//]]>
+</script>
+<script>
+//<![CDATA[
+gl = window.gl || {};
+gl.experiments = {};
+
+
+//]]>
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,9 @@
+started_utc=2026-10-26T11:23:04Z
+commit=2e28a81b11e6a4fe97472ed0dadb8ea71429127b
+python_executable=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+bundled_build_tools_path=C:\Users\Alex\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\site-packages
+test=tests/test_recovery_runbook_package.py::test_installed_wheel_contains_runbook_accepted_by_readiness_gate
+python_version=Python 3.12.14
+versions=pytest=9.1.1; setuptools=84.1.0; wheel=0.48.0; pip=26.2.2
+network=not enforced or measured; test uses local source/wheel, --no-deps, --no-build-isolation
+workspace_disk_free_bytes_before=5060542464

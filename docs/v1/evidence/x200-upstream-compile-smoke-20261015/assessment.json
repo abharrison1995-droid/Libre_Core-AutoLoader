@@ -1,0 +1,45 @@
+{
+  "classification": "UNACCEPTED UPSTREAM COMPILER DIAGNOSTIC; NO VALIDATED ARTIFACT",
+  "run_id": "20261015T185606Z-ca594b8e",
+  "source": {
+    "repository": "https://codeberg.org/libreboot/lbmk.git",
+    "revision": "1cf3181537b8d1fe1df0e91681f700850a3d9bf6",
+    "tree": "0cb9451c6e2e265d3aa5b7e371752d45cab98f53",
+    "all_35_source_pins_passed": true
+  },
+  "build": {
+    "argv": ["./mk", "-b", "coreboot", "x200_4mb"],
+    "start_utc": "2026-10-15T18:56:09.240790+00:00",
+    "end_utc": "2026-10-15T19:56:09.298997+00:00",
+    "elapsed_seconds": 3600.025,
+    "exit": -1,
+    "terminal_status": "TIMED_OUT",
+    "stage_at_stop": "Coreboot crossgcc-i386; GMP completed; MPFR started",
+    "stop_reason": "3600-second timeout; SIGTERM then bounded SIGKILL to isolated process group",
+    "output_directory_present": false,
+    "expected_rom_count": 31,
+    "rom_count": 0,
+    "expected_each_rom_size_bytes": 4194304,
+    "cbfs_inspection": "NOT_RUN; no ROM outputs",
+    "artifactengine_complete": false,
+    "hardware_or_media_operations": "NONE"
+  },
+  "overlays": {
+    "uboot_objcopy_patch_sha256": "03c17c53372864265bb6716b96ad90022dcc1b84d5ebd7a54fd93820be8b55e4",
+    "grub_unifont_patch_sha256": "3356bf29879cf87659230a201ab81f5e45cc5a0e9c80161463a9b868955f036d"
+  },
+  "unifont": {
+    "source_path": "/usr/share/fonts/opentype/unifont/unifont.otf",
+    "staged_sha256": "0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d",
+    "package": "fonts-unifont",
+    "package_version": "1:16.0.04-1build1"
+  },
+  "objcopy": {
+    "path": "/usr/bin/x86_64-linux-gnu-objcopy",
+    "version": "GNU Binutils for Ubuntu 2.46",
+    "sha256": "05f4473d24f7330a9b13f43d007d619a2e792e33de453cd7533a2d97c30da770"
+  },
+  "raw_runner_report_sha256": "36e2b6b7eba779657101f4edac25aae2f6903030e9a8cae73d3b3070c5e7d7e4",
+  "build_log_sha256": "13eb78af02982e08b4c17ea1697f053991b965d2de3300503102ee1cd46ab3da",
+  "runner_report_note": "Raw runner report retained unchanged. Its build_status field remains RUNNING despite build_exit=-1, terminal stop_reason, failure text, and end_utc; this assessment records the terminal timeout."
+}

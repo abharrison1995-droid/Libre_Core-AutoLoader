@@ -1,0 +1,31 @@
+{
+  "allowlisted_hosts": [
+    "documentation.ubuntu.com",
+    "archive.ubuntu.com"
+  ],
+  "proxy_policy": "direct; explicit --proxy empty and --noproxy *",
+  "argv": [
+    "--proxy",
+    "",
+    "--noproxy",
+    "*",
+    "--proto",
+    "=https",
+    "--proto-redir",
+    "=https",
+    "--location",
+    "--max-redirs",
+    "5",
+    "--fail",
+    "--silent",
+    "--show-error",
+    "--output",
+    "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\docs\\v1\\evidence\\ubuntu-trust-corroboration-20261025\\downloads\\image-verification.html",
+    "--write-out",
+    "LC_META_BEGIN\nurl_effective=%{url_effective}\nhttp_code=%{http_code}\nnum_redirects=%{num_redirects}\nssl_verify_result=%{ssl_verify_result}\nremote_ip=%{remote_ip}\nLC_META_END\nLC_CERTS_BEGIN\n%{certs}\nLC_CERTS_END\n",
+    "https://documentation.ubuntu.com/security/software-integrity/image-verification/"
+  ],
+  "output_file": "downloads/image-verification.html",
+  "executable": "C:\\Windows\\System32\\curl.exe",
+  "request_url": "https://documentation.ubuntu.com/security/software-integrity/image-verification/"
+}

@@ -1,0 +1,1 @@
+gpg: /tmp/lc-ubuntu-keyring-readonly-20261025/trustdb.gpg: trustdb created

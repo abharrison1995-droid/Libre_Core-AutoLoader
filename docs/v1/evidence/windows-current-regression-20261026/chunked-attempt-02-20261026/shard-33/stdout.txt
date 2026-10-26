@@ -1,0 +1,4 @@
+......................s..                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_rootless_offline_preflight.py:445: UNVALIDATED: process-group cleanup requires POSIX signals
+24 passed, 1 skipped in 0.97s

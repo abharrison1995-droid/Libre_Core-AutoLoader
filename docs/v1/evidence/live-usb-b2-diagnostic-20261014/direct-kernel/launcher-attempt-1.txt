@@ -1,0 +1,1 @@
+The first direct-kernel launch wrapper used a detached shell background process. QEMU received SIGHUP when that shell exited before boot started. It produced no guest capture and is not counted as a boot attempt. The corrected run is attached to a supervising Python process.

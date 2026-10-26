@@ -1,0 +1,4 @@
+focused_outer_exit=0
+full_suite_outer_exit=0
+privileged_cleanup=verified exact paths absent or removed
+detail=already absent: /run/user/1000/librecore-autoloader-v1-exact-source-20261026-r13 removed exact path: /tmp/librecore-autoloader-v1-exact-tests-20261026-r13 already absent: /tmp/librecore-autoloader-v1-focused-20261026-r13

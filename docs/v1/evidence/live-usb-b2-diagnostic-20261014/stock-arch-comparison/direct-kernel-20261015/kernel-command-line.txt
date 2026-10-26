@@ -1,0 +1,1 @@
+archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=tty0 console=ttyS0,115200n8 systemd.log_level=debug systemd.log_target=console systemd.debug_shell=1

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/usr/bin/readelf",
+    "-W",
+    "-d",
+    "/usr/bin/gpgv"
+  ],
+  "cwd": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025",
+  "environment": {
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "TZ": "UTC"
+  }
+}

@@ -1,0 +1,1 @@
+2d4b7a793a559ffcc0ee8a1f8914f9d5ad0a98189734b90f08ff630caaf7b0da  /tmp/lc-b2-rootfs-inspect.7HGWGj/airootfs.sfs

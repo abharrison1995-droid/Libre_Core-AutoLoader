@@ -1,0 +1,2 @@
+Status: ABORTED BEFORE TEST EXECUTION
+The repository-wide manifest completed, but the runner could not create its source snapshot under /run because that directory is root-owned. No pytest process started and this attempt provides no test result. Captured commit, status, patch, untracked list, and source manifest are preserved here.

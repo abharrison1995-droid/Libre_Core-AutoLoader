@@ -1,0 +1,5 @@
+Exception: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\ubuntu-trust-corroboration-20261025\parse_keyring_fingerprints.ps1:41
+Line |
+  41 |  … it -ne 0) { throw "$Label returned exit $exit; raw output retained" } …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | downloaded-keyring-listing returned exit 2; raw output retained

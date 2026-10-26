@@ -1,0 +1,5 @@
+state=removed
+utc=2026-10-26T04:02:06.2417880Z
+scratch=C:\w\lc-v1wfr-a13-aa27e49afaea4c869c7096ab20ebb1b8
+scratch_created=True
+details=Exact GUID-named scratch root removed after marker and reparse checks.

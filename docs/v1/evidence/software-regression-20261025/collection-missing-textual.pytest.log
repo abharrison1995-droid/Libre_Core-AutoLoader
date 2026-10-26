@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+______________________ ERROR collecting tests/test_ui.py _______________________
+ImportError while importing test module '/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/tests/test_ui.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_ui.py:11: in <module>
+    from textual.screen import Screen
+E   ModuleNotFoundError: No module named 'textual'
+=========================== short test summary info ============================
+ERROR tests/test_ui.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 9.92s

@@ -1,0 +1,407 @@
+{
+  "artifact_engine_source_sha256": "85230f87fff3032fae791b506616cca2e8538050069e7727bb256d27ca60a39c",
+  "artifactengine_build_invoked": false,
+  "build": {
+    "argv": [
+      "./mk",
+      "-b",
+      "coreboot",
+      "x200_4mb"
+    ],
+    "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+    "elapsed_seconds": 6751.435,
+    "ended_utc": "2026-10-21T02:39:08.561016+00:00",
+    "exit_code": 1,
+    "last_heartbeat_utc": "2026-10-21T02:38:43.974494+00:00",
+    "leader_reaped": true,
+    "log_bytes": 3016057,
+    "log_path": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/logs/upstream-build.log",
+    "log_sha256": "b340b204a1cc766bd1a36b41b3c5eee4bd5cf6b9c12a51f3380c29352e750e25",
+    "log_tail": [
+      "    HOSTCC     cbfstool/huf_compress.o",
+      "    HOSTCC     cbfstool/zstd_compress.o",
+      "    HOSTCC     cbfstool/zstd_compress_literals.o",
+      "    HOSTCC     cbfstool/zstd_compress_sequences.o",
+      "    HOSTCC     cbfstool/zstd_compress_superblock.o",
+      "    HOSTCC     cbfstool/zstd_double_fast.o",
+      "    HOSTCC     cbfstool/zstd_fast.o",
+      "    HOSTCC     cbfstool/zstd_lazy.o"
+    ],
+    "pid": 148550,
+    "process_group_id": 148550,
+    "started_utc": "2026-10-21T00:46:37.100703+00:00",
+    "status": "EXITED_NONZERO",
+    "stop_reason": "upstream build command returned a nonzero exit code",
+    "timeout_seconds": 14400
+  },
+  "cache_hash_shortcuts_copied": false,
+  "classification": "UNACCEPTED WSL UPSTREAM COMPILER DIAGNOSTIC; NOT FLASH-READY; NO ARTIFACTENGINE COMPLETE",
+  "complete_manifest_published": false,
+  "disk_free_bytes_after": 991552860160,
+  "disk_free_bytes_before": 996379369472,
+  "ended_utc": "2026-10-21T02:39:08.576197+00:00",
+  "environment": {
+    "GIT_CONFIG_GLOBAL": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/gitconfig",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_TERMINAL_PROMPT": "0",
+    "HOME": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/home",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "LIBRECORE_UNIFONT_PATH": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/inputs/unifont.otf",
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "TMPDIR": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/tmp",
+    "TZ": "UTC"
+  },
+  "final_classification": "UNACCEPTED WSL UPSTREAM BUILD DIAGNOSTIC; NO VALIDATED ARTIFACT; NOT FLASH-READY",
+  "firmware_files_copied_into_repo": false,
+  "fresh_scratch_root": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72",
+  "gitconfig_sha256": "1bbacc5ee7c995ca49f37c34ddcb55e3a09456059123bdcfe00519736f3acb4d",
+  "hardware_or_media_operations": "NONE",
+  "home_mode": "0o700",
+  "old_compiled_crossgcc_objects_reused": false,
+  "old_scratch_preserved_read_only": "/home/alex/librecore-x200-upstream-smoke-20261015T185606Z-ca594b8e",
+  "old_worktree_reused": false,
+  "output_validation": {
+    "cbfs": [],
+    "rom_count": 0,
+    "status": "NO_OUTPUT_DIRECTORY"
+  },
+  "overlays": {
+    "grub_font": {
+      "sha256": "3356bf29879cf87659230a201ab81f5e45cc5a0e9c80161463a9b868955f036d",
+      "source_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/autoloader/rom_builder/patches/0010-lbmk-grub-explicit-unifont.patch"
+    },
+    "uboot": {
+      "sha256": "03c17c53372864265bb6716b96ad90022dcc1b84d5ebd7a54fd93820be8b55e4",
+      "source_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/autoloader/rom_builder/patches/0009-x86-use-output-target-for-efi.patch",
+      "staged_relative_path": "config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch"
+    }
+  },
+  "package_inventory": "binutils\t2.46-3ubuntu2\nfonts-unifont\t1:16.0.04-1build1\ng++\t4:15.2.0-5ubuntu1\ngcc\t4:15.2.0-5ubuntu1\ngit\t1:2.53.0-1ubuntu1\nmake\t4.4.1-3\n",
+  "pinned_lbmK_revision": "1cf3181537b8d1fe1df0e91681f700850a3d9bf6",
+  "pinned_lbmK_tree": "0cb9451c6e2e265d3aa5b7e371752d45cab98f53",
+  "preflight_status": "PASSED",
+  "repo_checkout": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+  "run_id": "librecore-x200-upstream-resume-20261021T003745Z-e14b5a72",
+  "runner_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/x200-upstream-compile-resume-20261021/run_x200_build.py",
+  "runner_sha256": "b66ed7cc9aab9ee3b53cac209775c1a565bba05adb1c400c96cf186fc8b4a666",
+  "setup_commands": [
+    {
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--no-hardlinks",
+        "--quiet",
+        "/home/alex/librecore-x200-upstream-smoke-20261015T185606Z-ca594b8e/work/lbmk",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "Note: switching to '1cf3181537b8d1fe1df0e91681f700850a3d9bf6'.\n\nYou are in 'detached HEAD' state. You can look around, make experimental\nchanges and commit them, and you can discard any commits you make in this\nstate without impacting any branches by switching back to a branch.\n\nIf you want to create a new branch to retain commits you create, you may\ndo so (now or later) by using -c with the switch command. Example:\n\n  git switch -c <new-branch-name>\n\nOr undo this operation with:\n\n  git switch -\n\nTurn off this advice by setting config variable advice.detachedHead to false\n\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "checkout",
+        "--detach",
+        "1cf3181537b8d1fe1df0e91681f700850a3d9bf6"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "HEAD is now at 1cf3181 Libreboot 26.01 release\n",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "remote",
+        "set-url",
+        "origin",
+        "https://codeberg.org/libreboot/lbmk.git"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "apply",
+        "--check",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/autoloader/rom_builder/patches/0010-lbmk-grub-explicit-unifont.patch"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "apply",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/autoloader/rom_builder/patches/0010-lbmk-grub-explicit-unifont.patch"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "1cf3181537b8d1fe1df0e91681f700850a3d9bf6\n"
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "rev-parse",
+        "HEAD^{tree}"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "0cb9451c6e2e265d3aa5b7e371752d45cab98f53\n"
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "https://codeberg.org/libreboot/lbmk.git\n"
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work/lbmk",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "cwd": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/work",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": " M include/tree.sh\n?? config/u-boot/x86_64/patches/0009-x86-use-output-target-for-efi.patch\n"
+    }
+  ],
+  "source": {
+    "expected_rom_count": 31,
+    "expected_rom_relative_paths": [
+      "bin/x200_4mb/seabios_x200_4mb_libgfxinit_corebootfb.rom",
+      "bin/x200_4mb/seabios_x200_4mb_libgfxinit_txtmode.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_colemak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_deqwertz.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_esqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_frazerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_frdvbepo.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_itqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_noqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_ptqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_svenska.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_trqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_ukdvorak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_ukqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_usdvorak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_corebootfb_usqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_colemak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_deqwertz.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_esqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_frazerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_frdvbepo.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_itqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_noqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_ptqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_svenska.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_trqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_ukdvorak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_ukqwerty.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_usdvorak.rom",
+      "bin/x200_4mb/seagrub_x200_4mb_libgfxinit_txtmode_usqwerty.rom",
+      "bin/x200_4mb/seauboot_x200_4mb_libgfxinit_corebootfb.rom"
+    ],
+    "expected_rom_size_bytes_each": 4194304,
+    "origin": "https://codeberg.org/libreboot/lbmk.git",
+    "revision": "1cf3181537b8d1fe1df0e91681f700850a3d9bf6",
+    "selected_rom_relative_path": "bin/x200_4mb/seabios_x200_4mb_libgfxinit_corebootfb.rom",
+    "source_file_hashes_after_overlays": {
+      "config/coreboot/default/target.cfg": "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e",
+      "config/coreboot/x200_4mb/config/libgfxinit_corebootfb": "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
+      "config/coreboot/x200_4mb/config/libgfxinit_txtmode": "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65",
+      "config/coreboot/x200_4mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+      "config/coreboot/x200_8mb/config/libgfxinit_corebootfb": "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4",
+      "config/coreboot/x200_8mb/config/libgfxinit_txtmode": "d0558fb2221060c7062bd225b30ab65c71d994c3d1dcad98240440475062edaf",
+      "config/coreboot/x200_8mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+      "config/git/coreboot/pkg.cfg": "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f",
+      "config/git/grub/pkg.cfg": "6e8886854534db158f8560d7ec99e6eccd2f2c4ca6100aa0c9442c22558081c8",
+      "config/git/u-boot/pkg.cfg": "84088781b2b1630ffc95a5024945986f2ff8c83cc3cc86e474eef52a2f324ce0",
+      "config/grub/default/patches/0001-mitigate-grub-s-missing-characters-for-borders-arrow.patch": "049c385db82d971343e769520964bf557789f727ab0ab7d2d95ed2289c88aac0",
+      "config/grub/default/patches/0002-say-the-name-libreboot-in-the-grub-menu.patch": "93ba1fe44bb731049160fc7ab87641c544cada6741b81b1463f53cb7226fbeb1",
+      "config/grub/default/patches/0003-at_keyboard-coreboot-force-scancodes2-translate.patch": "40dd3c99aa16cea84e44dde75596545a566bf9ff9de08aec31b4f7ca0ac5e44c",
+      "config/grub/default/patches/0004-keylayouts-don-t-print-Unknown-key-message.patch": "1a0bacbfa5191540d3487e1ebac848e19424a1b15cff9c44e9d4526a8d9a4017",
+      "config/grub/default/patches/0005-don-t-print-missing-prefix-errors-on-the-screen.patch": "fdc6501d624697e4d8c2bfdb26cb5ebbecd1aeb566343e273a169f39dda5c8cd",
+      "config/grub/default/patches/0006-don-t-print-error-if-module-not-found.patch": "dacbcf7157605a95c1bf3f974aba41d6f6e70a9b52de4670688cf543bbd50799",
+      "config/grub/default/patches/0007-don-t-print-empty-error-messages.patch": "ee48e0449e968a28789da04904e7e2d6a58f698b66ff2b8864610a90848cd4df",
+      "config/grub/default/patches/0008-kern-coreboot-mmap-Map-to-reserved.patch": "203300078af56bfcc6b9e7958c0cdb24c3827873c3e1b0cd36eb9ce3db712504",
+      "config/grub/default/patches/0009-Revert-configure-Check-linker-for-image-base-support.patch": "71b838b5f9796954e156400100ef2503c04659f0cec04df172c20611a3cf9945",
+      "config/grub/default/patches/0010-Revert-configure-Print-a-more-helpful-error-if-autoc.patch": "4a00cc1ab2b3c04d0251a50f7309a4b82c9943a901ef92207f54baae346d46d6",
+      "config/grub/default/target.cfg": "a23bb6648ce1f893504c19d957a53de9de8a861f92ae123ade094dade4e8f5a8",
+      "config/u-boot/amd64coreboot/config/default": "16c6839809a9755a39d9674216b40b0b9f299c4869e7a3448ad755f3eec0ae6a",
+      "config/u-boot/amd64coreboot/target.cfg": "b7198cb054718c73194c3e7d193a758469c8dac64b0dc2bc5abd0fdb9746afde",
+      "config/u-boot/x86_64/patches/0001-x86-serial-ns16550-Allow-the-UART-to-be-silently-dis.patch": "03b77b02eaf90bcb35e6fb0c5ba1afb749241a14a94be8a87606a1df9386fa85",
+      "config/u-boot/x86_64/patches/0002-x86-Avoid-clearing-the-VESA-display.patch": "f7bff931f1f0735d63eb86bfd4a53cd6e93c4fdaf25d04bee804c5c3f64b176e",
+      "config/u-boot/x86_64/patches/0003-x86-Avoid-clearing-the-VESA-display.patch": "e40b5e133de50befff9b1b1738e20420c0e86873668bed1ae3aec1b309bebf56",
+      "config/u-boot/x86_64/patches/0004-Support-auto-boot-timeout-delay-bootflow-menu.patch": "36b864aad951ecdb5680ca1d4d87bdf9dfbe82511be840664fbbd34ef8f67b53",
+      "config/u-boot/x86_64/patches/0005-Libreboot-branding-version-on-the-bootflow-menu.patch": "df7ff820dbe9ebea8b2b19ac7c7f48d2342c1a3e525bbe51644c35873c758081",
+      "config/u-boot/x86_64/patches/0006-i-made-it-purple.patch": "fdf1baab5844be0a6ed8068afeeb4589fc0e346d72850f2232dc42dd1b007471",
+      "config/u-boot/x86_64/patches/0008-scripts-dtc-pylibfdt-libfdt.i_shipped-Use-SWIG_Appen.patch": "91ad0bae21b0f459e49e4edebdbd17993af7efffabe379287fb1089d917f77d5",
+      "config/u-boot/x86_64/target.cfg": "98d8b99e09fc64257aa6d2dfc2d470123e22d42bca718dd34aae107a09f71c9f",
+      "include/get.sh": "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9",
+      "include/lib.sh": "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a",
+      "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
+      "include/tree.sh": "1d2070246558a882a7dcf25a6e54c1b3498111b177318cd44704a549e773a9e7"
+    },
+    "source_file_hashes_before_overlays": {
+      "config/coreboot/default/target.cfg": "b0fa4882ec69979345e117076dda3c751143cd7d720e9cb4651796f77b2c395e",
+      "config/coreboot/x200_4mb/config/libgfxinit_corebootfb": "4038c9b655c1c74c582cb89a9f59688308d47faf8069679adce1a06da756410c",
+      "config/coreboot/x200_4mb/config/libgfxinit_txtmode": "76d49f1b10c3b45c65fd9149263e528aa60bbddf1d4ea4258835d9410a35cc65",
+      "config/coreboot/x200_4mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+      "config/coreboot/x200_8mb/config/libgfxinit_corebootfb": "6435d325d4f77c18ec6b411d708508d4eda2e5a4d2f6b83dfd3c0c0d230efac4",
+      "config/coreboot/x200_8mb/config/libgfxinit_txtmode": "d0558fb2221060c7062bd225b30ab65c71d994c3d1dcad98240440475062edaf",
+      "config/coreboot/x200_8mb/target.cfg": "74e0db657f688a39dcc581b4209f786da5397b5bb89920bfb8659a3650b7c34b",
+      "config/git/coreboot/pkg.cfg": "82e283bbd1c2b60ec9b2742e5e8c0a108dca8fe8ea483283a705b6102238c42f",
+      "config/git/grub/pkg.cfg": "6e8886854534db158f8560d7ec99e6eccd2f2c4ca6100aa0c9442c22558081c8",
+      "config/git/u-boot/pkg.cfg": "84088781b2b1630ffc95a5024945986f2ff8c83cc3cc86e474eef52a2f324ce0",
+      "config/grub/default/patches/0001-mitigate-grub-s-missing-characters-for-borders-arrow.patch": "049c385db82d971343e769520964bf557789f727ab0ab7d2d95ed2289c88aac0",
+      "config/grub/default/patches/0002-say-the-name-libreboot-in-the-grub-menu.patch": "93ba1fe44bb731049160fc7ab87641c544cada6741b81b1463f53cb7226fbeb1",
+      "config/grub/default/patches/0003-at_keyboard-coreboot-force-scancodes2-translate.patch": "40dd3c99aa16cea84e44dde75596545a566bf9ff9de08aec31b4f7ca0ac5e44c",
+      "config/grub/default/patches/0004-keylayouts-don-t-print-Unknown-key-message.patch": "1a0bacbfa5191540d3487e1ebac848e19424a1b15cff9c44e9d4526a8d9a4017",
+      "config/grub/default/patches/0005-don-t-print-missing-prefix-errors-on-the-screen.patch": "fdc6501d624697e4d8c2bfdb26cb5ebbecd1aeb566343e273a169f39dda5c8cd",
+      "config/grub/default/patches/0006-don-t-print-error-if-module-not-found.patch": "dacbcf7157605a95c1bf3f974aba41d6f6e70a9b52de4670688cf543bbd50799",
+      "config/grub/default/patches/0007-don-t-print-empty-error-messages.patch": "ee48e0449e968a28789da04904e7e2d6a58f698b66ff2b8864610a90848cd4df",
+      "config/grub/default/patches/0008-kern-coreboot-mmap-Map-to-reserved.patch": "203300078af56bfcc6b9e7958c0cdb24c3827873c3e1b0cd36eb9ce3db712504",
+      "config/grub/default/patches/0009-Revert-configure-Check-linker-for-image-base-support.patch": "71b838b5f9796954e156400100ef2503c04659f0cec04df172c20611a3cf9945",
+      "config/grub/default/patches/0010-Revert-configure-Print-a-more-helpful-error-if-autoc.patch": "4a00cc1ab2b3c04d0251a50f7309a4b82c9943a901ef92207f54baae346d46d6",
+      "config/grub/default/target.cfg": "a23bb6648ce1f893504c19d957a53de9de8a861f92ae123ade094dade4e8f5a8",
+      "config/u-boot/amd64coreboot/config/default": "16c6839809a9755a39d9674216b40b0b9f299c4869e7a3448ad755f3eec0ae6a",
+      "config/u-boot/amd64coreboot/target.cfg": "b7198cb054718c73194c3e7d193a758469c8dac64b0dc2bc5abd0fdb9746afde",
+      "config/u-boot/x86_64/patches/0001-x86-serial-ns16550-Allow-the-UART-to-be-silently-dis.patch": "03b77b02eaf90bcb35e6fb0c5ba1afb749241a14a94be8a87606a1df9386fa85",
+      "config/u-boot/x86_64/patches/0002-x86-Avoid-clearing-the-VESA-display.patch": "f7bff931f1f0735d63eb86bfd4a53cd6e93c4fdaf25d04bee804c5c3f64b176e",
+      "config/u-boot/x86_64/patches/0003-x86-Avoid-clearing-the-VESA-display.patch": "e40b5e133de50befff9b1b1738e20420c0e86873668bed1ae3aec1b309bebf56",
+      "config/u-boot/x86_64/patches/0004-Support-auto-boot-timeout-delay-bootflow-menu.patch": "36b864aad951ecdb5680ca1d4d87bdf9dfbe82511be840664fbbd34ef8f67b53",
+      "config/u-boot/x86_64/patches/0005-Libreboot-branding-version-on-the-bootflow-menu.patch": "df7ff820dbe9ebea8b2b19ac7c7f48d2342c1a3e525bbe51644c35873c758081",
+      "config/u-boot/x86_64/patches/0006-i-made-it-purple.patch": "fdf1baab5844be0a6ed8068afeeb4589fc0e346d72850f2232dc42dd1b007471",
+      "config/u-boot/x86_64/patches/0008-scripts-dtc-pylibfdt-libfdt.i_shipped-Use-SWIG_Appen.patch": "91ad0bae21b0f459e49e4edebdbd17993af7efffabe379287fb1089d917f77d5",
+      "config/u-boot/x86_64/target.cfg": "98d8b99e09fc64257aa6d2dfc2d470123e22d42bca718dd34aae107a09f71c9f",
+      "include/get.sh": "b473d8af1ae2fea9663103aad12a191d297611d65d50f89e04bd8de6e561feb9",
+      "include/lib.sh": "f429d5c14be6e988f7472d1f02e19f893be467f1685ad5a5822f41000e47754a",
+      "include/rom.sh": "9b04ea21df571682ccbc1a66e19d17ca9fe6ccde30a8089d1cb45e3683283e3b",
+      "include/tree.sh": "de3c294c4401fcc5a6364e644364127e3ddb31d3f0d7b00050350516ae428876"
+    },
+    "tree": "0cb9451c6e2e265d3aa5b7e371752d45cab98f53",
+    "unifont_include_tree_sha256_expected": "1d2070246558a882a7dcf25a6e54c1b3498111b177318cd44704a549e773a9e7"
+  },
+  "source_repository": "https://codeberg.org/libreboot/lbmk.git",
+  "started_utc": "2026-10-21T00:46:34.050117+00:00",
+  "tools": {
+    "g++": {
+      "package_owner_output": "g++-15-x86-64-linux-gnu: /usr/bin/x86_64-linux-gnu-g++-15\n",
+      "path": "/usr/bin/x86_64-linux-gnu-g++-15",
+      "sha256": "e6718f7e0c7d057c3ff77b550c603da9bc4030e3ede3c053705acce1293dbe4d",
+      "version_output": "x86_64-linux-gnu-g++-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "gcc": {
+      "package_owner_output": "gcc-15-x86-64-linux-gnu: /usr/bin/x86_64-linux-gnu-gcc-15\n",
+      "path": "/usr/bin/x86_64-linux-gnu-gcc-15",
+      "sha256": "b5f1b773a7c733738352000c92a077dc5852a1a2fc6d836b1e411be1e9ec5f88",
+      "version_output": "x86_64-linux-gnu-gcc-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0\nCopyright (C) 2025 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+    },
+    "git": {
+      "package_owner_output": "git: /usr/bin/git\n",
+      "path": "/usr/bin/git",
+      "sha256": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a",
+      "version_output": "git version 2.53.0\n"
+    },
+    "make": {
+      "package_owner_output": "make: /usr/bin/make\n",
+      "path": "/usr/bin/make",
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "version_output": "GNU Make 4.4.1\nBuilt for x86_64-pc-linux-gnu\nCopyright (C) 1988-2023 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n"
+    },
+    "objcopy": {
+      "package_owner_output": "binutils-x86-64-linux-gnu: /usr/bin/x86_64-linux-gnu-objcopy\n",
+      "path": "/usr/bin/x86_64-linux-gnu-objcopy",
+      "sha256": "05f4473d24f7330a9b13f43d007d619a2e792e33de453cd7533a2d97c30da770",
+      "version_output": "GNU objcopy (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n"
+    }
+  },
+  "unifont": {
+    "sha256": "0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d",
+    "source_path": "/usr/share/fonts/opentype/unifont/unifont.otf",
+    "staged_path": "/home/alex/librecore-x200-upstream-resume-20261021T003745Z-e14b5a72/inputs/unifont.otf"
+  },
+  "verified_tarball_cache": [
+    {
+      "name": "408aa933cacbef50a728675001204530bae2ea31a8cde1c54a604b350ca9c7b59dd9cde8dccaf7c1a59e466baac59585466c2ccd80ddd038c8f6048edbc5f19c",
+      "sha256": "eaca4c0248db872a055ab38b0deab4f5f577d1a0cada0fcbc0d80955e2a98e33",
+      "size_bytes": 2030512
+    },
+    {
+      "name": "4bab4ef6076f8c5dfdc99d810b51108ced61ea2942ba0c1c932d624360a5473df20d32b300fc76f2ba4aa2a97e1f275c9fd494a1ba9f07c4cb2ad7ceaeb1ae97",
+      "sha256": "ab642492f5cf882b74aa0cb730cd410a81edcdbec895183ce930e706c1c759b8",
+      "size_bytes": 773573
+    },
+    {
+      "name": "932bdef0cda94bacedf452ab17f103c0cb511ff2cec55e9112fc0328cbf1d803b42595728ea7b200e0a057c03e85626f937012e49a7515bc5dd256b2bf4bc396",
+      "sha256": "a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9",
+      "size_bytes": 92306460
+    },
+    {
+      "name": "c7b10a7466d9fd398d7a0b3f2a43318432668d714f2ec70069a31bdc93c86d28e0fe83792195727167743707fbae45337c0873a0786416db53bbf22860c16ce7",
+      "sha256": "c50c0e7f9cb188980e2cc97e4537626b1672441815587f1eab69d2a1bfbef5d2",
+      "size_bytes": 27868232
+    },
+    {
+      "name": "e85a0dab5195889948a3462189f0e0598d331d3457612e2d3350799dba2e244316d256f8161df5219538eb003e4b5343f989aaa00f96321559063ed8c8f29fd2",
+      "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+      "size_bytes": 2094196
+    },
+    {
+      "name": "eb9e7f51b5385fb349cc4fba3a45ffdf0dd53be6dfc74932dc01258158a10514667960c530c47dd9dfc5aa18be2bd94859d80499844c5713710581e6ac6259a9",
+      "sha256": "b67ba0383ef7e8a8563734e2e889ef5ec3c3b898a01d00fa0a6869ad81c6ce01",
+      "size_bytes": 1505596
+    },
+    {
+      "name": "f28445d368debdf44219cc57df33800a8c0e49186cd60836d4adfec7700d53b801d34aa9fc9bfda74169843f33a1e8b465e11292582eb968bb9c3a26f54dd172",
+      "sha256": "bef3de159bcd61adf98bb7cc87ee9046e944644ad76b7633f18ab063edb29e57",
+      "size_bytes": 1361988
+    }
+  ]
+}

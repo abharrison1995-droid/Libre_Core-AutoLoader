@@ -1,0 +1,67 @@
+{
+  "mode": "BIOS",
+  "tcg_multi_threaded": true,
+  "status": "REVIEWED_BOOT_INCOMPLETE",
+  "started_utc": "2026-10-13T23:20:38.193727+00:00",
+  "ended_utc": "2026-10-13T23:25:48.897380+00:00",
+  "command_argv": [
+    "qemu-system-x86_64",
+    "-accel",
+    "tcg,thread=multi",
+    "-m",
+    "3072",
+    "-smp",
+    "4",
+    "-cdrom",
+    "/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso",
+    "-boot",
+    "d",
+    "-no-reboot",
+    "-no-shutdown",
+    "-display",
+    "none",
+    "-serial",
+    "file:/mnt/c/Users/Alex/AppData/Local/Temp/librecore-qemu-1197d904/bios-multi/serial.log",
+    "-monitor",
+    "unix:/tmp/lc-qemu-bios-vi6shyi5/hmp.sock,server=on,wait=off",
+    "-nic",
+    "none"
+  ],
+  "qemu_version": "QEMU emulator version 11.1.2",
+  "ovmf_path": null,
+  "ovmf_sha256": null,
+  "ovmf_vars_source": null,
+  "ovmf_vars_source_sha256": null,
+  "ovmf_vars_copy": null,
+  "iso_path": "/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso",
+  "iso_sha256_before": "afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd",
+  "iso_sha256_after": "afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd",
+  "iso_unchanged": true,
+  "qemu_exit_code": 0,
+  "monitor_greeting": "QEMU 11.1.2 monitor - type 'help' for more information\r\n(qemu) ",
+  "capture_files": {
+    "boot-screen.ppm": {
+      "size": 864015,
+      "sha256": "d40754e7177e94915ade58bdcb60094c885be431dbecc88391bf90c2028f7a10"
+    },
+    "qemu-host.log": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "serial.log": {
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "tty2-after-login-attempt.ppm": {
+      "size": 864015,
+      "sha256": "37cddef3c64f7c1eaa4a5d63260e990b78329a85f952c3fd368a91b8a3e5e0ab"
+    },
+    "tty2-before-login.ppm": {
+      "size": 864015,
+      "sha256": "cda5e531edfbf2e1852c13f3ec407021715300bf09c82df22f902b65c4af399c"
+    }
+  },
+  "reviewed_by": "GPT SOL 6 LOW",
+  "reviewed_at_utc": "2026-10-14T00:01:12Z",
+  "review_note": "Evidence review complete; guest did not demonstrate AutoLoader or service startup."
+}

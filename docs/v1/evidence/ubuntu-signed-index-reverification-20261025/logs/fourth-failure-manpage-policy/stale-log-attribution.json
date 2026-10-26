@@ -1,0 +1,11 @@
+{
+  "scope": "Copied root-level logs for historical preservation",
+  "captured_at": "2026-10-25T22:18:51Z",
+  "warning": "The root-level log directory was reused by earlier harness attempts. The copied gpgv-resolute_InRelease.* files have older timestamps and are not output from this manpage-policy attempt.",
+  "stale_gpgv_log": {
+    "stderr": "gpgv: invalid option \"--no-options\"",
+    "origin": "The earlier second-failure-gpgv-no-options attempt; its authoritative copies are in the sibling diagnostic directory.",
+    "signature_result": "none"
+  },
+  "attempt_result_source": "verification-summary.json records the exact ValueError for this attempt; manpage argv/stdout/exit and runner outputs are in the same diagnostic directory."
+}

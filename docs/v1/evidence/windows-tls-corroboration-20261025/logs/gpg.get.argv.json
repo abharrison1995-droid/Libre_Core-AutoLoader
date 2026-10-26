@@ -1,0 +1,21 @@
+{
+  "executable": "C:\\Windows\\System32\\curl.exe",
+  "proxy_policy": "explicit --proxy empty and --noproxy *",
+  "argv": [
+    "--proxy",
+    "",
+    "--noproxy",
+    "*",
+    "--max-time",
+    "60",
+    "--silent",
+    "--show-error",
+    "--verbose",
+    "--write-out",
+    "\nLC_META_BEGIN\nurl_effective=%{url_effective}\nhttp_code=%{http_code}\nredirect_url=%{redirect_url}\nnum_redirects=%{num_redirects}\nssl_verify_result=%{ssl_verify_result}\nremote_ip=%{remote_ip}\ncontent_type=%{content_type}\nLC_META_END\nLC_CERTS_BEGIN\n%{certs}\nLC_CERTS_END\n",
+    "--output",
+    "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\docs\\v1\\evidence\\windows-tls-corroboration-20261025\\downloads\\gpg_2.4.8-4ubuntu3.1_amd64.deb",
+    "--url",
+    "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb"
+  ]
+}

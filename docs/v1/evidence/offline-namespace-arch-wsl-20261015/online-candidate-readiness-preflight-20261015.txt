@@ -1,0 +1,29 @@
+Arch WSL online-candidate readiness preflight — 2026-10-15
+
+Environment: Arch Linux WSL2, x86_64, Linux 6.18.54.1-microsoft-standard-WSL2.
+QEMU installed in the distro is 11.1.2. This was a non-destructive invocation
+of the production mount-capability preflight from the current shared checkout;
+it did not call execute_build or create a candidate-build output/work
+directory. The preflight may create its own private scratch mounts.
+
+Command:
+
+```
+wsl.exe -d archlinux -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && python3 -c "import subprocess; from usb_builder.build_usb import _establish_offline_network_isolation; print(_establish_offline_network_isolation(subprocess.run))"'
+```
+
+Result: exit status 1 with:
+
+```
+usb_builder.build_usb.BuildContractError: ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE: exact Archiso chroot mount set is unavailable in this namespace: devtmpfs
+```
+
+`execute_build` requires this isolated mount-capability preflight for both
+online and offline modes, before build work/output creation. The online
+candidate build was therefore not launched: no repository sync/download,
+package installation, mkarchiso invocation, or candidate ISO occurred in this
+check. Existing workspace changes and prior ISO/QEMU evidence were preserved.
+
+This is an Arch WSL result only. It does not establish native Linux mount or
+build capability. Native Linux build, offline ISO build, successful Live USB
+app/service boot, and hardware workflows remain pending.

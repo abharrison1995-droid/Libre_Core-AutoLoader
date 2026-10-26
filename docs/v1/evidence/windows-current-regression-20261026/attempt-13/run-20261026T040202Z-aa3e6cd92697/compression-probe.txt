@@ -1,0 +1,10 @@
+status=failed
+utc=2026-10-26T04:02:06.1234090Z
+directory_attributes=Directory, Compressed
+file_attributes=Archive, Compressed
+probe_logical_bytes=1048576
+probe_compressed_allocation_bytes=1048576
+probe_error=GetCompressedFileSizeW reported 1048576 bytes for a 1048576-byte compressible probe.
+cleanup_error=
+probe_file_removed=True
+probe_directory_removed=True

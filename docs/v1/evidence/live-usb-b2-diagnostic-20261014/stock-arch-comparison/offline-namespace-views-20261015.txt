@@ -1,0 +1,12 @@
+host_netns=net:[4026531833]
+unshare_exit=0
+guest_netns=net:[4026532241]
+if_nameindex=[(1, 'lo')]
+sysfs_class_net=['eth0', 'lo']
+ipv4_route_file=''
+ipv6_route_file='00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo\n00000000000000000000000000000000 00 00000000000000000000000000000000 00 00000000000000000000000000000000 ffffffff 00000001 00000000 00200200       lo\n'
+ip_-j_link=[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","linkmode":"DEFAULT","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00"}]
+ip_-j_addr=[{"ifindex":1,"ifname":"lo","flags":["LOOPBACK"],"mtu":65536,"qdisc":"noop","operstate":"DOWN","group":"default","txqlen":1000,"link_type":"loopback","address":"00:00:00:00:00:00","broadcast":"00:00:00:00:00:00","addr_info":[]}]
+ip_-j_-4_route=[]
+ip_-j_-6_route=[]
+unshare_stderr=

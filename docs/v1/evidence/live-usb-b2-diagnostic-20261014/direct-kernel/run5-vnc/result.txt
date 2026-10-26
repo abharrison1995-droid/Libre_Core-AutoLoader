@@ -1,0 +1,12 @@
+mode=direct-kernel-vnc-tty9
+qemu_exit=0
+elapsed_seconds=307.1
+iso_sha256_before=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_sha256_after=afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd
+iso_unchanged=True
+kernel_sha256=8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+initramfs_sha256=c7440ebd5164e83e4a28c3f22ba2695af06a0fd29676ae572967ecdb6218e090
+serial_bytes=245475
+stop_reason=QEMU reached 300-second hard bound at 300.0s; no guest success inferred.
+network_device=none
+firmware_writer=none

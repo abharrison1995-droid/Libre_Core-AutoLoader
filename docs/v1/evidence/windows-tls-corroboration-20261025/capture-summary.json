@@ -1,0 +1,615 @@
+{
+  "status": "PROPOSAL_REVIEW_REQUIRED",
+  "captured_at_utc_start": "2026-10-25T21:01:28.9826235+00:00",
+  "captured_at_utc_finish": "2026-10-25T21:01:35.9188147+00:00",
+  "capture_host": {
+    "captured_at_utc": "2026-10-25T21:01:31.0729225+00:00",
+    "operating_system": "Microsoft Windows NT 10.0.19044.0",
+    "powershell_version": "7.6.5",
+    "dotnet_runtime": ".NET 10.0.11",
+    "curl_executable": "C:\\Windows\\System32\\curl.exe",
+    "curl_sha256": "3345339164cf384eff527b6c3160fea8d849a4231ec6ca80513e3a739e505168",
+    "curl_file_size": 711736,
+    "curl_version_output": "curl 8.13.0 (Windows) libcurl/8.13.0 Schannel zlib/1.3.1 WinIDN\r\nRelease-Date: 2025-04-02\r\nProtocols: dict file ftp ftps http https imap imaps ipfs ipns mqtt pop3 pop3s smb smbs smtp smtps telnet tftp ws wss\r\nFeatures: alt-svc AsynchDNS HSTS HTTPS-proxy IDN IPv6 Kerberos Largefile libz NTLM SPNEGO SSL SSPI threadsafe Unicode UnixSockets",
+    "curl_backend": "Windows libcurl with Schannel",
+    "proxy_environment_variable_names_present": [],
+    "proxy_values_recorded": false,
+    "request_proxy_policy": "Every curl request passed --proxy \"\" and --noproxy *; direct transport required",
+    "windows_root_store_validation": "curl Schannel default peer verification; require ssl_verify_result=0; independently record a supplemental X509Chain build against Windows CurrentUser/LocalMachine Root stores",
+    "source_manifest_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+    "source_manifest_listed_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+    "measured_c_free_bytes_before": 6349357056
+  },
+  "source_bundle": "../ubuntu-verifier-provenance-20261025",
+  "source_manifest_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+  "source_manifest_listed_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+  "transport": "Windows-native curl 8.13.0 / Schannel; explicit empty proxy and --noproxy *; redirects handled one hop at a time and constrained to HTTPS archive.ubuntu.com with identical package path",
+  "tls_validation": "Schannel default certificate/hostname/revocation validation; require curl ssl_verify_result=0. %{certs} peer chain is retained per request. Supplemental Windows X509Chain.Build must succeed with no status and terminate at a certificate present in CurrentUser/LocalMachine Root.",
+  "max_allowed_redirect_hops": 6,
+  "c_free_bytes_before": 6349357056,
+  "c_free_bytes_after": 6348357632,
+  "package_results": [
+    {
+      "package": "gpgv",
+      "version": "2.4.8-4ubuntu3.1",
+      "architecture": "amd64",
+      "signed_index": "resolute-updates-main-Packages.xz",
+      "inrelease": "archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "signed_index_row_source_url_http": "http://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "request_start_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "redirects": [
+        {
+          "requested_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+          "response_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+          "http_status": 200,
+          "redirect_url": "",
+          "remote_ip": "2a06:bc80:0:1000::17",
+          "schannel_ssl_verify_result": 0,
+          "head_content_length_header": 155072,
+          "chain": {
+            "curl_peer_chain_pem_count": 3,
+            "curl_peer_certificates": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z"
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z"
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z"
+              }
+            ],
+            "windows_chain_build": true,
+            "windows_chain_policy_status": [],
+            "windows_built_chain": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+                "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+                "not_before_utc": "2015-06-04T11:04:38Z",
+                "not_after_utc": "2035-06-04T11:04:38Z",
+                "statuses": []
+              }
+            ],
+            "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "windows_trust_root_in_user_or_machine_root_store": true,
+            "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+            "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+          },
+          "raw_stdout": "gpgv.hop-1.head.stdout.txt",
+          "raw_stderr": "gpgv.hop-1.head.stderr.txt",
+          "argv": "gpgv.hop-1.head.argv.json",
+          "exit": "gpgv.hop-1.head.exit"
+        }
+      ],
+      "final_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "final_get_status": 200,
+      "final_get_remote_ip": "2a06:bc80:0:1000::18",
+      "final_get_schannel_ssl_verify_result": 0,
+      "final_get_chain": {
+        "curl_peer_chain_pem_count": 3,
+        "curl_peer_certificates": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z"
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z"
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z"
+          }
+        ],
+        "windows_chain_build": true,
+        "windows_chain_policy_status": [],
+        "windows_built_chain": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+            "not_before_utc": "2015-06-04T11:04:38Z",
+            "not_after_utc": "2035-06-04T11:04:38Z",
+            "statuses": []
+          }
+        ],
+        "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+        "windows_trust_root_in_user_or_machine_root_store": true,
+        "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+        "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+      },
+      "expected_size_from_signed_index": 155072,
+      "downloaded_size": 155072,
+      "expected_sha256_from_signed_index": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "downloaded_sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "downloaded_file": "downloads/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "downloaded_file_matches_signed_index": true,
+      "preexisting_local_archive_size": 155072,
+      "preexisting_local_archive_sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "preexisting_local_archive_matches_signed_index": true,
+      "get_command_argv": "gpgv.get.argv.json",
+      "get_stdout": "gpgv.get.stdout.txt",
+      "get_stderr": "gpgv.get.stderr.txt",
+      "get_exit": "gpgv.get.exit",
+      "started_at_utc": "2026-10-25T21:01:31.2047573+00:00",
+      "finished_at_utc": "2026-10-25T21:01:33.7501378+00:00"
+    },
+    {
+      "package": "gpg",
+      "version": "2.4.8-4ubuntu3.1",
+      "architecture": "amd64",
+      "signed_index": "resolute-updates-main-Packages.xz",
+      "inrelease": "archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+      "signed_index_row_source_url_http": "http://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "request_start_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "redirects": [
+        {
+          "requested_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+          "response_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+          "http_status": 200,
+          "redirect_url": "",
+          "remote_ip": "2a06:bc80:0:1000::17",
+          "schannel_ssl_verify_result": 0,
+          "head_content_length_header": 636848,
+          "chain": {
+            "curl_peer_chain_pem_count": 3,
+            "curl_peer_certificates": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z"
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z"
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z"
+              }
+            ],
+            "windows_chain_build": true,
+            "windows_chain_policy_status": [],
+            "windows_built_chain": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+                "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+                "not_before_utc": "2015-06-04T11:04:38Z",
+                "not_after_utc": "2035-06-04T11:04:38Z",
+                "statuses": []
+              }
+            ],
+            "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "windows_trust_root_in_user_or_machine_root_store": true,
+            "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+            "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+          },
+          "raw_stdout": "gpg.hop-1.head.stdout.txt",
+          "raw_stderr": "gpg.hop-1.head.stderr.txt",
+          "argv": "gpg.hop-1.head.argv.json",
+          "exit": "gpg.hop-1.head.exit"
+        }
+      ],
+      "final_url": "https://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "final_get_status": 200,
+      "final_get_remote_ip": "2a06:bc80:0:1000::17",
+      "final_get_schannel_ssl_verify_result": 0,
+      "final_get_chain": {
+        "curl_peer_chain_pem_count": 3,
+        "curl_peer_certificates": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z"
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z"
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z"
+          }
+        ],
+        "windows_chain_build": true,
+        "windows_chain_policy_status": [],
+        "windows_built_chain": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+            "not_before_utc": "2015-06-04T11:04:38Z",
+            "not_after_utc": "2035-06-04T11:04:38Z",
+            "statuses": []
+          }
+        ],
+        "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+        "windows_trust_root_in_user_or_machine_root_store": true,
+        "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+        "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+      },
+      "expected_size_from_signed_index": 636848,
+      "downloaded_size": 636848,
+      "expected_sha256_from_signed_index": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "downloaded_sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "downloaded_file": "downloads/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "downloaded_file_matches_signed_index": true,
+      "preexisting_local_archive_size": 636848,
+      "preexisting_local_archive_sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "preexisting_local_archive_matches_signed_index": true,
+      "get_command_argv": "gpg.get.argv.json",
+      "get_stdout": "gpg.get.stdout.txt",
+      "get_stderr": "gpg.get.stderr.txt",
+      "get_exit": "gpg.get.exit",
+      "started_at_utc": "2026-10-25T21:01:33.7930444+00:00",
+      "finished_at_utc": "2026-10-25T21:01:34.9394261+00:00"
+    },
+    {
+      "package": "ubuntu-keyring",
+      "version": "2023.11.28.1build1",
+      "architecture": "all",
+      "signed_index": "resolute-main-Packages.xz",
+      "inrelease": "archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+      "signed_index_row_source_url_http": "http://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "request_start_url": "https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "redirects": [
+        {
+          "requested_url": "https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+          "response_url": "https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+          "http_status": 200,
+          "redirect_url": "",
+          "remote_ip": "2a06:bc80:0:1000::17",
+          "schannel_ssl_verify_result": 0,
+          "head_content_length_header": 11228,
+          "chain": {
+            "curl_peer_chain_pem_count": 3,
+            "curl_peer_certificates": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z"
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z"
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z"
+              }
+            ],
+            "windows_chain_build": true,
+            "windows_chain_policy_status": [],
+            "windows_built_chain": [
+              {
+                "subject": "CN=archive.ubuntu.com",
+                "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+                "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+                "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+                "not_before_utc": "2026-10-13T05:21:33Z",
+                "not_after_utc": "2027-01-11T05:21:32Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=YR2, O=Let's Encrypt, C=US",
+                "issuer": "CN=Root YR, O=ISRG, C=US",
+                "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+                "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+                "not_before_utc": "2025-09-03T00:00:00Z",
+                "not_after_utc": "2028-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=Root YR, O=ISRG, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+                "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+                "not_before_utc": "2026-05-13T00:00:00Z",
+                "not_after_utc": "2032-09-02T23:59:59Z",
+                "statuses": []
+              },
+              {
+                "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+                "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+                "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+                "not_before_utc": "2015-06-04T11:04:38Z",
+                "not_after_utc": "2035-06-04T11:04:38Z",
+                "statuses": []
+              }
+            ],
+            "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "windows_trust_root_in_user_or_machine_root_store": true,
+            "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+            "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+          },
+          "raw_stdout": "ubuntu-keyring.hop-1.head.stdout.txt",
+          "raw_stderr": "ubuntu-keyring.hop-1.head.stderr.txt",
+          "argv": "ubuntu-keyring.hop-1.head.argv.json",
+          "exit": "ubuntu-keyring.hop-1.head.exit"
+        }
+      ],
+      "final_url": "https://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "final_get_status": 200,
+      "final_get_remote_ip": "2a06:bc80:0:1000::17",
+      "final_get_schannel_ssl_verify_result": 0,
+      "final_get_chain": {
+        "curl_peer_chain_pem_count": 3,
+        "curl_peer_certificates": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z"
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z"
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z"
+          }
+        ],
+        "windows_chain_build": true,
+        "windows_chain_policy_status": [],
+        "windows_built_chain": [
+          {
+            "subject": "CN=archive.ubuntu.com",
+            "issuer": "CN=YR2, O=Let's Encrypt, C=US",
+            "thumbprint_sha1": "5F8FBA12D55D8EA96423C8674C4D28941859E588",
+            "certificate_sha256": "a28ab92b3dfb47da982e79c0c8b34ee45be0fba4c6ac0cdcead16db073fc4a5d",
+            "not_before_utc": "2026-10-13T05:21:33Z",
+            "not_after_utc": "2027-01-11T05:21:32Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=YR2, O=Let's Encrypt, C=US",
+            "issuer": "CN=Root YR, O=ISRG, C=US",
+            "thumbprint_sha1": "2D74D6DFD96EEA55AD7BAAFA0D3C6552B2DADC37",
+            "certificate_sha256": "238b85a0099c65b970477d5724f1a1d475ce5058cffe4efa8733899bdb863c47",
+            "not_before_utc": "2025-09-03T00:00:00Z",
+            "not_after_utc": "2028-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=Root YR, O=ISRG, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "AB9D0263244DD0326EB67015705A667E79CFE998",
+            "certificate_sha256": "072639d0b140d5bffae16ad9c3f6cc6086040621f51ee61a6d46a8915c07cf76",
+            "not_before_utc": "2026-05-13T00:00:00Z",
+            "not_after_utc": "2032-09-02T23:59:59Z",
+            "statuses": []
+          },
+          {
+            "subject": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "issuer": "CN=ISRG Root X1, O=Internet Security Research Group, C=US",
+            "thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+            "certificate_sha256": "96bcec06264976f37460779acf28c5a7cfe8a3c0aae11a8ffcee05c0bddf08c6",
+            "not_before_utc": "2015-06-04T11:04:38Z",
+            "not_after_utc": "2035-06-04T11:04:38Z",
+            "statuses": []
+          }
+        ],
+        "windows_trust_root_thumbprint_sha1": "CABD2A79A1076A31F21D253635CB039D4329A5E8",
+        "windows_trust_root_in_user_or_machine_root_store": true,
+        "windows_chain_builder_revocation_mode": "NoCheck; supplemental path construction only",
+        "schannel_curl_revocation_policy": "curl default Schannel verification; ssl_verify_result must be 0"
+      },
+      "expected_size_from_signed_index": 11228,
+      "downloaded_size": 11228,
+      "expected_sha256_from_signed_index": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "downloaded_sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "downloaded_file": "downloads/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "downloaded_file_matches_signed_index": true,
+      "preexisting_local_archive_size": 11228,
+      "preexisting_local_archive_sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "preexisting_local_archive_matches_signed_index": true,
+      "get_command_argv": "ubuntu-keyring.get.argv.json",
+      "get_stdout": "ubuntu-keyring.get.stdout.txt",
+      "get_stderr": "ubuntu-keyring.get.stderr.txt",
+      "get_exit": "ubuntu-keyring.get.exit",
+      "started_at_utc": "2026-10-25T21:01:34.9395079+00:00",
+      "finished_at_utc": "2026-10-25T21:01:35.903914+00:00"
+    }
+  ],
+  "package_download_total_bytes": 803148,
+  "packages_installed": false,
+  "payload_binaries_executed": false,
+  "packages_extracted": false,
+  "arch_material_acquired": false,
+  "trust_status": "This independently corroborates transport/bytes only; it does not bootstrap or independently authenticate the Ubuntu root keyring or authorize Arch acquisition.",
+  "post_capture_summary_correction": {
+    "performed_at_utc": "2026-10-25T21:04:25.9969615+00:00",
+    "field": "package_download_total_bytes",
+    "prior_value_observed": 0,
+    "corrected_value": 803148,
+    "derivation": "sum of the three captured downloaded_size values: 155072 + 636848 + 11228",
+    "no_network_requests_repeated": true,
+    "original_pre_correction_summary_bytes_preserved": false
+  }
+}

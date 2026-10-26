@@ -1,195 +1,122 @@
-import hashlib
-import logging
-import os
-import platform
-import shutil
-import subprocess
-import urllib.request
-import zipfile
+"""Fail-closed IVprep source handoff; no download or downgrade execution."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional, Dict
-import psutil
+from datetime import datetime, timezone
 
-from autoloader.exceptions import BIOSReversionError, SafetyError, LowBatteryError
-from autoloader.detection.model import ModelDetector
-from autoloader.detection.bios import BIOSDetector
-from autoloader.database.models import get_model
-from autoloader.utils import is_admin
+from autoloader.exceptions import BIOSReversionError, SafetyError, UnsupportedModelError
 
-logger = logging.getLogger(__name__)
+IVPREP_REPOSITORY = "https://github.com/n4ru/IVprep"
+IVPREP_REVISION = "7faecc72be8776be32f37e7ff00af22a25dfc3cf"
+IVPREP_TREE = "e5c684e3dc5b90d7e70122229a8b46bd4e4bd012"
+IVPREP_README_SHA256 = "e1b8bc1feea5d8b52e5bacc8fc520a98cb21b125824800a7662d6119fb8492e5"
+IVPREP_DOWNGRADE_SCRIPT_SHA256 = "cb5528d6f1d001937b224f3d9b7f075a928c2692e12d8f74b24533dd12d2dd31"
+IVPREP_TARGET_BIOS = "2.64"
 
-# Known upstream IVprep master archive SHA256 (or configurable override)
-IVPREP_DEFAULT_SHA256: Optional[str] = "c24f64c676d4986161726a457492c19a9f20e4b7b3b9b469315d18d4529ee1d3"
 
-@dataclass
+@dataclass(frozen=True)
 class IVprepConfig:
-    """Configuration for IVprep downgrade."""
+    """Narrow metadata for the only supported V1 IVprep handoff."""
+
+    model: str
+    target_bios_version: str = IVPREP_TARGET_BIOS
+
+
+@dataclass(frozen=True)
+class IVprepHandoffDescriptor:
+    """Pinned instructions for a human-operated external Windows workflow."""
+
     model: str
     target_bios_version: str
-    download_url: str = "https://github.com/n4ru/IVprep/archive/refs/heads/master.zip"
-    working_dir: Path = Path("IVprep_working")
-    expected_sha256: Optional[str] = None
+    repository_url: str
+    revision: str
+    tree: str
+    readme_url: str
+    readme_sha256: str
+    downgrade_script_sha256: str
+    approved_by: str
+    approved_at: datetime
+    required_platform: str = "Windows 64-bit"
+    instructions: tuple[str, ...] = (
+        "Use Windows 64-bit and follow the pinned upstream IVprep README.",
+        "In BIOS, set Flash BIOS Updating by End-Users to Enabled.",
+        "In BIOS, set Secure RollBack Prevention to Disabled.",
+        "Connect AC power and keep power connected throughout the downgrade.",
+        "Do not run downgrade.bat as Administrator; upstream WinFlash requests elevation when needed.",
+        "The device reboots and the external tool writes the BIOS region; allow the process to finish.",
+        "Power loss during the downgrade can brick the device. AutoLoader does not download or execute IVprep.",
+    )
+    requires_external_human_run: bool = True
+    power_loss_can_brick_device: bool = True
+    binaries_included: bool = False
+    binary_assets_verified: bool = False
+    executes_anything: bool = False
+
 
 class IVPrepManager:
-    """
-    Manages the IVprep downgrade process for xx30 series ThinkPads.
-    """
-    
-    TARGET_VERSIONS: Dict[str, str] = {
-        "x230": "2.60",
-        "x230t": "2.58",
-        "t430": "2.64",
-        "t430s": "2.59",
-        "t530": "2.60",
-        "w530": "2.58",
-    }
+    """Legacy API adapter that exposes source instructions only.
 
-    def __init__(self, model: Optional[str] = None, target_version: Optional[str] = None, expected_sha256: Optional[str] = None):
-        self.model_detector = ModelDetector()
-        self.bios_detector = BIOSDetector()
-        
-        detected_res = self.model_detector.detect()
-        self.model = (model or detected_res.model_id or "x230").lower()
-        
-        target = target_version or self.TARGET_VERSIONS.get(self.model, "2.60")
-        self.config = IVprepConfig(
-            model=self.model,
-            target_bios_version=target,
-            expected_sha256=expected_sha256 or IVPREP_DEFAULT_SHA256,
+    Upstream IVprep is Windows 64-bit-only and performs a BIOS-region flash.
+    V1 does not download or execute its mutable archive or its batch script.
+    """
+
+    TARGET_VERSIONS = {"t430": IVPREP_TARGET_BIOS}
+
+    def __init__(
+        self,
+        model: str | None = None,
+        target_version: str | None = None,
+        expected_sha256: str | None = None,
+    ) -> None:
+        # Retain the old signature to avoid breaking imports, but never accept
+        # a caller-provided archive checksum as artifact verification.
+        del expected_sha256
+        self.model = (model or "").strip().lower()
+        target = target_version or self.TARGET_VERSIONS.get(self.model, "")
+        self.config = IVprepConfig(self.model, target)
+
+    def create_handoff_descriptor(
+        self, *, actor: str, explicit_approval: bool, approved_at: datetime
+    ) -> IVprepHandoffDescriptor:
+        if self.model != "t430":
+            raise UnsupportedModelError("V1 IVprep handoff is limited to the exact T430 profile")
+        if self.config.target_bios_version != IVPREP_TARGET_BIOS:
+            raise SafetyError("V1 T430 IVprep target must be pinned at BIOS 2.64")
+        if not actor.strip() or not explicit_approval:
+            raise SafetyError("Explicit human approval is required before displaying the IVprep handoff")
+        if approved_at.tzinfo is None or approved_at.utcoffset() != timezone.utc.utcoffset(approved_at):
+            raise SafetyError("IVprep approval timestamp must be timezone-aware UTC")
+        return IVprepHandoffDescriptor(
+            model="t430",
+            target_bios_version=IVPREP_TARGET_BIOS,
+            repository_url=IVPREP_REPOSITORY,
+            revision=IVPREP_REVISION,
+            tree=IVPREP_TREE,
+            readme_url=f"{IVPREP_REPOSITORY}/blob/{IVPREP_REVISION}/README.md",
+            readme_sha256=IVPREP_README_SHA256,
+            downgrade_script_sha256=IVPREP_DOWNGRADE_SCRIPT_SHA256,
+            approved_by=actor.strip(),
+            approved_at=approved_at,
         )
-        
-    def download(self) -> Path:
-        """
-        Downloads IVprep from GitHub, verifies SHA256 integrity, and safely extracts it with Zip Slip protection.
-        """
-        logger.info(f"Downloading IVprep from {self.config.download_url}...")
-        self.config.working_dir.mkdir(parents=True, exist_ok=True)
-        zip_path = self.config.working_dir / "ivprep.zip"
-        
-        try:
-            # Download with socket timeout and stream hashing
-            req = urllib.request.Request(self.config.download_url, headers={"User-Agent": "Libre_Core-AutoLoader"})
-            hasher = hashlib.sha256()
-            with urllib.request.urlopen(req, timeout=30) as response, open(zip_path, "wb") as out_f:
-                while True:
-                    chunk = response.read(8192)
-                    if not chunk:
-                        break
-                    hasher.update(chunk)
-                    out_f.write(chunk)
 
-            # SHA256 integrity verification if expected hash configured
-            computed_hash = hasher.hexdigest()
-            logger.debug(f"IVprep archive downloaded. SHA256: {computed_hash}")
-            if self.config.expected_sha256:
-                if computed_hash.lower() != self.config.expected_sha256.lower():
-                    raise BIOSReversionError(
-                        f"IVprep archive SHA256 mismatch! Expected {self.config.expected_sha256}, got {computed_hash}"
-                    )
-
-            # Safe zip extraction (prevent Zip Slip / path traversal)
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                dest_dir = self.config.working_dir.resolve()
-                for member in zip_ref.infolist():
-                    member_path = (dest_dir / member.filename).resolve()
-                    if not member_path.is_relative_to(dest_dir):
-                        raise BIOSReversionError(f"Malicious path traversal detected in zip archive: {member.filename}")
-                zip_ref.extractall(self.config.working_dir)
-
-            logger.info("Successfully downloaded and extracted IVprep.")
-            return self.config.working_dir / "IVprep-master"
-        except Exception as e:
-            logger.error(f"Failed to download or extract IVprep: {e}")
-            if zip_path.exists():
-                try:
-                    zip_path.unlink()
-                except Exception:
-                    pass
-            raise BIOSReversionError(f"Failed to download IVprep: {e}")
+    @staticmethod
+    def _unavailable(action: str) -> BIOSReversionError:
+        return BIOSReversionError(
+            f"IVPREP_{action}_DISABLED: V1 provides only a pinned human handoff; "
+            "no download, script execution, or BIOS write is available"
+        )
 
     def verify_prerequisites(self) -> bool:
-        """
-        Verifies that all prerequisites for IVprep downgrade are met.
-        """
-        logger.info("Verifying prerequisites for IVprep downgrade...")
-        
-        if platform.system().lower() != "windows":
-            logger.warning("IVprep requires Windows to automate the downgrade.")
-            logger.warning("Please boot into Windows or use alternative hardware flashing methods.")
-            raise BIOSReversionError("IVprep automation requires Windows.")
+        raise self._unavailable("AUTOMATION")
 
-        if not is_admin():
-            logger.error("Must run as Windows Administrator for IVprep downgrade.")
-            raise SafetyError("Administrator privileges required on Windows for BIOS downgrade.")
-
-        try:
-            db_model = get_model(self.model)
-        except Exception:
-            db_model = None
-
-        if not db_model or not db_model.supports_1vyrain:
-            logger.error(f"Model {self.model} is not supported by IVprep (xx30 series only).")
-            raise SafetyError(f"Model {self.model} is not an xx30 series ThinkPad.")
-
-        # Power checks via psutil
-        battery = psutil.sensors_battery()
-        if battery:
-            if not battery.power_plugged and battery.percent < 30:
-                logger.error(f"Battery level too low ({battery.percent}%) without AC power. Connect AC adapter.")
-                raise LowBatteryError("AC adapter must be connected or battery level at least 30%.")
-
-        logger.warning("IMPORTANT: Ensure all BIOS passwords (Supervisor, Power-on) are removed before proceeding.")
-        logger.warning("IMPORTANT: If you plan to apply EC mods (battery/keyboard), they MUST be done BEFORE this step.")
-        
-        logger.info("All prerequisites verified successfully.")
-        return True
+    def download(self):
+        """Never download a moving upstream archive or firmware assets."""
+        raise self._unavailable("DOWNLOAD")
 
     def execute_downgrade(self) -> bool:
-        """
-        Executes the downgrade script on Windows using cmd.exe.
-        """
-        self.verify_prerequisites()
-        
-        extracted_dir = self.download()
-        downgrade_bat = extracted_dir / "downgrade.bat"
-        
-        if not downgrade_bat.exists():
-            raise BIOSReversionError(f"downgrade.bat not found in {extracted_dir}")
-            
-        logger.info("Executing downgrade.bat with WinFlash64...")
-        try:
-            cmd = ["cmd.exe", "/c", "downgrade.bat"]
-            result = subprocess.run(
-                cmd, 
-                cwd=str(extracted_dir),
-                capture_output=True,
-                text=True,
-                timeout=300,
-                check=True
-            )
-            logger.info("Downgrade script executed successfully.")
-            logger.debug(f"Downgrade output: {result.stdout}")
-            return True
-        except subprocess.CalledProcessError as e:
-            err_msg = e.stderr or e.stdout or str(e)
-            logger.error(f"Failed to execute downgrade.bat: {err_msg}")
-            raise BIOSReversionError(f"Downgrade execution failed: {err_msg}")
-        except subprocess.TimeoutExpired:
-            raise BIOSReversionError("Downgrade process timed out after 300 seconds.")
-            
+        """Never launch downgrade.bat, WinFlash, or a BIOS writer."""
+        raise self._unavailable("EXECUTION")
+
     def verify_downgrade_success(self) -> bool:
-        """
-        Verifies if the downgrade was successful by checking the current BIOS version.
-        """
-        logger.info("Verifying downgrade success...")
-        bios_info = self.bios_detector.detect(force_refresh=True)
-        current_version = bios_info.version or "Unknown"
-        
-        from autoloader.detection.bios import VersionComparison
-        if self.bios_detector.compare_version(current_version, self.config.target_bios_version) == VersionComparison.MATCHES:
-            logger.info(f"Success! Current BIOS version is {current_version}.")
-            return True
-        else:
-            logger.warning(f"Expected {self.config.target_bios_version}, current detected is {current_version} (reboot may be required).")
-            return False
+        """A version read without a fresh post-reboot handoff is not success."""
+        raise self._unavailable("AUTOMATED_VERIFICATION")

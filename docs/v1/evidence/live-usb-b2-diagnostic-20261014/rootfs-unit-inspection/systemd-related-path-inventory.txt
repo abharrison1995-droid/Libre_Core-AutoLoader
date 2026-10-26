@@ -1,0 +1,64 @@
+-rw-r--r-- root/root               927 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/basic.target
+-rw-r--r-- root/root               556 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/local-fs.target
+drwxr-xr-x root/root                32 2026-10-13 23:51 squashfs-root/usr/lib/systemd/system/local-fs.target.wants
+lrwxrwxrwx root/root                12 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/local-fs.target.wants/tmp.mount -> ../tmp.mount
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/machines.target.wants/var-lib-machines.mount -> ../var-lib-machines.mount
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/remote-fs.target.wants/var-lib-machines.mount -> ../var-lib-machines.mount
+-rw-r--r-- root/root               574 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target
+drwxr-xr-x root/root              1506 2026-10-13 23:51 squashfs-root/usr/lib/systemd/system/sysinit.target.wants
+lrwxrwxrwx root/root                20 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/clonesetup.target -> ../clonesetup.target
+lrwxrwxrwx root/root                20 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/cryptsetup.target -> ../cryptsetup.target
+lrwxrwxrwx root/root                22 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/dev-hugepages.mount -> ../dev-hugepages.mount
+lrwxrwxrwx root/root                19 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/dev-mqueue.mount -> ../dev-mqueue.mount
+lrwxrwxrwx root/root                17 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/imports.target -> ../imports.target
+lrwxrwxrwx root/root                24 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/integritysetup.target -> ../integritysetup.target
+lrwxrwxrwx root/root                28 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/kmod-static-nodes.service -> ../kmod-static-nodes.service
+lrwxrwxrwx root/root                19 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/ldconfig.service -> ../ldconfig.service
+lrwxrwxrwx root/root                36 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.automount -> ../proc-sys-fs-binfmt_misc.automount
+lrwxrwxrwx root/root                32 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/sys-fs-fuse-connections.mount -> ../sys-fs-fuse-connections.mount
+lrwxrwxrwx root/root                26 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/sys-kernel-config.mount -> ../sys-kernel-config.mount
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/sys-kernel-debug.mount -> ../sys-kernel-debug.mount
+lrwxrwxrwx root/root                27 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/sys-kernel-tracing.mount -> ../sys-kernel-tracing.mount
+lrwxrwxrwx root/root                36 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-ask-password-console.path -> ../systemd-ask-password-console.path
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-binfmt.service -> ../systemd-binfmt.service
+lrwxrwxrwx root/root                35 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-boot-random-seed.service -> ../systemd-boot-random-seed.service
+lrwxrwxrwx root/root                28 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-firstboot.service -> ../systemd-firstboot.service
+lrwxrwxrwx root/root                34 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-hibernate-clear.service -> ../systemd-hibernate-clear.service
+lrwxrwxrwx root/root                30 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-hwdb-update.service -> ../systemd-hwdb-update.service
+lrwxrwxrwx root/root                41 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-journal-catalog-update.service -> ../systemd-journal-catalog-update.service
+lrwxrwxrwx root/root                32 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-journal-flush.service -> ../systemd-journal-flush.service
+lrwxrwxrwx root/root                27 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-journald.service -> ../systemd-journald.service
+lrwxrwxrwx root/root                36 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-machine-id-commit.service -> ../systemd-machine-id-commit.service
+lrwxrwxrwx root/root                31 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-modules-load.service -> ../systemd-modules-load.service
+lrwxrwxrwx root/root                29 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrmachine.service -> ../systemd-pcrmachine.service
+lrwxrwxrwx root/root                28 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrnvdone.service -> ../systemd-pcrnvdone.service
+lrwxrwxrwx root/root                33 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrosseparator.service -> ../systemd-pcrosseparator.service
+lrwxrwxrwx root/root                35 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrphase-sysinit.service -> ../systemd-pcrphase-sysinit.service
+lrwxrwxrwx root/root                27 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrphase.service -> ../systemd-pcrphase.service
+lrwxrwxrwx root/root                29 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-pcrproduct.service -> ../systemd-pcrproduct.service
+lrwxrwxrwx root/root                30 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-random-seed.service -> ../systemd-random-seed.service
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-repart.service -> ../systemd-repart.service
+lrwxrwxrwx root/root                25 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-sysctl.service -> ../systemd-sysctl.service
+lrwxrwxrwx root/root                27 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-sysusers.service -> ../systemd-sysusers.service
+lrwxrwxrwx root/root                43 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup-dev-early.service -> ../systemd-tmpfiles-setup-dev-early.service
+lrwxrwxrwx root/root                37 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup-dev.service -> ../systemd-tmpfiles-setup-dev.service
+lrwxrwxrwx root/root                33 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup.service -> ../systemd-tmpfiles-setup.service
+lrwxrwxrwx root/root                35 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-tpm2-setup-early.service -> ../systemd-tpm2-setup-early.service
+lrwxrwxrwx root/root                29 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-tpm2-setup.service -> ../systemd-tpm2-setup.service
+lrwxrwxrwx root/root                31 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-udev-trigger.service -> ../systemd-udev-trigger.service
+lrwxrwxrwx root/root                24 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-udevd.service -> ../systemd-udevd.service
+lrwxrwxrwx root/root                30 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-update-done.service -> ../systemd-update-done.service
+lrwxrwxrwx root/root                30 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/systemd-update-utmp.service -> ../systemd-update-utmp.service
+lrwxrwxrwx root/root                21 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/sysinit.target.wants/veritysetup.target -> ../veritysetup.target
+-rw-r--r-- root/root              1518 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-nsresourced.service
+-rw-r--r-- root/root              1122 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-nsresourced.socket
+-rw-r--r-- root/root               831 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-pcrphase-sysinit.service
+-rw-r--r-- root/root              1093 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/systemd-sysext.service
+-rw-r--r-- root/root               804 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/tmp.mount
+-rw-r--r-- root/root               807 2026-09-22 14:13 squashfs-root/usr/lib/systemd/system/var-lib-machines.mount
+-rwxr-xr-x root/root            121176 2026-09-22 14:13 squashfs-root/usr/lib/systemd/systemd-nsresourced
+-rw-r--r-- root/root               505 2026-09-22 14:13 squashfs-root/usr/lib/systemd/user/basic.target
+-rw-r--r-- root/root                54 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-nsresourced.8.gz
+-rw-r--r-- root/root              2375 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-nsresourced.service.8.gz
+-rw-r--r-- root/root                51 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-pcrphase-sysinit.service.8.gz
+-rw-r--r-- root/root                39 2026-09-22 14:13 squashfs-root/usr/share/man/man8/systemd-sysext.service.8.gz

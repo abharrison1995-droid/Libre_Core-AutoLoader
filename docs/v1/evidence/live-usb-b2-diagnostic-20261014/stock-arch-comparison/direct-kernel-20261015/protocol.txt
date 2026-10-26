@@ -1,0 +1,1 @@
+Diagnostic control only, not Libre_Core product acceptance. Kernel and initramfs were extracted byte-for-byte from the checksum-verified official ISO. The ISO is attached read-only as CD-ROM. The guest receives only the documented debug-shell switch, a visually gated harmless echo marker, and read-only inspection commands. No firmware writer, writable disk or NIC is attached.

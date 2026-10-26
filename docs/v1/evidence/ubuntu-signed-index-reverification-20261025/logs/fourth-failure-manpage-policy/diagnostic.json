@@ -1,0 +1,8 @@
+{
+  "status": "EXPECTED_LOCAL_GPGV_MANPAGE_NORMALIZATION_FAILURE",
+  "error": "ValueError: local gpgv manual does not support the isolated no-config invocation policy",
+  "failed_before_gpgv_signature_check": true,
+  "no_signature_result_claimed": true,
+  "preserved_inputs_and_extraction": true,
+  "next_action": "Normalize only roff font/escaped-hyphen tokens and whitespace before checking supported-option statements; use a unique new run directory and extraction root."
+}

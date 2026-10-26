@@ -1,0 +1,1 @@
+Stock Arch Linux 2026.10.01 direct-kernel/VNC read-only diagnostic; started=2026-10-15T13:14:01Z; cap=600s; no NIC/writer; guest input only after visual tty9 prompt confirmation

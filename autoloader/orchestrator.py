@@ -15,14 +15,12 @@ from typing import Callable, Optional
 
 from autoloader.exceptions import (
     AutoLoaderError,
-    BackupVerificationError,
-    FlashError,
-    SafetyError,
+    BackupUnavailableError,
+    PhysicalFlashUnavailableError,
+    ROMBuildUnavailableError,
 )
-from autoloader.flasher.backup import BackupManager, BackupResult
+from autoloader.flasher.backup import BackupResult
 from autoloader.flasher.flashrom import ProgrammerType
-from autoloader.flasher.verify import verify_flash
-from autoloader.database.models import get_model
 from autoloader.detection.model import DetectionResult
 
 logger = logging.getLogger(__name__)
@@ -108,161 +106,61 @@ class Orchestrator:
     # ------------------------------------------------------------------
     def run_backup(self) -> Optional[BackupResult]:
         """
-        Performs a two-pass verified ROM backup using the current AppState.
+        Fail closed until observed topology and complete recovery coverage exist.
 
-        Returns the BackupResult on success.  Fires on_complete or on_error.
+        The low-level BackupManager remains available for unit testing, but a
+        model database entry alone cannot establish that a physical backup is
+        complete or suitable for recovery.
         """
         model_id = self._state.model_id
         if not model_id:
             self._on_error("No model selected. Cannot perform backup without knowing the target chip.")
             return None
-
-        try:
-            model = get_model(model_id)
-            programmer = self._state.programmer
-
-            # Pick the chip label to back up
-            # Internal: use bottom (primary 8 MB) or single chip if not dual-chip
-            if model.is_dual_chip:
-                chip = next(c for c in model.flash_chips if c.label.lower() == "bottom")
-            else:
-                chip = model.flash_chips[0]
-
-            self._log(f"[bold cyan]Starting backup for {model.name}[/bold cyan]")
-            self._progress(5, "Initialising backup manager...")
-            self._abort_if_cancelled()
-
-            manager = BackupManager(
-                backup_dir=str(self._state.backup_dir),
-            )
-
-            self._log(f"[cyan]Programmer: {programmer.value}[/cyan]")
-            self._log(f"[cyan]Chip: {chip.model_number} ({chip.size_mb} MB, {chip.label})[/cyan]")
-            self._progress(15, "Reading ROM — pass 1 of 2 (this takes ~30 s)...")
-            self._abort_if_cancelled()
-
-            result = manager.create_backup(
-                model=model_id,
-                programmer=programmer,
-                chip_label=chip.label,
-                chip_name=chip.model_number if chip.model_number else None,
-            )
-
-            self._abort_if_cancelled()
-
-            if result.match:
-                self._state.last_backup_result = result
-                self._log(
-                    f"[bold green]✅ Backup verified! SHA256: {result.sha256[:16]}...[/bold green]"
-                )
-                self._progress(100, "Backup complete.")
-                self._on_complete()
-            else:
-                self._on_error(
-                    f"❌ Backup SHA256 mismatch — the two reads differ.\n"
-                    f"Pass 1: {result.path1}\nPass 2: {result.path2}\n"
-                    "Check SPI clip seating and retry."
-                )
-
-            return result
-
-        except BackupVerificationError as e:
-            self._on_error(f"[bold red]Backup verification failed:[/bold red] {e}")
-        except FlashError as e:
-            self._on_error(f"[bold red]Flash error:[/bold red] {e}")
-        except SafetyError as e:
-            self._on_error(f"[bold yellow]Safety check failed:[/bold yellow] {e}")
-        except AutoLoaderError as e:
-            self._on_error(f"[red]Operation failed:[/red] {e}")
-        except Exception as e:
-            logger.exception("Unexpected error in run_backup()")
-            self._on_error(f"[bold red]Unexpected error:[/bold red] {e}")
-
+        error = BackupUnavailableError(
+            "Backup capture is unavailable until observed chip topology and complete "
+            "recovery coverage are validated. No hardware was read."
+        )
+        self._log(f"[yellow]{error.code}: {error}[/yellow]")
+        self._progress(0, "Backup unavailable; no hardware was read.")
+        self._on_error(f"[{error.code}] {error}")
         return None
 
     # ------------------------------------------------------------------
-    # Build ROM workflow (simulated stages — real build hooks wired later)
+    # Build ROM workflow
     # ------------------------------------------------------------------
     def run_build(self) -> bool:
         """
-        Runs the ROM build pipeline.  Returns True on success.
+        Report the build as unavailable until a validated builder is connected.
 
-        Stages are defined as (label, pct_end, approx_seconds).  The
-        simulated loop keeps the UI responsive while actual build tools
-        are invoked in the future.
+        This method intentionally does not emit progress completion or a ROM
+        path: no firmware build is currently wired into the orchestrator.
         """
-        import time
+        error = ROMBuildUnavailableError(
+            "ROM building is unavailable: no validated firmware builder is connected. No ROM was produced."
+        )
+        self._log(f"[yellow]{error.code}: {error}[/yellow]")
+        self._progress(0, "Build unavailable; no ROM was produced.")
+        self._on_error(f"[{error.code}] {error}")
+        return False
 
-        stages = [
-            ("Downloading Libreboot source...", 10),
-            ("Building cross-compiler toolchain...", 30),
-            ("Extracting binary blobs...", 50),
-            ("Neutralising Intel ME (me_cleaner)...", 65),
-            ("Compiling coreboot...", 85),
-            ("Post-processing & CBFS injection...", 95),
-            ("Finalising ROM image...", 100),
-        ]
-
-        try:
-            self._log("[bold cyan]Starting ROM build pipeline...[/bold cyan]")
-            for label, pct in stages:
-                self._abort_if_cancelled()
-                self._progress(pct - 5, label)
-                self._log(f"[bold green]=>[/bold green] {label}")
-                # In the future: call real build subprocess here
-                for _ in range(10):
-                    if self.is_cancelled:
-                        raise AutoLoaderError("Build cancelled by user.")
-                    time.sleep(0.15)
-                self._progress(pct, label)
-
-            self._abort_if_cancelled()
-            output = self._state.output_dir / "coreboot.rom"
-            self._log(f"[bold cyan]ROM image ready: {output}[/bold cyan]")
-            self._on_complete()
-            return True
-
-        except AutoLoaderError as e:
-            self._on_error(str(e))
-        except Exception as e:
-            logger.exception("Unexpected error in run_build()")
-            self._on_error(f"[bold red]Unexpected build error:[/bold red] {e}")
-
+    def run_flash(self, rom_path: Path) -> bool:
+        """Fail closed while no model-validated, authorized writer is connected."""
+        error = PhysicalFlashUnavailableError(
+            f"Physical flashing is unavailable for {rom_path}: the shared model-specific "
+            "safety and authorization backend is not implemented; no write was attempted."
+        )
+        self._log(f"[yellow]{error.code}: {error}[/yellow]")
+        self._progress(0, "Flash unavailable; no write was attempted.")
+        self._on_error(f"[{error.code}] {error}")
         return False
 
     # ------------------------------------------------------------------
     # Verify workflow
     # ------------------------------------------------------------------
     def run_verify(self, rom_path: Path, programmer: Optional[ProgrammerType] = None) -> bool:
-        """
-        Reads back the current flash and compares against rom_path.
-
-        Returns True if verified successfully.
-        """
-        programmer = programmer or self._state.programmer
-        try:
-            self._log("[cyan]Verifying flashed ROM against source image...[/cyan]")
-            self._progress(20, "Preparing verification...")
-
-            result = verify_flash(
-                programmer=programmer,
-                expected_rom_path=rom_path,
-            )
-
-            if result.verified:
-                self._log("[bold green]✅ Flash verification PASSED[/bold green]")
-                self._progress(100, "Verification complete.")
-                self._on_complete()
-                return True
-            else:
-                self._on_error(
-                    "❌ Flash verification FAILED — flashed content does not match source ROM.\n"
-                    "Do NOT power cycle. Attempt recovery flash immediately."
-                )
-        except AutoLoaderError as e:
-            self._on_error(f"[bold red]Verification error:[/bold red] {e}")
-        except Exception as e:
-            logger.exception("Unexpected error in run_verify()")
-            self._on_error(f"[bold red]Unexpected verification error:[/bold red] {e}")
-
+        """Keep the legacy API fail-closed; no direct SPI read is permitted."""
+        message = f"Read-back verification is unavailable for {rom_path}; no SPI read was attempted."
+        self._log(f"[yellow]READBACK_NOT_PERFORMED: {message}[/yellow]")
+        self._progress(0, "Read-back unavailable; not performed.")
+        self._on_error(f"[READBACK_NOT_PERFORMED] {message}")
         return False

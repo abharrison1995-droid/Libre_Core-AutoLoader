@@ -1,0 +1,1 @@
+QEMU was stopped by SIGTERM after the VNC client packing error at 7.6 seconds; this was not the 300-second guest diagnostic bound.

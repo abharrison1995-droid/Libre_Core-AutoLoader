@@ -1,0 +1,152 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+........................................................................ [ 18%]
+........................................................................ [ 25%]
+........................................................................ [ 31%]
+....................s................................................... [ 37%]
+........................................................................ [ 43%]
+........................................................................ [ 50%]
+...............................................................F........ [ 56%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+.....................................................ss................. [ 75%]
+........................................................................ [ 81%]
+........................................................................ [ 87%]
+...s.................................................................... [ 93%]
+......................................................................   [100%]/home/alex/.venvs/autoloader-v1/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'App.call_from_thread.<locals>.run_callback' was never awaited
+  gc.collect()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+
+=================================== FAILURES ===================================
+_ test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption _
+
+tmp_path = PosixPath('/dev/shm/lc-v1-full-reconstructed-20261022-c/pytest/test_tui_cancel_or_unmount_rev0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x75aca3efbcb0>
+
+    def test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption(tmp_path, monkeypatch):
+        """A phrase click cannot race an unmount into consuming approval later."""
+        import threading
+    
+        import autoloader.workflow.journal as journal_module
+        import autoloader.workflow.write_approval as approval_module
+        from tests.test_phase10b_write_service import _service_request
+    
+        monkeypatch.setattr(approval_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(approval_module, "_sync_directory", lambda _path: None)
+        monkeypatch.setattr(journal_module, "_directory_fsync_supported", lambda: True)
+        monkeypatch.setattr(journal_module, "_sync_directory", lambda _path: None)
+        service, request, writer, _readback = _service_request(tmp_path / "service", monkeypatch)
+        original_consume = approval_module._consume_frontend_confirmation
+        consume_entered = threading.Event()
+        release_consume = threading.Event()
+    
+        def gated_consume(confirmation):
+            if confirmation.channel.value == "tui-explicit-action":
+                consume_entered.set()
+                if not release_consume.wait(timeout=5):
+                    raise AssertionError("test did not release the receipt-consumption gate")
+            original_consume(confirmation)
+    
+        monkeypatch.setattr(approval_module, "_consume_frontend_confirmation", gated_consume)
+    
+        async def runner():
+            app = AutoLoaderApp()
+            async with app.run_test(size=(100, 40)) as pilot:
+                for action in ("cancel", "unmount"):
+                    await app.push_screen(WriteConfirmationScreen())
+                    screen = app.screen
+                    bridge = approval_module._create_mounted_tui_confirmation_bridge(
+                        screen, mount_nonce=screen.mount_nonce
+                    )
+                    errors = []
+    
+                    def run_service():
+                        try:
+                            service.execute(request, _tui_bridge=bridge)
+                        except Exception as exc:
+                            errors.append(exc)
+    
+                    thread = threading.Thread(target=run_service, daemon=True)
+                    thread.start()
+                    for _ in range(100):
+                        await pilot.pause(0.05)
+                        if "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain:
+                            break
+                    assert "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain
+                    challenge = screen._challenge
+                    assert challenge is not None
+                    screen.query_one("#write-challenge-phrase", Input).value = challenge.exact_phrase
+                    await pilot.click("#write-confirm")
+                    for _ in range(100):
+                        await pilot.pause(0.05)
+                        if consume_entered.is_set():
+                            break
+                    assert consume_entered.is_set(), "service did not reach receipt consumption"
+                    if action == "cancel":
+                        await pilot.click("#write-cancel")
+                    else:
+                        app.pop_screen()
+                        await pilot.pause(0.1)
+                    release_consume.set()
+                    thread.join(timeout=4)
+                    assert not thread.is_alive()
+                    assert len(errors) == 1
+                    assert isinstance(errors[0], approval_module.WriteApprovalError)
+                    assert writer.calls == []
+                    consume_entered.clear()
+                    release_consume.clear()
+    
+>       asyncio.run(runner())
+
+tests/test_ui.py:1405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.14/asyncio/runners.py:204: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.14/asyncio/runners.py:127: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.14/asyncio/base_events.py:719: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def runner():
+        app = AutoLoaderApp()
+        async with app.run_test(size=(100, 40)) as pilot:
+            for action in ("cancel", "unmount"):
+                await app.push_screen(WriteConfirmationScreen())
+                screen = app.screen
+                bridge = approval_module._create_mounted_tui_confirmation_bridge(
+                    screen, mount_nonce=screen.mount_nonce
+                )
+                errors = []
+    
+                def run_service():
+                    try:
+                        service.execute(request, _tui_bridge=bridge)
+                    except Exception as exc:
+                        errors.append(exc)
+    
+                thread = threading.Thread(target=run_service, daemon=True)
+                thread.start()
+                for _ in range(100):
+                    await pilot.pause(0.05)
+                    if "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain:
+                        break
+>               assert "Type exactly:" in screen.query_one("#write-challenge-details", Static).render().plain
+E               AssertionError: assert 'Type exactly:' in 'Challenge has not been generated.'
+E                +  where 'Challenge has not been generated.' = Content('Challenge has not been generated.').plain
+E                +    where Content('Challenge has not been generated.') = render()
+E                +      where render = Static(id='write-challenge-details').render
+E                +        where Static(id='write-challenge-details') = query_one('#write-challenge-details', Static)
+E                +          where query_one = WriteConfirmationScreen().query_one
+
+tests/test_ui.py:1381: AssertionError
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_phase10a_write_approval.py:839: Windows-specific production durability policy
+SKIPPED [1] tests/test_usb_builder.py:3300: UNVALIDATED: host lacks trusted Arch pacman executable ownership evidence
+SKIPPED [1] tests/test_usb_builder.py:3370: UNVALIDATED: host lacks trusted Arch pacman executable ownership evidence
+SKIPPED [1] tests/test_usb_builder.py:5508: Windows-specific host platform contract
+FAILED tests/test_ui.py::test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption
+1 failed, 1145 passed, 4 skipped in 878.84s (0:14:38)

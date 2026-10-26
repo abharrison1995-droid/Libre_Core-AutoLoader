@@ -1,0 +1,5 @@
+.......ss.....                                                           [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_usb_builder.py:3287: UNVALIDATED: host lacks Linux util-linux unshare
+SKIPPED [1] tests\test_usb_builder.py:3343: UNVALIDATED: host lacks Linux util-linux unshare
+12 passed, 2 skipped in 1.61s

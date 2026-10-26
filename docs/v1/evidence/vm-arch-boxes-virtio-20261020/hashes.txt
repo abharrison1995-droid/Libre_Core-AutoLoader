@@ -1,0 +1,2 @@
+bb888a084568f4e68b1260ffa614ebf806c79668fa20f946c691973538f4d33c  Arch-Linux-x86_64-basic.qcow2 (base image, unchanged)
+fced85a5b0b00d1bd8b05f335dee5891028f6ec709101c2a5f307255aef2b537  guest-overlay.qcow2 (final diagnostic overlay)

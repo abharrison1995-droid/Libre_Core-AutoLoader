@@ -1,0 +1,9 @@
+[Unit]
+Description=One-shot trigger for LibreCore sealed offline V1 preflight
+
+[Path]
+PathExists=/dev/disk/by-id/virtio-LC-REQUEST-RO
+Unit=librecore-offline-preflight.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,1 @@
+GIT_TEMPLATE_DIR=.git-template-empty; GIT_CONFIG_COUNT=1, core.longpaths=true; .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp=.pytesttmp-win-v1-20261026d --junitxml=docs/v1/evidence/windows-current-regression-20261026/attempt-12/junit.xml -q --color=no <two Windows-only test nodes>

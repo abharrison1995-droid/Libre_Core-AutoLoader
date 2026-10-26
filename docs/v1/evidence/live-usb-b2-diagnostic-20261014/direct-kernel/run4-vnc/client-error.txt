@@ -1,0 +1,1 @@
+The loopback VNC server accepted the client and completed the RFB 3.8 handshake. The temporary client then failed before requesting a framebuffer because it packed one extra field in the RFB framebuffer-update request. No VGA capture or guest serial output was obtained. QEMU was stopped by SIGTERM after 7.6 seconds; this is launcher/client-failure evidence only.

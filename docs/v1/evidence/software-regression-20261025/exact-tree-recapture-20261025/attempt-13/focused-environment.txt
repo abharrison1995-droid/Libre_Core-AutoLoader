@@ -1,0 +1,6 @@
+umask=0022
+uid=1000(alex) gid=1000(alex) groups=1000(alex),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users),991(kvm)
+Python 3.14.4
+pytest 9.1.1
+basetemp=/tmp/librecore-autoloader-v1-focused-20261026-r13
+selection=fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review or fixed_service_host_rejects_corrupted_bound_evidence_records or fixed_service_host_rejects_command_status_hash_mismatch or fixed_service_rejects_swapped_evidence_volume_before_result_markers or fixed_service_interruption_before_terminal_is_rejected_by_stopped_host or fixed_service_synthetic_evidence_modes_are_umask_independent

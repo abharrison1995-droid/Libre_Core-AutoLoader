@@ -1,0 +1,290 @@
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 16%]
+........................................................................ [ 22%]
+........................................................................ [ 27%]
+......................FFFFF........FF................................... [ 33%]
+........................................................................ [ 39%]
+..............s......................................................... [ 44%]
+...........s............................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 61%]
+........................................................................ [ 67%]
+........................................................................ [ 72%]
+...............................................ss....................... [ 78%]
+........................................................................ [ 83%]
+.....................................................................s.. [ 89%]
+........................................................................ [ 95%]
+................................................................         [100%]
+=================================== FAILURES ===================================
+_ test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review _
+
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_evidence_vo0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c49f6f20>
+
+    def test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        captured_finalizers: list[Callable[[], tuple[int, str]]] = []
+        make_finalizer = offline_vm_guest_worker.make_fixed_guest_evidence_finalizer
+    
+        def capture_finalizer(*args: object) -> Callable[[], tuple[int, str]]:
+            callback = make_finalizer(*args)  # type: ignore[arg-type]
+            captured_finalizers.append(callback)
+            return callback
+    
+        monkeypatch.setattr(offline_vm_guest_worker, "make_fixed_guest_evidence_finalizer", capture_finalizer)
+        request = case["request"]
+        assert isinstance(request, dict)
+        assert request["layout"]["output_device"] == "LC-OUTPUT-RW"  # type: ignore[index]
+        assert request["layout"]["evidence_device"] == "LC-EVIDENCE-RW"  # type: ignore[index]
+        assert offline_vm_worker.PRODUCTION_WORKER_DEPLOYMENT is None
+        invocation = case["invocation"]
+        assert isinstance(invocation, build.BuildInvocation)
+        assert invocation.service_name == build.BUILD_SERVICE_NAME
+        assert invocation.operation_id == request["operation_id"]
+        assert invocation.request_sha256 == case["request_sha"]
+        assert invocation.argv == (
+            build.MKARCHISO_PATH,
+            "-v",
+            "-C",
+            build.WORKER_PACMAN_CONF,
+            "-w",
+            build.WORKER_WORK,
+            "-o",
+            build.WORKER_OUTPUT,
+            build.WORKER_PROFILE,
+        )
+        assert invocation.cwd == "/"
+        assert invocation.timeout_seconds == build.BUILD_TIMEOUT_SECONDS
+        assert invocation.env == {
+            "PATH": f"{Path(build.WORKER_PACSTRAP_BIN)}:/usr/bin:/usr/sbin:/bin",
+            "HOME": "/run/librecore-worker",
+            "TMPDIR": f"{build.WORKER_ROOT}/tmp",
+            "LANG": "C",
+            "LC_ALL": "C",
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "PYTHONOPTIMIZE": "0",
+        }
+    
+>       assert build_service.main() == 0
+E       assert 2 == 0
+E        +  where 2 = <function main at 0x7046c6f07e20>()
+E        +    where <function main at 0x7046c6f07e20> = build_service.main
+
+tests/test_offline_vm_worker.py:2107: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[command-status] _
+
+role = 'command-status'
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_host_reject0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c49f9860>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        write_volume = offline_vm_guest_worker.write_guest_evidence_volume
+    
+        def corrupt_record(request: object, state: object, binding: object, sources: object) -> tuple[int, str]:
+            assert isinstance(sources, (tuple, list))
+            changed = []
+            for source in sources:
+                if not isinstance(source, offline_vm_evidence.EvidenceSource) or source.role != role:
+                    changed.append(source)
+                    continue
+                record = json.loads(source.inline_bytes or b"")
+                if role == "command-status":
+                    record["exit_code"] = 1
+                elif role == "package-inventory":
+                    record["packages"] = ["ghost-package 9"]
+                else:
+                    record["source_sha256"] = "e" * 64
+                changed.append(replace(source, inline_bytes=offline_vm_evidence.canonical_json(record)))
+            return write_volume(request, state, binding, tuple(changed))  # type: ignore[arg-type]
+    
+        monkeypatch.setattr(offline_vm_guest_worker, "write_guest_evidence_volume", corrupt_record)
+        service_status = build_service.main()
+>       assert service_status == 0
+E       assert 2 == 0
+
+tests/test_offline_vm_worker.py:2181: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[package-inventory] _
+
+role = 'package-inventory'
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_host_reject1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c4c82f90>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        write_volume = offline_vm_guest_worker.write_guest_evidence_volume
+    
+        def corrupt_record(request: object, state: object, binding: object, sources: object) -> tuple[int, str]:
+            assert isinstance(sources, (tuple, list))
+            changed = []
+            for source in sources:
+                if not isinstance(source, offline_vm_evidence.EvidenceSource) or source.role != role:
+                    changed.append(source)
+                    continue
+                record = json.loads(source.inline_bytes or b"")
+                if role == "command-status":
+                    record["exit_code"] = 1
+                elif role == "package-inventory":
+                    record["packages"] = ["ghost-package 9"]
+                else:
+                    record["source_sha256"] = "e" * 64
+                changed.append(replace(source, inline_bytes=offline_vm_evidence.canonical_json(record)))
+            return write_volume(request, state, binding, tuple(changed))  # type: ignore[arg-type]
+    
+        monkeypatch.setattr(offline_vm_guest_worker, "write_guest_evidence_volume", corrupt_record)
+        service_status = build_service.main()
+>       assert service_status == 0
+E       assert 2 == 0
+
+tests/test_offline_vm_worker.py:2181: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[provenance] _
+
+role = 'provenance'
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_host_reject2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c4c830e0>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        write_volume = offline_vm_guest_worker.write_guest_evidence_volume
+    
+        def corrupt_record(request: object, state: object, binding: object, sources: object) -> tuple[int, str]:
+            assert isinstance(sources, (tuple, list))
+            changed = []
+            for source in sources:
+                if not isinstance(source, offline_vm_evidence.EvidenceSource) or source.role != role:
+                    changed.append(source)
+                    continue
+                record = json.loads(source.inline_bytes or b"")
+                if role == "command-status":
+                    record["exit_code"] = 1
+                elif role == "package-inventory":
+                    record["packages"] = ["ghost-package 9"]
+                else:
+                    record["source_sha256"] = "e" * 64
+                changed.append(replace(source, inline_bytes=offline_vm_evidence.canonical_json(record)))
+            return write_volume(request, state, binding, tuple(changed))  # type: ignore[arg-type]
+    
+        monkeypatch.setattr(offline_vm_guest_worker, "write_guest_evidence_volume", corrupt_record)
+        service_status = build_service.main()
+>       assert service_status == 0
+E       assert 2 == 0
+
+tests/test_offline_vm_worker.py:2181: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+_________ test_fixed_service_host_rejects_command_status_hash_mismatch _________
+
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_host_reject3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c4c83cb0>
+
+    def test_fixed_service_host_rejects_command_status_hash_mismatch(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        write_volume = offline_vm_guest_worker.write_guest_evidence_volume
+    
+        def rewrite_valid_command_status(
+            request: object, state: object, binding: object, sources: object,
+        ) -> tuple[int, str]:
+            assert isinstance(sources, (tuple, list))
+            changed = []
+            for source in sources:
+                if not isinstance(source, offline_vm_evidence.EvidenceSource) or source.role != "command-status":
+                    changed.append(source)
+                    continue
+                record = json.loads(source.inline_bytes or b"")
+                child_result = record["build_process_result"]
+                assert isinstance(child_result, dict)
+                child_result["elapsed_seconds"] = 0.75
+                changed.append(replace(source, inline_bytes=offline_vm_evidence.canonical_json(record)))
+            return write_volume(request, state, binding, tuple(changed))  # type: ignore[arg-type]
+    
+        monkeypatch.setattr(offline_vm_guest_worker, "write_guest_evidence_volume", rewrite_valid_command_status)
+>       assert build_service.main() == 0
+E       assert 2 == 0
+E        +  where 2 = <function main at 0x7046c6f07e20>()
+E        +    where <function main at 0x7046c6f07e20> = build_service.main
+
+tests/test_offline_vm_worker.py:2208: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+___ test_fixed_service_rejects_swapped_evidence_volume_before_result_markers ___
+
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_rejects_swa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c4c304b0>
+
+    def test_fixed_service_rejects_swapped_evidence_volume_before_result_markers(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch, swap_evidence_after_write=True)
+        assert build_service.main() == 2
+>       assert (case["operation_root"] / "evidence-before-swap.raw").exists()  # type: ignore[operator]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert False
+E        +  where False = exists()
+E        +    where exists = (PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_rejects_swa0/approved-worker-parent/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa') / 'evidence-before-swap.raw').exists
+
+tests/test_offline_vm_worker.py:2320: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+_ test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host __
+
+tmp_path = PosixPath('/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_interruptio0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7046c4c82f20>
+
+    def test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+        write_all = build_service._pwrite_all
+    
+        def fail_terminal(fd: int, data: bytes, offset: int) -> None:
+            if offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected interruption before terminal marker")
+            write_all(fd, data, offset)
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", fail_terminal)
+        assert build_service.main() == 2
+        output_volume = case["output_volume"]
+        assert isinstance(output_volume, Path)
+        with output_volume.open("rb") as stream:
+            stream.seek(offline_vm_worker.RESULT_COMMIT_OFFSET)
+>           assert stream.read(offline_vm_worker.RESULT_COMMIT_SIZE).startswith(offline_vm_worker.RESULT_COMMIT_MAGIC)
+E           AssertionError: assert False
+E            +  where False = <built-in method startswith of bytes object at 0x2a622cc0>(b'LCVMCMT2')
+E            +    where <built-in method startswith of bytes object at 0x2a622cc0> = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00...00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'.startswith
+E            +      where b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00...00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' = <built-in method read of _io.BufferedReader object at 0x7046c4a46f00>(2048)
+E            +        where <built-in method read of _io.BufferedReader object at 0x7046c4a46f00> = <_io.BufferedReader name='/tmp/librecore-autoloader-v1-evidence-20261025-full-rerun/test_fixed_service_interruptio0/approved-worker-parent/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/output.raw'>.read
+E            +        and   2048 = offline_vm_worker.RESULT_COMMIT_SIZE
+E            +    and   b'LCVMCMT2' = offline_vm_worker.RESULT_COMMIT_MAGIC
+
+tests/test_offline_vm_worker.py:2341: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"reason":"evidence source mode is writable by group or others","status":"INCOMPLETE_BUILD_SERVICE"}
+=========================== short test summary info ============================
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[command-status]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[package-inventory]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[provenance]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_command_status_hash_mismatch
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_rejects_swapped_evidence_volume_before_result_markers
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host
+7 failed, 1276 passed, 5 skipped in 790.70s (0:13:10)

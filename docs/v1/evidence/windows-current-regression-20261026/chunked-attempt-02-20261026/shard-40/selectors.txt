@@ -1,0 +1,2 @@
+tests/test_usb_builder.py::test_rootless_host_state_rejects_identity_and_subid_failures
+tests/test_usb_builder.py::test_rootless_host_state_rejects_capability_escalation_state

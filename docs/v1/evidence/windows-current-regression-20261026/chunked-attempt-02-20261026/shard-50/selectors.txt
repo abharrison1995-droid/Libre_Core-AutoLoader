@@ -1,0 +1,2 @@
+tests/test_usb_builder.py::test_mount_probe_parser_accepts_each_real_denial_as_unsupported
+tests/test_usb_builder.py::test_mount_probe_parser_accepts_only_operation_valid_capability_denials

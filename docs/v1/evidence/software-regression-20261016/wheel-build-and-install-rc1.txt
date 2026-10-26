@@ -1,0 +1,24 @@
+source_commit=7b6000ad6503b9ccfd435ec2404674ff26cda6f5
+build_command=python -m pip wheel --no-deps --no-build-isolation --no-cache-dir --no-index --wheel-dir=/dev/shm/librecore-wheel-rc1-20261016-wheel /dev/shm/librecore-wheel-rc1-20261016-src
+install_command=python -m pip install --no-deps --no-index --target=/dev/shm/librecore-wheel-rc1-20261016-install <wheel>
+Processing /dev/shm/librecore-wheel-rc1-20261016-src
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: libre-core-autoloader
+  Building wheel for libre-core-autoloader (pyproject.toml): started
+  Building wheel for libre-core-autoloader (pyproject.toml): finished with status 'done'
+  Created wheel for libre-core-autoloader: filename=libre_core_autoloader-0.1.0-py3-none-any.whl size=393143 sha256=8f0cbc3827e779ab8d236dae62923b238ec05f3ab41f30ee2a7f4faa8244a999
+  Stored in directory: /dev/shm/librecore-wheel-rc1-20261016-tmp/pip-ephem-wheel-cache-7vkizb1a/wheels/f0/05/3f/81f516871a4706621fe2c4374c47517f32a4083d8a13c8d3bb
+Successfully built libre-core-autoloader
+8f0cbc3827e779ab8d236dae62923b238ec05f3ab41f30ee2a7f4faa8244a999  /dev/shm/librecore-wheel-rc1-20261016-wheel/libre_core_autoloader-0.1.0-py3-none-any.whl
+wheel_bytes=393143
+Processing /dev/shm/librecore-wheel-rc1-20261016-wheel/libre_core_autoloader-0.1.0-py3-none-any.whl
+Installing collected packages: libre-core-autoloader
+Successfully installed libre-core-autoloader-0.1.0
+resource_ok=autoloader.rom_builder:patches/0009-x86-use-output-target-for-efi.patch
+resource_ok=usb_builder:patches/arch-install-scripts-31-2-pacstrap-status.patch
+autoloader_import=/dev/shm/librecore-wheel-rc1-20261016-install/autoloader/__init__.py
+usb_builder_import=/dev/shm/librecore-wheel-rc1-20261016-install/usb_builder/__init__.py
+fixed_posix_path_source=True
+wheel_build_install_smoke=PASS
+report=/dev/shm/librecore-wheel-rc1-20261016-report.txt

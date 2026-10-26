@@ -1,0 +1,13 @@
+ARGV_JSON=["/usr/bin/curl", "--fail", "--location", "--noproxy", "*", "--connect-timeout", "20", "--max-time", "180", "--output", "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/ubuntu-keyring_2023.11.28.1build1_all.deb", "http://archive.ubuntu.com/ubuntu/pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb"]
+STDOUT_BEGIN
+STDOUT_END
+STDERR_BEGIN
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0
+100  11228 100  11228   0      0   8324      0   00:01   00:01           8323
+100  11228 100  11228   0      0   8323      0   00:01   00:01           8323
+100  11228 100  11228   0      0   8322      0   00:01   00:01           8323
+100  11228 100  11228   0      0   8321      0   00:01   00:01           8323
+STDERR_END

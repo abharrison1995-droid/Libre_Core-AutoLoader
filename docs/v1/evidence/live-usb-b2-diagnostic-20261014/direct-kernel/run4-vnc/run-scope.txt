@@ -1,0 +1,1 @@
+Same ISO/kernel/initramfs and run2 direct-kernel args; no NIC; local VNC only on 127.0.0.1:5902; no firmware writer. 300 second hard bound.

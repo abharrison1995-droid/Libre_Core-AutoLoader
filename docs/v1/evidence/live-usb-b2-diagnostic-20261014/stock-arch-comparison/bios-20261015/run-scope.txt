@@ -1,0 +1,1 @@
+Stock Arch Linux 2026.10.01 normal BIOS boot comparison; started=2026-10-15T12:53:19Z; cap=600s; no NIC/writer; no guest input; loopback VNC display only.

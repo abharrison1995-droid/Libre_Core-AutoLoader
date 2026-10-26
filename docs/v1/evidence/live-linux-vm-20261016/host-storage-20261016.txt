@@ -1,0 +1,40 @@
+Host storage measurement — 2026-10-16 20:12 UTC
+
+Command:
+
+    Get-PSDrive C | Select-Object Name,Free,Used
+
+Observed output:
+
+    Name       Free         Used
+    ----       ----         ----
+    C    5981900800 233408839680
+
+At this observation C: had 5,981,900,800 bytes free (about 5.57 GiB).
+This is a point-in-time measurement, not a reservation. Earlier notes
+recorded about 2.1 GiB free at a prior checkpoint; this later measurement
+supersedes that number for this timestamp only.
+
+Later measurement — 2026-10-16 20:17 UTC
+
+PowerShell command and output:
+
+    Get-PSDrive C | Select-Object Name,Free,Used
+
+    Name       Free         Used
+    ----       ----         ----
+    C    6120456192 233270284288
+
+WSL cross-check:
+
+    df -B1 /mnt/c
+    Filesystem        1B-blocks         Used  Available Use% Mounted on
+    C:\            239390740480 233270284288 6120456192  98% /mnt/c
+
+At this observation C: had 6,120,456,192 bytes free (about 5.70 GiB).
+The 10 GiB value used in earlier planning is a conservative reserve, not a
+measured minimum or peak for the current-source Live USB build. Existing
+build evidence shows a partial attempt with about 382 MB of overlay growth in
+91 seconds and a manual pause at 3,243,921,408 bytes free; it produced no
+complete ISO or peak-storage measurement. The checked-in evidence therefore
+does not prove that 5.70 GiB is sufficient or insufficient.

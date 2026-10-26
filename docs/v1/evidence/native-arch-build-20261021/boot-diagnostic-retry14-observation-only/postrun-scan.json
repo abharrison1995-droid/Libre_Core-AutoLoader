@@ -1,0 +1,25 @@
+{
+  "classification": "post-run audit of the raw retry14 serial transcript; no guest input",
+  "raw_serial_bytes": 10040,
+  "raw_serial_sha256": "1d92765db637393a0ca3cdc39cb1e672dc411e6477e4094857bccf43e571085e",
+  "normalized_serial_bytes": 7487,
+  "normalized_serial_sha256": "6ca46650792d2dbe2581672b1004e01d0d113a17f5b174ddba6650643c167828",
+  "normal_startup_target_count": 0,
+  "emergency_or_fatal_terminal_marker_count": 0,
+  "namespace_resource_manager_failure_count": 4,
+  "last_nonempty_lines": [
+    "[FAILED] Failed to start Namespace Resource Manager.",
+    "See 'systemctl status systemd-nsresourced.service' for details.",
+    "         Starting Namespace Resource Manager...",
+    "[FAILED] Failed to start Namespace Resource Manager.",
+    "See 'systemctl status systemd-nsresourced.service' for details.",
+    "         Starting Namespace Resource Manager...",
+    "[FAILED] Failed to start Namespace Resource Manager.",
+    "See 'systemctl status systemd-nsresourced.service' for details.",
+    "         Starting Namespace Resource Manager...",
+    "[FAILED] Failed to start Namespace Resource Manager.",
+    "See 'systemctl status systemd-nsresourced.service' for details.",
+    "         Starting Namespace Resource Manager..."
+  ],
+  "method": "ANSI CSI/escape sequences removed before literal/regular-expression scans; raw transcript retained unchanged"
+}

@@ -1,0 +1,2 @@
+created=2026-10-15T12:06:45Z
+Inspect marker-visible.ppm; create continue-run9.txt to continue read-only captures.

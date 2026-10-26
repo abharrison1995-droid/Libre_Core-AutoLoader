@@ -1,0 +1,1 @@
+PowerShell Copy-Item of exact existing Ubuntu evidence files into a new evidence bundle; no network, install, or package payload execution. Source bundles: ubuntu-verifier-provenance-20261025, windows-tls-corroboration-20261025, ubuntu-trust-corroboration-20261025.

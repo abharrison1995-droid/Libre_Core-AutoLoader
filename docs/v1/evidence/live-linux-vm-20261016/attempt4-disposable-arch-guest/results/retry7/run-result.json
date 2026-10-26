@@ -1,0 +1,1411 @@
+{
+  "archived_evidence_hashes": {
+    "results/retry1/SHA256SUMS": "f854341312fe036d2104d424369f7425fde8d25988813f35f30900a1595227c6",
+    "results/retry1/hmp-transcript.txt": "2a760b9b885ced543a1964ee15fcae254b567c0454160ed00b482b5e236a40e8",
+    "results/retry1/run-result.json": "6aa456051d1bef66173e78cd6347e57fa486b0b34c2b3e25bc00237136d015e2",
+    "results/retry1/serial.log": "25ea9424fcf940869759c4322d2cc9896ef460a0e5080d4afee9ba4808ac4ab6",
+    "results/retry1/vga.ppm": "711378f4bef4cce5f3c3b95aba1f01692d0368c8dc5e82b21762bd808db3beec",
+    "results/retry2-prelaunch/SHA256SUMS": "74404c7156016d0c5290a0de6c78c8f6544416d3856e4920c8063dda0305daec",
+    "results/retry2-prelaunch/run-result.json": "01c0d7bac6bd7d2fa86996e113445559364169b03b716d8e239a009d353c246a",
+    "results/retry3/SHA256SUMS": "9098fccc2d2f4f7fd5bc7ea1dab0e53ac7e3c2a508a9bac8dbe5a42e75d90a75",
+    "results/retry3/hmp-transcript.txt": "5586c683f668ecc0f915b2b506c590f53e7582ef2143aa4f2c24feaf6f789ef8",
+    "results/retry3/run-result.json": "0508775e4af3efa15098e11f36229cd90f71761360e25b2738a09a88c04758b2",
+    "results/retry3/serial.log": "c6de37f9c221b252f692d9ca0e1bff471f2c167ece33d4f8dacd9dbefeec2625",
+    "results/retry3/vga.ppm": "2cb0382369604884fd63ae0b5ba6a6bc658e1cb66e6239d09a698ed50d8fcc25",
+    "results/retry4/SHA256SUMS": "373cb75123dc6e7ae5d84f34db4152b7fdc396ba6630ba757e6ab96db6c2cf19",
+    "results/retry4/hmp-transcript.txt": "8d0b0a2912cdf4dab9356a3f33f0e388a02bb6205de399e3fb3914a9d34b1043",
+    "results/retry4/run-result.json": "be3e63815d8ce2fd90aa935913aebfbcb71cf0fdafdc8c45005b54d503ca5462",
+    "results/retry4/serial.log": "722adaa927749d7ba70775a5fb0479e1c9fe5eaf27c7909949a8dc569339fc72",
+    "results/retry4/vga.ppm": "d5dc4ecc27f947e41ebd1a948bf88d5ead3d12dfb2734e3bcad239c158db5227",
+    "results/retry5/SHA256SUMS": "504a913a422ad0232de4279fc5ffd21b3be01d5e2cd336ee33661cd54ee212b8",
+    "results/retry5/hmp-transcript.txt": "8536ab4e67b5f24c78ad5edd239544b4f9d108bbc35334ea36f31dd9bea046ee",
+    "results/retry5/run-result.json": "e6cb2f95d6c51a4a3729cc9d4e0796a7be17ea9d8e39c7453dbeaaf7ab1c4108",
+    "results/retry5/serial.log": "1453123437effabc4120fbc9334e3fc2b5375d7246152ee92dc9d71cc7e2bd05",
+    "results/retry5/vga.ppm": "843c2cf78a128d4253b0210e1750098d416a4b3232bc1298e82e8d78ee56d310",
+    "results/retry6/SHA256SUMS": "f33b74c84f1b0c306ed3486c893285c17675b02c863d4500f20bae94ff9be563",
+    "results/retry6/hmp-transcript.txt": "10b77d1818dbf5881fed07e889c3d5fdf1d266ab597ac3da03edb332412c7c44",
+    "results/retry6/run-result.json": "bb7a1edac63ab4afa36abb541e2f979c2410d34d6a3485f2e977987c6e5ce83e",
+    "results/retry6/serial.log": "0867095973a43a1dc83bd490e905746e63db33af5de3cab6c8dc1324c28dff36",
+    "results/retry6/vga.ppm": "233e15ddaa525015605cbfc06d68188f57a02fe45b211eea4d63ef546899e95a"
+  },
+  "attempt_id": "retry7",
+  "c_free_after_bytes": 5839257600,
+  "c_free_before_bytes": 5839335424,
+  "c_free_before_launch_bytes": 5839335424,
+  "c_free_floor_bytes": 2147483648,
+  "c_free_floor_preserved": true,
+  "command_return_prompt_modes": {
+    "debug": "fresh bytes after each command must end in an accepted explicit debug-root prompt form",
+    "normal": "fresh bytes after each command must end in the existing Arch root login prompt form"
+  },
+  "debug_shell_newline_response": {
+    "fresh_root_shell_prompt_seen": true,
+    "length_bytes": 45,
+    "observed_utc_epoch": 1792197620.0900795,
+    "prompt_deadline_utc_epoch": 1792197643.2741776,
+    "prompt_match": {
+      "fresh_data_end_offset": 1532,
+      "fresh_data_start_offset": 1487,
+      "line_sha256": "8fe5d91ee598601553d1cb99c63555685e94cd50a71fc82de05e60bfa76dfa29",
+      "normalized_line": "sh-5.3# ",
+      "observed_utc_epoch": 1792197620.0900679,
+      "quiet_interval_seconds": 1.0,
+      "shape": "versioned-sh"
+    },
+    "prompt_window_seconds": 45,
+    "sha256": "7582fe9ce19569375e286956b84d06af3a8af9be4e2cf5b778bdc4f859799683",
+    "start_offset": 1487
+  },
+  "debug_shell_newline_send_count": 1,
+  "debug_shell_newline_sent": true,
+  "debug_shell_prompt_accepted_shapes": [
+    "bare-root-sh",
+    "versioned-sh",
+    "root-at-host",
+    "bracketed-root-at-host"
+  ],
+  "debug_shell_prompt_line_rule": "after exact OSC marker and one newline, the final normalized line must full-match an explicit root prompt and remain unchanged across a one-second quiet interval",
+  "debug_shell_prompt_quiet_seconds": 1.0,
+  "debug_shell_prompt_window_seconds": 45,
+  "debug_shell_service_marker": {
+    "end_offset": 1487,
+    "match_rule": "complete OSC 3008 sequence; exactly one semicolon-delimited servicename field equal to debug-shell.service",
+    "maximum_sequence_bytes": 4096,
+    "observed_utc_epoch": 1792197598.274035,
+    "osc_type": 3008,
+    "sequence_length_bytes": 278,
+    "sequence_sha256": "b3f0d3f9a65ac03d6a455f1fd3c6f96f2001b151a7950ce05c988692b2a743ca",
+    "service_field": "servicename=debug-shell.service",
+    "start_offset": 1209
+  },
+  "debug_shell_service_marker_seen": true,
+  "diagnostic_complete": false,
+  "diagnostic_kernel_arguments": [
+    "systemd.getty_auto=0",
+    "systemd.show_status=0",
+    "systemd.debug_shell",
+    "systemd.default_debug_tty=ttyS0"
+  ],
+  "elapsed_seconds_before_stop": 900.059,
+  "evidence_files": {
+    "argv.json": {
+      "sha256": "5dc8e0c126ebd2f76e23c7b3b3f4a06398dc1de4e3c5bc11ba8d4324f6871bdc",
+      "size_bytes": 1828
+    },
+    "hmp-transcript.txt": {
+      "sha256": "0db6e51ed276930ec60610f054851fdf825d5291b5493ad7bbc1bd98ebf2de03",
+      "size_bytes": 122358
+    },
+    "initramfs-linux.img": {
+      "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+      "size_bytes": 249467488
+    },
+    "qemu.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "serial.log": {
+      "sha256": "85814254b5667c52d7491560a5f74c6843ba63cd075a0d9e219949e90ab70acf",
+      "size_bytes": 9350
+    },
+    "vga.ppm": {
+      "sha256": "1d436f07d176474b1a6d21c45472b98d1e1713559a09a9011c8c9f81dee18660",
+      "size_bytes": 3072016
+    },
+    "vmlinuz-linux": {
+      "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+      "size_bytes": 17224192
+    }
+  },
+  "expected_source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "guest_git_check": "NOT_PERFORMED; host Git HEAD/status validation only",
+  "guest_helper_copy_sha256": "b5b4897c4d78dc296717315668f361865279f5c17f49b095f64ed213f2569a1c",
+  "guest_probe_marker_seen": false,
+  "guest_probe_sha256": "b5b4897c4d78dc296717315668f361865279f5c17f49b095f64ed213f2569a1c",
+  "guest_shell_commands": [
+    {
+      "command": "stty -echo",
+      "completion": "shell_prompt",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197620.1744046
+    },
+    {
+      "command": ": LC_ECHO_CANARY_50baa37d0461e66b; printf '\\nLC_ECHO_OFF_605aa09e219fed1c\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_ECHO_OFF_605aa09e219fed1c",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197625.9367507
+    },
+    {
+      "command": "if mkdir -p /mnt/source && mount -t 9p -o trans=virtio,version=9p2000.L,ro source /mnt/source; then rc=0; else rc=$?; fi; printf '\\nLC_SOURCE_MOUNT_a2292d5f888cac28:%s\\n' \"$rc\"",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_SOURCE_MOUNT_a2292d5f888cac28",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197626.1452959
+    },
+    {
+      "command": ": > /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CLEAR_442d2a458f8481c1\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CLEAR_442d2a458f8481c1",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197653.7533479
+    },
+    {
+      "command": "printf '%s' 'IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiJEaXNwb3NhYmxlIGxpdmUtZ3Vlc3QgY2hlY2tzOyBuZXZlciBpbnZva2VzIHRoZSBwcm9kdWN0IGJ1aWxkIHdvcmtmbG93LiIiIgoKZnJvbSBfX2Z1dHVyZV9fIGltcG9ydCBhbm5vdGF0aW9ucwoKaW1wb3J0IGVycm5vCmltcG9ydCBoYXNobGliCmltcG9ydCBqc29uCmltcG9ydCBvcwppbXBvcnQgcHdkCmltcG9ydCBncnAKaW1wb3J0IHJlCmltcG9ydCBzdGF0CmltcG9ydCBzdWJwcm9jZXNzCmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAoKCkVYUEVDVEVEX1ND' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d503a252bc\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d503a252bc",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197654.1098878
+    },
+    {
+      "command": "printf '%s' 'UkFUQ0hfQllURVMgPSAzICogMTAyNCoqMwpFWFBFQ1RFRF9TQ1JBVENIX1NFUklBTCA9ICJMQ1YxU0NSQVRDSDNHIgpCVUlMRF9VSUQgPSAxMDAwCkJVSUxEX0dJRCA9IDEwMDAKUFlUSE9OX0NBQ0hFX1BSRUZJWCA9IFBhdGgoIi9ydW4vbGMtcHljYWNoZSIpClVTQl9CVUlMREVSX1NPVVJDRV9NQU5JRkVTVDogZGljdFtzdHIsIGRpY3Rbc3RyLCBzdHJdXSA9IHsKICAgICJ1c2JfYnVpbGRlci9fX2luaXRfXy5weSI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICIwZWVhMjc0NDc5NjFkZDkxMGQ1' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_12e9308d54\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_12e9308d54",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197654.9695446
+    },
+    {
+      "command": "printf '%s' 'YzRiMGZkZjM5YjNmNWRjODQwMGJjZTI0YTBlZjk2ZTIzZGI4NmQzY2U5NTRmIn0sCiAgICAidXNiX2J1aWxkZXIvYXJjaGlzb19wcm9maWxlL2Fpcm9vdGZzL2V0Yy9ta2luaXRjcGlvLmNvbmYuZC9hcmNoaXNvLmNvbmYiOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiY2QxZDMyOGQwYjM0MzcxOWM1OTc1NzI5YmY3YzhjNWEyMjc1NDJiZWIzOTY1NzRmZjRhZGVhYzMwMzgxZGIwYiJ9LAogICAgInVzYl9idWlsZGVyL2FyY2hpc29fcHJvZmlsZS9haXJvb3Rmcy9ldGMvbWtpbml0Y3Bpby5jb25m' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_01ccd4c955\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_01ccd4c955",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197655.8267596
+    },
+    {
+      "command": "printf '%s' 'LmQvenotYXV0b2xvYWRlci11c2IuY29uZiI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICJhZDE0MzYxOGJhMzVkZDhmZjAwZmFiNTg1Y2I2ZTYzMjRmZGNjZDZlMTlkN2NhNTljNGFiYzY5YTYxMGExNDkxIn0sCiAgICAidXNiX2J1aWxkZXIvYXJjaGlzb19wcm9maWxlL2Fpcm9vdGZzL2V0Yy9tb3RkIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjZiMTYyMTEwZWY5NjBkMDVlZTg4MTI0NTcyMDM5MzMxMjJiMzk4MjRlYWRjZDMxMzQ4NTY2YjBiZDUwYmNjY2MifSwKICAgICJ1c2Jf' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d7b7d3bffa\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d7b7d3bffa",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197657.3245769
+    },
+    {
+      "command": "printf '%s' 'YnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvYWlyb290ZnMvZXRjL3N5c3RlbWQvc3lzdGVtL2F1dG9sb2FkZXIuc2VydmljZSI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICJlNDY2Y2U0NDYyZjI4MzVkZGYyYTQ1ZWRmODVlYjBhYjM4ZjI0Y2JjMmY2MTU4NDAzMTY4MDBmNzE2OWNlNzY0In0sCiAgICAidXNiX2J1aWxkZXIvYXJjaGlzb19wcm9maWxlL2Fpcm9vdGZzL29wdC9hdXRvbG9hZGVyL3N0YXJ0LnNoIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjEzZDBmMGNjYjA2N2Q4MjU4' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_4e86f8a4f6\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_4e86f8a4f6",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197658.676301
+    },
+    {
+      "command": "printf '%s' 'YmIxOGVkYmZiODY5NGZkOGFmMDZkM2RlNjVkMDgxMzgzYmZkZTAwNWI2M2FmMTUifSwKICAgICJ1c2JfYnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvYWlyb290ZnMvcm9vdC9jdXN0b21pemVfYWlyb290ZnMuc2giOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiMTgxYjI1OWIxYmQ5YTA1MGIwM2MxOTVkZTVmYzQwMDYwMjFiYzUxODJiYzNkNWY0YjY4MWNjMzEwZDhkZjI2YiJ9LAogICAgInVzYl9idWlsZGVyL2FyY2hpc29fcHJvZmlsZS9lZmlib290L2xvYWRlci9lbnRyaWVzLzAxLWF1dG9sb2Fk' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a801088419\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a801088419",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197660.042068
+    },
+    {
+      "command": "printf '%s' 'ZXIuY29uZiI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICI2Y2JhMWRjYjAzZDI4ODY2YmVhMmUyMjgzYmViYzYzZWU3MGYwZDJhZDA0YjhiNGU0ZmZiOGI5YzU2N2VjZTk3In0sCiAgICAidXNiX2J1aWxkZXIvYXJjaGlzb19wcm9maWxlL2VmaWJvb3QvbG9hZGVyL2xvYWRlci5jb25mIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogImUzM2ExMmVhOTUzNzUzMmZkMmNjNWNkYTJhNDI3MzNmOTAwMDQzZmU1MGU3NDBmZGI5OTc3ZTM0OWNkMGFkOWIifSwKICAgICJ1c2JfYnVpbGRlci9h' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_083d4b5d3f\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_083d4b5d3f",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197661.4970562
+    },
+    {
+      "command": "printf '%s' 'cmNoaXNvX3Byb2ZpbGUvcGFja2FnZXMueDg2XzY0IjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjdhN2EzZmE0MTI3YWI2ZmJhYWY5NTJiZTRiYmRlODJmNzg3YTdkYTMwZDMxMTE2MDFhOWU3ZmNjZDYzMzRkYmQifSwKICAgICJ1c2JfYnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvcGFjbWFuLmNvbmYiOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiNGRmYjJmNjBhNzkwODNkOTUwODc2MzA1NDMyYTczOWI0NWE4OTY0NGI4OTk5NmZkM2Y0NDc0NTYxNTU2ZWMxNiJ9LAogICAgInVzYl9i' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d3b59b7d78\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d3b59b7d78",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197662.4808433
+    },
+    {
+      "command": "printf '%s' 'dWlsZGVyL2FyY2hpc29fcHJvZmlsZS9wcm9maWxlZGVmLnNoIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjNjY2E2ZWRjMzFlMjZhNTM1M2FkZTg5MjBhNWNlYWVmYzAxNTNkODRlOWU0Mzk3ODIxMWFiNTdhMDBhOWY1YTgifSwKICAgICJ1c2JfYnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvc3lzbGludXgvYXJjaGlzb19zeXMtbGludXguY2ZnIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjY4NGM3ODFlMTliODg0YTdkNDFkNjJjZTdkMjQ5ZjE3ZWZjZDVmNTkwZWUxZWM4MTZiNWRl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_ca63382f7d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_ca63382f7d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197664.0778139
+    },
+    {
+      "command": "printf '%s' 'YjQ1OGViNTdmNzcifSwKICAgICJ1c2JfYnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvc3lzbGludXgvYXJjaGlzb19zeXMuY2ZnIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjU4MzBjMzJkZjA1MDAwMTEwM2I5YjVlMDc2MjlkMWM5NTZhNTQ0M2MwNmNkM2Q5ODI0ZDljYzdhNzBmNmRlMGIifSwKICAgICJ1c2JfYnVpbGRlci9hcmNoaXNvX3Byb2ZpbGUvc3lzbGludXgvc3lzbGludXguY2ZnIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjk3NzcwMWE5OGIzZDg1ODdhMGIxNTRhYjUx' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9ff3ca3a65\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9ff3ca3a65",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197665.5532918
+    },
+    {
+      "command": "printf '%s' 'YzViMjc4ODk1N2E0OTk4YTFjZjZiMmRlYzk2YWQ2ZjIzNDdiMzYifSwKICAgICJ1c2JfYnVpbGRlci9idWlsZF91c2IucHkiOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiZTFlZmNjM2I1M2MxOTVlNWE2ODMyMjdhNjEzZGYwNDhhODQwOWM2YmFlMjQ2ZTE0ZDk5YjBkZTUzZTA5MGFjNyJ9LAogICAgInVzYl9idWlsZGVyL2J1aWxkX3VzYi5zaCI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICJlYWM3NjBlYTgxZTJkN2Y3OWIwODdiMWI0YmFiNjFmOGYyMGEwOTAyZThmZDE2ZTFjMTg0' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_01ca2b493d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_01ca2b493d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197666.681179
+    },
+    {
+      "command": "printf '%s' 'MzE1OTIxYjI2MGEzIn0sCiAgICAidXNiX2J1aWxkZXIvbW91bnRfcHJvYmUucHkiOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiZmJjMjVlZTRkMGJlNjVmMWQ3MTA4MGUzNGVhM2YxMzVlMzhlMDczMjBkZjY4MWRiYmI4YjFhY2FkZDFjOGRlMCJ9LAogICAgInVzYl9idWlsZGVyL25ldHdvcmtfcHJvYmUucHkiOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiMDdhYmFlY2YyMzdjOTQ3MTQxY2U1OTUzNDcwNmQ2MDhhZDkyYjdmYjU0MzI0MDM4MWUzMzZlMjMwYjhkNDFlYyJ9LAogICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_e2087e1c1d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_e2087e1c1d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197667.2123501
+    },
+    {
+      "command": "printf '%s' 'InVzYl9idWlsZGVyL3BhdGNoZXMvYXJjaC1pbnN0YWxsLXNjcmlwdHMtMzEtMi1wYWNzdHJhcC1zdGF0dXMucGF0Y2giOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiMTEzOTRmOGI5MDEzNjQyMzZkNDQ5YzM1YTg0MTcwZWRhMjk4MThiYzlkNDFjYmFkZDk2NzdhMDRmZGRiY2VhYSJ9LAogICAgInVzYl9idWlsZGVyL3Jvb3RsZXNzX21vdW50X3Byb2JlLnB5IjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjNmNTRmNTM1ZmUwZjAxM2M3YTUwYTI5NzMzZGMwYTkxNjVhZmI0Y2VmYjQ3' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_7b058fb097\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_7b058fb097",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197667.9528892
+    },
+    {
+      "command": "printf '%s' 'Yzc5MzY4NmU4ZTRkZGU3YTcxY2UifSwKICAgICJ1c2JfYnVpbGRlci9yb290bGVzc19vZmZsaW5lX3ByZWZsaWdodC5weSI6IHsidHlwZSI6ICJyZWd1bGFyIiwgInNoYTI1NiI6ICJjYTlhNWM5MjZlMDgxMDg4NjAxNWM2NTdmNzc4YmRkZjgyYzEyNjI1YjI5YmYzZmI0ZWM4OTg2NDRlMGEyMzk4In0sCiAgICAidXNiX2J1aWxkZXIvc25hcHNob3QubG9jay5qc29uIjogeyJ0eXBlIjogInJlZ3VsYXIiLCAic2hhMjU2IjogIjNiNzNmNmYxZmMxMjNjMjIzYWJjOTNmNThjZWY5YmI1ZDI1OTBkNGNlNWNkZjIx' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_0caf0a1c00\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_0caf0a1c00",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197668.4714193
+    },
+    {
+      "command": "printf '%s' 'OWM2MjA5YmE0MzIyOTFmOGUifSwKICAgICJ1c2JfYnVpbGRlci92ZW50b3kvdmVudG95Lmpzb24iOiB7InR5cGUiOiAicmVndWxhciIsICJzaGEyNTYiOiAiMzI2Mjg2YWUyOTg5MWMzNjFjNGU3MGQ1MzQ4ODBkMzM3NWJkNzQyNmI1MThmNTIxZTQyYmYwMTM1NjM1ZjFmZiJ9LAp9CkVYUEVDVEVEX1VTQl9CVUlMREVSX01BTklGRVNUX1NIQTI1NiA9ICIxNzZhZTlkYjk2OGRkZjZmYWUxNzE4Yzc5M2U5MjRkYzQyOTM3YjBiYjlkMzA0NGMwOGU0NTkzN2ZjNTM5NmM1IgpSRVRSWTFfU0VSSUFMX1JFTEFUSVZF' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_8df6a95847\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_8df6a95847",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197669.0826094
+    },
+    {
+      "command": "printf '%s' 'ID0gUGF0aCgKICAgICJkb2NzL3YxL2V2aWRlbmNlL2xpdmUtbGludXgtdm0tMjAyNjEwMTYvYXR0ZW1wdDQtZGlzcG9zYWJsZS1hcmNoLWd1ZXN0L3Jlc3VsdHMvcmV0cnkxL3NlcmlhbC5sb2ciCikKUkVUUlkzX1NFUklBTF9SRUxBVElWRSA9IFBhdGgoCiAgICAiZG9jcy92MS9ldmlkZW5jZS9saXZlLWxpbnV4LXZtLTIwMjYxMDE2L2F0dGVtcHQ0LWRpc3Bvc2FibGUtYXJjaC1ndWVzdC9yZXN1bHRzL3JldHJ5My9zZXJpYWwubG9nIgopClJFVFJZNF9TRVJJQUxfUkVMQVRJVkUgPSBQYXRoKAogICAgImRv' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9a5246dfcd\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9a5246dfcd",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197669.6368225
+    },
+    {
+      "command": "printf '%s' 'Y3MvdjEvZXZpZGVuY2UvbGl2ZS1saW51eC12bS0yMDI2MTAxNi9hdHRlbXB0NC1kaXNwb3NhYmxlLWFyY2gtZ3Vlc3QvcmVzdWx0cy9yZXRyeTQvc2VyaWFsLmxvZyIKKQpSRVRSWTVfU0VSSUFMX1JFTEFUSVZFID0gUGF0aCgKICAgICJkb2NzL3YxL2V2aWRlbmNlL2xpdmUtbGludXgtdm0tMjAyNjEwMTYvYXR0ZW1wdDQtZGlzcG9zYWJsZS1hcmNoLWd1ZXN0L3Jlc3VsdHMvcmV0cnk1L3NlcmlhbC5sb2ciCikKUkVUUlk2X1NFUklBTF9SRUxBVElWRSA9IFBhdGgoCiAgICAiZG9jcy92MS9ldmlkZW5jZS9s' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_58d882140e\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_58d882140e",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197670.1435337
+    },
+    {
+      "command": "printf '%s' 'aXZlLWxpbnV4LXZtLTIwMjYxMDE2L2F0dGVtcHQ0LWRpc3Bvc2FibGUtYXJjaC1ndWVzdC9yZXN1bHRzL3JldHJ5Ni9zZXJpYWwubG9nIgopClJFVFJZX0FSQ0hJVkVfRVhQRUNURUQgPSB7CiAgICAicmVzdWx0cy9yZXRyeTEiOiB7CiAgICAgICAgIm1hbmlmZXN0X3NoYTI1NiI6ICJmODU0MzQxMzEyZmUwMzZkMjEwNGQ0MjQzNjlmNzQyNWZkZThkMjU5ODg4MTNmMzVmMzA5MDBhMTU5NTIyN2M2IiwKICAgICAgICAiZmlsZXMiOiB7CiAgICAgICAgICAgICJydW4tcmVzdWx0Lmpzb24iOiAiNmFhNDU2MDUx' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_60c8cd2b71\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_60c8cd2b71",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197670.7308033
+    },
+    {
+      "command": "printf '%s' 'ZDFiZWY2NjE3M2U3OGNkNjM0N2U1N2ZhNDg2YjBiMzRjMmIzZTI1YmMwMDIzNzEzNmQwMTVlMiIsCiAgICAgICAgICAgICJzZXJpYWwubG9nIjogIjI1ZWE5NDI0ZmNmOTQwODY5NzU5YzQzMjJkMmNjOTg5NmVmNDYwYTBlNTA4MGQ0YWZlZTliYTQ4MDhhYzRhYjYiLAogICAgICAgICAgICAiaG1wLXRyYW5zY3JpcHQudHh0IjogIjJhNzYwYjliODg1Y2VkNTQzYTE5NjRlZTE1ZmNhZTI1NGI1NjdjMDQ1NDE2MGVkMDBiNDgyYjVlMjM2YTQwZTgiLAogICAgICAgICAgICAidmdhLnBwbSI6ICI3MTEzNzhmNGJl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_80e20c868b\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_80e20c868b",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197671.329863
+    },
+    {
+      "command": "printf '%s' 'ZjRjY2U1ZjNjM2I5NWFiYTFmMDE2OTJkMDM2OGM4ZGM1ZTgyYjIxNzYyYmQ4MDhkYjNiZWVjIiwKICAgICAgICB9LAogICAgfSwKICAgICJyZXN1bHRzL3JldHJ5Mi1wcmVsYXVuY2giOiB7CiAgICAgICAgIm1hbmlmZXN0X3NoYTI1NiI6ICI3NDQwNGM3MTU2MDE2ZDBjNTI5MGEwZGU2Yzc4YzhmNjU0NDQxNmQzODU2ZTQ5MjBjODA2M2RkYTAzMDVkYWVjIiwKICAgICAgICAiZmlsZXMiOiB7CiAgICAgICAgICAgICJydW4tcmVzdWx0Lmpzb24iOiAiMDFjMGQ3YmFjNmJkN2QyZmE4Njk5NmUxMTM0NDU1NTkz' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_adb9a25056\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_adb9a25056",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197671.9784331
+    },
+    {
+      "command": "printf '%s' 'NjQxNjliMDNiNzE2ZDhlMjM5YTAwOWQzNTNjMjQ2YSIsCiAgICAgICAgfSwKICAgIH0sCiAgICAicmVzdWx0cy9yZXRyeTMiOiB7CiAgICAgICAgIm1hbmlmZXN0X3NoYTI1NiI6ICI5MDk4ZmNjYzJkMmY0ZjdmZDViYzdlYTFkYWIwZTUzYWM3ZTNjMmE1MDhhOWJhYzhkYmU1YTQyZTc1ZDkwYTc1IiwKICAgICAgICAiZmlsZXMiOiB7CiAgICAgICAgICAgICJydW4tcmVzdWx0Lmpzb24iOiAiMDUwODc3NWU0YWYzZWZhMTUwOThlMTFmMzYyMjljZDkwZjcxNzYxMzYwZTI1YjI3MzhhMDlhODhjMDQ3NThiMiIs' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_4579fafcba\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_4579fafcba",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197672.5339222
+    },
+    {
+      "command": "printf '%s' 'CiAgICAgICAgICAgICJzZXJpYWwubG9nIjogImM2ZGUzN2Y5YzIyMWIyNTJmNjkyZDljYTBlMWJmZjQ3MWYyYzE2N2VjZTMzZDRmOGRhY2Q5ZGJlZmVlYzI2MjUiLAogICAgICAgICAgICAiaG1wLXRyYW5zY3JpcHQudHh0IjogIjU1ODZjNjgzZjY2OGVjYzBmOTE1YjJiNTA2YzU5MGY1M2U3NTgyZWYyMTQzYWE0ZjJjMjRmZWFmNmY3ODllZjgiLAogICAgICAgICAgICAidmdhLnBwbSI6ICIyY2IwMzgyMzY5NjA0ODg0ZmQ2M2FlMGI1YmE2YTZiYzY1OGUxY2I2NmU2MjM5ZDA5YTY5OGVkNTBkOGZjYzI1IiwK' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_95e9fcf08c\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_95e9fcf08c",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197673.3118231
+    },
+    {
+      "command": "printf '%s' 'ICAgICAgICB9LAogICAgfSwKICAgICJyZXN1bHRzL3JldHJ5NCI6IHsKICAgICAgICAibWFuaWZlc3Rfc2hhMjU2IjogIjM3M2NiNzUxMjNkYzZlN2FlNWQ4NGYzNGRiNDE1MmI3ZmRjMzk2YmE2NjMwYmE3NTdlNmFiOTZkYjZjMmNmMTkiLAogICAgICAgICJmaWxlcyI6IHsKICAgICAgICAgICAgInJ1bi1yZXN1bHQuanNvbiI6ICJiZTNlNjM4MTVkOGNlMmZkOTBhYTkzNTkxM2FlYmZiY2I3MWNmMGZkYWZkYzhjNDUwMDViNTRkNTAzY2E1NDYyIiwKICAgICAgICAgICAgInNlcmlhbC5sb2ciOiAiNzIyYWRh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_b30611b123\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_b30611b123",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197674.0528064
+    },
+    {
+      "command": "printf '%s' 'YTkyNzc0OWQ3YmE3MDc3NWE1ZmIwNDc5ZTFjOWZlNWVhZjI3Yzc5MDk5NDlhOGRjNTY5MzM5ZmM3MiIsCiAgICAgICAgICAgICJobXAtdHJhbnNjcmlwdC50eHQiOiAiOGQwYjBhMjkxMmNkZjRkYWI5MzU2YTNmMzNmMGUzODhhMDJiYjYyMDVkZTM5OWUzZmIzOTE0YTlkMzRiMTA0MyIsCiAgICAgICAgICAgICJ2Z2EucHBtIjogImQ1ZGM0ZWNjMjdmOTQ3ZTQxZWJkMWE5NDhiZjg4ZDVlYWQzZDEyZGZiMjczNGUzYmNhZDIzOWMxNThkYjUyMjciLAogICAgICAgIH0sCiAgICB9LAogICAgInJlc3VsdHMvcmV0' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_fdf36dd287\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_fdf36dd287",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197674.4521022
+    },
+    {
+      "command": "printf '%s' 'cnk1IjogewogICAgICAgICJtYW5pZmVzdF9zaGEyNTYiOiAiNTA0YTkxM2E0MjJhZDAyMzJkZTQyNzlmYzVmZmQyMWIzYmUwMWQ1ZTJjZDMzNmVlMzM2NjFjZDU0ZWUyMTJiOCIsCiAgICAgICAgImZpbGVzIjogewogICAgICAgICAgICAicnVuLXJlc3VsdC5qc29uIjogImU2Y2IyZjk1ZDZjNTFhNGEzNzI5Y2M5ZDRlMDc5NmE3YmUxN2VhOWQ4ZTM5Yzc0NTNkYmVhYWY3YWIxYzQxMDgiLAogICAgICAgICAgICAic2VyaWFsLmxvZyI6ICIxNDUzMTIzNDM3ZWZmYWJjNDEyMGZiYzkzMzRlM2ZjMmI1Mzc1ZDcy' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_8fb6e3f283\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_8fb6e3f283",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197675.2802348
+    },
+    {
+      "command": "printf '%s' 'NDYxNTJlZTkyZGM5ZDcxY2M3ZTJiZDA1IiwKICAgICAgICAgICAgImhtcC10cmFuc2NyaXB0LnR4dCI6ICI4NTM2YWI0ZTY3YjVmMjRjNzhhZDVlZGQyMzk1NDRiNGY5ZDEwOGJiYzM1MzM0ZWEzNmYzMWRkOWJlYTA0NmVlIiwKICAgICAgICAgICAgInZnYS5wcG0iOiAiODQzYzJjZjc4YTEyOGQ0MjUzYjAyMTBlMTc1MDA5OGQ0MTZhNGIzMjMyYmMxMjk4ZTgyZThkNzhlZTU2ZDMxMCIsCiAgICAgICAgfSwKICAgIH0sCiAgICAicmVzdWx0cy9yZXRyeTYiOiB7CiAgICAgICAgIm1hbmlmZXN0X3NoYTI1NiI6' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6fb0760492\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6fb0760492",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197676.2385514
+    },
+    {
+      "command": "printf '%s' 'ICJmMzNiNzRjODRmMWIwYzMwNmVkMzQ4NmM4OTMyODVjMTc2NzViMDJjODYzZDQ1MDBmMjBiYWU5NGZmOWJlNTYzIiwKICAgICAgICAiZmlsZXMiOiB7CiAgICAgICAgICAgICJydW4tcmVzdWx0Lmpzb24iOiAiYmI3YTFlZGFjNjNhYjRhZmEzNmFiYjU0MWUyZjk3OWMyNDEwZDM0ZDZhMzQ4NWYyZTk3Nzk4N2M2ZTVjZTgzZSIsCiAgICAgICAgICAgICJzZXJpYWwubG9nIjogIjA4NjcwOTU5NzNhNDNhMWRjODNiZDQ5MGU5MDU3NDZlNjNkYjMzYWY1ZGUzY2FiNmM4ZGMxMzI0YzI4ZGZmMzYiLAogICAgICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_1e28f51726\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_1e28f51726",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197677.3519967
+    },
+    {
+      "command": "printf '%s' 'ICAgICAiaG1wLXRyYW5zY3JpcHQudHh0IjogIjEwYjc3ZDE4MThkYmY1ODgxZmVkMDdlODg5YzNkNWZkZjFkMjY2YWI1OTdhYzNkYTAzZWRiMzMyNDEyYzdjNDQiLAogICAgICAgICAgICAidmdhLnBwbSI6ICIyMzNlMTVkZGFhNTI1MDE1NjA1Y2JmYzA2ZDY4MTg4ZjU3YTAyZmU0NWIyMTFlZWE0ZDYzZWY1NDY4OTllOTVhIiwKICAgICAgICB9LAogICAgfSwKfQpTT1VSQ0UgPSBQYXRoKCIvbW50L3NvdXJjZSIpClNDUkFUQ0ggPSBQYXRoKCIvbW50L3NjcmF0Y2giKQpFVklERU5DRV9SRUxBVElWRSA9IFBh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_351d210432\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_351d210432",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197678.392215
+    },
+    {
+      "command": "printf '%s' 'dGgoCiAgICAiZG9jcy92MS9ldmlkZW5jZS9saXZlLWxpbnV4LXZtLTIwMjYxMDE2L2F0dGVtcHQ0LWRpc3Bvc2FibGUtYXJjaC1ndWVzdCIKKQoKCmRlZiBydW4oCiAgICBhcmd2OiBsaXN0W3N0cl0sCiAgICAqLAogICAgY2hlY2s6IGJvb2wgPSBUcnVlLAogICAgdGltZW91dDogaW50ID0gNjAsCiAgICBlbnY6IGRpY3Rbc3RyLCBzdHJdIHwgTm9uZSA9IE5vbmUsCikgLT4gc3VicHJvY2Vzcy5Db21wbGV0ZWRQcm9jZXNzW3N0cl06CiAgICBwcmludCgiQ09NTUFORD0iICsganNvbi5kdW1wcyhhcmd2KSwg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a2896b2d6d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a2896b2d6d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197678.891378
+    },
+    {
+      "command": "printf '%s' 'Zmx1c2g9VHJ1ZSkKICAgIGNvbW1hbmRfZW52ID0gb3MuZW52aXJvbi5jb3B5KCkKICAgIGlmIGVudiBpcyBub3QgTm9uZToKICAgICAgICBjb21tYW5kX2Vudi51cGRhdGUoZW52KQogICAgICAgIHByaW50KCJDT01NQU5EX0VOVj0iICsganNvbi5kdW1wcyhlbnYsIHNvcnRfa2V5cz1UcnVlKSwgZmx1c2g9VHJ1ZSkKICAgIHJlc3VsdCA9IHN1YnByb2Nlc3MucnVuKAogICAgICAgIGFyZ3YsCiAgICAgICAgc3RkaW49c3VicHJvY2Vzcy5ERVZOVUxMLAogICAgICAgIHN0ZG91dD1zdWJwcm9jZXNzLlBJUEUs' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d5c2b22a69\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d5c2b22a69",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197679.587731
+    },
+    {
+      "command": "printf '%s' 'CiAgICAgICAgc3RkZXJyPXN1YnByb2Nlc3MuU1RET1VULAogICAgICAgIHRleHQ9VHJ1ZSwKICAgICAgICBjaGVjaz1GYWxzZSwKICAgICAgICBjbG9zZV9mZHM9VHJ1ZSwKICAgICAgICB0aW1lb3V0PXRpbWVvdXQsCiAgICAgICAgZW52PWNvbW1hbmRfZW52LAogICAgKQogICAgcHJpbnQocmVzdWx0LnN0ZG91dCwgZW5kPSIiLCBmbHVzaD1UcnVlKQogICAgcHJpbnQoZiJDT01NQU5EX0VYSVQ9e3Jlc3VsdC5yZXR1cm5jb2RlfSIsIGZsdXNoPVRydWUpCiAgICBpZiBjaGVjayBhbmQgcmVzdWx0LnJldHVy' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6bf81ed871\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6bf81ed871",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197681.0509186
+    },
+    {
+      "command": "printf '%s' 'bmNvZGUgIT0gMDoKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJjb21tYW5kIGZhaWxlZCAoe3Jlc3VsdC5yZXR1cm5jb2RlfSk6IHthcmd2WzBdfSIpCiAgICByZXR1cm4gcmVzdWx0CgoKZGVmIGV4YWN0X2xvY2tlZF9wYWNrYWdlcygpIC0+IGRpY3Rbc3RyLCBzdHJdOgogICAgbG9ja19wYXRoID0gU09VUkNFIC8gInVzYl9idWlsZGVyIiAvICJzbmFwc2hvdC5sb2NrLmpzb24iCiAgICBsb2NrID0ganNvbi5sb2Fkcyhsb2NrX3BhdGgucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpKQogICAgcm9v' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_acd970afcb\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_acd970afcb",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197682.5787024
+    },
+    {
+      "command": "printf '%s' 'dGxlc3MgPSBsb2NrLmdldCgicm9vdGxlc3NfYnVpbGRlciIpCiAgICBpZiBub3QgaXNpbnN0YW5jZShyb290bGVzcywgZGljdCk6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKCJzbmFwc2hvdCBsb2NrIGhhcyBubyByb290bGVzcy1idWlsZGVyIGNvbnRyYWN0IikKICAgIHBhY2thZ2VzID0gewogICAgICAgIGxvY2suZ2V0KCJhcmNoaXNvX3BhY2thZ2UiKTogbG9jay5nZXQoImFyY2hpc29fdmVyc2lvbiIpLAogICAgICAgIHJvb3RsZXNzLmdldCgiYXJjaF9pbnN0YWxsX3NjcmlwdHNfcGFja2FnZSIp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_13979a389c\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_13979a389c",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197683.9981706
+    },
+    {
+      "command": "printf '%s' 'OiByb290bGVzcy5nZXQoImFyY2hfaW5zdGFsbF9zY3JpcHRzX3ZlcnNpb24iKSwKICAgICAgICByb290bGVzcy5nZXQoInBhY21hbl9wYWNrYWdlIik6IHJvb3RsZXNzLmdldCgicGFjbWFuX3ZlcnNpb24iKSwKICAgICAgICByb290bGVzcy5nZXQoInV0aWxfbGludXhfcGFja2FnZSIpOiByb290bGVzcy5nZXQoInV0aWxfbGludXhfdmVyc2lvbiIpLAogICAgICAgIHJvb3RsZXNzLmdldCgiYmFzaF9wYWNrYWdlIik6IHJvb3RsZXNzLmdldCgiYmFzaF92ZXJzaW9uIiksCiAgICAgICAgcm9vdGxlc3MuZ2V0' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_01f4df3cb1\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_01f4df3cb1",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197685.0638707
+    },
+    {
+      "command": "printf '%s' 'KCJtYXBfaGVscGVyX3BhY2thZ2UiKTogcm9vdGxlc3MuZ2V0KCJtYXBfaGVscGVyX3BhY2thZ2VfdmVyc2lvbiIpLAogICAgICAgIHJvb3RsZXNzLmdldCgibGliY2FwX3BhY2thZ2UiKTogcm9vdGxlc3MuZ2V0KCJsaWJjYXBfdmVyc2lvbiIpLAogICAgfQogICAgaWYgYW55KG5vdCBpc2luc3RhbmNlKG5hbWUsIHN0cikgb3Igbm90IG5hbWUgb3Igbm90IGlzaW5zdGFuY2UodmVyc2lvbiwgc3RyKSBvciBub3QgdmVyc2lvbiBmb3IgbmFtZSwgdmVyc2lvbiBpbiBwYWNrYWdlcy5pdGVtcygpKToKICAgICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d3c2e935cd\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d3c2e935cd",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197686.5552065
+    },
+    {
+      "command": "printf '%s' 'ICByYWlzZSBSdW50aW1lRXJyb3IoInNuYXBzaG90IGxvY2sgaGFzIGluY29tcGxldGUgcGlubmVkIHBhY2thZ2UgaWRlbnRpdGllcyIpCiAgICBpZiBsZW4ocGFja2FnZXMpICE9IGxlbihzZXQocGFja2FnZXMpKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoInNuYXBzaG90IGxvY2sgcGFja2FnZSBpZGVudGl0eSBtYXAgaXMgYW1iaWd1b3VzIikKICAgIHJldHVybiB7c3RyKG5hbWUpOiBzdHIodmVyc2lvbikgZm9yIG5hbWUsIHZlcnNpb24gaW4gcGFja2FnZXMuaXRlbXMoKX0KCgpkZWYgdmVyaWZ5' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_79844cc4b2\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_79844cc4b2",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197687.746687
+    },
+    {
+      "command": "printf '%s' 'X3NvdXJjZV9tb3VudCgpIC0+IHN0cjoKICAgIHJvd3MgPSBbXQogICAgZm9yIGxpbmUgaW4gUGF0aCgiL3Byb2MvbW91bnRzIikucmVhZF90ZXh0KGVuY29kaW5nPSJhc2NpaSIpLnNwbGl0bGluZXMoKToKICAgICAgICBmaWVsZHMgPSBsaW5lLnNwbGl0KCkKICAgICAgICBpZiBsZW4oZmllbGRzKSA9PSA2IGFuZCBmaWVsZHNbMV0gPT0gc3RyKFNPVVJDRSk6CiAgICAgICAgICAgIHJvd3MuYXBwZW5kKGZpZWxkcykKICAgIGlmIGxlbihyb3dzKSAhPSAxOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcigi' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_973fcb5eec\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_973fcb5eec",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197688.89192
+    },
+    {
+      "command": "printf '%s' 'c291cmNlIG1vdW50IGlzIG1pc3Npbmcgb3IgYW1iaWd1b3VzIikKICAgIGZpZWxkcyA9IHJvd3NbMF0KICAgIGlmIGZpZWxkc1swXSAhPSAic291cmNlIiBvciBmaWVsZHNbMl0gIT0gIjlwIiBvciAicm8iIG5vdCBpbiBmaWVsZHNbM10uc3BsaXQoIiwiKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJzb3VyY2UgbW91bnQgaXMgbm90IHRoZSBleHBlY3RlZCByZWFkLW9ubHkgOXAgc2hhcmU6IHtmaWVsZHMhcn0iKQogICAgcmV0dXJuICIgIi5qb2luKGZpZWxkcykKCgpkZWYgcmVndWxhcl9zb3Vy' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_b179f2a374\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_b179f2a374",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197689.8281548
+    },
+    {
+      "command": "printf '%s' 'Y2VfZmlsZShyb290OiBQYXRoLCByZWxhdGl2ZTogUGF0aCkgLT4gUGF0aDoKICAgIGlmIHJlbGF0aXZlLmlzX2Fic29sdXRlKCkgb3IgIi4uIiBpbiByZWxhdGl2ZS5wYXJ0czoKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJzb3VyY2UgcGF0aCBpcyBub3QgYSBzYWZlIHJlbGF0aXZlIHBhdGg6IHtyZWxhdGl2ZX0iKQogICAgcm9vdF9pbmZvID0gcm9vdC5sc3RhdCgpCiAgICBpZiBzdGF0LlNfSVNMTksocm9vdF9pbmZvLnN0X21vZGUpIG9yIG5vdCBzdGF0LlNfSVNESVIocm9vdF9pbmZvLnN0X21v' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6b6bb35389\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6b6bb35389",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197690.7959146
+    },
+    {
+      "command": "printf '%s' 'ZGUpOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcihmInNvdXJjZSByb290IG11c3QgYmUgYSByZWFsIGRpcmVjdG9yeToge3Jvb3R9IikKICAgIGN1cnJlbnQgPSByb290CiAgICBmb3IgcGFydCBpbiByZWxhdGl2ZS5wYXJ0c1s6LTFdOgogICAgICAgIGN1cnJlbnQgPSBjdXJyZW50IC8gcGFydAogICAgICAgIGluZm8gPSBjdXJyZW50LmxzdGF0KCkKICAgICAgICBpZiBzdGF0LlNfSVNMTksoaW5mby5zdF9tb2RlKSBvciBub3Qgc3RhdC5TX0lTRElSKGluZm8uc3RfbW9kZSk6CiAgICAgICAgICAgIHJh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_06fed77391\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_06fed77391",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197691.8609388
+    },
+    {
+      "command": "printf '%s' 'aXNlIFJ1bnRpbWVFcnJvcihmInNvdXJjZSBwYXRoIGhhcyBhIGxpbmtlZC9ub24tZGlyZWN0b3J5IGNvbXBvbmVudDoge2N1cnJlbnR9IikKICAgIHBhdGggPSBjdXJyZW50IC8gcmVsYXRpdmUubmFtZQogICAgaW5mbyA9IHBhdGgubHN0YXQoKQogICAgaWYgc3RhdC5TX0lTTE5LKGluZm8uc3RfbW9kZSkgb3Igbm90IHN0YXQuU19JU1JFRyhpbmZvLnN0X21vZGUpOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcihmInNvdXJjZSBtdXN0IGJlIGEgcmVndWxhciBub24tc3ltbGluayBmaWxlOiB7cmVsYXRp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_1342c8f0be\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_1342c8f0be",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197692.6613894
+    },
+    {
+      "command": "printf '%s' 'dmV9IikKICAgIHJldHVybiBwYXRoCgoKZGVmIG1hbmlmZXN0X2J5dGVzKG1hbmlmZXN0OiBkaWN0W3N0ciwgZGljdFtzdHIsIHN0cl1dKSAtPiBieXRlczoKICAgIHBheWxvYWQgPSB7InNjaGVtYV92ZXJzaW9uIjogMSwgImZpbGVzIjoge25hbWU6IG1hbmlmZXN0W25hbWVdIGZvciBuYW1lIGluIHNvcnRlZChtYW5pZmVzdCl9fQogICAgcmV0dXJuIGpzb24uZHVtcHMocGF5bG9hZCwgc29ydF9rZXlzPVRydWUsIHNlcGFyYXRvcnM9KCIsIiwgIjoiKSkuZW5jb2RlKCJhc2NpaSIpCgoKZGVmIG1hbmlmZXN0' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_dc86692c81\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_dc86692c81",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197693.4689426
+    },
+    {
+      "command": "printf '%s' 'X3NoYTI1NihtYW5pZmVzdDogZGljdFtzdHIsIGRpY3Rbc3RyLCBzdHJdXSkgLT4gc3RyOgogICAgcmV0dXJuIGhhc2hsaWIuc2hhMjU2KG1hbmlmZXN0X2J5dGVzKG1hbmlmZXN0KSkuaGV4ZGlnZXN0KCkKCgpkZWYgdmVyaWZ5X3VzYl9idWlsZGVyX3NvdXJjZV9tYW5pZmVzdCgKICAgIHJvb3Q6IFBhdGggPSBTT1VSQ0UsCiAgICBtYW5pZmVzdDogZGljdFtzdHIsIGRpY3Rbc3RyLCBzdHJdXSA9IFVTQl9CVUlMREVSX1NPVVJDRV9NQU5JRkVTVCwKICAgIGV4cGVjdGVkX3NoYTI1Njogc3RyID0gRVhQRUNU' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_93b1e3275b\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_93b1e3275b",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197694.2385285
+    },
+    {
+      "command": "printf '%s' 'RURfVVNCX0JVSUxERVJfTUFOSUZFU1RfU0hBMjU2LAopIC0+IGRpY3Rbc3RyLCBvYmplY3RdOgogICAgaWYgbm90IG1hbmlmZXN0IG9yIG1hbmlmZXN0X3NoYTI1NihtYW5pZmVzdCkgIT0gZXhwZWN0ZWRfc2hhMjU2OgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcigicGlubmVkIHVzYl9idWlsZGVyIG1hbmlmZXN0IGRpZ2VzdCBtaXNtYXRjaCIpCiAgICBjaGVja2VkOiBkaWN0W3N0ciwgc3RyXSA9IHt9CiAgICBmb3IgbmFtZSBpbiBzb3J0ZWQobWFuaWZlc3QpOgogICAgICAgIGlmICJcXCIgaW4gbmFt' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_09c95dff41\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_09c95dff41",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197694.9782407
+    },
+    {
+      "command": "printf '%s' 'ZToKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYibWFuaWZlc3QgcGF0aCBpcyBub3QgY2Fub25pY2FsIFBPU0lYOiB7bmFtZSFyfSIpCiAgICAgICAgcmVsYXRpdmUgPSBQYXRoKG5hbWUpCiAgICAgICAgaWYgcmVsYXRpdmUuaXNfYWJzb2x1dGUoKSBvciByZWxhdGl2ZS5hc19wb3NpeCgpICE9IG5hbWUgb3IgIi4uIiBpbiByZWxhdGl2ZS5wYXJ0czoKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYibWFuaWZlc3QgcGF0aCBpcyBub3QgYSBzYWZlIGV4YWN0IHJlbGF0aXZlIG5hbWU6' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_04092dc6ba\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_04092dc6ba",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197695.5567567
+    },
+    {
+      "command": "printf '%s' 'IHtuYW1lIXJ9IikKICAgICAgICBpZiBub3QgbmFtZS5zdGFydHN3aXRoKCJ1c2JfYnVpbGRlci8iKSBvciAiL2RvY3MvIiBpbiBuYW1lIG9yIG5hbWUuZW5kc3dpdGgoIi5tZCIpOgogICAgICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJtYW5pZmVzdCBpbmNsdWRlcyBhIG5vbi1ndWVzdCBzb3VyY2UgcGF0aDoge25hbWUhcn0iKQogICAgICAgIGVudHJ5ID0gbWFuaWZlc3RbbmFtZV0KICAgICAgICBpZiBzZXQoZW50cnkpICE9IHsidHlwZSIsICJzaGEyNTYifSBvciBlbnRyeS5nZXQoInR5cGUiKSAh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_13179b2d76\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_13179b2d76",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197696.2084239
+    },
+    {
+      "command": "printf '%s' 'PSAicmVndWxhciI6CiAgICAgICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcihmIm1hbmlmZXN0IGhhcyBhbiB1bmV4cGVjdGVkIHNvdXJjZSB0eXBlL3NoYXBlOiB7bmFtZSFyfSIpCiAgICAgICAgZGlnZXN0ID0gZW50cnkuZ2V0KCJzaGEyNTYiLCAiIikKICAgICAgICBpZiBub3QgcmUuZnVsbG1hdGNoKHIiWzAtOWEtZl17NjR9IiwgZGlnZXN0KToKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYibWFuaWZlc3QgaGFzIGFuIGludmFsaWQgU0hBLTI1Njoge25hbWUhcn0iKQogICAgICAgIHBhdGgg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_f428dd4b48\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_f428dd4b48",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197696.8150532
+    },
+    {
+      "command": "printf '%s' 'PSByZWd1bGFyX3NvdXJjZV9maWxlKHJvb3QsIHJlbGF0aXZlKQogICAgICAgIGFjdHVhbCA9IGhhc2hsaWIuc2hhMjU2KHBhdGgucmVhZF9ieXRlcygpKS5oZXhkaWdlc3QoKQogICAgICAgIGlmIGFjdHVhbCAhPSBkaWdlc3Q6CiAgICAgICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcihmInBpbm5lZCB1c2JfYnVpbGRlciBzb3VyY2UgU0hBLTI1NiBtaXNtYXRjaDoge25hbWV9IikKICAgICAgICBjaGVja2VkW25hbWVdID0gYWN0dWFsCiAgICByZXR1cm4gewogICAgICAgICJtYW5pZmVzdF9zaGEyNTYiOiBl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9c46ee355d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9c46ee355d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197697.4637556
+    },
+    {
+      "command": "printf '%s' 'eHBlY3RlZF9zaGEyNTYsCiAgICAgICAgImZpbGVfY291bnQiOiBsZW4oY2hlY2tlZCksCiAgICAgICAgImZpbGVzIjogY2hlY2tlZCwKICAgIH0KCgpkZWYgcmVxdWlyZV9yZWFkb25seV9zb3VyY2Vfd3JpdGVfb3BlbihwYXRoOiBQYXRoKSAtPiBzdHI6CiAgICBmbGFncyA9IG9zLk9fV1JPTkxZIHwgZ2V0YXR0cihvcywgIk9fTk9GT0xMT1ciLCAwKSB8IGdldGF0dHIob3MsICJPX0NMT0VYRUMiLCAwKQogICAgdHJ5OgogICAgICAgIGRlc2NyaXB0b3IgPSBvcy5vcGVuKHBhdGgsIGZsYWdzKQogICAgZXhj' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_605c098085\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_605c098085",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197698.1052368
+    },
+    {
+      "command": "printf '%s' 'ZXB0IE9TRXJyb3IgYXMgZXhjOgogICAgICAgIGlmIGV4Yy5lcnJubyAhPSBlcnJuby5FUk9GUzoKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYicmVhZC1vbmx5IHNvdXJjZSB3cml0ZS1vcGVuIGRpZCBub3QgZmFpbCB3aXRoIEVST0ZTOiBlcnJubz17ZXhjLmVycm5vfSIpIGZyb20gZXhjCiAgICAgICAgcmV0dXJuIGYiQkxPQ0tFRCBlcnJubz17ZXhjLmVycm5vfSIKICAgIG9zLmNsb3NlKGRlc2NyaXB0b3IpCiAgICByYWlzZSBSdW50aW1lRXJyb3IoInNvdXJjZSBzaGFyZSB1bmV4cGVjdGVk' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6007af2dfd\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6007af2dfd",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197698.8375118
+    },
+    {
+      "command": "printf '%s' 'bHkgYWxsb3dlZCB3cml0ZS1vcGVuIikKCgpkZWYgcHJlcGFyZV9wcml2YXRlX2NhY2hlX3ByZWZpeChwYXRoOiBQYXRoID0gUFlUSE9OX0NBQ0hFX1BSRUZJWCwgZXhwZWN0ZWRfdWlkOiBpbnQgfCBOb25lID0gTm9uZSkgLT4gTm9uZToKICAgIG93bmVyID0gb3MuZ2V0ZXVpZCgpIGlmIGV4cGVjdGVkX3VpZCBpcyBOb25lIGVsc2UgZXhwZWN0ZWRfdWlkCiAgICBpZiBvd25lciAhPSBvcy5nZXRldWlkKCkgYW5kIG9zLmdldGV1aWQoKSAhPSAwOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcigib25seSBy' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_21937600ed\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_21937600ed",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197699.6356733
+    },
+    {
+      "command": "printf '%s' 'b290IG1heSBjcmVhdGUgYSBjYWNoZSBwcmVmaXggZm9yIGFub3RoZXIgVUlEIikKICAgIGlmIHBhdGguZXhpc3RzKCkgb3IgcGF0aC5pc19zeW1saW5rKCk6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiUHl0aG9uIGNhY2hlIHByZWZpeCBhbHJlYWR5IGV4aXN0czoge3BhdGh9IikKICAgIHBhcmVudF9pbmZvID0gcGF0aC5wYXJlbnQubHN0YXQoKQogICAgaWYgc3RhdC5TX0lTTE5LKHBhcmVudF9pbmZvLnN0X21vZGUpIG9yIG5vdCBzdGF0LlNfSVNESVIocGFyZW50X2luZm8uc3RfbW9kZSk6CiAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_727e290341\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_727e290341",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197700.2381952
+    },
+    {
+      "command": "printf '%s' 'ICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiUHl0aG9uIGNhY2hlIHBhcmVudCBpcyBub3QgYSByZWFsIGRpcmVjdG9yeToge3BhdGgucGFyZW50fSIpCiAgICBvcy5ta2RpcihwYXRoLCAwbzcwMCkKICAgIGlmIG93bmVyICE9IG9zLmdldGV1aWQoKToKICAgICAgICBvcy5jaG93bihwYXRoLCBvd25lciwgb3duZXIpCiAgICB2YWxpZGF0ZV9wcml2YXRlX2NhY2hlX3ByZWZpeChwYXRoLCBleHBlY3RlZF91aWQ9b3duZXIpCgoKZGVmIHZhbGlkYXRlX3ByaXZhdGVfY2FjaGVfcHJlZml4KHBhdGg6IFBhdGgs' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_7233b5c8d7\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_7233b5c8d7",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197700.9156237
+    },
+    {
+      "command": "printf '%s' 'IGV4cGVjdGVkX3VpZDogaW50IHwgTm9uZSA9IE5vbmUpIC0+IE5vbmU6CiAgICBvd25lciA9IG9zLmdldGV1aWQoKSBpZiBleHBlY3RlZF91aWQgaXMgTm9uZSBlbHNlIGV4cGVjdGVkX3VpZAogICAgaW5mbyA9IHBhdGgubHN0YXQoKQogICAgaWYgKAogICAgICAgIHN0YXQuU19JU0xOSyhpbmZvLnN0X21vZGUpCiAgICAgICAgb3Igbm90IHN0YXQuU19JU0RJUihpbmZvLnN0X21vZGUpCiAgICAgICAgb3IgaW5mby5zdF91aWQgIT0gb3duZXIKICAgICAgICBvciBzdGF0LlNfSU1PREUoaW5mby5zdF9tb2Rl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_25f0b427bd\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_25f0b427bd",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197701.7402167
+    },
+    {
+      "command": "printf '%s' 'KSAhPSAwbzcwMAogICAgICAgIG9yIGFueShwYXRoLml0ZXJkaXIoKSkKICAgICk6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiUHl0aG9uIGNhY2hlIHByZWZpeCBtdXN0IGJlIHByaXZhdGUsIGVtcHR5LCBhbmQgb3duZWQgYnkgVUlEIHtvd25lcn06IHtwYXRofSIpCgoKZGVmIHZlcmlmeV9ndWVzdF9oZWxwZXJfYmluZGluZyhleHBlY3RlZF9oZWxwZXJfc2hhMjU2OiBzdHIpIC0+IHN0cjoKICAgIGhlbHBlciA9IFBhdGgoX19maWxlX18pCiAgICBpbmZvID0gaGVscGVyLmxzdGF0KCkKICAgIGlm' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_2a0895ce5f\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_2a0895ce5f",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197702.386182
+    },
+    {
+      "command": "printf '%s' 'IHN0YXQuU19JU0xOSyhpbmZvLnN0X21vZGUpIG9yIG5vdCBzdGF0LlNfSVNSRUcoaW5mby5zdF9tb2RlKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoImd1ZXN0IGhlbHBlciBtdXN0IGJlIGEgcmVndWxhciBub24tc3ltbGluayBmaWxlIikKICAgIGFjdHVhbCA9IGhhc2hsaWIuc2hhMjU2KGhlbHBlci5yZWFkX2J5dGVzKCkpLmhleGRpZ2VzdCgpCiAgICBpZiBub3QgcmUuZnVsbG1hdGNoKHIiWzAtOWEtZl17NjR9IiwgZXhwZWN0ZWRfaGVscGVyX3NoYTI1Nikgb3IgYWN0dWFsICE9IGV4cGVjdGVk' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6203e65583\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6203e65583",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197703.1055183
+    },
+    {
+      "command": "printf '%s' 'X2hlbHBlcl9zaGEyNTY6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKCJndWVzdCBoZWxwZXIgYnl0ZXMgZGlmZmVyIGZyb20gdGhlIGhvc3QtcGlubmVkIGhlbHBlciBTSEEtMjU2IikKICAgIHJldHVybiBhY3R1YWwKCgpkZWYgdmVyaWZ5X2FyY2hpdmVkX2V2aWRlbmNlKHJvb3Q6IFBhdGgpIC0+IGRpY3Rbc3RyLCBzdHJdOgogICAgdmVyaWZpZWQ6IGRpY3Rbc3RyLCBzdHJdID0ge30KICAgIGZvciBkaXJlY3RvcnksIGV4cGVjdGVkIGluIFJFVFJZX0FSQ0hJVkVfRVhQRUNURUQuaXRlbXMoKToKICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_56dfe43ae5\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_56dfe43ae5",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197703.8909612
+    },
+    {
+      "command": "printf '%s' 'ICAgICBtYW5pZmVzdF9yZWxhdGl2ZSA9IFBhdGgoZGlyZWN0b3J5KSAvICJTSEEyNTZTVU1TIgogICAgICAgIG1hbmlmZXN0ID0gcmVndWxhcl9zb3VyY2VfZmlsZShyb290LCBtYW5pZmVzdF9yZWxhdGl2ZSkKICAgICAgICBtYW5pZmVzdF9ieXRlcyA9IG1hbmlmZXN0LnJlYWRfYnl0ZXMoKQogICAgICAgIG1hbmlmZXN0X2hhc2ggPSBoYXNobGliLnNoYTI1NihtYW5pZmVzdF9ieXRlcykuaGV4ZGlnZXN0KCkKICAgICAgICBpZiBtYW5pZmVzdF9oYXNoICE9IGV4cGVjdGVkWyJtYW5pZmVzdF9zaGEyNTYi' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_3c135b0e64\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_3c135b0e64",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197704.5540466
+    },
+    {
+      "command": "printf '%s' 'XToKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiYXJjaGl2ZWQgZXZpZGVuY2UgbWFuaWZlc3QgU0hBLTI1NiBtaXNtYXRjaDoge21hbmlmZXN0X3JlbGF0aXZlfSIpCiAgICAgICAgdHJ5OgogICAgICAgICAgICBtYW5pZmVzdF9saW5lcyA9IG1hbmlmZXN0X2J5dGVzLmRlY29kZSgiYXNjaWkiKS5zcGxpdGxpbmVzKCkKICAgICAgICBleGNlcHQgVW5pY29kZURlY29kZUVycm9yIGFzIGV4YzoKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiYXJjaGl2ZWQgZXZpZGVuY2UgbWFuaWZl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a5894130d6\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a5894130d6",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197705.2824924
+    },
+    {
+      "command": "printf '%s' 'c3QgaXMgbm90IEFTQ0lJOiB7bWFuaWZlc3RfcmVsYXRpdmV9IikgZnJvbSBleGMKICAgICAgICBwYXJzZWQ6IGRpY3Rbc3RyLCBzdHJdID0ge30KICAgICAgICBmb3IgbGluZSBpbiBtYW5pZmVzdF9saW5lczoKICAgICAgICAgICAgZGlnZXN0LCBzZXBhcmF0b3IsIGZpbGVuYW1lID0gbGluZS5wYXJ0aXRpb24oIiAgIikKICAgICAgICAgICAgaWYgbm90IHNlcGFyYXRvciBvciBmaWxlbmFtZSBpbiBwYXJzZWQgb3Igbm90IHJlLmZ1bGxtYXRjaChyIlswLTlhLWZdezY0fSIsIGRpZ2VzdCk6CiAgICAgICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_3a2a0b743c\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_3a2a0b743c",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197705.9648247
+    },
+    {
+      "command": "printf '%s' 'ICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJhcmNoaXZlZCBldmlkZW5jZSBtYW5pZmVzdCBoYXMgbWFsZm9ybWVkL2R1cGxpY2F0ZSByb3dzOiB7bWFuaWZlc3RfcmVsYXRpdmV9IikKICAgICAgICAgICAgcGFyc2VkW2ZpbGVuYW1lXSA9IGRpZ2VzdAogICAgICAgIGlmIHBhcnNlZCAhPSBleHBlY3RlZFsiZmlsZXMiXToKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiYXJjaGl2ZWQgZXZpZGVuY2UgbWFuaWZlc3QgZW50cmllcyBkaWZmZXIgZnJvbSBwaW5zOiB7bWFuaWZlc3RfcmVsYXRp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_79868d80dc\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_79868d80dc",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197706.6870005
+    },
+    {
+      "command": "printf '%s' 'dmV9IikKICAgICAgICB2ZXJpZmllZFttYW5pZmVzdF9yZWxhdGl2ZS5hc19wb3NpeCgpXSA9IG1hbmlmZXN0X2hhc2gKICAgICAgICBmb3IgZmlsZW5hbWUsIGV4cGVjdGVkX2hhc2ggaW4gZXhwZWN0ZWRbImZpbGVzIl0uaXRlbXMoKToKICAgICAgICAgICAgcmVsYXRpdmUgPSBQYXRoKGRpcmVjdG9yeSkgLyBmaWxlbmFtZQogICAgICAgICAgICBldmlkZW5jZSA9IHJlZ3VsYXJfc291cmNlX2ZpbGUocm9vdCwgcmVsYXRpdmUpCiAgICAgICAgICAgIGFjdHVhbF9oYXNoID0gaGFzaGxpYi5zaGEyNTYoZXZp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_991420c3b6\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_991420c3b6",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197707.4047093
+    },
+    {
+      "command": "printf '%s' 'ZGVuY2UucmVhZF9ieXRlcygpKS5oZXhkaWdlc3QoKQogICAgICAgICAgICBpZiBhY3R1YWxfaGFzaCAhPSBleHBlY3RlZF9oYXNoOgogICAgICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYiYXJjaGl2ZWQgZXZpZGVuY2UgU0hBLTI1NiBtaXNtYXRjaDoge3JlbGF0aXZlfSIpCiAgICAgICAgICAgIHZlcmlmaWVkW3JlbGF0aXZlLmFzX3Bvc2l4KCldID0gYWN0dWFsX2hhc2gKICAgIHJldHVybiB2ZXJpZmllZAoKCmRlZiB2ZXJpZnlfc2NyYXRjaF9kZXZpY2UoKSAtPiBOb25lOgogICAgaW52ZW50' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_60effdab7b\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_60effdab7b",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197708.2545416
+    },
+    {
+      "command": "printf '%s' 'b3J5ID0gcnVuKAogICAgICAgIFsiL3Vzci9iaW4vbHNibGsiLCAiLS1qc29uIiwgIi0tYnl0ZXMiLCAiLS1vdXRwdXQiLCAiTkFNRSxUWVBFLFNJWkUsUk8sUk0sU0VSSUFMLE1PVU5UUE9JTlRTIl0KICAgICkuc3Rkb3V0CiAgICBwcmludCgiQkxPQ0tfSU5WRU5UT1JZX0pTT05fQkVHSU4iLCBmbHVzaD1UcnVlKQogICAgcHJpbnQoaW52ZW50b3J5LCBlbmQ9IiIsIGZsdXNoPVRydWUpCiAgICBwcmludCgiQkxPQ0tfSU5WRU5UT1JZX0pTT05fRU5EIiwgZmx1c2g9VHJ1ZSkKICAgIHBhcnNlZCA9IGpzb24u' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_f7a666c4c2\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_f7a666c4c2",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197708.8105528
+    },
+    {
+      "command": "printf '%s' 'bG9hZHMoaW52ZW50b3J5KQogICAgZGV2aWNlcyA9IHBhcnNlZC5nZXQoImJsb2NrZGV2aWNlcyIpCiAgICBpZiBub3QgaXNpbnN0YW5jZShkZXZpY2VzLCBsaXN0KToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoImxzYmxrIGRpZCBub3QgcmV0dXJuIGEgYmxvY2tkZXZpY2VzIGxpc3QiKQogICAgZGlza3MgPSBbaXRlbSBmb3IgaXRlbSBpbiBkZXZpY2VzIGlmIGlzaW5zdGFuY2UoaXRlbSwgZGljdCkgYW5kIGl0ZW0uZ2V0KCJ0eXBlIikgPT0gImRpc2siXQogICAgaWYgbGVuKGRpc2tzKSAhPSAxIG9y' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_5359142920\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_5359142920",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197709.324463
+    },
+    {
+      "command": "printf '%s' 'IGRpc2tzWzBdLmdldCgibmFtZSIpICE9ICJ2ZGEiOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJvcihmInVuZXhwZWN0ZWQgd3JpdGFibGUgZGlzayBpbnZlbnRvcnk6IHtkaXNrcyFyfSIpCiAgICBkaXNrID0gZGlza3NbMF0KICAgIGlmICgKICAgICAgICBkaXNrLmdldCgic2l6ZSIpICE9IEVYUEVDVEVEX1NDUkFUQ0hfQllURVMKICAgICAgICBvciBkaXNrLmdldCgicm8iKSBub3QgaW4gKDAsIEZhbHNlKQogICAgICAgIG9yIGRpc2suZ2V0KCJybSIpIG5vdCBpbiAoMCwgRmFsc2UpCiAgICAgICAgb3Ig' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_bb8e3be795\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_bb8e3be795",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197710.0086086
+    },
+    {
+      "command": "printf '%s' 'ZGlzay5nZXQoInNlcmlhbCIpICE9IEVYUEVDVEVEX1NDUkFUQ0hfU0VSSUFMCiAgICAgICAgb3IgZGlzay5nZXQoIm1vdW50cG9pbnRzIikgbm90IGluIChOb25lLCBbXSkKICAgICAgICBvciBkaXNrLmdldCgiY2hpbGRyZW4iKSBub3QgaW4gKE5vbmUsIFtdKQogICAgKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiIvZGV2L3ZkYSBpcyBub3QgdGhlIGV4YWN0IHVubW91bnRlZCBzY3JhdGNoIGRpc2s6IHtkaXNrIXJ9IikKICAgIHNpemUgPSBydW4oWyIvdXNyL2Jpbi9ibG9ja2RldiIsICItLWdl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_94db487fe4\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_94db487fe4",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197710.780198
+    },
+    {
+      "command": "printf '%s' 'dHNpemU2NCIsICIvZGV2L3ZkYSJdKS5zdGRvdXQuc3RyaXAoKQogICAgcmVhZF9vbmx5ID0gcnVuKFsiL3Vzci9iaW4vYmxvY2tkZXYiLCAiLS1nZXRybyIsICIvZGV2L3ZkYSJdKS5zdGRvdXQuc3RyaXAoKQogICAgaWYgc2l6ZSAhPSBzdHIoRVhQRUNURURfU0NSQVRDSF9CWVRFUykgb3IgcmVhZF9vbmx5ICE9ICIwIjoKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoImJsb2NrZGV2IHNpemUvcmVhZC1vbmx5IGlkZW50aXR5IGRvZXMgbm90IG1hdGNoIHRoZSBzY3JhdGNoIGZpbGUiKQogICAgZm9yIGxp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9dd41c64af\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9dd41c64af",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197711.3860826
+    },
+    {
+      "command": "printf '%s' 'bmUgaW4gUGF0aCgiL3Byb2MvbW91bnRzIikucmVhZF90ZXh0KGVuY29kaW5nPSJhc2NpaSIpLnNwbGl0bGluZXMoKToKICAgICAgICBmaWVsZHMgPSBsaW5lLnNwbGl0KCkKICAgICAgICBpZiBmaWVsZHMgYW5kIHJlLmZ1bGxtYXRjaChyIi9kZXYvdmRhKD86WzAtOV0rKT8iLCBmaWVsZHNbMF0pOgogICAgICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJzY3JhdGNoIGJsb2NrIGRldmljZSBpcyBhbHJlYWR5IG1vdW50ZWQ6IHtsaW5lfSIpCiAgICBwcmludChmIlNDUkFUQ0hfREVWSUNFPS9kZXYvdmRh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_e65b112d1d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_e65b112d1d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197712.103704
+    },
+    {
+      "command": "printf '%s' 'IFNFUklBTD17RVhQRUNURURfU0NSQVRDSF9TRVJJQUx9IFNJWkU9e3NpemV9IFJPPXtyZWFkX29ubHl9IiwgZmx1c2g9VHJ1ZSkKCgpkZWYgdmVyaWZ5X3NjcmF0Y2hfd3JpdGUoKSAtPiBOb25lOgogICAgU0NSQVRDSC5ta2Rpcihtb2RlPTBvNzU1LCBwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCiAgICBydW4oWyIvdXNyL2Jpbi9ta2ZzLmV4dDQiLCAiLUYiLCAiLXEiLCAiL2Rldi92ZGEiXSkKICAgIHJ1bihbIi91c3IvYmluL21vdW50IiwgIi9kZXYvdmRhIiwgc3RyKFNDUkFUQ0gpXSkKICAgIG1h' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_566997fe30\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_566997fe30",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197712.7561417
+    },
+    {
+      "command": "printf '%s' 'cmtlciA9IFNDUkFUQ0ggLyAid3JpdGFibGUtc2NyYXRjaC1wcm9iZS50eHQiCiAgICBtYXJrZXIud3JpdGVfdGV4dCgiZGlzcG9zYWJsZSBBcmNoIFZNIHNjcmF0Y2ggb25seVxuIiwgZW5jb2Rpbmc9ImFzY2lpIikKICAgIHJ1bihbIi91c3IvYmluL3N5bmMiXSkKICAgIG1hcmtlcl9oYXNoID0gcnVuKFsiL3Vzci9iaW4vc2hhMjU2c3VtIiwgc3RyKG1hcmtlcildKS5zdGRvdXQuc3BsaXQoKVswXQogICAgcnVuKFsiL3Vzci9iaW4vdW1vdW50Iiwgc3RyKFNDUkFUQ0gpXSkKICAgIHJ1bihbIi91c3IvYmlu' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_771f5529b5\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_771f5529b5",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197713.378132
+    },
+    {
+      "command": "printf '%s' 'L21vdW50IiwgIi9kZXYvdmRhIiwgc3RyKFNDUkFUQ0gpXSkKICAgIHBlcnNpc3RlZCA9IG1hcmtlci5yZWFkX2J5dGVzKCkKICAgIGlmIHBlcnNpc3RlZCAhPSBiImRpc3Bvc2FibGUgQXJjaCBWTSBzY3JhdGNoIG9ubHlcbiI6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKCJzY3JhdGNoIG1hcmtlciBkaWQgbm90IHN1cnZpdmUgdW5tb3VudC9yZW1vdW50IikKICAgIHJ1bihbIi91c3IvYmluL3Vtb3VudCIsIHN0cihTQ1JBVENIKV0pCiAgICBwcmludChmIlNDUkFUQ0hfV1JJVEVfU0hBMjU2PXttYXJr' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_283713b688\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_283713b688",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197713.9376338
+    },
+    {
+      "command": "printf '%s' 'ZXJfaGFzaH0iLCBmbHVzaD1UcnVlKQogICAgcHJpbnQoIlNDUkFUQ0hfRElTSz1XUklUQUJMRV9BTkRfVU5NT1VOVEVEIiwgZmx1c2g9VHJ1ZSkKCgpkZWYgcHJlcGFyZV9idWlsZF9pZGVudGl0eSgpIC0+IE5vbmU6CiAgICBpZiBhbnkoZW50cnkucHdfbmFtZSA9PSAiZndidWlsZCIgZm9yIGVudHJ5IGluIHB3ZC5nZXRwd2FsbCgpKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoImZ3YnVpbGQgYWxyZWFkeSBleGlzdHM7IHJlZnVzaW5nIHRvIHJldXNlIGFuIHVua25vd24gYWNjb3VudCIpCiAgICBp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a53023e60d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a53023e60d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197714.3577123
+    },
+    {
+      "command": "printf '%s' 'ZiBhbnkoZW50cnkucHdfdWlkID09IDEwMDAgZm9yIGVudHJ5IGluIHB3ZC5nZXRwd2FsbCgpKSBvciBhbnkoZW50cnkuZ3JfZ2lkID09IDEwMDAgZm9yIGVudHJ5IGluIGdycC5nZXRncmFsbCgpKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoIlVJRC9HSUQgMTAwMCBpcyBhbHJlYWR5IGFzc2lnbmVkOyByZWZ1c2luZyB0byBhbHRlciBhbiBleGlzdGluZyBpZGVudGl0eSIpCiAgICBmb3IgcG9saWN5IGluIChQYXRoKCIvZXRjL3N1YnVpZCIpLCBQYXRoKCIvZXRjL3N1YmdpZCIpKToKICAgICAgICBp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_03f2be6763\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_03f2be6763",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197715.0318937
+    },
+    {
+      "command": "printf '%s' 'ZiBwb2xpY3kuZXhpc3RzKCkgYW5kIHBvbGljeS5yZWFkX3RleHQoZW5jb2Rpbmc9ImFzY2lpIikuc3RyaXAoKToKICAgICAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYie3BvbGljeX0gaXMgbm90IGVtcHR5OyByZWZ1c2luZyB0byBjaGFuZ2UgZXhpc3Rpbmcgc3Vib3JkaW5hdGUtSUQgcG9saWN5IikKICAgIHJ1bihbIi91c3IvYmluL2dyb3VwYWRkIiwgIi0tZ2lkIiwgIjEwMDAiLCAiZndidWlsZCJdKQogICAgcnVuKFsiL3Vzci9iaW4vdXNlcmFkZCIsICItLXVpZCIsICIxMDAwIiwgIi0tZ2lkIiwg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a29d133d01\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a29d133d01",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197715.6433065
+    },
+    {
+      "command": "printf '%s' 'IjEwMDAiLCAiLS1jcmVhdGUtaG9tZSIsICItLWhvbWUtZGlyIiwgIi9ob21lL2Z3YnVpbGQiLCAiLS1zaGVsbCIsICIvdXNyL2Jpbi9iYXNoIiwgImZ3YnVpbGQiXSkKICAgIFBhdGgoIi9ldGMvc3VidWlkIikud3JpdGVfdGV4dCgiZndidWlsZDoxMDAwMDA6NjU1MzZcbiIsIGVuY29kaW5nPSJhc2NpaSIpCiAgICBQYXRoKCIvZXRjL3N1YmdpZCIpLndyaXRlX3RleHQoImZ3YnVpbGQ6MTAwMDAwOjY1NTM2XG4iLCBlbmNvZGluZz0iYXNjaWkiKQogICAgb3MuY2htb2QoIi9ldGMvc3VidWlkIiwgMG82NDQp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9ece611e18\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9ece611e18",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197716.3552637
+    },
+    {
+      "command": "printf '%s' 'CiAgICBvcy5jaG1vZCgiL2V0Yy9zdWJnaWQiLCAwbzY0NCkKCgpkZWYgcm9vdGxlc3NfaW1wb3J0X3ByZWZsaWdodF9jb2RlKCkgLT4gc3RyOgogICAgcmV0dXJuICcnJ1wKaW1wb3J0IGhhc2hsaWIKaW1wb3J0IGltcG9ydGxpYgppbXBvcnQganNvbgppbXBvcnQgb3MKaW1wb3J0IHN0YXQKaW1wb3J0IHN5cwpmcm9tIGRhdGFjbGFzc2VzIGltcG9ydCBhc2RpY3QKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgppZiBzeXMuZmxhZ3Mub3B0aW1pemUgIT0gMDoKICAgIHJhaXNlIFJ1bnRpbWVFcnJvcignb3B0' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_2a2ef60666\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_2a2ef60666",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197716.91292
+    },
+    {
+      "command": "printf '%s' 'aW1pemVkIFB5dGhvbiBpcyB1bnN1cHBvcnRlZCBmb3IgdGhlIHJvb3RsZXNzIGltcG9ydCBwcmVmbGlnaHQnKQpwcmludCgnQ0hJTERfUFlUSE9OX09QVElNSVpFPTAnLCBmbHVzaD1UcnVlKQoKcHJlZml4ID0gUGF0aCgnL3J1bi9sYy1weWNhY2hlJykKYXNzZXJ0IHN5cy5weWNhY2hlX3ByZWZpeCA9PSBzdHIocHJlZml4KSwgJ3VuZXhwZWN0ZWQgc3lzLnB5Y2FjaGVfcHJlZml4Jwphc3NlcnQgc3lzLmRvbnRfd3JpdGVfYnl0ZWNvZGUgaXMgVHJ1ZSwgJ2J5dGVjb2RlIHdyaXRpbmcgaXMgZW5hYmxlZCcK' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_7f8c58b45f\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_7f8c58b45f",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197717.4985347
+    },
+    {
+      "command": "printf '%s' 'cHJlZml4X2luZm8gPSBwcmVmaXgubHN0YXQoKQphc3NlcnQgKAogICAgc3RhdC5TX0lTRElSKHByZWZpeF9pbmZvLnN0X21vZGUpCiAgICBhbmQgbm90IHN0YXQuU19JU0xOSyhwcmVmaXhfaW5mby5zdF9tb2RlKQogICAgYW5kIHByZWZpeF9pbmZvLnN0X3VpZCA9PSAxMDAwCiAgICBhbmQgc3RhdC5TX0lNT0RFKHByZWZpeF9pbmZvLnN0X21vZGUpID09IDBvNzAwCiAgICBhbmQgbm90IGFueShwcmVmaXguaXRlcmRpcigpKQopLCAnY2FjaGUgcHJlZml4IG11c3QgYmUgZnJlc2gsIHByaXZhdGUsIGVtcHR5' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_8d6a242b16\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_8d6a242b16",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197718.6907814
+    },
+    {
+      "command": "printf '%s' 'IGFuZCByb290LW93bmVkJwoKbWFuaWZlc3QgPSBqc29uLmxvYWRzKG9zLmVudmlyb25bJ0xDX1VTQl9CVUlMREVSX01BTklGRVNUX0pTT04nXSkKY2Fub25pY2FsID0ganNvbi5kdW1wcygKICAgIHsnc2NoZW1hX3ZlcnNpb24nOiAxLCAnZmlsZXMnOiB7bmFtZTogbWFuaWZlc3RbbmFtZV0gZm9yIG5hbWUgaW4gc29ydGVkKG1hbmlmZXN0KX19LAogICAgc29ydF9rZXlzPVRydWUsCiAgICBzZXBhcmF0b3JzPSgnLCcsICc6JyksCikuZW5jb2RlKCdhc2NpaScpCm1hbmlmZXN0X2hhc2ggPSBoYXNobGliLnNo' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_9b83da004c\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_9b83da004c",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197719.4880295
+    },
+    {
+      "command": "printf '%s' 'YTI1NihjYW5vbmljYWwpLmhleGRpZ2VzdCgpCmFzc2VydCBtYW5pZmVzdF9oYXNoID09IG9zLmVudmlyb25bJ0xDX0VYUEVDVEVEX1VTQl9CVUlMREVSX01BTklGRVNUX1NIQTI1NiddLCAnbWFuaWZlc3QgZGlnZXN0IG1pc21hdGNoJwphc3NlcnQgbGVuKG1hbmlmZXN0KSA9PSAyNCwgJ3VuZXhwZWN0ZWQgbWFuaWZlc3QgaW52ZW50b3J5IHNpemUnCnJvb3QgPSBQYXRoKCcvbW50L3NvdXJjZScpCnJvb3RfaW5mbyA9IHJvb3QubHN0YXQoKQphc3NlcnQgc3RhdC5TX0lTRElSKHJvb3RfaW5mby5zdF9tb2Rl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a5e7320b14\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a5e7320b14",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197720.1922681
+    },
+    {
+      "command": "printf '%s' 'KSBhbmQgbm90IHN0YXQuU19JU0xOSyhyb290X2luZm8uc3RfbW9kZSksICd1bnNhZmUgc291cmNlIG1vdW50IHJvb3QnCgpkZWYgY2hlY2tfbWFuaWZlc3QoKToKICAgIGNoZWNrZWQgPSBzZXQoKQogICAgZm9yIG5hbWUsIGVudHJ5IGluIG1hbmlmZXN0Lml0ZW1zKCk6CiAgICAgICAgYXNzZXJ0ICgKICAgICAgICAgICAgbmFtZS5zdGFydHN3aXRoKCd1c2JfYnVpbGRlci8nKQogICAgICAgICAgICBhbmQgJ1xcXFwnIG5vdCBpbiBuYW1lCiAgICAgICAgICAgIGFuZCAnL2RvY3MvJyBub3QgaW4gbmFtZQog' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a4465906d5\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a4465906d5",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197720.8217905
+    },
+    {
+      "command": "printf '%s' 'ICAgICAgICAgICBhbmQgbm90IG5hbWUuZW5kc3dpdGgoJy5tZCcpCiAgICAgICAgKSwgKCd1bnNhZmUgbWFuaWZlc3QgcGF0aCcsIG5hbWUpCiAgICAgICAgcmVsYXRpdmUgPSBQYXRoKG5hbWUpCiAgICAgICAgYXNzZXJ0IG5vdCByZWxhdGl2ZS5pc19hYnNvbHV0ZSgpIGFuZCByZWxhdGl2ZS5hc19wb3NpeCgpID09IG5hbWUgYW5kICcuLicgbm90IGluIHJlbGF0aXZlLnBhcnRzLCAoJ25vbmNhbm9uaWNhbCBwYXRoJywgbmFtZSkKICAgICAgICBhc3NlcnQgc2V0KGVudHJ5KSA9PSB7J3R5cGUnLCAnc2hh' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_709e54007d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_709e54007d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197721.4531767
+    },
+    {
+      "command": "printf '%s' 'MjU2J30gYW5kIGVudHJ5Wyd0eXBlJ10gPT0gJ3JlZ3VsYXInLCAoJ2ludmFsaWQgbWFuaWZlc3QgZW50cnknLCBuYW1lKQogICAgICAgIGN1cnJlbnQgPSByb290CiAgICAgICAgZm9yIHBhcnQgaW4gcmVsYXRpdmUucGFydHNbOi0xXToKICAgICAgICAgICAgY3VycmVudCA9IGN1cnJlbnQgLyBwYXJ0CiAgICAgICAgICAgIGluZm8gPSBjdXJyZW50LmxzdGF0KCkKICAgICAgICAgICAgYXNzZXJ0IHN0YXQuU19JU0RJUihpbmZvLnN0X21vZGUpIGFuZCBub3Qgc3RhdC5TX0lTTE5LKGluZm8uc3RfbW9kZSks' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_e137806e67\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_e137806e67",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197722.1828194
+    },
+    {
+      "command": "printf '%s' 'ICgndW5zYWZlIGNvbXBvbmVudCcsIHN0cihjdXJyZW50KSkKICAgICAgICB0YXJnZXQgPSBjdXJyZW50IC8gcmVsYXRpdmUubmFtZQogICAgICAgIGluZm8gPSB0YXJnZXQubHN0YXQoKQogICAgICAgIGFzc2VydCBzdGF0LlNfSVNSRUcoaW5mby5zdF9tb2RlKSBhbmQgbm90IHN0YXQuU19JU0xOSyhpbmZvLnN0X21vZGUpLCAoJ25vdCByZWd1bGFyJywgbmFtZSkKICAgICAgICBkaWdlc3QgPSBoYXNobGliLnNoYTI1Nih0YXJnZXQucmVhZF9ieXRlcygpKS5oZXhkaWdlc3QoKQogICAgICAgIGFzc2VydCBk' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d30fac9d21\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d30fac9d21",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197723.203764
+    },
+    {
+      "command": "printf '%s' 'aWdlc3QgPT0gZW50cnlbJ3NoYTI1NiddLCAoJ3NvdXJjZSBoYXNoIG1pc21hdGNoJywgbmFtZSkKICAgICAgICBjaGVja2VkLmFkZChuYW1lKQogICAgYXNzZXJ0IGNoZWNrZWQgPT0gc2V0KG1hbmlmZXN0KSwgJ21hbmlmZXN0IGludmVudG9yeSBtaXNtYXRjaCcKICAgIHJldHVybiBjaGVja2VkCgpjaGVja2VkID0gY2hlY2tfbWFuaWZlc3QoKQpoZWxwZXIgPSBQYXRoKCcvcnVuL2xjLWd1ZXN0LXByb2JlLnB5JykKaGVscGVyX2luZm8gPSBoZWxwZXIubHN0YXQoKQphc3NlcnQgc3RhdC5TX0lTUkVHKGhl' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_58aecca6d3\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_58aecca6d3",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197723.9051502
+    },
+    {
+      "command": "printf '%s' 'bHBlcl9pbmZvLnN0X21vZGUpIGFuZCBub3Qgc3RhdC5TX0lTTE5LKGhlbHBlcl9pbmZvLnN0X21vZGUpLCAnaGVscGVyIG11c3QgYmUgcmVndWxhcicKaGVscGVyX2hhc2ggPSBoYXNobGliLnNoYTI1NihoZWxwZXIucmVhZF9ieXRlcygpKS5oZXhkaWdlc3QoKQphc3NlcnQgaGVscGVyX2hhc2ggPT0gb3MuZW52aXJvblsnTENfRVhQRUNURURfR1VFU1RfSEVMUEVSX1NIQTI1NiddLCAnaGVscGVyIGhhc2ggbWlzbWF0Y2gnCnByaW50KCdDSElMRF9QWVRIT05fQ0FDSEVfUE9MSUNZPVBBU1MnLCBmbHVzaD1U' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_096f1f01bc\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_096f1f01bc",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197724.7011018
+    },
+    {
+      "command": "printf '%s' 'cnVlKQpwcmludCgnQ0hJTERfVVNCX0JVSUxERVJfTUFOSUZFU1RfU0hBMjU2PScgKyBtYW5pZmVzdF9oYXNoLCBmbHVzaD1UcnVlKQpwcmludCgnQ0hJTERfVVNCX0JVSUxERVJfTUFOSUZFU1RfRklMRV9DT1VOVD0nICsgc3RyKGxlbihjaGVja2VkKSksIGZsdXNoPVRydWUpCnByaW50KCdDSElMRF9HVUVTVF9IRUxQRVJfU0hBMjU2PScgKyBoZWxwZXJfaGFzaCwgZmx1c2g9VHJ1ZSkKCnN5cy5wYXRoLmluc2VydCgwLCBzdHIocm9vdCkpCm1vZHVsZSA9IGltcG9ydGxpYi5pbXBvcnRfbW9kdWxlKCd1c2Jf' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_904283b5f0\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_904283b5f0",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197725.5754936
+    },
+    {
+      "command": "printf '%s' 'YnVpbGRlci5idWlsZF91c2InKQpleHBlY3RlZF9tb2R1bGUgPSAocm9vdCAvICd1c2JfYnVpbGRlci9idWlsZF91c2IucHknKS5yZXNvbHZlKHN0cmljdD1UcnVlKQphc3NlcnQgUGF0aChtb2R1bGUuX19maWxlX18pLnJlc29sdmUoc3RyaWN0PVRydWUpID09IGV4cGVjdGVkX21vZHVsZSwgJ2J1aWxkZXIgaW1wb3J0ZWQgZnJvbSB1bmV4cGVjdGVkIHBhdGgnCmZvciBuYW1lLCBpdGVtIGluIHR1cGxlKHN5cy5tb2R1bGVzLml0ZW1zKCkpOgogICAgaWYgbmFtZSA9PSAndXNiX2J1aWxkZXInIG9yIG5hbWUu' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_862427f066\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_862427f066",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197726.3316066
+    },
+    {
+      "command": "printf '%s' 'c3RhcnRzd2l0aCgndXNiX2J1aWxkZXIuJyk6CiAgICAgICAgbW9kdWxlX2ZpbGUgPSBnZXRhdHRyKGl0ZW0sICdfX2ZpbGVfXycsIE5vbmUpCiAgICAgICAgaWYgbW9kdWxlX2ZpbGUgaXMgbm90IE5vbmU6CiAgICAgICAgICAgIHJlc29sdmVkID0gUGF0aChtb2R1bGVfZmlsZSkucmVzb2x2ZShzdHJpY3Q9VHJ1ZSkKICAgICAgICAgICAgcmVsYXRpdmUgPSByZXNvbHZlZC5yZWxhdGl2ZV90byhyb290KS5hc19wb3NpeCgpCiAgICAgICAgICAgIGFzc2VydCByZWxhdGl2ZSBpbiBtYW5pZmVzdCwgKCd1bm1h' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_a4c86ea424\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_a4c86ea424",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197727.1213727
+    },
+    {
+      "command": "printf '%s' 'bmlmZXN0ZWQgaW1wb3J0ZWQgbW9kdWxlJywgbmFtZSwgcmVsYXRpdmUpCmNoZWNrX21hbmlmZXN0KCkKYXNzZXJ0IG5vdCBhbnkocHJlZml4Lml0ZXJkaXIoKSksICdQeXRob24gY2FjaGUgcHJlZml4IGNoYW5nZWQgZHVyaW5nIGltcG9ydCcKaG9zdF9wcmVmbGlnaHQgPSBnZXRhdHRyKG1vZHVsZSwgJ19yb290bGVzc19hcmNoaXNvX2hvc3RfcHJlZmxpZ2h0JykKbW91bnRfcHJlZmxpZ2h0ID0gZ2V0YXR0cihtb2R1bGUsICdfcm9vdGxlc3NfYXJjaGlzb19tb3VudF9wcmVmbGlnaHQnKQpob3N0ID0gaG9z' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_4b51ea5cdd\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_4b51ea5cdd",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197727.8548048
+    },
+    {
+      "command": "printf '%s' 'dF9wcmVmbGlnaHQoKQpwcmludCgnUk9PVExFU1NfSE9TVF9QUkVGTElHSFQ9UEFTUycsIGZsdXNoPVRydWUpCnByaW50KGpzb24uZHVtcHMoeydob3N0JzogYXNkaWN0KGhvc3QpfSwgc29ydF9rZXlzPVRydWUpLCBmbHVzaD1UcnVlKQptb3VudCA9IG1vdW50X3ByZWZsaWdodChob3N0KQpwcmludCgnUk9PVExFU1NfTU9VTlRfUFJFRkxJR0hUPVBBU1MnLCBmbHVzaD1UcnVlKQpwcmludChqc29uLmR1bXBzKHsnbW91bnQnOiBtb3VudH0sIHNvcnRfa2V5cz1UcnVlKSwgZmx1c2g9VHJ1ZSkKcHJpbnQoJ0dV' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_3afd279960\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_3afd279960",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197728.5783844
+    },
+    {
+      "command": "printf '%s' 'RVNUX1BST0JFX0NPTVBMRVRFX05PX0JVSUxEJywgZmx1c2g9VHJ1ZSkKJycnCgoKZGVmIHJvb3RsZXNzX3ByZWZsaWdodF9jb21tYW5kKGNvZGU6IHN0cikgLT4gbGlzdFtzdHJdOgogICAgcmV0dXJuIFsKICAgICAgICAiL3Vzci9iaW4vc2V0cHJpdiIsCiAgICAgICAgIi0tYm91bmRpbmctc2V0PS1hbGwsK3NldHVpZCwrc2V0Z2lkIiwKICAgICAgICBmIi0tcmV1aWQ9e0JVSUxEX1VJRH0iLAogICAgICAgIGYiLS1yZWdpZD17QlVJTERfR0lEfSIsCiAgICAgICAgIi0tY2xlYXItZ3JvdXBzIiwKICAgICAg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_ccdd8b0e72\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_ccdd8b0e72",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197729.3036778
+    },
+    {
+      "command": "printf '%s' 'ICAiLS0iLAogICAgICAgICIvdXNyL2Jpbi9weXRob24zIiwKICAgICAgICAiLVAiLAogICAgICAgICItYyIsCiAgICAgICAgY29kZSwKICAgIF0KCgpkZWYgcnVuX3Jvb3RsZXNzX3ByZWZsaWdodHMoKSAtPiBOb25lOgogICAgcHJlZmxpZ2h0X2NvZGUgPSByb290bGVzc19pbXBvcnRfcHJlZmxpZ2h0X2NvZGUoKQogICAgY29tcGlsZShwcmVmbGlnaHRfY29kZSwgIjxyb290bGVzcy1pbXBvcnQtcHJlZmxpZ2h0PiIsICJleGVjIikKICAgIHByZXBhcmVfcHJpdmF0ZV9jYWNoZV9wcmVmaXgoZXhwZWN0ZWRf' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_acfd218d37\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_acfd218d37",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197730.048551
+    },
+    {
+      "command": "printf '%s' 'dWlkPUJVSUxEX1VJRCkKICAgIG1hbmlmZXN0X2pzb24gPSBqc29uLmR1bXBzKFVTQl9CVUlMREVSX1NPVVJDRV9NQU5JRkVTVCwgc29ydF9rZXlzPVRydWUsIHNlcGFyYXRvcnM9KCIsIiwgIjoiKSkKICAgIGV4cGVjdGVkX2hlbHBlcl9zaGEyNTYgPSBvcy5lbnZpcm9uLmdldCgiTENfRVhQRUNURURfR1VFU1RfSEVMUEVSX1NIQTI1NiIsICIiKQogICAgaWYgbm90IHJlLmZ1bGxtYXRjaChyIlswLTlhLWZdezY0fSIsIGV4cGVjdGVkX2hlbHBlcl9zaGEyNTYpOgogICAgICAgIHJhaXNlIFJ1bnRpbWVFcnJv' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_3f8ececaec\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_3f8ececaec",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197730.5781817
+    },
+    {
+      "command": "printf '%s' 'cigiaG9zdCBkaWQgbm90IHByb3ZpZGUgdGhlIHJldmlld2VkIGd1ZXN0IGhlbHBlciBoYXNoIikKICAgIGVudiA9IHsKICAgICAgICAiSE9NRSI6ICIvaG9tZS9md2J1aWxkIiwKICAgICAgICAiUEFUSCI6ICIvdXNyL2JpbjovYmluIiwKICAgICAgICAiUFlUSE9OUEFUSCI6IHN0cihTT1VSQ0UpLAogICAgICAgICJQWVRIT05ET05UV1JJVEVCWVRFQ09ERSI6ICIxIiwKICAgICAgICAiUFlUSE9OT1BUSU1JWkUiOiAiMCIsCiAgICAgICAgIlBZVEhPTlBZQ0FDSEVQUkVGSVgiOiBzdHIoUFlUSE9OX0NBQ0hF' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_661e6658b6\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_661e6658b6",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197731.2315326
+    },
+    {
+      "command": "printf '%s' 'X1BSRUZJWCksCiAgICAgICAgIlRNUERJUiI6ICIvdG1wIiwKICAgICAgICAiTENfQUxMIjogIkMiLAogICAgICAgICJMQ19FWFBFQ1RFRF9HVUVTVF9IRUxQRVJfU0hBMjU2IjogZXhwZWN0ZWRfaGVscGVyX3NoYTI1NiwKICAgICAgICAiTENfRVhQRUNURURfVVNCX0JVSUxERVJfTUFOSUZFU1RfU0hBMjU2IjogRVhQRUNURURfVVNCX0JVSUxERVJfTUFOSUZFU1RfU0hBMjU2LAogICAgICAgICJMQ19VU0JfQlVJTERFUl9NQU5JRkVTVF9KU09OIjogbWFuaWZlc3RfanNvbiwKICAgIH0KICAgIGNvbW1hbmQg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_ab831ff0ac\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_ab831ff0ac",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197731.9980586
+    },
+    {
+      "command": "printf '%s' 'PSByb290bGVzc19wcmVmbGlnaHRfY29tbWFuZChwcmVmbGlnaHRfY29kZSkKICAgIHJlc3VsdCA9IHJ1bihjb21tYW5kLCBjaGVjaz1GYWxzZSwgZW52PWVudikKICAgIGlmIHJlc3VsdC5yZXR1cm5jb2RlICE9IDA6CiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKGYicm9vdGxlc3MgaG9zdC9tb3VudCBwcmVmbGlnaHQgZmFpbGVkOiB7cmVzdWx0LnJldHVybmNvZGV9IikKICAgIHJlcXVpcmVkID0gKAogICAgICAgICJDSElMRF9QWVRIT05fT1BUSU1JWkU9MCIsCiAgICAgICAgIkNISUxEX1BZVEhPTl9D' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_74cb0d46dc\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_74cb0d46dc",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197732.8791142
+    },
+    {
+      "command": "printf '%s' 'QUNIRV9QT0xJQ1k9UEFTUyIsCiAgICAgICAgZiJDSElMRF9VU0JfQlVJTERFUl9NQU5JRkVTVF9TSEEyNTY9e0VYUEVDVEVEX1VTQl9CVUlMREVSX01BTklGRVNUX1NIQTI1Nn0iLAogICAgICAgIGYiQ0hJTERfVVNCX0JVSUxERVJfTUFOSUZFU1RfRklMRV9DT1VOVD17bGVuKFVTQl9CVUlMREVSX1NPVVJDRV9NQU5JRkVTVCl9IiwKICAgICAgICBmIkNISUxEX0dVRVNUX0hFTFBFUl9TSEEyNTY9e2V4cGVjdGVkX2hlbHBlcl9zaGEyNTZ9IiwKICAgICAgICAiUk9PVExFU1NfSE9TVF9QUkVGTElHSFQ9UEFT' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_72e9691e58\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_72e9691e58",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197733.4236183
+    },
+    {
+      "command": "printf '%s' 'UyIsCiAgICAgICAgIlJPT1RMRVNTX01PVU5UX1BSRUZMSUdIVD1QQVNTIiwKICAgICAgICAiR1VFU1RfUFJPQkVfQ09NUExFVEVfTk9fQlVJTEQiLAogICAgKQogICAgaWYgYW55KGxpbmUgbm90IGluIHJlc3VsdC5zdGRvdXQuc3BsaXRsaW5lcygpIGZvciBsaW5lIGluIHJlcXVpcmVkKToKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoInJvb3RsZXNzIGltcG9ydC9wcmVmbGlnaHQgZGlkIG5vdCBlbWl0IGV2ZXJ5IHJlcXVpcmVkIGludGVncml0eSByZWNvcmQiKQoKCmRlZiBtYWluKCkgLT4gaW50Ogog' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_181feb4de4\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_181feb4de4",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197734.0625725
+    },
+    {
+      "command": "printf '%s' 'ICAgcHJpbnQoIkdVRVNUX1BST0JFX0JFR0lOIiwgZmx1c2g9VHJ1ZSkKICAgIHByaW50KCJVVEM9IiArIHJ1bihbIi91c3IvYmluL2RhdGUiLCAiLXUiLCAiKyVGVCVUWiJdKS5zdGRvdXQuc3RyaXAoKSwgZmx1c2g9VHJ1ZSkKICAgIHByaW50KCJJRD0iICsgcnVuKFsiL3Vzci9iaW4vaWQiXSkuc3Rkb3V0LnN0cmlwKCksIGZsdXNoPVRydWUpCiAgICBwcmludCgiS0VSTkVMPSIgKyBydW4oWyIvdXNyL2Jpbi91bmFtZSIsICItYSJdKS5zdGRvdXQuc3RyaXAoKSwgZmx1c2g9VHJ1ZSkKCiAgICBzb3VyY2Vf' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_e794fd77be\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_e794fd77be",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197734.8953168
+    },
+    {
+      "command": "printf '%s' 'bW91bnQgPSB2ZXJpZnlfc291cmNlX21vdW50KCkKICAgIHByaW50KCJTT1VSQ0VfTU9VTlQ9IiArIHNvdXJjZV9tb3VudCwgZmx1c2g9VHJ1ZSkKICAgIGV4cGVjdGVkX2hlbHBlcl9zaGEyNTYgPSBvcy5lbnZpcm9uLmdldCgiTENfRVhQRUNURURfR1VFU1RfSEVMUEVSX1NIQTI1NiIsICIiKQogICAgZXhwZWN0ZWRfbWFuaWZlc3Rfc2hhMjU2ID0gb3MuZW52aXJvbi5nZXQoIkxDX0VYUEVDVEVEX1VTQl9CVUlMREVSX01BTklGRVNUX1NIQTI1NiIsICIiKQogICAgaGVscGVyX3NoYTI1NiA9IHZlcmlmeV9n' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_6a2034d8ef\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_6a2034d8ef",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197735.7982678
+    },
+    {
+      "command": "printf '%s' 'dWVzdF9oZWxwZXJfYmluZGluZyhleHBlY3RlZF9oZWxwZXJfc2hhMjU2KQogICAgaWYgZXhwZWN0ZWRfbWFuaWZlc3Rfc2hhMjU2ICE9IEVYUEVDVEVEX1VTQl9CVUlMREVSX01BTklGRVNUX1NIQTI1NjoKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoImhvc3QtcGlubmVkIGFuZCBoZWxwZXItcGlubmVkIHVzYl9idWlsZGVyIG1hbmlmZXN0cyBkaWZmZXIiKQogICAgbWFuaWZlc3RfcmVzdWx0ID0gdmVyaWZ5X3VzYl9idWlsZGVyX3NvdXJjZV9tYW5pZmVzdCgpCiAgICB3cml0ZV9vcGVuID0gcmVxdWly' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_1b117afb41\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_1b117afb41",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197736.4520261
+    },
+    {
+      "command": "printf '%s' 'ZV9yZWFkb25seV9zb3VyY2Vfd3JpdGVfb3BlbihTT1VSQ0UgLyAidXNiX2J1aWxkZXIvYnVpbGRfdXNiLnB5IikKICAgIHByaW50KCJHVUVTVF9IRUxQRVJfU0hBMjU2PSIgKyBoZWxwZXJfc2hhMjU2LCBmbHVzaD1UcnVlKQogICAgcHJpbnQoIlVTQl9CVUlMREVSX1NPVVJDRV9NQU5JRkVTVF9TSEEyNTY9IiArIHN0cihtYW5pZmVzdF9yZXN1bHRbIm1hbmlmZXN0X3NoYTI1NiJdKSwgZmx1c2g9VHJ1ZSkKICAgIHByaW50KCJVU0JfQlVJTERFUl9TT1VSQ0VfTUFOSUZFU1RfRklMRV9DT1VOVD0iICsgc3Ry' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_18f454f1f5\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_18f454f1f5",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197737.2972662
+    },
+    {
+      "command": "printf '%s' 'KG1hbmlmZXN0X3Jlc3VsdFsiZmlsZV9jb3VudCJdKSwgZmx1c2g9VHJ1ZSkKICAgIHByaW50KCJVU0JfQlVJTERFUl9TT1VSQ0VfV1JJVEVfT1BFTj0iICsgd3JpdGVfb3BlbiwgZmx1c2g9VHJ1ZSkKICAgIHByaW50KCJHVUVTVF9HSVRfQ0hFQ0s9Tk9UX1BFUkZPUk1FRDsgaG9zdCBHaXQgSEVBRC9zdGF0dXMgdmFsaWRhdGlvbiBvbmx5IiwgZmx1c2g9VHJ1ZSkKCiAgICBleHBlY3RlZF9wYWNrYWdlcyA9IGV4YWN0X2xvY2tlZF9wYWNrYWdlcygpCiAgICBwYWNrYWdlX3Jlc3VsdCA9IHJ1bihbIi91c3Iv' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_ca58820a42\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_ca58820a42",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197737.9332902
+    },
+    {
+      "command": "printf '%s' 'YmluL3BhY21hbiIsICItUSIsICpzb3J0ZWQoZXhwZWN0ZWRfcGFja2FnZXMpXSwgY2hlY2s9RmFsc2UpCiAgICBhY3R1YWxfcGFja2FnZXM6IGRpY3Rbc3RyLCBzdHJdID0ge30KICAgIGZvciBsaW5lIGluIHBhY2thZ2VfcmVzdWx0LnN0ZG91dC5zcGxpdGxpbmVzKCk6CiAgICAgICAgZmllbGRzID0gbGluZS5zcGxpdCgpCiAgICAgICAgaWYgbGVuKGZpZWxkcykgIT0gMiBvciBmaWVsZHNbMF0gaW4gYWN0dWFsX3BhY2thZ2VzOgogICAgICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJtYWxmb3JtZWQg' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_3d0cd23f4d\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_3d0cd23f4d",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197738.7357225
+    },
+    {
+      "command": "printf '%s' 'b3IgZHVwbGljYXRlIHBhY21hbiBwYWNrYWdlIHJvdzoge2xpbmUhcn0iKQogICAgICAgIGFjdHVhbF9wYWNrYWdlc1tmaWVsZHNbMF1dID0gZmllbGRzWzFdCiAgICBpZiBwYWNrYWdlX3Jlc3VsdC5yZXR1cm5jb2RlICE9IDAgb3IgYWN0dWFsX3BhY2thZ2VzICE9IGV4cGVjdGVkX3BhY2thZ2VzOgogICAgICAgIHByaW50KCJMT0NLRURfUEFDS0FHRV9FWFBFQ1RFRD0iICsganNvbi5kdW1wcyhleHBlY3RlZF9wYWNrYWdlcywgc29ydF9rZXlzPVRydWUpLCBmbHVzaD1UcnVlKQogICAgICAgIHByaW50KCJM' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_d41f50c11f\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_d41f50c11f",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197739.3898814
+    },
+    {
+      "command": "printf '%s' 'T0NLRURfUEFDS0FHRV9BQ1RVQUw9IiArIGpzb24uZHVtcHMoYWN0dWFsX3BhY2thZ2VzLCBzb3J0X2tleXM9VHJ1ZSksIGZsdXNoPVRydWUpCiAgICAgICAgcmFpc2UgUnVudGltZUVycm9yKCJsaXZlIElTTyBwYWNrYWdlIHZlcnNpb25zIGRvIG5vdCBtYXRjaCB0aGUgY2hlY2tlZC1pbiByb290bGVzcyBidWlsZCBsb2NrIikKICAgIHByaW50KCJMT0NLRURfUEFDS0FHRV9WRVJTSU9OUz0iICsganNvbi5kdW1wcyhhY3R1YWxfcGFja2FnZXMsIHNvcnRfa2V5cz1UcnVlKSwgZmx1c2g9VHJ1ZSkKCiAgICBw' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_690fe2fbee\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_690fe2fbee",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197740.335276
+    },
+    {
+      "command": "printf '%s' 'cmVwYXJlX2J1aWxkX2lkZW50aXR5KCkKICAgIHJ1bl9yb290bGVzc19wcmVmbGlnaHRzKCkKICAgIHZlcmlmeV9zY3JhdGNoX2RldmljZSgpCiAgICB2ZXJpZnlfc2NyYXRjaF93cml0ZSgpCiAgICBwcmludCgiR1VFU1RfUFJPQkVfQ09NUExFVEVfTk9fQlVJTEQiLCBmbHVzaD1UcnVlKQogICAgcmV0dXJuIDAKCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgdHJ5OgogICAgICAgIHJhaXNlIFN5c3RlbUV4aXQobWFpbigpKQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBleGM6CiAgICAgICAgcHJp' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_8b078bca60\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_8b078bca60",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197740.8957858
+    },
+    {
+      "command": "printf '%s' 'bnQoZiJHVUVTVF9QUk9CRV9FWENFUFRJT049e3R5cGUoZXhjKS5fX25hbWVfX306IHtleGN9IiwgZmx1c2g9VHJ1ZSkKICAgICAgICByYWlzZQo=' >> /run/lc-guest-probe.b64; printf '\\nLC_HELPER_CHUNK_58d14225a0\\n'",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_CHUNK_58d14225a0",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197741.6912084
+    },
+    {
+      "command": "base64 -d /run/lc-guest-probe.b64 > /run/lc-guest-probe.py && chmod 0755 /run/lc-guest-probe.py; rc=$?; sha256sum /run/lc-guest-probe.py; printf '\\nLC_HELPER_COPY_4bda0d229489b47f:%s\\n' \"$rc\"",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_HELPER_COPY_4bda0d229489b47f:0",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197742.097448
+    },
+    {
+      "command": "LC_EXPECTED_GUEST_HELPER_SHA256=b5b4897c4d78dc296717315668f361865279f5c17f49b095f64ed213f2569a1c LC_EXPECTED_USB_BUILDER_MANIFEST_SHA256=176ae9db968ddf6fae1718c793e924dc42937b0bb9d3044c08e45937fc5396c5 PYTHONOPTIMIZE=0 PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 /run/lc-guest-probe.py; rc=$?; printf '\\nLC_GUEST_PROBE_RC_a1ff837f7400bc0f:%s\\n' \"$rc\"",
+      "completion": "marker_and_shell_prompt",
+      "marker": "LC_GUEST_PROBE_RC_a1ff837f7400bc0f",
+      "prompt_mode": "debug",
+      "utc_epoch": 1792197752.667232
+    }
+  ],
+  "guest_shell_inputs": [
+    {
+      "fresh_root_shell_prompt_seen": true,
+      "input_base64": "Cg==",
+      "input_description": "one blank newline",
+      "observed_marker_utc_epoch": 1792197598.274035,
+      "prompt_match": {
+        "fresh_data_end_offset": 1532,
+        "fresh_data_start_offset": 1487,
+        "line_sha256": "8fe5d91ee598601553d1cb99c63555685e94cd50a71fc82de05e60bfa76dfa29",
+        "normalized_line": "sh-5.3# ",
+        "observed_utc_epoch": 1792197620.0900679,
+        "quiet_interval_seconds": 1.0,
+        "shape": "versioned-sh"
+      },
+      "reason": "exact bounded OSC servicename=debug-shell.service marker observed",
+      "response_length_bytes": 45,
+      "response_sha256": "7582fe9ce19569375e286956b84d06af3a8af9be4e2cf5b778bdc4f859799683",
+      "response_start_offset": 1487,
+      "sent_utc_epoch": 1792197598.2740557
+    }
+  ],
+  "guest_shell_is_normal_login": false,
+  "guest_shell_method": "systemd.debug_shell on ttyS0; ephemeral diagnostic shell",
+  "guest_shell_prompt_match": {
+    "fresh_data_end_offset": 1532,
+    "fresh_data_start_offset": 1487,
+    "line_sha256": "8fe5d91ee598601553d1cb99c63555685e94cd50a71fc82de05e60bfa76dfa29",
+    "normalized_line": "sh-5.3# ",
+    "observed_utc_epoch": 1792197620.0900679,
+    "quiet_interval_seconds": 1.0,
+    "shape": "versioned-sh"
+  },
+  "guest_shell_prompt_seen": true,
+  "guest_shell_prompt_serial_offset": 1487,
+  "guest_shell_prompt_type": "SYSTEMD_DEBUG_SHELL_EPHEMERAL_NOT_NORMAL_LOGIN",
+  "guest_shell_prompt_utc_epoch": 1792197620.090106,
+  "guest_usb_builder_source_manifest_file_count_expected": 24,
+  "guest_usb_builder_source_manifest_sha256": "176ae9db968ddf6fae1718c793e924dc42937b0bb9d3044c08e45937fc5396c5",
+  "hardware_or_firmware_validation": false,
+  "ignored_serial_log_checks": [
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "core.autocrlf=true",
+        "-c",
+        "core.filemode=false",
+        "check-ignore",
+        "--quiet",
+        "--",
+        "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log"
+      ],
+      "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log",
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "core.autocrlf=true",
+        "-c",
+        "core.filemode=false",
+        "check-ignore",
+        "--quiet",
+        "--",
+        "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/serial.log"
+      ],
+      "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/serial.log",
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "core.autocrlf=true",
+        "-c",
+        "core.filemode=false",
+        "check-ignore",
+        "--quiet",
+        "--",
+        "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/serial.log"
+      ],
+      "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/serial.log",
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "core.autocrlf=true",
+        "-c",
+        "core.filemode=false",
+        "check-ignore",
+        "--quiet",
+        "--",
+        "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/serial.log"
+      ],
+      "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/serial.log",
+      "returncode": 0,
+      "stdout": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-C",
+        "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+        "-c",
+        "core.autocrlf=true",
+        "-c",
+        "core.filemode=false",
+        "check-ignore",
+        "--quiet",
+        "--",
+        "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/serial.log"
+      ],
+      "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/serial.log",
+      "returncode": 0,
+      "stdout": ""
+    }
+  ],
+  "ignored_serial_log_paths": [
+    "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log",
+    "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/serial.log",
+    "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/serial.log",
+    "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/serial.log",
+    "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/serial.log"
+  ],
+  "initramfs": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/initramfs-linux.img",
+    "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+    "size": 249467488
+  },
+  "iso_label_output": "ARCH_202610",
+  "iso_path": "/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_unchanged": true,
+  "kernel": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/vmlinuz-linux",
+    "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+    "size": 17224192
+  },
+  "last_c_free_bytes": 5837967360,
+  "launch_utc_epoch": 1792197026.1480181,
+  "monitor_connected": true,
+  "network": "QEMU user-mode NIC with restrict=on; no forwarding or host access configured",
+  "normal_boot_or_login_validated": false,
+  "normal_login_getty_autogeneration_disabled": true,
+  "offline_launcher_status": "OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE; not invoked",
+  "output_dir": "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7",
+  "output_filesystem_type": "ext4",
+  "output_parent_chain": [
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 493,
+      "path": "/var",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 1023,
+      "path": "/var/tmp",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 65534,
+      "mode": 448,
+      "path": "/var/tmp/lcvm",
+      "uid": 65534
+    }
+  ],
+  "package_install_or_sync_invoked": false,
+  "process_launched": true,
+  "product_build_invoked": false,
+  "purpose": "disposable Arch systemd debug-shell source-integrity/import-isolation preflight only; retry7 candidate",
+  "qemu_argv": [
+    "/usr/bin/qemu-system-x86_64",
+    "-machine",
+    "q35",
+    "-accel",
+    "tcg,thread=multi",
+    "-nodefaults",
+    "-cpu",
+    "max",
+    "-m",
+    "2048",
+    "-smp",
+    "2",
+    "-kernel",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/vmlinuz-linux",
+    "-initrd",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/initramfs-linux.img",
+    "-append",
+    "archisobasedir=arch archisolabel=ARCH_202610 copytoram=n console=tty0 console=ttyS0,115200n8 systemd.getty_auto=0 systemd.show_status=0 systemd.debug_shell systemd.default_debug_tty=ttyS0",
+    "-device",
+    "ich9-ahci,id=ahci",
+    "-drive",
+    "file=/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso,format=raw,media=cdrom,readonly=on,if=none,id=installer",
+    "-device",
+    "ide-cd,drive=installer,bus=ahci.0",
+    "-drive",
+    "if=none,id=scratch,file=/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/scratch-3g.raw,format=raw,cache=none",
+    "-device",
+    "virtio-blk-pci,drive=scratch,serial=LCV1SCRATCH3G",
+    "-fsdev",
+    "local,id=source,path=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader,security_model=none,readonly=on",
+    "-device",
+    "virtio-9p-pci,fsdev=source,mount_tag=source",
+    "-netdev",
+    "user,id=net0,restrict=on",
+    "-device",
+    "virtio-net-pci,netdev=net0",
+    "-chardev",
+    "socket,id=serial0,path=/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/serial.sock,server=on,wait=off",
+    "-serial",
+    "chardev:serial0",
+    "-monitor",
+    "unix:/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/monitor.sock,server=on,wait=off",
+    "-display",
+    "none",
+    "-vga",
+    "std",
+    "-no-reboot",
+    "-no-user-config",
+    "-name",
+    "librecore-disposable-arch-preflight-20261016-retry7"
+  ],
+  "qemu_exit_code": 0,
+  "qemu_pid": 319,
+  "qemu_terminated": true,
+  "qemu_version": "QEMU emulator version 11.1.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "runner_error": "RunnerError: guest command did not complete before deadline: LC_GUEST_PROBE_RC_a1ff837f7400bc0f",
+  "runner_invocation": {
+    "argv": [
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py",
+      "--output-dir",
+      "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7"
+    ],
+    "capabilities_and_no_new_privs": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1"
+    },
+    "egid": 65534,
+    "euid": 65534,
+    "gid": 65534,
+    "home": "/var/tmp/lcvm",
+    "path": "/usr/bin:/bin",
+    "supplementary_groups": [],
+    "tmpdir": "/var/tmp/lcvm",
+    "uid": 65534
+  },
+  "runner_sha256": "1a6d78053e8d7b657d6a8c5a67d352d12d786a64f9258fda71c208469872c8e9",
+  "schema_version": 1,
+  "scratch": {
+    "allocated_bytes_before_guest": 0,
+    "format": "raw",
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261017-retry7/scratch-3g.raw",
+    "serial": "LCV1SCRATCH3G",
+    "virtual_size_bytes": 3221225472
+  },
+  "scratch_allocated_bytes_after": 0,
+  "scratch_format": "raw sparse file, exact maximum virtual size 3 GiB",
+  "serial_command_echo_disabled": true,
+  "serial_connected": true,
+  "source_git_validation": {
+    "check_ignore_checks": [
+      {
+        "argv": [
+          "/usr/bin/git",
+          "-C",
+          "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "core.autocrlf=true",
+          "-c",
+          "core.filemode=false",
+          "check-ignore",
+          "--quiet",
+          "--",
+          "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log"
+        ],
+        "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log",
+        "returncode": 0,
+        "stdout": ""
+      },
+      {
+        "argv": [
+          "/usr/bin/git",
+          "-C",
+          "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "core.autocrlf=true",
+          "-c",
+          "core.filemode=false",
+          "check-ignore",
+          "--quiet",
+          "--",
+          "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/serial.log"
+        ],
+        "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/serial.log",
+        "returncode": 0,
+        "stdout": ""
+      },
+      {
+        "argv": [
+          "/usr/bin/git",
+          "-C",
+          "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "core.autocrlf=true",
+          "-c",
+          "core.filemode=false",
+          "check-ignore",
+          "--quiet",
+          "--",
+          "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/serial.log"
+        ],
+        "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/serial.log",
+        "returncode": 0,
+        "stdout": ""
+      },
+      {
+        "argv": [
+          "/usr/bin/git",
+          "-C",
+          "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "core.autocrlf=true",
+          "-c",
+          "core.filemode=false",
+          "check-ignore",
+          "--quiet",
+          "--",
+          "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/serial.log"
+        ],
+        "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/serial.log",
+        "returncode": 0,
+        "stdout": ""
+      },
+      {
+        "argv": [
+          "/usr/bin/git",
+          "-C",
+          "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+          "-c",
+          "core.autocrlf=true",
+          "-c",
+          "core.filemode=false",
+          "check-ignore",
+          "--quiet",
+          "--",
+          "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/serial.log"
+        ],
+        "path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/serial.log",
+        "returncode": 0,
+        "stdout": ""
+      }
+    ],
+    "core_autocrlf": "true",
+    "core_filemode": "false",
+    "git_optional_locks": "0",
+    "head_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "rev-parse",
+      "HEAD"
+    ],
+    "head_returncode": 0,
+    "head_stdout": "0522fcb3ba68c32df428b998e6f26c0744a50860\n",
+    "safe_directory": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+    "status_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "status_returncode": 0,
+    "status_stdout": "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/test_retry7_guest_probe.py\n"
+  },
+  "source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "source_head_output": "0522fcb3ba68c32df428b998e6f26c0744a50860\n",
+  "source_head_returncode": 0,
+  "source_mount": "9p read-only mount command returned zero",
+  "source_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+  "source_share_read_only": true,
+  "source_status": [
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/test_retry7_guest_probe.py"
+  ],
+  "source_status_output": "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/test_retry7_guest_probe.py\n",
+  "source_status_returncode": 0,
+  "static_serial_getty_absence_checked": false,
+  "status": "SYSTEMD_DEBUG_SHELL_PROMPT_AFTER_MARKER_AND_NEWLINE",
+  "systemd_getty_auto": "0",
+  "termination": "QEMU exited after HMP quit and process-group cleanup",
+  "wall_limit_seconds": 900
+}

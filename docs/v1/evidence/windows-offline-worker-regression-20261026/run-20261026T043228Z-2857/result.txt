@@ -1,0 +1,8 @@
+pytest_exit=1
+source_manifests_match=True
+finished_utc=2026-10-26T04:34:11.0440493Z
+free_after_bytes=1654513664
+scratch_cleanup=preserved-by-policy
+physical_hardware_access=none
+firmware_write=none
+

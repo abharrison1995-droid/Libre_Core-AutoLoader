@@ -1,0 +1,1 @@
+The additional RFB client test in `grab.py` failed with `ConnectionRefusedError` while the run9 VNC client was connected. It sent no key events and captured no frame. The attempt was read-only and did not change the guest.

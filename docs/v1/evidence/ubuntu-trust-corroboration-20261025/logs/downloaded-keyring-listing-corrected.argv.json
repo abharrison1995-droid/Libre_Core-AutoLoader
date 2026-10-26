@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/gpg",
+    "--homedir",
+    "/tmp/lc-ubuntu-keyring-readonly-20261025",
+    "--batch",
+    "--no-options",
+    "--no-default-keyring",
+    "--keyring",
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-trust-corroboration-20261025/downloads/ubuntu-archive-keyring.gpg",
+    "--with-colons",
+    "--fingerprint",
+    "--list-keys"
+  ],
+  "operation": "Read-only key listing; no key import, payload execution, install, or network fetch",
+  "executable": "C:\\Windows\\System32\\wsl.exe"
+}

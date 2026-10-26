@@ -12,11 +12,14 @@ def is_admin() -> bool:
     """Check if current process has elevated Administrator/root privileges."""
     if os.name == 'nt':
         try:
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+            windows_dll = getattr(ctypes, "windll", None)
+            if windows_dll is None:
+                return False
+            return windows_dll.shell32.IsUserAnAdmin() != 0
         except Exception as e:
             logger.debug("Failed to check Windows admin privileges: %s", e)
             return False
-    try:
-        return os.geteuid() == 0
-    except AttributeError:
+    get_effective_uid = getattr(os, "geteuid", None)
+    if not callable(get_effective_uid):
         return False
+    return get_effective_uid() == 0

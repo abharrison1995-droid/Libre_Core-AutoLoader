@@ -1,0 +1,9 @@
+Attempt: retry13 direct-kernel serial-shell diagnostic (diagnostic only)
+QEMU: qemu-system-x86_64 10.2.1, TCG multi-thread, 4 vCPU, 6144 MiB RAM, 600-second cap.
+Verified ISO: /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/iso-boot/archlinux-2026.10.01-x86_64.iso (SHA-256 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5), attached read-only as CD-ROM.
+Kernel/initramfs extracted from that ISO with 7-Zip using exact member paths arch/boot/x86_64/vmlinuz-linux and arch/boot/x86_64/initramfs-linux.img; extracted files are hashed in the attempt record.
+Base kernel args: archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00
+Added kernel args: console=ttyS0,115200n8 systemd.getty_auto=0 systemd.debug_shell systemd.default_debug_tty=ttyS0
+Serial: -serial stdio, with QEMU run under pty_qemu_runner.py on an interactive PTY. The wrapper records serial output and user input separately and applies the 600-second cap.
+Monitor: QMP Unix socket /tmp/lcarch-native-retry13-direct-kernel.qmp; only query-status and quit helper operations are permitted.
+Storage: fresh operation-local qcow overlays for existing workspace (80 GiB virtual) and results (4 GiB virtual); existing source image attached read-only. No NIC, USB, programmer, physical disk, or host device passthrough.

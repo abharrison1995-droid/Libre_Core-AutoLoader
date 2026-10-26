@@ -1,0 +1,1 @@
+.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider -vv -ra --basetemp=C:\w\lc-x200-write-block-20261026 --junitxml=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-05\junit.xml tests/test_x200_libreboot_workflow.py::test_x200_writers_and_process_paths_remain_unreachable

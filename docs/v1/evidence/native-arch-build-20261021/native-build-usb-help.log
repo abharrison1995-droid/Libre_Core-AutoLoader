@@ -1,0 +1,23 @@
+Usage: python -m autoloader build-usb [OPTIONS]
+
+  Build a candidate ISO through the pinned Archiso contract (Linux only).
+
+Options:
+  --source-root DIRECTORY         Absolute clean Git checkout containing this
+                                  project.  [required]
+  --profile-dir DIRECTORY         Absolute checked-in Archiso profile
+                                  directory.  [required]
+  --snapshot-lock FILE            Absolute checked-in package snapshot lock.
+                                  [required]
+  --output-dir DIRECTORY          Absolute existing empty output directory;
+                                  files are never overwritten.  [required]
+  --work-parent DIRECTORY         Absolute existing directory for an owned
+                                  temporary build tree.  [required]
+  --network-mode [online|offline]
+                                  Use the fixed dated archive or a verified
+                                  local package repository.  [required]
+  --offline-repository DIRECTORY  Absolute local repository root; required for
+                                  offline mode.
+  --offline-manifest FILE         Absolute file/hash manifest for the offline
+                                  repository.
+  --help                          Show this message and exit.

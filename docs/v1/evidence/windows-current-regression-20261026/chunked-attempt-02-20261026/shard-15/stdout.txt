@@ -1,0 +1,9 @@
+sssss......s..........                                                   [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_image.py:788: candidate state symlink policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_image.py:804: candidate state hardlink policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_image.py:818: restart inspection test requires Linux candidate publication
+SKIPPED [1] tests\test_offline_vm_image.py:861: POSIX candidate permission modes are not available
+SKIPPED [1] tests\test_offline_vm_image.py:896: symlinks are unavailable on this filesystem
+SKIPPED [1] tests\test_offline_vm_package_closure.py:394: sealed executable memfd is Linux-specific
+16 passed, 6 skipped in 0.84s

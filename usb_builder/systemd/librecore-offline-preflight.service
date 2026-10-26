@@ -1,0 +1,39 @@
+[Unit]
+Description=LibreCore sealed offline V1 NNP=1 build preflight
+After=local-fs.target
+RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs
+ConditionPathExists=/dev/disk/by-id/virtio-LC-REQUEST-RO
+ConditionPathExists=!/run/librecore-worker/preflight-started.json
+
+[Service]
+Type=oneshot
+User=fwbuild
+Group=fwbuild
+WorkingDirectory=/
+Environment=PATH=/usr/bin:/bin
+Environment=HOME=/run/librecore-worker
+Environment=LANG=C
+Environment=LC_ALL=C
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONOPTIMIZE=0
+ExecStart=/usr/bin/python -B -m usb_builder.offline_vm_build_preflight
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_SETUID CAP_SETGID
+AmbientCapabilities=
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /dev/disk/by-id/virtio-LC-REQUEST-RO
+ReadWritePaths=/run/librecore-scratch /run/librecore-package-dbs
+RuntimeDirectory=librecore-scratch librecore-worker librecore-package-dbs
+RuntimeDirectoryMode=0700
+KillMode=control-group
+RuntimeMaxSec=4h30min
+TimeoutStartSec=4h30min
+TimeoutStopSec=5s
+SuccessAction=poweroff
+FailureAction=poweroff
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "dated-extra-db",
+    "method": "HEAD",
+    "requested_url": "https://archive.archlinux.org/repos/2026/09/30/extra/os/x86_64/extra.db",
+    "effective_url": "https://archive.archlinux.org/repos/2026/09/30/extra/os/x86_64/extra.db",
+    "exit_code": 0,
+    "body_received": false,
+    "headers_file": "dated-extra-db.response-headers.txt",
+    "transport_file": "dated-extra-db.transport.txt",
+    "stderr_file": "dated-extra-db.stderr.txt"
+  },
+  {
+    "id": "dated-keyring-archive-metadata",
+    "method": "HEAD",
+    "requested_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst",
+    "effective_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst",
+    "exit_code": 0,
+    "body_received": false,
+    "headers_file": "dated-keyring-archive-metadata.response-headers.txt",
+    "transport_file": "dated-keyring-archive-metadata.transport.txt",
+    "stderr_file": "dated-keyring-archive-metadata.stderr.txt"
+  },
+  {
+    "id": "dated-pacman-archive-metadata",
+    "method": "HEAD",
+    "requested_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst",
+    "effective_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst",
+    "exit_code": 0,
+    "body_received": false,
+    "headers_file": "dated-pacman-archive-metadata.response-headers.txt",
+    "transport_file": "dated-pacman-archive-metadata.transport.txt",
+    "stderr_file": "dated-pacman-archive-metadata.stderr.txt"
+  }
+]

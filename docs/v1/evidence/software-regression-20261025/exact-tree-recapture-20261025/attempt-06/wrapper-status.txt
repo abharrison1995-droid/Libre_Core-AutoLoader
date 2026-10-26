@@ -1,0 +1,2 @@
+Outer runner status: 1
+Reason: after pytest exited 0, set -e stopped the runner when recursive removal of /tmp/librecore-autoloader-v1-exact-tests-20261025-r3 encountered test-created root-owned files and permission-denied errors. The temporary paths were in WSL volatile /tmp and /run and were absent after WSL stopped. pytest.exit is 0; JUnit contains 1382 cases, 1378 passed, 4 skipped, 0 failures, 0 errors.

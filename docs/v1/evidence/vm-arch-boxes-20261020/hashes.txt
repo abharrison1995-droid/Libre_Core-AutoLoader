@@ -1,0 +1,3 @@
+bb888a084568f4e68b1260ffa614ebf806c79668fa20f946c691973538f4d33c  /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/images/Arch-Linux-x86_64-basic.qcow2
+6a7040cc5a2fa470b41ae5862362c65e109bb253422f7759693e6daae14a213d  /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/guest-overlay.qcow2
+c0616cf5635a3b2c8978d3666827571f08073c2c8ca25e5389aef5c371283148  /mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/screen-3.ppm

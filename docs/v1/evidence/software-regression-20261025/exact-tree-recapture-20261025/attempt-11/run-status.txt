@@ -1,0 +1,1 @@
+INTERRUPTED_INVALID_ENVIRONMENT: source was executed directly from /mnt/c rather than a POSIX snapshot; pytest scratch reached ENOSPC on /tmp; do not count as current-source full-suite result.

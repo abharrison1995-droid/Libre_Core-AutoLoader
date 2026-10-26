@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-20",
+  "qemu_version": "QEMU emulator version 10.2.1 (Debian 1:10.2.1+ds-1ubuntu3.2)",
+  "argv": [
+    "qemu-system-x86_64",
+    "-daemonize",
+    "-pidfile", "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/qemu.pid",
+    "-name", "librecore-arch-builder",
+    "-machine", "pc",
+    "-accel", "tcg",
+    "-cpu", "max",
+    "-smp", "1",
+    "-m", "4096",
+    "-drive", "file=/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/guest-overlay.qcow2,format=qcow2,if=ide",
+    "-boot", "c",
+    "-nic", "user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:32222-:22",
+    "-display", "none",
+    "-serial", "file:/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/serial.log",
+    "-monitor", "none",
+    "-qmp", "unix:/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/qmp.sock,server=on,wait=off",
+    "-no-shutdown",
+    "-D", "/mnt/wsl/PHYSICALDRIVE1p2/opt/librecore-autoloader-v1-vm/arch-boxes-shell-20261020/qemu.log",
+    "-d", "guest_errors"
+  ]
+}

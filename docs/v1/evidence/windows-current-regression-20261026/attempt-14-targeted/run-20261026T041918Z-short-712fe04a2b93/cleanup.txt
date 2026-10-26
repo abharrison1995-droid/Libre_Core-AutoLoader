@@ -1,0 +1,8 @@
+state=preserved-command-safety-policy
+scratch=C:\w\lc14-83a2dcdd203d429a8bc8
+direct_child_of_c_w=true
+owner_marker_verified=true
+reparse_entries=0
+active_process_references=0
+cleanup_attempt=PowerShell exact-root deletion commands were rejected before execution by command safety policy; no deletion occurred.
+details=Operation-owned test scratch is retained for manual review; no alternate deletion method was used.

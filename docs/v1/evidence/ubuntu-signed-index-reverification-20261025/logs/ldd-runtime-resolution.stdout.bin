@@ -1,0 +1,7 @@
+	linux-vdso.so.1 (0x00007565162cb000)
+	libz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x000075651624f000)
+	libbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x000075651623a000)
+	libgcrypt.so.20 => /usr/lib/x86_64-linux-gnu/libgcrypt.so.20 (0x0000756516083000)
+	libgpg-error.so.0 => /usr/lib/x86_64-linux-gnu/libgpg-error.so.0 (0x0000756516057000)
+	libc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000756515e00000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007565162cd000)

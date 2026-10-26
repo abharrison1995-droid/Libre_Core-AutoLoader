@@ -1,0 +1,27 @@
+qemu-system-x86_64
+-accel
+tcg,thread=multi
+-m
+3072
+-smp
+4
+-kernel
+/mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261014/direct/vmlinuz-linux
+-initrd
+/mnt/c/Users/Alex/AppData/Local/Temp/lc-b2-diagnostic-20261014/direct/initramfs-linux.img
+-append
+archisobasedir=arch archisosearchuuid=2026-10-13-22-51-40-00 console=tty0 console=ttyS0,115200n8 systemd.log_level=debug systemd.log_target=console systemd.debug_shell=1 systemd.unit=emergency.target
+-cdrom
+/home/alex/librecore-usb-kms-output-20261013-b2/candidate-bundle/libre_core_autoloader-2026.09.29-x86_64.iso
+-boot
+d
+-no-reboot
+-no-shutdown
+-display
+none
+-serial
+unix:/tmp/lc-b2-emergency-20261014-serial.sock,server=on,wait=off
+-monitor
+unix:/tmp/lc-b2-emergency-20261014-hmp.sock,server=on,wait=off
+-nic
+none

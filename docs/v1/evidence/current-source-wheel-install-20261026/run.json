@@ -1,0 +1,160 @@
+{
+  "result": "PASS",
+  "source_root": "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader",
+  "source_inputs": [
+    "README.md",
+    "pyproject.toml",
+    "autoloader",
+    "usb_builder"
+  ],
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.19044-SP0",
+  "python_executable": "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Scripts\\python.exe",
+  "network_policy": "pip --no-index; --no-deps; no build isolation; no cache",
+  "hardware_accessed": false,
+  "firmware_accessed": false,
+  "source_snapshot_sha256": "e071f9dbd6d8510eefa6c865b36475c08142b3c01f9efc8ca1ec8508a6b727b4",
+  "source_file_count": 149,
+  "build_backend_versions": {
+    "setuptools": "84.1.0",
+    "wheel": "0.48.0",
+    "pip": "26.2.2"
+  },
+  "build_backend_module_paths": {
+    "setuptools": "C:\\Users\\Alex\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\site-packages\\setuptools\\__init__.py",
+    "wheel": "C:\\Users\\Alex\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\site-packages\\wheel\\__init__.py"
+  },
+  "wheel_build": {
+    "argv": [
+      "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pip",
+      "wheel",
+      "--no-index",
+      "--no-deps",
+      "--no-build-isolation",
+      "--no-cache-dir",
+      "--wheel-dir",
+      "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\dist",
+      "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\source"
+    ],
+    "cwd": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\source",
+    "exit_code": 0
+  },
+  "wheel": {
+    "filename": "libre_core_autoloader-0.1.0-py3-none-any.whl",
+    "bytes": 551061,
+    "sha256": "8dd04f50015e45b4bb58e8d38765d4a339d91f4af2002677e7d31dee726fcb86"
+  },
+  "required_wheel_entries_present": true,
+  "wheel_runtime_dependencies_match": true,
+  "wheel_runtime_dependencies": [
+    "click>=8.0",
+    "psutil>=5.9",
+    "rich>=13.0",
+    "textual>=0.40.0"
+  ],
+  "wheel_requires_dist_match": true,
+  "wheel_requires_dist": [
+    "click>=8.0",
+    "mypy;extra==\"dev\"",
+    "psutil>=5.9",
+    "pytest-cov;extra==\"dev\"",
+    "pytest;extra==\"dev\"",
+    "rich>=13.0",
+    "setuptools;extra==\"dev\"",
+    "textual>=0.40.0",
+    "types-psutil;extra==\"dev\"",
+    "wheel;extra==\"dev\""
+  ],
+  "wheel_extras_match": true,
+  "wheel_extras": [
+    "dev"
+  ],
+  "wheel_requires_python": ">=3.11",
+  "wheel_patch_entries": [
+    "autoloader/rom_builder/patches/0009-x86-use-output-target-for-efi.patch",
+    "autoloader/rom_builder/patches/0010-lbmk-grub-explicit-unifont.patch",
+    "autoloader/rom_builder/patches/0011-lbmk-vboot-cbfstool-keep-strchr-result-const.patch",
+    "usb_builder/patches/arch-install-scripts-31-2-pacstrap-status.patch"
+  ],
+  "required_worker_module_entries_present": true,
+  "required_installed_resource_entries_present": true,
+  "wheel_install": {
+    "argv": [
+      "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Scripts\\python.exe",
+      "-m",
+      "pip",
+      "install",
+      "--no-index",
+      "--no-deps",
+      "--no-cache-dir",
+      "--target",
+      "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed",
+      "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\docs\\v1\\evidence\\current-source-wheel-install-20261026\\libre_core_autoloader-0.1.0-py3-none-any.whl"
+    ],
+    "cwd": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2",
+    "exit_code": 0
+  },
+  "installed_import_module_paths": {
+    "usb_builder.offline_vm_build": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_build.py",
+    "usb_builder.offline_vm_build_service": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_build_service.py",
+    "usb_builder.offline_vm_evidence": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_evidence.py",
+    "usb_builder.offline_vm_guest_worker": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_guest_worker.py",
+    "usb_builder.offline_vm_image": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_image.py",
+    "usb_builder.offline_vm_package_closure": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_package_closure.py",
+    "usb_builder.offline_vm_worker": "C:\\Users\\Alex\\AppData\\Local\\Temp\\lca-current-wheel-install-katypjn2\\installed\\usb_builder\\offline_vm_worker.py"
+  },
+  "runtime_dependencies_source": "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Lib\\site-packages",
+  "installed_snapshot_resources": {
+    "usb_builder/snapshot.lock.json": {
+      "snapshot_sha256": "5d66df5f5e6eacd0770399985b65507e84f208a7fbd1352faca13c0ead456cb1",
+      "installed_sha256": "5d66df5f5e6eacd0770399985b65507e84f208a7fbd1352faca13c0ead456cb1",
+      "matches_snapshot": true
+    },
+    "usb_builder/systemd/librecore-offline-build.service": {
+      "snapshot_sha256": "ce07f89b760f7c279e418a1d523a5ff117b29fc7d67181d5b205837c320d4455",
+      "installed_sha256": "ce07f89b760f7c279e418a1d523a5ff117b29fc7d67181d5b205837c320d4455",
+      "matches_snapshot": true
+    },
+    "usb_builder/systemd/librecore-offline-build.path": {
+      "snapshot_sha256": "138acb90c8bd8ee21af24ce8a52b4b989c04ad83e516e95f8d8ff60670580e31",
+      "installed_sha256": "138acb90c8bd8ee21af24ce8a52b4b989c04ad83e516e95f8d8ff60670580e31",
+      "matches_snapshot": true
+    },
+    "usb_builder/systemd/librecore-offline-preflight.service": {
+      "snapshot_sha256": "805a20f08f423021a0cd4ef3dfb6181b3adca118fe643d4c8a026179078ce59a",
+      "installed_sha256": "805a20f08f423021a0cd4ef3dfb6181b3adca118fe643d4c8a026179078ce59a",
+      "matches_snapshot": true
+    },
+    "usb_builder/systemd/librecore-offline-preflight.path": {
+      "snapshot_sha256": "a9c0a927a2bd566140411ecdaa37ff62cc7e6c97184de95675cafa3931b94977",
+      "installed_sha256": "a9c0a927a2bd566140411ecdaa37ff62cc7e6c97184de95675cafa3931b94977",
+      "matches_snapshot": true
+    }
+  },
+  "cli_help": {
+    "cli-help": {
+      "argv": [
+        "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Scripts\\python.exe",
+        "-m",
+        "autoloader",
+        "--help"
+      ],
+      "exit_code": 0
+    },
+    "flash-help": {
+      "argv": [
+        "C:\\Users\\Alex\\Desktop\\Libre_Core-AutoLoader\\.venv\\Scripts\\python.exe",
+        "-m",
+        "autoloader",
+        "flash",
+        "--help"
+      ],
+      "exit_code": 0
+    }
+  },
+  "source_after_sha256": "e071f9dbd6d8510eefa6c865b36475c08142b3c01f9efc8ca1ec8508a6b727b4",
+  "source_after_file_count": 149,
+  "source_unchanged": true
+}

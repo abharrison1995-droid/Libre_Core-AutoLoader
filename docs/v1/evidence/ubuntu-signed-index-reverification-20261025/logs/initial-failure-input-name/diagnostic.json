@@ -1,0 +1,7 @@
+{
+  "reason": "Verifier expected resolute-updates-Packages.xz while staged input was resolute-updates-main-Packages.xz",
+  "status": "EXPECTED_HARNESS_INPUT_NAMING_FAILURE",
+  "network_or_install": false,
+  "retry_changes": "Corrected helper to use the retained original input name",
+  "failed_before_package_extraction_and_before_any_gpgv_execution": true
+}

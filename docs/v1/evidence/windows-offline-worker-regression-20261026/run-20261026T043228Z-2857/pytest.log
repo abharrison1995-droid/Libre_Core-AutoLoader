@@ -1,0 +1,2063 @@
+......s.ss.ssssss.ssssssss.........sssssssssssss.........ss............. [ 22%]
+................FFFFFFFFFFFF.FFFsF...sFFFFFFFFFFFFFFFFsFFFssssssssssssss [ 45%]
+sssssssssssssssssssssssssssssssssssssssssss.....ss...sssssssssssssssssss [ 67%]
+ssssss......s.........................s......s......ssssssssssss.ssss... [ 90%]
+.....s............sss...ssssssss                                         [100%]
+================================== FAILURES ===================================
+__ test_candidate_publication_orders_payload_receipt_header_and_final_commit __
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_ord0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF3E060>
+
+    def test_candidate_publication_orders_payload_receipt_header_and_final_commit(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate.iso"
+        payload = b"candidate bytes for durable publication"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        events: list[tuple[str, int | None]] = []
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+    
+        def recording_pwrite(fd: int, data: bytes, offset: int) -> None:
+            events.append(("write", offset))
+            original_pwrite(fd, data, offset)
+    
+        def recording_fsync(fd: int) -> None:
+            events.append(("fsync", None))
+            original_fsync(fd)
+    
+        def recording_service_result() -> None:
+            events.append(("service-result", None))
+    
+        def recording_evidence_finalization() -> tuple[int, str]:
+            events.append(("evidence-fsync-hash", None))
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        def recording_service_ready() -> None:
+            events.append(("service-ready", None))
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", recording_pwrite)
+        monkeypatch.setattr(os, "fsync", recording_fsync)
+>       _run_candidate_publication(
+            plan, candidate, result, request,
+            publish_service_result=recording_service_result,
+            publish_service_ready=recording_service_ready,
+            finalize_evidence_volume=recording_evidence_finalization,
+        )
+
+tests\test_offline_vm_worker.py:1619: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[copy-copy failure] _
+
+failure = 'copy', expected_message = 'copy failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF3C7D0>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[payload_fsync-fsync failure] _
+
+failure = 'payload_fsync', expected_message = 'fsync failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF41790>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[evidence_finalize-evidence-volume fsync/hash failure] _
+
+failure = 'evidence_finalize'
+expected_message = 'evidence-volume fsync/hash failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4DBB0>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[service_result-service result failure] _
+
+failure = 'service_result', expected_message = 'service result failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4D070>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[receipt_write-receipt write failure] _
+
+failure = 'receipt_write', expected_message = 'receipt write failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4D5B0>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[receipt_fsync-fsync failure] _
+
+failure = 'receipt_fsync', expected_message = 'fsync failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4D820>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[header_write-header write failure] _
+
+failure = 'header_write', expected_message = 'header write failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACE25C70>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[header_fsync-fsync failure] _
+
+failure = 'header_fsync', expected_message = 'fsync failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF53D10>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[service_ready-service ready failure] _
+
+failure = 'service_ready', expected_message = 'service ready failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai8')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF51370>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[commit_write-commit write failure] _
+
+failure = 'commit_write', expected_message = 'commit write failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai9')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF52630>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_candidate_publication_failures_never_leave_host_accepted_header[terminal_write-terminal write failure] _
+
+failure = 'terminal_write', expected_message = 'terminal write failure'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_candidate_publication_fai10')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4D1F0>
+
+    @pytest.mark.parametrize(
+        ("failure", "expected_message"),
+        (
+            ("copy", "copy failure"),
+            ("payload_fsync", "fsync failure"),
+            ("evidence_finalize", "evidence-volume fsync/hash failure"),
+            ("service_result", "service result failure"),
+            ("receipt_write", "receipt write failure"),
+            ("receipt_fsync", "fsync failure"),
+            ("header_write", "header write failure"),
+            ("header_fsync", "fsync failure"),
+            ("service_ready", "service ready failure"),
+            ("commit_write", "commit write failure"),
+            ("terminal_write", "terminal write failure"),
+        ),
+    )
+    def test_candidate_publication_failures_never_leave_host_accepted_header(
+        failure: str,
+        expected_message: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-failure.iso"
+        payload = b"candidate bytes for failure injection"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        original_fsync = os.fsync
+        fsync_number = [0]
+        service_result_calls: list[int] = []
+        service_ready_calls: list[int] = []
+    
+        def failing_pwrite(fd: int, data: bytes, offset: int) -> None:
+            if failure == "copy" and offset == offline_vm_worker.RESULT_ISO_OFFSET:
+                raise OSError("injected copy failure")
+            if failure == "receipt_write" and offset == offline_vm_worker.RESULT_RECEIPT_OFFSET:
+                raise OSError("injected receipt write failure")
+            if failure == "header_write" and offset == 0:
+                raise OSError("injected header write failure")
+            if failure == "commit_write" and offset == offline_vm_worker.RESULT_COMMIT_OFFSET:
+                raise OSError("injected commit write failure")
+            if failure == "terminal_write" and offset == offline_vm_worker.RESULT_TERMINAL_OFFSET:
+                raise OSError("injected terminal write failure")
+            original_pwrite(fd, data, offset)
+    
+        def failing_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            selected = {"payload_fsync": 1, "receipt_fsync": 2, "header_fsync": 3}.get(failure)
+            if fsync_number[0] == selected:
+                raise OSError("injected fsync failure")
+            original_fsync(fd)
+    
+        def publish_service_result() -> None:
+            service_result_calls.append(1)
+            if failure == "service_result":
+                def fail_write_result(_result: build.GuestBuildResult) -> None:
+                    raise OSError("injected service result failure")
+    
+                monkeypatch.setattr(build_service, "_write_result", fail_write_result)
+                build_service._write_result(result)
+    
+        def publish_service_ready() -> None:
+            service_ready_calls.append(1)
+            if failure == "service_ready":
+                raise OSError("injected service ready failure")
+    
+        def finalize_evidence_volume() -> tuple[int, str]:
+            if failure == "evidence_finalize":
+                raise OSError("injected evidence-volume fsync/hash failure")
+            return _TEST_EVIDENCE_SIZE, _TEST_EVIDENCE_SHA256
+    
+        monkeypatch.setattr(build_service, "_pwrite_all", failing_pwrite)
+        monkeypatch.setattr(os, "fsync", failing_fsync)
+        with pytest.raises(OSError, match=expected_message):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=publish_service_result,
+                publish_service_ready=publish_service_ready,
+                finalize_evidence_volume=finalize_evidence_volume,
+            )
+
+tests\test_offline_vm_worker.py:1720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+___ test_commit_fsync_error_is_rejected_even_when_commit_bytes_are_visible ____
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_commit_fsync_error_is_rej0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF5D880>
+
+    def test_commit_fsync_error_is_rejected_even_when_commit_bytes_are_visible(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-commit-fsync.iso"
+        payload = b"candidate bytes for commit fsync case"
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        original_pwrite = build_service._pwrite_all
+        monkeypatch.setattr(build, "WORKER_OUTPUT", candidate.parent.as_posix())
+        original_fsync = os.fsync
+        fsync_number = [0]
+    
+        def fail_commit_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            if fsync_number[0] == 4:
+                raise OSError("injected final commit fsync failure")
+            original_fsync(fd)
+    
+        monkeypatch.setattr(os, "fsync", fail_commit_fsync)
+        with pytest.raises(OSError, match="final commit fsync"):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=lambda: None,
+                publish_service_ready=lambda: None,
+            )
+
+tests\test_offline_vm_worker.py:1783: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+___ test_host_fsync_can_finalize_terminal_slot_after_commit_fsync_returned ____
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_host_fsync_can_finalize_t0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF4D7C0>
+
+    def test_host_fsync_can_finalize_terminal_slot_after_commit_fsync_returned(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-terminal-fsync.iso"
+        iso = bytearray(20 * 2048)
+        iso[32769:32774] = b"CD001"
+        iso[17 * 2048 + 1 : 17 * 2048 + 6] = b"CD001"
+        iso[17 * 2048 + 7 : 17 * 2048 + 30] = b"EL TORITO SPECIFICATION"
+        payload = bytes(iso)
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        monkeypatch.setattr(build, "WORKER_OUTPUT", candidate.parent.as_posix())
+        original_fsync = os.fsync
+        fsync_number = [0]
+    
+        def fail_terminal_fsync(fd: int) -> None:
+            fsync_number[0] += 1
+            if fsync_number[0] == 5:
+                raise OSError("injected terminal marker fsync failure")
+            original_fsync(fd)
+    
+        monkeypatch.setattr(os, "fsync", fail_terminal_fsync)
+        with pytest.raises(OSError, match="terminal marker fsync"):
+>           _run_candidate_publication(
+                plan, candidate, result, request,
+                publish_service_result=lambda: None,
+                publish_service_ready=lambda: None,
+            )
+
+tests\test_offline_vm_worker.py:1824: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+______ test_terminal_marker_after_returned_commit_fsync_is_host_durable _______
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_terminal_marker_after_ret0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF534A0>
+
+    def test_terminal_marker_after_returned_commit_fsync_is_host_durable(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        plan, _, request = _fixture_plan(tmp_path)
+        candidate = plan.output_volume.path.parent / "candidate-terminal-durable.iso"
+        iso = bytearray(20 * 2048)
+        iso[32769:32774] = b"CD001"
+        iso[17 * 2048 + 1 : 17 * 2048 + 6] = b"CD001"
+        iso[17 * 2048 + 7 : 17 * 2048 + 30] = b"EL TORITO SPECIFICATION"
+        payload = bytes(iso)
+        candidate.write_bytes(payload)
+        result = _guest_candidate_result(request, candidate, payload)
+        monkeypatch.setattr(build, "WORKER_OUTPUT", candidate.parent.as_posix())
+>       _run_candidate_publication(
+            plan, candidate, result, request,
+            publish_service_result=lambda: None,
+            publish_service_ready=lambda: None,
+        )
+
+tests\test_offline_vm_worker.py:1855: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:1575: in _run_candidate_publication
+    build_service._write_candidate_payload_receipt_header(
+usb_builder\offline_vm_build_service.py:426: in _write_candidate_payload_receipt_header
+    if build._linux_pread(fd, RESULT_HEADER_SIZE, 0) != bytes(RESULT_HEADER_SIZE):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+__ test_guest_readiness_requires_bound_terminal_marker_after_visible_commit ___
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_guest_readiness_requires_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF5EBA0>
+
+    def test_guest_readiness_requires_bound_terminal_marker_after_visible_commit(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        plan, _deployment, request = _fixture_plan(tmp_path)
+        output_path = plan.output_volume.path
+        output_capacity = plan.output_volume.size
+        monkeypatch.setattr(build_service, "OUTPUT_DEVICE", output_path)
+        monkeypatch.setattr(build_service.stat, "S_ISBLK", lambda _mode: True)
+        monkeypatch.setattr(build, "_linux_stat_rdev", lambda _value: 1234)
+        monkeypatch.setattr(
+            build,
+            "_linux_ioctl",
+            lambda _fd, _command, _payload: struct.pack("Q", output_capacity),
+        )
+    
+        command_digest = "c" * 64
+        iso_size = 2048
+        iso_digest = "d" * 64
+        header = offline_vm_worker.build_result_header(
+            request,
+            status="CANDIDATE_ISO",
+            iso_size=iso_size,
+            iso_sha256=iso_digest,
+            command_argv_sha256=command_digest,
+            evidence_size=_TEST_EVIDENCE_SIZE,
+            evidence_sha256=_TEST_EVIDENCE_SHA256,
+        )
+        header_prefix = header[: offline_vm_worker.RESULT_RECEIPT_OFFSET]
+        receipt = offline_vm_worker.build_service_success_receipt(
+            request,
+            iso_size=iso_size,
+            iso_sha256=iso_digest,
+            command_argv_sha256=command_digest,
+            evidence_size=_TEST_EVIDENCE_SIZE,
+            evidence_sha256=_TEST_EVIDENCE_SHA256,
+        )
+        commit = offline_vm_worker.build_result_commit_marker(
+            request, header_prefix=header_prefix, service_receipt=receipt,
+            evidence_size=_TEST_EVIDENCE_SIZE, evidence_sha256=_TEST_EVIDENCE_SHA256,
+        )
+        terminal = offline_vm_worker.build_result_terminal_marker(
+            request,
+            header_prefix=header_prefix,
+            service_receipt=receipt,
+            commit_marker=commit,
+            evidence_size=_TEST_EVIDENCE_SIZE,
+            evidence_sha256=_TEST_EVIDENCE_SHA256,
+        )
+        with output_path.open("r+b") as stream:
+            stream.seek(0)
+            stream.write(header_prefix)
+            stream.seek(offline_vm_worker.RESULT_RECEIPT_OFFSET)
+            stream.write(receipt)
+            stream.seek(offline_vm_worker.RESULT_COMMIT_OFFSET)
+            stream.write(commit)
+            stream.seek(offline_vm_worker.RESULT_TERMINAL_OFFSET)
+            stream.write(bytes(offline_vm_worker.RESULT_TERMINAL_SIZE))
+    
+        # Commit bytes may be visible while the guest is still before or inside
+        # its commit fsync. The readiness predicate must keep waiting for the
+        # later marker that binds the exact commit and records fsync return.
+>       assert not build_service.candidate_commit_is_present(request)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:1992: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+usb_builder\offline_vm_build_service.py:304: in candidate_commit_is_present
+    header_prefix = build._linux_pread(fd, RESULT_RECEIPT_OFFSET, 0)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+usb_builder\offline_vm_build.py:290: in _linux_pread
+    _require_linux_runtime()
+usb_builder\offline_vm_build.py:254: in _require_linux_runtime
+    _reject("sealed offline VM operations are supported only inside Linux")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'sealed offline VM operations are supported only inside Linux'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: sealed offline VM operations are supported only inside Linux
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review _
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_evidence_vo0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF5CC80>
+
+    def test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(
+            tmp_path,
+            monkeypatch,
+            mutate_and_restore_source_database_during_build=True,
+        )
+
+tests\test_offline_vm_worker.py:2423: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_post_executor_database_failure_publishes_prompt_bound_failure_receipt __
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_post_executor_database_fa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE6852E0>
+
+    def test_post_executor_database_failure_publishes_prompt_bound_failure_receipt(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2545: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[command-status] _
+
+role = 'command-status'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_host_reject0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF5E000>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2576: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[package-inventory] _
+
+role = 'package-inventory'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_host_reject1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF505C0>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2576: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_host_rejects_corrupted_bound_evidence_records[provenance] _
+
+role = 'provenance'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_host_reject2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE687410>
+
+    @pytest.mark.parametrize("role", ["command-status", "package-inventory", "provenance"])
+    def test_fixed_service_host_rejects_corrupted_bound_evidence_records(
+        role: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2576: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+________ test_fixed_service_host_rejects_command_status_hash_mismatch _________
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_host_reject3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE70EB70>
+
+    def test_fixed_service_host_rejects_command_status_hash_mismatch(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2605: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection[candidate] _
+
+mutation = 'candidate'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_finalizer_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE70EC00>
+
+    @pytest.mark.parametrize("mutation", ["candidate", "wheel"])
+    def test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection(
+        mutation: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2641: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection[wheel] _
+
+mutation = 'wheel'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_finalizer_r1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE6C26F0>
+
+    @pytest.mark.parametrize("mutation", ["candidate", "wheel"])
+    def test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection(
+        mutation: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2641: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[fsync] _
+
+failure = 'fsync'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_evidence_fi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE70EF30>
+
+    @pytest.mark.parametrize("failure", ["fsync", "readback", "swap", "replay"])
+    def test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(
+            tmp_path, monkeypatch, swap_evidence_after_write=(failure == "swap"),
+        )
+
+tests\test_offline_vm_worker.py:2663: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[readback] _
+
+failure = 'readback'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_evidence_fi1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE70E0C0>
+
+    @pytest.mark.parametrize("failure", ["fsync", "readback", "swap", "replay"])
+    def test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(
+            tmp_path, monkeypatch, swap_evidence_after_write=(failure == "swap"),
+        )
+
+tests\test_offline_vm_worker.py:2663: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[swap] _
+
+failure = 'swap'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_evidence_fi2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE687290>
+
+    @pytest.mark.parametrize("failure", ["fsync", "readback", "swap", "replay"])
+    def test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(
+            tmp_path, monkeypatch, swap_evidence_after_write=(failure == "swap"),
+        )
+
+tests\test_offline_vm_worker.py:2663: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[replay] _
+
+failure = 'replay'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_evidence_fi3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF533E0>
+
+    @pytest.mark.parametrize("failure", ["fsync", "readback", "swap", "replay"])
+    def test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(
+            tmp_path, monkeypatch, swap_evidence_after_write=(failure == "swap"),
+        )
+
+tests\test_offline_vm_worker.py:2663: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_nonzero_results_never_publish_candidate_markers[service-result] _
+
+failure = 'service-result'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_nonzero_res0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE6C3D70>
+
+    @pytest.mark.parametrize("failure", ["service-result", "child-exception"])
+    def test_fixed_service_nonzero_results_never_publish_candidate_markers(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2712: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_nonzero_results_never_publish_candidate_markers[child-exception] _
+
+failure = 'child-exception'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_nonzero_res1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE6C07D0>
+
+    @pytest.mark.parametrize("failure", ["service-result", "child-exception"])
+    def test_fixed_service_nonzero_results_never_publish_candidate_markers(
+        failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2712: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+__ test_fixed_service_rejects_swapped_evidence_volume_before_result_markers ___
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_rejects_swa0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACE32660>
+
+    def test_fixed_service_rejects_swapped_evidence_volume_before_result_markers(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch, swap_evidence_after_write=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2735: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_rejects_mutated_private_database_snapshot_before_result_markers _
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_rejects_mut0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF3D0D0>
+
+    def test_fixed_service_rejects_mutated_private_database_snapshot_before_result_markers(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2744: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed[missing] _
+
+mutation = 'missing'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_fails_close0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF41A90>
+capsys = <_pytest.capture.CaptureFixture object at 0x00000233AB49C5F0>
+
+    @pytest.mark.parametrize("mutation", ["missing", "changed"])
+    def test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed(
+        mutation: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2803: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed[changed] _
+
+mutation = 'changed'
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_fails_close1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233ACF3F590>
+capsys = <_pytest.capture.CaptureFixture object at 0x00000233ACF3DA00>
+
+    @pytest.mark.parametrize("mutation", ["missing", "changed"])
+    def test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed(
+        mutation: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2803: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+_ test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host _
+
+tmp_path = WindowsPath('C:/w/lc-20261026T043228Z-2857/pytest/test_fixed_service_interruptio0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000233AE6C09E0>
+
+    def test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+>       case = _service_evidence_e2e_case(tmp_path, monkeypatch)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:2817: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_offline_vm_worker.py:2216: in _service_evidence_e2e_case
+    build._create_repository_database_snapshot(
+usb_builder\offline_vm_build.py:1047: in _create_repository_database_snapshot
+    _reject("repository snapshot root is not a fresh private runtime directory")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'repository snapshot root is not a fresh private runtime directory'
+
+    def _reject(message: str) -> NoReturn:
+>       raise OfflineVmBuildError(message)
+E       usb_builder.offline_vm_build.OfflineVmBuildError: repository snapshot root is not a fresh private runtime directory
+
+usb_builder\offline_vm_build.py:238: OfflineVmBuildError
+=========================== short test summary info ===========================
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_orders_payload_receipt_header_and_final_commit
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[copy-copy failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[payload_fsync-fsync failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[evidence_finalize-evidence-volume fsync/hash failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[service_result-service result failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[receipt_write-receipt write failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[receipt_fsync-fsync failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[header_write-header write failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[header_fsync-fsync failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[service_ready-service ready failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[commit_write-commit write failure]
+FAILED tests/test_offline_vm_worker.py::test_candidate_publication_failures_never_leave_host_accepted_header[terminal_write-terminal write failure]
+FAILED tests/test_offline_vm_worker.py::test_commit_fsync_error_is_rejected_even_when_commit_bytes_are_visible
+FAILED tests/test_offline_vm_worker.py::test_host_fsync_can_finalize_terminal_slot_after_commit_fsync_returned
+FAILED tests/test_offline_vm_worker.py::test_terminal_marker_after_returned_commit_fsync_is_host_durable
+FAILED tests/test_offline_vm_worker.py::test_guest_readiness_requires_bound_terminal_marker_after_visible_commit
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_volume_round_trips_to_stopped_host_pending_review
+FAILED tests/test_offline_vm_worker.py::test_post_executor_database_failure_publishes_prompt_bound_failure_receipt
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[command-status]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[package-inventory]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_corrupted_bound_evidence_records[provenance]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_host_rejects_command_status_hash_mismatch
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection[candidate]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_finalizer_rejects_output_mutation_after_evidence_collection[wheel]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[fsync]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[readback]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[swap]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_evidence_finalization_failure_never_publishes_candidate_header[replay]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_nonzero_results_never_publish_candidate_markers[service-result]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_nonzero_results_never_publish_candidate_markers[child-exception]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_rejects_swapped_evidence_volume_before_result_markers
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_rejects_mutated_private_database_snapshot_before_result_markers
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed[missing]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_fails_closed_when_private_snapshot_lock_is_missing_or_changed[changed]
+FAILED tests/test_offline_vm_worker.py::test_fixed_service_interruption_before_terminal_is_rejected_by_stopped_host
+35 failed, 135 passed, 150 skipped in 92.69s (0:01:32)

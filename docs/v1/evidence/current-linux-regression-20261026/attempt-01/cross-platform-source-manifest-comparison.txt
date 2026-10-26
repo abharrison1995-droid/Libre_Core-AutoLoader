@@ -1,0 +1,11 @@
+# Cross-platform source manifest comparison
+
+The Ubuntu full regression manifest contains 204 source and test paths.
+The native Windows attempt-15 pre-run manifest also contains 204 paths.
+Paths were normalized from Windows separators and leading ./ prefixes,
+then compared by relative path and SHA-256.
+
+Result: zero missing paths and zero content-hash differences.
+The current Linux and Windows selections therefore used the same captured
+source/test content. The Arch ownership probes remain UNVALIDATED because
+they were skipped on both platforms.

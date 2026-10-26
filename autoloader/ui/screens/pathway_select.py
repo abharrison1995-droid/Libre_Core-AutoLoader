@@ -1,82 +1,186 @@
-"""Pathway Selection Screen module."""
-import logging
+"""Profile-specific workflow status and controller-derived actions."""
 from textual.app import ComposeResult
-from textual.screen import Screen
-from textual.widgets import Static, Button, Header, Footer, Checkbox, Rule
-from textual.containers import Container, Vertical, Horizontal, VerticalScroll
+from textual.containers import Container, Horizontal, VerticalScroll
+from textual.events import ScreenResume
+from textual.widgets import Button, Footer, Header, Static
 
-logger = logging.getLogger(__name__)
+from autoloader.application_controller import ApplicationAction, ApplicationController
+from autoloader.ui.screens.controller_screen import ControllerScreen
+from autoloader.ui.screens.x_workflow_action import XWorkflowActionScreen
+from autoloader.ui.screens.write_confirmation import WriteConfirmationScreen
+from autoloader.ui.screens.post_reboot_evidence import PostRebootEvidenceScreen
 
-HARDWARE_FLASH_CAVEAT = (
-    "[bold red]⚠️ CRITICAL HARDWARE SAFETY NOTICE & DISCLAIMER:[/bold red]\n"
-    "[yellow]External hardware flashing involves physical disassembly, attaching SOIC clip probes, "
-    "and supplying direct 3.3V power to the motherboard SPI flash chips.\n\n"
-    "• Ensure 3.3V data line voltage (avoid 5V CH341A black board hazards).\n"
-    "• Always verify double-read SHA256 backups match before writing.\n"
-    "• Improper connections can permanently BRICK your ThinkPad.\n"
-    "The user takes full responsibility for modifying physical hardware.[/yellow]"
-)
 
-class PathwaySelectScreen(Screen[None]):
-    """Screen for selecting between Hardware Flashing and Software Firmware pathways."""
-    
+class PathwaySelectScreen(ControllerScreen):
+    """Show only actions advertised by the shared application controller."""
+
     def compose(self) -> ComposeResult:
-        """Compose the dual-category pathway selection screen."""
         yield Header()
         with Container(classes="container"):
-            yield Static("Firmware Modification Pathways", classes="header-text")
-            
-            with VerticalScroll(classes="pathways-scroll"):
-                # Section 1: Hardware Flashing Menu
-                yield Static("⚡ OPTION 1: HARDWARE FLASHING (External SPI Programmer)", classes="section-title")
-                yield Static(HARDWARE_FLASH_CAVEAT, classes="warning-panel")
-                yield Checkbox("I understand the risks and accept full responsibility for hardware flashing.", id="cb-hardware-ack")
-                with Horizontal(classes="button-row"):
-                    yield Button("Launch Hardware Flashing Wizard", variant="error", id="btn-hardware-flash", disabled=True)
-                    yield Button("Backup & Split Dual-Chip Dumps", id="btn-hardware-backup")
-                
-                yield Rule()
-                
-                # Section 2: Software-Based Modifications Menu
-                yield Static("💾 OPTION 2: SOFTWARE MODIFICATIONS & CUSTOM FIRMWARE", classes="section-title")
-                with Vertical(classes="software-pathways"):
-                    yield Button("1vyrain (Software Jailbreak & Downgrade - xx30 Models)", id="path-1vyrain")
-                    yield Button("Coreboot ROM Builder (SeaBIOS / GRUB / TianoCore)", id="path-coreboot")
-                    yield Button("Libreboot Automated Builder (100% Free Open Source)", id="path-libreboot")
-                    yield Button("Canoeboot (Blob-free FSF-compliant Firmware)", id="path-canoeboot")
-                    yield Button("Middleton BIOS (SATA-II & Whitelist Unlock for Penryn/GM45)", id="path-middleton")
-                    yield Button("EC Modifications (Classic 7-Row Keyboard & Battery Whitelist)", id="path-ec")
-                    yield Button("🧪 Practice / Dry-Run Mode (Safe QEMU VM Simulator)", variant="success", id="path-dryrun")
-                
+            yield Static("Selected V1 Workflow", classes="header-text")
+            yield Static("No profile selected", id="profile-name")
+            yield Static("UNKNOWN", id="profile-status", classes="warning")
+            with VerticalScroll():
+                yield Static("", id="profile-reasons")
+                yield Static("", id="profile-evidence")
+                yield Static("", id="profile-operation")
+                yield Static("", id="profile-next-actions")
+            with Horizontal(classes="button-container"):
+                yield Button("Detect Device", id="action-detect")
+                yield Button("Import Candidate Evidence", id="action-import")
+                yield Button("Resume / Load Checkpoint", id="action-resume")
+                yield Button("Inspect Operation Checkpoint", id="action-inspect")
+                yield Button("Review Persisted Readiness Inputs", id="action-readiness")
+                yield Button("Submit T430 Handoff Stage", id="action-t430-stage")
+                yield Button("View Evidence", id="action-evidence")
+                yield Button("1vyrain Handoff Guidance", id="action-handoff")
+            with Horizontal(classes="button-container"):
+                yield Button("Prepare Workflow", id="action-prepare", disabled=True)
+                yield Button("Capture / Reopen Verified Backup", id="action-accept-backup", disabled=True)
+                yield Button("Build Pinned Artifact", id="action-build", disabled=True)
+                yield Button("Accept Completed Artifact", id="action-accept-artifact", disabled=True)
+            with Horizontal(classes="button-container"):
+                yield Button("Flash", id="action-flash", disabled=True)
+                yield Button("Restore", id="action-restore", disabled=True)
+                yield Button("Read-back", id="action-readback", disabled=True)
+                yield Button("Boot Check", id="action-boot", disabled=True)
             with Horizontal(classes="button-container"):
                 yield Button("Back", id="btn-back")
+                yield Button("Preparation Details", id="btn-details")
         yield Footer()
 
-    def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
-        """Enable hardware flashing button when acknowledgment is checked."""
-        if event.checkbox.id == "cb-hardware-ack":
-            btn = self.query_one("#btn-hardware-flash", Button)
-            btn.disabled = not event.value
+    def on_mount(self) -> None:
+        self.refresh_status()
+
+    def on_screen_resume(self, event: ScreenResume) -> None:
+        """Refresh controller-derived stage/actions after a child action returns."""
+        self.refresh_status()
+
+    def refresh_status(self) -> None:
+        controller: ApplicationController = self.controller_app.controller
+        if not controller.selected_profile_id:
+            self.query_one("#profile-name", Static).update("No V1 profile selected")
+            self.query_one("#profile-status", Static).update("UNKNOWN")
+            return
+        status = controller.profile_status()
+        self.query_one("#profile-name", Static).update(
+            f"{status.model_id.upper()} · {status.firmware_family} · {status.profile_id}"
+        )
+        self.query_one("#profile-status", Static).update(f"{status.status.value} · {status.stage}")
+        self.query_one("#profile-reasons", Static).update("Reasons: " + "; ".join(status.reasons))
+        self.query_one("#profile-evidence", Static).update(
+            "Evidence references: " + (", ".join(status.evidence_refs) if status.evidence_refs else "none")
+        )
+        operation_details = [f"Operation ID: {status.operation_id or 'none'}"]
+        operation_details.append(f"Checkpoint: {status.checkpoint_ref or 'none'}")
+        operation_details.extend(status.evidence_summary)
+        self.query_one("#profile-operation", Static).update("Operation evidence:\n" + "\n".join(operation_details))
+        actions = ", ".join(action.value for action in status.allowed_next_actions) or "none"
+        self.query_one("#profile-next-actions", Static).update(f"Allowed next actions: {actions}")
+        mapping = {
+            "action-detect": ApplicationAction.DETECT_DEVICE,
+            "action-import": ApplicationAction.IMPORT_EVIDENCE,
+            "action-resume": ApplicationAction.RESUME,
+            "action-inspect": ApplicationAction.INSPECT_CHECKPOINT,
+            "action-readiness": ApplicationAction.REVIEW_READINESS,
+            "action-t430-stage": ApplicationAction.T430_HANDOFF_STEP,
+            "action-evidence": ApplicationAction.VIEW_EVIDENCE,
+            "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
+            "action-prepare": ApplicationAction.PREPARE,
+            "action-accept-backup": ApplicationAction.ACCEPT_BACKUP,
+            "action-build": ApplicationAction.BUILD,
+            "action-accept-artifact": ApplicationAction.ACCEPT_ARTIFACT,
+            "action-flash": ApplicationAction.FLASH,
+            "action-restore": ApplicationAction.RESTORE,
+            "action-readback": ApplicationAction.READBACK,
+            "action-boot": ApplicationAction.BOOT_CHECK,
+        }
+        for widget_id, action in mapping.items():
+            enabled_for_post_reboot_intake = (
+                action is ApplicationAction.BOOT_CHECK
+                and status.profile_id in {"x200-libreboot", "x220-coreboot", "t430-1vyrain"}
+            )
+            enabled_for_readiness_review = (
+                action is ApplicationAction.REVIEW_READINESS
+                and status.profile_id in {"x200-libreboot", "x220-coreboot", "t430-1vyrain"}
+            )
+            self.query_one(f"#{widget_id}", Button).disabled = (
+                action not in status.allowed_next_actions
+                and not enabled_for_post_reboot_intake
+                and not enabled_for_readiness_review
+            )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button press events."""
-        btn_id = event.button.id
-        if btn_id == "btn-back":
+        button_id = event.button.id
+        if button_id == "btn-back":
             self.app.pop_screen()
-        elif btn_id == "btn-hardware-flash":
-            self.app.push_screen("flash_guide")
-        elif btn_id == "btn-hardware-backup":
-            self.app.push_screen("backup_screen")
-        elif btn_id == "path-1vyrain":
-            self.app.notify("Selected 1vyrain pathway. Preparing reversion and soft-flashing workflow.", title="1vyrain Pathway")
-            self.app.push_screen("flash_guide")
-        elif btn_id in ["path-coreboot", "path-libreboot", "path-canoeboot"]:
+            return
+        if button_id == "btn-details":
             self.app.push_screen("rom_config")
-        elif btn_id == "path-middleton":
-            self.app.notify("Middleton BIOS provides SATA-II and Whitelist unlocks for T400/T500/X200.", title="Middleton BIOS")
-            self.app.push_screen("rom_config")
-        elif btn_id == "path-ec":
-            self.app.push_screen("ec_config")
-        elif btn_id == "path-dryrun":
-            self.app.notify("Launching Safe VM Dry-Run mode...", title="Sandbox Mode")
-            self.app.push_screen("model_select")
+            return
+        if button_id == "action-import":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.IMPORT_EVIDENCE in status.allowed_next_actions:
+                self.app.push_screen("evidence_import")
+            return
+        if button_id == "action-resume":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.RESUME in status.allowed_next_actions:
+                if status.profile_id == "t430-1vyrain":
+                    self.app.push_screen("evidence_import")
+                else:
+                    self.app.push_screen(XWorkflowActionScreen(ApplicationAction.RESUME))
+            return
+        if button_id == "action-inspect":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.INSPECT_CHECKPOINT not in status.allowed_next_actions or not status.operation_journal_ref:
+                return
+            result = self.controller_app.controller.request_action(
+                ApplicationAction.INSPECT_CHECKPOINT,
+                profile_id=status.profile_id,
+                checkpoint_path=status.operation_journal_ref,
+            )
+            self.app.notify(f"{result.code}: {result.message}", title="Checkpoint", timeout=12)
+            return
+        if button_id == "action-readiness":
+            self.app.push_screen("readiness_review")
+            return
+        if button_id == "action-t430-stage":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.T430_HANDOFF_STEP in status.allowed_next_actions:
+                self.app.push_screen("t430_handoff")
+            return
+        if button_id in {"action-prepare", "action-accept-backup", "action-build", "action-accept-artifact"}:
+            action = {
+                "action-prepare": ApplicationAction.PREPARE,
+                "action-accept-backup": ApplicationAction.ACCEPT_BACKUP,
+                "action-build": ApplicationAction.BUILD,
+                "action-accept-artifact": ApplicationAction.ACCEPT_ARTIFACT,
+            }[button_id]
+            status = self.controller_app.controller.profile_status()
+            if action in status.allowed_next_actions:
+                self.app.push_screen(XWorkflowActionScreen(action))
+            return
+        if button_id == "action-flash":
+            status = self.controller_app.controller.profile_status()
+            if ApplicationAction.FLASH in status.allowed_next_actions and status.profile_id in {
+                "x200-libreboot", "x220-coreboot"
+            }:
+                self.app.push_screen(WriteConfirmationScreen())
+            return
+        if button_id == "action-boot":
+            self.app.push_screen(PostRebootEvidenceScreen())
+            return
+        action_by_button = {
+            "action-detect": ApplicationAction.DETECT_DEVICE,
+            "action-evidence": ApplicationAction.VIEW_EVIDENCE,
+            "action-handoff": ApplicationAction.HANDOFF_GUIDANCE,
+            "action-restore": ApplicationAction.RESTORE,
+            "action-readback": ApplicationAction.READBACK,
+        }
+        routed_action = action_by_button.get(button_id or "")
+        if routed_action is None:
+            return
+        result = self.controller_app.controller.request_action(routed_action)
+        self.app.notify(f"{result.code}: {result.message}", title="Workflow status", timeout=8)
+        self.refresh_status()

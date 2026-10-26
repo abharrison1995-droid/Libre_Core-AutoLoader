@@ -1,0 +1,135 @@
+{
+  "started_utc": "2026-10-15T12:53:19Z",
+  "ended_utc": "2026-10-15T13:03:28Z",
+  "elapsed_seconds": 600.2,
+  "qemu_exit_code": 0,
+  "stop_reason": "600-second cap reached at 600s",
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_unchanged": true,
+  "guest_input_sent": false,
+  "network_device": "none",
+  "firmware_writer": "none",
+  "screenshots": [
+    {
+      "elapsed_seconds": 10.2,
+      "captured_utc": "2026-10-15T12:53:30Z",
+      "file": "vga-t0010s.png",
+      "sha256": "3ca3559d4d9e7632d961e8e2509ed4ef7f1846db7648a29660b93d00ab543ff6"
+    },
+    {
+      "elapsed_seconds": 40.2,
+      "captured_utc": "2026-10-15T12:54:00Z",
+      "file": "vga-t0040s.png",
+      "sha256": "6a0b2f16ac57b48023a8239259b4af05e6a046e618682e1ed620f107b4ba2538"
+    },
+    {
+      "elapsed_seconds": 70.1,
+      "captured_utc": "2026-10-15T12:54:29Z",
+      "file": "vga-t0070s.png",
+      "sha256": "6a0b2f16ac57b48023a8239259b4af05e6a046e618682e1ed620f107b4ba2538"
+    },
+    {
+      "elapsed_seconds": 100.1,
+      "captured_utc": "2026-10-15T12:54:59Z",
+      "file": "vga-t0100s.png",
+      "sha256": "ece8345a80faa101ae6262f212f2482d717d729d0a77b031bee835950681fd9d"
+    },
+    {
+      "elapsed_seconds": 130.1,
+      "captured_utc": "2026-10-15T12:55:30Z",
+      "file": "vga-t0130s.png",
+      "sha256": "4dba9fe5e9695f079eb6aae286ea7ae5f26c6a0cec9ac3ed4088e49b45fa8969"
+    },
+    {
+      "elapsed_seconds": 160.2,
+      "captured_utc": "2026-10-15T12:56:00Z",
+      "file": "vga-t0160s.png",
+      "sha256": "ca3da798106455e8173c646c161711d0923acaf628040fe54f9bf71348bd5f47"
+    },
+    {
+      "elapsed_seconds": 190.1,
+      "captured_utc": "2026-10-15T12:56:30Z",
+      "file": "vga-t0190s.png",
+      "sha256": "0b35d5c381d057723548ebfad9b14416d965120ce6558bc457fb565809048c29"
+    },
+    {
+      "elapsed_seconds": 220.0,
+      "captured_utc": "2026-10-15T12:57:00Z",
+      "file": "vga-t0220s.png",
+      "sha256": "5a7a423f21c652fe1a8d8868a634244772b5d36edbdab0b3ca0c2701e8f4a665"
+    },
+    {
+      "elapsed_seconds": 250.1,
+      "captured_utc": "2026-10-15T12:57:30Z",
+      "file": "vga-t0250s.png",
+      "sha256": "784aaae991395867661e0adc82579a54cc22e70858efc9bfe2dab5d0e4dcd7e5"
+    },
+    {
+      "elapsed_seconds": 280.1,
+      "captured_utc": "2026-10-15T12:58:01Z",
+      "file": "vga-t0280s.png",
+      "sha256": "a161d77f5e479f12d3146763d009d92d3baa21db3a3294da124b5f9036c729da"
+    },
+    {
+      "elapsed_seconds": 310.2,
+      "captured_utc": "2026-10-15T12:58:30Z",
+      "file": "vga-t0310s.png",
+      "sha256": "ff5bb16a1bc6bd69927d780fe76915d7ac39611e93bb56e4873dd9bb19520179"
+    },
+    {
+      "elapsed_seconds": 340.2,
+      "captured_utc": "2026-10-15T12:59:01Z",
+      "file": "vga-t0340s.png",
+      "sha256": "071dfc6c3a9047fd178f5bdf9ffc962e690862b1ca87ba48d1a20249f3158f63"
+    },
+    {
+      "elapsed_seconds": 370.1,
+      "captured_utc": "2026-10-15T12:59:30Z",
+      "file": "vga-t0370s.png",
+      "sha256": "27905a0f9aadfa7301763fab8bc5ea20d2d785efda78c3a89d495c82a96cf129"
+    },
+    {
+      "elapsed_seconds": 400.2,
+      "captured_utc": "2026-10-15T13:00:00Z",
+      "file": "vga-t0400s.png",
+      "sha256": "f7a115e92cd35a6dc055dd3cbded4e63c176f3782dca256ebe779eb7528656a1"
+    },
+    {
+      "elapsed_seconds": 430.2,
+      "captured_utc": "2026-10-15T13:00:30Z",
+      "file": "vga-t0430s.png",
+      "sha256": "c9bf263b4cbe83ae4866291a5937d7653f9cc6e8730ceda1e56a9ac7bc2d93b9"
+    },
+    {
+      "elapsed_seconds": 460.1,
+      "captured_utc": "2026-10-15T13:01:01Z",
+      "file": "vga-t0460s.png",
+      "sha256": "0535c0cc8b1b3a456e20d8a06f90dae2f0700ab976b2a7152e8fe51a4c713fea"
+    },
+    {
+      "elapsed_seconds": 490.0,
+      "captured_utc": "2026-10-15T13:01:31Z",
+      "file": "vga-t0490s.png",
+      "sha256": "df12a5f5945608c4adeb60169ab3b7f3438b909f88ea959bb8cbd0a9637eb45b"
+    },
+    {
+      "elapsed_seconds": 520.0,
+      "captured_utc": "2026-10-15T13:02:00Z",
+      "file": "vga-t0520s.png",
+      "sha256": "bb257f65f9093f30e2c4b57e086963f641d6638b2c7a3e3221b3a8a013ccf044"
+    },
+    {
+      "elapsed_seconds": 550.2,
+      "captured_utc": "2026-10-15T13:02:30Z",
+      "file": "vga-t0550s.png",
+      "sha256": "c3377016c39fc3e1272104d6e75e1fc9ff9c3663c2e5fa4eeeea6cb0b3c03eec"
+    },
+    {
+      "elapsed_seconds": 580.1,
+      "captured_utc": "2026-10-15T13:03:00Z",
+      "file": "vga-t0580s.png",
+      "sha256": "39fc39565595bcf94579e7a21fcdfbe2bf3a915d1dd8f84f98effe7e68efb36c"
+    }
+  ]
+}

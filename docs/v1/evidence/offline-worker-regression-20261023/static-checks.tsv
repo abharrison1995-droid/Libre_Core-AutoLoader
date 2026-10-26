@@ -1,0 +1,6 @@
+collect_only	0	env PYTHONDONTWRITEBYTECODE=1 TMPDIR=/tmp /home/alex/librecore-v1-test-venv/bin/python -m pytest --collect-only -q -p no:cacheprovider
+mypy_linux	0	env MYPY_CACHE_DIR=/tmp/lc-v1-mypy-native /home/alex/librecore-v1-test-venv/bin/python -m mypy --no-incremental --cache-dir=/tmp/lc-v1-mypy-native autoloader usb_builder
+mypy_win32	0	env MYPY_CACHE_DIR=/tmp/lc-v1-mypy-win32 /home/alex/librecore-v1-test-venv/bin/python -m mypy --no-incremental --platform win32 --cache-dir=/tmp/lc-v1-mypy-win32 autoloader usb_builder
+cli_help	0	/home/alex/librecore-v1-test-venv/bin/python -m autoloader --help
+cli_flash_help	0	/home/alex/librecore-v1-test-venv/bin/python -m autoloader flash --help
+cli_build_rom_help	0	/home/alex/librecore-v1-test-venv/bin/python -m autoloader build-rom --help

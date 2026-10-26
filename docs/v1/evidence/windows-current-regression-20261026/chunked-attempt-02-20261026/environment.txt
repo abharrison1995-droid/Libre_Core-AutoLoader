@@ -1,0 +1,14 @@
+os=Microsoft Windows NT 10.0.19044.0
+python=Python 3.12.14
+pytest=pytest 9.1.1
+commit=2e28a81b11e6a4fe97472ed0dadb8ea71429127b
+source_manifest_entries=204
+collected_test_nodes=1392
+stable_function_selectors=768
+shard_size=25
+shard_count=61
+minimum_free_bytes=3221225472
+scratch_root=C:\w\lc-v1-win-functions-20261026
+git_template=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.git-template-empty
+git_core.longpaths=true
+started_utc=2026-10-26T10:52:39.6197238Z

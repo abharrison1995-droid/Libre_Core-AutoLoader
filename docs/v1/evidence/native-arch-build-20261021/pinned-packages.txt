@@ -1,0 +1,7 @@
+archiso 91-1
+pacman 7.1.0.r9.g54d9411-2
+util-linux 2.42.4-1
+bash 5.3.20-1
+arch-install-scripts 31-2
+shadow 4.20.0.arch1-1
+libcap 2.78-1

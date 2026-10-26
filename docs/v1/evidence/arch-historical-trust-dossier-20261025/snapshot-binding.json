@@ -1,0 +1,284 @@
+{
+  "schema": "arch-historical-trust-dossier-v1",
+  "status": "PENDING_SOL_REVIEW_ACQUISITION_BLOCKED",
+  "captured_at_utc": "2026-10-25T22:34:21Z to 2026-10-25T22:37:13Z",
+  "snapshot": {
+    "date": "2026-09-30",
+    "repository_base": "https://archive.archlinux.org/repos/2026/09/30",
+    "snapshot_lock_path": "../../../../usb_builder/snapshot.lock.json",
+    "snapshot_lock_sha256": "5d66df5f5e6eacd0770399985b65507e84f208a7fbd1352faca13c0ead456cb1",
+    "repository_database_pins": [
+      {
+        "repo": "core",
+        "sha256": "08d52f5e83f72a9e9f8464441da87b9a399f4decc7110fcfa3825f7c0af42dd2",
+        "size": 129884
+      },
+      {
+        "repo": "extra",
+        "sha256": "d2262e9def7afc76960c5242624cc14029afa47a9407acd84a29aed3a44f1663",
+        "size": 8865765
+      }
+    ],
+    "database_pin_source": {
+      "path": "docs/v1/evidence/worker-package-seed-inventory-20261025/seed-inventory.json",
+      "sha256": "c70588335e72b5a2e3bcd3e183a93821ed0cd48ca4d6657a9315f0248e2e8ea6",
+      "size_bytes": 8406
+    },
+    "database_hashes_independently_recomputed_in_this_dossier": false
+  },
+  "package_rows_from_existing_pinned_metadata": [
+    {
+      "repo": "core",
+      "version": "20260909-1",
+      "arch": "any",
+      "filename": "archlinux-keyring-20260909-1-any.pkg.tar.zst",
+      "size_bytes": 1273532,
+      "sha256": "6a8ea16f51d3b305c18322d5884ca959f12c32a3f186873090fdc18465605293",
+      "packager_metadata": "Christian Hesse <eworm@archlinux.org>",
+      "build_time_utc": "2026-09-09T07:45:27Z",
+      "official_signature_time_utc": "2026-09-09T07:47:00Z",
+      "official_page": "https://archlinux.org/packages/core/any/archlinux-keyring/",
+      "archive_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst",
+      "signature_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst.sig",
+      "db_pgpsig_length": 119,
+      "db_pgpsig_sha256": "5942acd5b5e27a45051c447b8054696465872e834af1a5bd3cb85e2881cf6cf8",
+      "signature_verified": false,
+      "archive_downloaded": false,
+      "keyring_imported": false
+    },
+    {
+      "repo": "core",
+      "version": "7.1.0.r9.g54d9411-2",
+      "arch": "x86_64",
+      "filename": "pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst",
+      "size_bytes": 991730,
+      "sha256": "2092ec7a0391416e4a1757c455bc071d7b58a124cedc83f582cb7d37d52f211b",
+      "packager_metadata": "Christian Hesse <eworm@archlinux.org>",
+      "archive_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst",
+      "signature_url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst.sig",
+      "db_pgpsig_length": 119,
+      "db_pgpsig_sha256": "3e31debd8c57ac1c84c9586e57611e95e8a2ff7dfb8f3b54be95028ee36644e2",
+      "pacman_sha256_in_snapshot_lock": "bef41dfdb55bf620aa6d5b50a657b6d04b894d1b48da7d447a9d23a29ff66478",
+      "vercmp_sha256_in_snapshot_lock": null,
+      "signer_expectation": "Christian Hesse is only a candidate based on the DB packager field. The current package page is -3 and does not prove the exact -2 signer; inspect and verify the exact archived signature before extraction.",
+      "signature_verified": false,
+      "archive_downloaded": false,
+      "extracted": false,
+      "vercmp_executed": false
+    }
+  ],
+  "package_metadata_source": {
+    "trust_manifest": {
+      "path": "docs/v1/evidence/worker-package-seed-policy-20261025/trust-manifest-proposal-20261025.json",
+      "sha256": "1ad5fc85bb66fc41fe6c9f41e2d0e9d7db82651628818c53319c3f40c8a4f8b7",
+      "size_bytes": 16046
+    },
+    "seed_inventory": {
+      "path": "docs/v1/evidence/worker-package-seed-inventory-20261025/seed-inventory.json",
+      "sha256": "c70588335e72b5a2e3bcd3e183a93821ed0cd48ca4d6657a9315f0248e2e8ea6",
+      "size_bytes": 8406
+    },
+    "pgpsig_digests_are_db_bound_metadata_only": true,
+    "signature_verified": false
+  },
+  "official_page_captures": [
+    {
+      "id": "master-keys-current",
+      "url": "https://archlinux.org/master-keys/",
+      "response_date_utc": "Sun, 25 Oct 2026 22:35:18 GMT",
+      "tls_ssl_verify_result": "0",
+      "body_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.html",
+        "sha256": "53f18e194293803532bfe0a0d8418c9f20161da1c7f630a6a37d8fc7e071b858",
+        "size_bytes": 70620
+      },
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.response-headers.txt",
+        "sha256": "e3d3e4354fbda73a946e6fe0ff85011ecbeb7aa3169618333ed50e7698420935",
+        "size_bytes": 645
+      },
+      "transport_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.transport.txt",
+        "sha256": "1c3ceb44f22d08a0611fabb648bb56dd29cb138aaf790fab5291fdb496924827",
+        "size_bytes": 9983
+      },
+      "http_status": "HTTP/1.1 200 OK"
+    },
+    {
+      "id": "keyring-package-page",
+      "url": "https://archlinux.org/packages/core/any/archlinux-keyring/",
+      "response_date_utc": "Sun, 25 Oct 2026 22:35:19 GMT",
+      "tls_ssl_verify_result": "0",
+      "body_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.html",
+        "sha256": "ebe22438c948d79d821bb7a2640788a886e9213a1b137d62e1083a9f6b12ab66",
+        "size_bytes": 16647
+      },
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.response-headers.txt",
+        "sha256": "580f4b1e603ff45a4709897effbf3978d15e6b807d7afaff91c040fcde2e2f2f",
+        "size_bytes": 618
+      },
+      "transport_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.transport.txt",
+        "sha256": "2e58471957c8ce2ae3ea398a18ee4af58ac022ad446aa8ec118a7305d4666521",
+        "size_bytes": 10007
+      },
+      "http_status": "HTTP/1.1 200 OK"
+    },
+    {
+      "id": "pacman-current-page",
+      "url": "https://archlinux.org/packages/core/x86_64/pacman/",
+      "response_date_utc": "Sun, 25 Oct 2026 22:35:20 GMT",
+      "tls_ssl_verify_result": "0",
+      "body_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.html",
+        "sha256": "9cec8785c3eb69c10d979be93419a1c645445acd30373a6142b07f941e6cdf87",
+        "size_bytes": 21901
+      },
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.response-headers.txt",
+        "sha256": "4a7298ba38d6c5e21c088bd96a8067531616d5426463464afbb79e5eb977666b",
+        "size_bytes": 618
+      },
+      "transport_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.transport.txt",
+        "sha256": "0600e6e90a9fd703b7d19cb0d8d279a9deaf01cb7aad974b7b573ef9390f8fc0",
+        "size_bytes": 9999
+      },
+      "http_status": "HTTP/1.1 200 OK"
+    },
+    {
+      "id": "keyring-source-commit",
+      "url": "https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046",
+      "response_date_utc": "Sun, 25 Oct 2026 22:35:21 GMT",
+      "tls_ssl_verify_result": "0",
+      "body_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-source-commit.html",
+        "sha256": "b9c636bf63333948ba8234bdd420e2dea1eb8ce87254fee44b4bfca25f02e03f",
+        "size_bytes": 94882
+      },
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.response-headers.txt",
+        "sha256": "11cd9cfd9db40a1cd05bbd26adff0b39cf580a64e947bb0cbbf20f4aef6573f4",
+        "size_bytes": 1103
+      },
+      "transport_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.transport.txt",
+        "sha256": "49c7f16a37dcb67e0123878712f68872ce335dfb195e0983c9f626dff4e385d7",
+        "size_bytes": 10128
+      },
+      "http_status": "HTTP/1.1 200 OK"
+    }
+  ],
+  "official_archive_head_observations": [
+    {
+      "id": "dated-core-index",
+      "method": "HEAD",
+      "url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/",
+      "status": "HTTP/1.1 200 OK",
+      "date_utc": "Sun, 25 Oct 2026 22:35:22 GMT",
+      "content_length": null,
+      "last_modified": null,
+      "etag": null,
+      "body_received": false,
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.response-headers.txt",
+        "sha256": "3b0392f94166491d68a5c070134f9490a395a281f842ac514c0975e61d31d707",
+        "size_bytes": 193
+      }
+    },
+    {
+      "id": "dated-core-db",
+      "method": "HEAD",
+      "url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/core.db",
+      "status": "HTTP/1.1 200 OK",
+      "date_utc": "Sun, 25 Oct 2026 22:35:22 GMT",
+      "content_length": "129884",
+      "last_modified": "Tue, 29 Sep 2026 20:58:06 GMT",
+      "etag": "\"6abc265e-1fb5c\"",
+      "body_received": false,
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.response-headers.txt",
+        "sha256": "f1783cbe9fbeb22a2042cafd9936cfec86aa7b806d6d1a1aa063247d4d463c94",
+        "size_bytes": 324
+      }
+    },
+    {
+      "id": "dated-extra-db",
+      "method": "HEAD",
+      "url": "https://archive.archlinux.org/repos/2026/09/30/extra/os/x86_64/extra.db",
+      "status": "HTTP/1.1 200 OK",
+      "date_utc": "Sun, 25 Oct 2026 22:35:59 GMT",
+      "content_length": "8865765",
+      "last_modified": "Wed, 30 Sep 2026 12:05:49 GMT",
+      "etag": "\"6abcfb1d-8747e5\"",
+      "body_received": false,
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.response-headers.txt",
+        "sha256": "b83f66f542c6704c7330a8111066fffd90577d043ac9d95bab6e19d18f9c668c",
+        "size_bytes": 326
+      }
+    },
+    {
+      "id": "dated-keyring-archive",
+      "method": "HEAD",
+      "url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst",
+      "status": "HTTP/1.1 200 OK",
+      "date_utc": "Sun, 25 Oct 2026 22:35:59 GMT",
+      "content_length": "1273532",
+      "last_modified": "Wed, 09 Sep 2026 07:47:17 GMT",
+      "etag": "\"6aa10f05-136ebc\"",
+      "body_received": false,
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.response-headers.txt",
+        "sha256": "94ba978c494f2c43bbe073310b1eefc432d560a155cea981e5ae8955f8388e39",
+        "size_bytes": 318
+      }
+    },
+    {
+      "id": "dated-pacman-archive",
+      "method": "HEAD",
+      "url": "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst",
+      "status": "HTTP/1.1 200 OK",
+      "date_utc": "Sun, 25 Oct 2026 22:36:00 GMT",
+      "content_length": "991730",
+      "last_modified": "Wed, 06 May 2026 08:56:37 GMT",
+      "etag": "\"69fb0245-f21f2\"",
+      "body_received": false,
+      "headers_capture": {
+        "path": "docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.response-headers.txt",
+        "sha256": "26278ed927f61eb2a5ec4443f85670fc4f0112a5660d5f3ad9252f7d7d4bdce4",
+        "size_bytes": 316
+      }
+    }
+  ],
+  "current_arch_master_key_page_is_historical_evidence": false,
+  "archive_package_or_signature_bodies_fetched": false,
+  "key_material_fetched_or_imported": false,
+  "packages_extracted_or_executed": false,
+  "transport_client": {
+    "identity": "curl 8.13.0 for Windows, libcurl/8.13.0 Schannel",
+    "version_capture": "host-curl-version.txt",
+    "version_capture_sha256": "a74ef8d964e5d0f144aa5c9647d4df8d8b7f01731e3510c3e9e1f273581c5f11",
+    "proxy_policy": "--noproxy *",
+    "protocol_policy": "HTTPS only; HTTPS redirects only; final hostname checked against allowlist",
+    "verification": "ssl_verify_result=0 on observed requests; Windows host trust boundary"
+  },
+  "historical_findings": {
+    "current_master_key_page_is_historical_record": false,
+    "dated_master_key_record_located": false,
+    "keyring_immutable_packaging_commit": "56acf30f9492d6b6e9cc7c16fd1d969afc462046",
+    "keyring_commit_utc": "2026-09-09T07:47:14Z",
+    "keyring_commit_changed_files": [
+      ".SRCINFO",
+      "PKGBUILD"
+    ],
+    "commit_contains_keyring_keyset": false,
+    "pacman_current_page_version": "7.1.0.r9.g54d9411-3",
+    "pacman_pinned_snapshot_version": "7.1.0.r9.g54d9411-2",
+    "exact_pacman_snapshot_signer": "unknown",
+    "stage_a": "blocked",
+    "acquisition_authorized": false
+  }
+}

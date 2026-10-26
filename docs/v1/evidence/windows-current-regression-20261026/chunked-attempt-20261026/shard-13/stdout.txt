@@ -1,0 +1,19 @@
+s.....ss...ssssssssssssss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_evidence_adapter.py:623: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [1] tests\test_offline_vm_image.py:209: symlinks are unavailable on this filesystem
+SKIPPED [1] tests\test_offline_vm_image.py:240: symlink creation is unavailable on this filesystem
+SKIPPED [1] tests\test_offline_vm_image.py:367: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:394: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:410: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:436: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:459: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:488: atomic no-replace is Linux-specific
+SKIPPED [1] tests\test_offline_vm_image.py:516: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:544: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:573: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:608: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:643: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [1] tests\test_offline_vm_image.py:671: candidate publication requires Linux dir fsync/renameat2
+SKIPPED [2] tests\test_offline_vm_image.py:699: candidate publication requires Linux dir fsync/renameat2
+8 passed, 17 skipped in 4.33s

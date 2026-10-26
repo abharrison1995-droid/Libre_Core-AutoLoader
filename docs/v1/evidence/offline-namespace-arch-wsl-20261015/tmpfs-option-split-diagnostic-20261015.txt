@@ -1,0 +1,55 @@
+TMPFS mount argument diagnosis - Arch WSL - 2026-10-15
+
+This read-only investigation established that the `tmpfs-run` EINVAL came from
+the probe's mount(2) argument plan, not from a WSL inability to mount tmpfs.
+No builder workflow, mkarchiso, package install/download, media, or hardware
+operation was run.
+
+Environment and pinned source evidence
+--------------------------------------
+Kernel: Linux 6.18.54.1-microsoft-standard-WSL2, x86_64.
+Packages: archiso 91-1; arch-install-scripts 31-2; util-linux 2.42.4-1.
+Ownership: `/usr/bin/arch-chroot` and `/usr/bin/pacstrap` are owned by
+arch-install-scripts 31-2; `/usr/bin/mount` is owned by util-linux 2.42.4-1.
+SHA-256 `/usr/bin/arch-chroot`:
+`56c50ac2f6d58325d4f5eaa0a0e359ca3019bffe08b7b37468de3bddae09e8d5`.
+SHA-256 `/usr/bin/pacstrap`:
+`c0cbe2eb3e77a2a4437b03021ec1e63f31f20888778cd3c70ff49d2368371207`.
+
+The installed `/usr/bin/pacstrap` `chroot_setup()` at lines 76-84 and
+`unshare_setup()` at lines 100-115 use `mount run ROOT/run -t tmpfs -o
+nosuid,nodev,mode=0755` and `mount tmp ROOT/tmp -t tmpfs -o
+mode=1777,strictatime,nodev,nosuid`. `/usr/bin/arch-chroot` `unshare_setup()`
+at lines 86-101 uses the same `run` and `tmp` forms. These exact `mount(8)`
+options are translated by util-linux into generic mount flags plus
+filesystem-specific data.
+
+Disposable syscall comparison
+-----------------------------
+Invocation used a fresh `/usr/bin/unshare --user --map-root-user --net
+--mount --pid --fork --propagation private --mount-proc -- ...` child. The
+child verified changed user/net/mount/PID namespace IDs and called the
+production namespace network-view checker before any test mount. Its network
+report showed only `lo`, zero IPv4/IPv6 routes, and the two exact IPv6
+null/unreachable sentinel rows. Parent `/proc/self/mountinfo` was 4019 bytes
+before and after and byte-identical. The temporary test tree was removed.
+
+For `mount("run", TARGET, "tmpfs", 0,
+"nosuid,nodev,mode=0755")`, the return was -1, errno 22 (`EINVAL`). This was
+the previous probe argument plan: generic VFS flags were incorrectly passed
+as tmpfs data.
+
+For `mount("run", TARGET, "tmpfs", MS_NOSUID|MS_NODEV,
+"mode=0755")`, mount and unmount both returned 0. The exact installed
+arch-install-scripts command
+`mount run TARGET -t tmpfs -o nosuid,nodev,mode=0755` also returned 0 and
+unmounted cleanly. The `tmpfs-tmp` form with
+`MS_NOSUID|MS_NODEV|MS_STRICTATIME` flags and only `mode=1777` data returned 0
+and unmounted cleanly.
+
+After the probe-plan correction, direct production
+`_establish_offline_network_isolation(subprocess.run)` reported
+`ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` for `devtmpfs` only. The route-free
+namespace checks pass. WSL still does not provide the complete required
+Archiso mount capability, so no offline build is enabled or claimed. This is
+Arch WSL evidence, not native Linux validation.

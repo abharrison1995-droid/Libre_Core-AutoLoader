@@ -1,0 +1,10 @@
+sssssssssssss............                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_post_reboot_evidence.py:297: production sidecar durability requires POSIX directory fsync
+SKIPPED [5] tests\test_post_reboot_evidence.py:323: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:359: production sidecar durability requires POSIX directory fsync
+SKIPPED [3] tests\test_post_reboot_evidence.py:390: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:409: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:434: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_recovery_runbook_package.py:16: wheel smoke requires the already-installed setuptools and wheel build tools
+12 passed, 13 skipped in 1.55s

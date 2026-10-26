@@ -1,0 +1,5 @@
+...............s.......s.                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_package_closure.py:703: durable seed inventory publication requires POSIX descriptor and directory fsync
+SKIPPED [1] tests\test_offline_vm_worker.py:249: descriptor/fchmod policy is POSIX-specific
+23 passed, 2 skipped in 4.00s

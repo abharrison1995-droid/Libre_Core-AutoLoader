@@ -1,0 +1,1 @@
+Same ISO/kernel/initramfs and run2 direct-kernel args; no NIC; loopback VNC 127.0.0.1:5902; persistent HMP monitor connected from launch; no firmware writer. 600 second hard bound.

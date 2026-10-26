@@ -1,0 +1,12 @@
+# Retained files in this folder; check these entries with sha256sum -c SHA256SUMS.
+# External input hashes below are captured run records; their bytes are not in this folder.
+# 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5  source-and-workspace-copy archlinux-2026.10.01-x86_64.iso
+# 8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901  extracted inputs/vmlinuz-linux
+# 35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52  extracted inputs/initramfs-linux.img
+792060038da47b2d8ccc930b09c457f12c45219476ba253eb1faae382f1b7807  README.md
+4f1a79d53a84c795b20a47c9a6190ae6515a9afbee06488b364be94e8e8da555  run-record-20261023.txt
+ef417b7596e0df773615aeb34328882b3a321d6a2fb23b6d59827b8826ee7e59  archlinux-console-check-capture.png
+d60d8acd43b4f2828f1b4699b0c09ba61e9f8c4cd75f4e8939678f0f59ec0d55  archlinux-welcome-capture.png
+227b8bcb14c5e1d01e333cf2467660aec7aa852907469bc3d94830cde536f3dd  boot-screen-20261023.bmp
+3945216347cdd54a140e5e18e72871333d437b8d825a71c13bbbbefcb7003e29  guest-initramfs-shell-capture-20261023.bmp
+2590d19ce11329f7c7694089d59a9c86ab23da81c9660a742fc5dd99717b5a9c  boot-screen-no-fdc-20261023.bmp

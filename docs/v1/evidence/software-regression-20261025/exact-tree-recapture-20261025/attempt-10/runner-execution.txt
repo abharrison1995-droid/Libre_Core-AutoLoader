@@ -1,0 +1,7 @@
+Outer command: wsl -d Ubuntu -u root -- bash -lc "mount -o remount,size=6G /tmp; exec runuser -u alex -- env HOME=/home/alex USER=alex LOGNAME=alex bash /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-10.sh"
+Runner copy: runner.sh
+Runner SHA-256: 
+b8d6633c5d60cee1f7c8372fdd97e549f7a5148b564daca055f249eb25daeadc
+Runner exit: 0
+Pytest exit: 0
+The root WSL invocation only remounted the empty /tmp tmpfs and switched to unprivileged user alex before running the retained script.

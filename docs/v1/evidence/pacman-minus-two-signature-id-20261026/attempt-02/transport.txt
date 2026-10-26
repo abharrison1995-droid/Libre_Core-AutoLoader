@@ -1,0 +1,3 @@
+http_code=200
+size_download=119
+ssl_verify_result=0

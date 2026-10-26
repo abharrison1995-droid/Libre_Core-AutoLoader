@@ -1,0 +1,33 @@
+Arch WSL mount errno classification follow-up
+Recorded: 2026-10-15 16:08 UTC
+Environment: Arch Linux WSL2, x86_64, Linux 6.18.54.1-microsoft-standard-WSL2
+
+Production preflight command:
+The production function `_establish_offline_network_isolation(subprocess.run)`
+was called from the repository checkout with real Arch `unshare`, `ip`, and
+pacman ownership checks. It ran the route probe and the isolated mount probe;
+it did not call `execute_build`, pacman sync/install, mkarchiso, or create
+builder work/output directories.
+
+Output:
+RESULT=ERROR BuildContractError: ARCHISO_MOUNT_PREFLIGHT_INTEGRITY_FAILURE: mount probe report or child namespace evidence was invalid; exit=4: MountProbeIntegrityError: mount operation tmpfs-run failed with unexpected errno 22
+
+A direct diagnostic invocation of `run_mount_capability_probe` with a tracing
+wrapper observed these raw syscall results in the same namespace shape:
+- devtmpfs mount: EPERM (Operation not permitted)
+- tmpfs-run mount: EINVAL (Invalid argument)
+
+`EINVAL` is intentionally an integrity failure under the fixed probe plan; it
+is not reclassified as a capability denial. Its specific cause remains open
+for a later, separate source/option investigation. The older
+`production-mount-preflight-20261015.txt` records an earlier implementation
+that classified every OSError as unsupported; that historical
+`ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE` result is superseded by this stricter
+classification. The integrated real-preflight regression accepts either a
+valid supported-capability result or this exact integrity result and confirms
+the host mount table is unchanged.
+
+No build or output was started. This is WSL-only software evidence, not native
+Linux validation. The errno allowlist and operation-specific report parser
+have synthetic regressions; no production errno value beyond the two above is
+claimed.

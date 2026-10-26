@@ -1,0 +1,3 @@
+uid=1000(alex) gid=1000(alex) groups=1000(alex),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users),991(kvm)
+Python 3.14.4
+/usr/bin/python3: No module named pytest

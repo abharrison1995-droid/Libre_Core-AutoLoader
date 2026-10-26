@@ -1,147 +1,219 @@
 # Libre_Core AutoLoader
 
+Libre_Core AutoLoader is an in-development Python application for preparing and documenting ThinkPad firmware workflows. The CLI and Textual interface share a model-specific controller for the three V1 profiles. Explicit X200/X220 preparation can inspect local identity and SPI evidence; backup actions perform full-chip reads, and build actions invoke only the pinned artifact engine. The guarded CLI and dedicated mounted-screen TUI write routes reopen staged X200/X220 evidence, require fresh evidence and one-use exact-action human approval, and perform a separate full-chip read-back. The TUI challenge is bound to its active screen and can be cancelled until the service consumes the receipt. Both write routes are unavailable on this Windows development host because durable directory fsync is unsupported. Ubuntu 26.04 WSL has been used for software tests, but is not native Linux. A later pinned Libreboot 26.01 WSL diagnostic produced 31 X200 4-MiB variants, and separate validation-only size/CBFS checks accepted their structure. That diagnostic did not create or accept an ArtifactEngine COMPLETE manifest or a device-bound artifact. The latest fail-closed ArtifactEngine preflight stopped before building because physical identity, chip-capacity, and verified-backup evidence were unavailable. No accepted device-bound ROM artifact or COMPLETE manifest exists. Raw restore/recovery remains unavailable, and real-device boot validation has not passed. No hardware workflow has been validated on a real device.
+
+## V1 reference workflows
+
+| Device | Planned pathway | Current status |
+|---|---|---|
+| ThinkPad T430 | 1vyrain, with an official IVprep handoff if the observed BIOS is incompatible | CLI/TUI submit human handoff approvals and fresh return attestations; hardware validation is pending |
+| ThinkPad X200 | Libreboot with external SPI programming | CLI/TUI route preparation, verified backup, pinned build/artifact acceptance and safe resume; Linux build and hardware validation are pending |
+| ThinkPad X220 | Coreboot with external SPI programming | CLI/TUI route preparation, verified backup, backup-derived blobs, pinned build/artifact acceptance and safe resume; Linux build and hardware validation are pending |
+
+These are development targets, not a claim of supported or safe flashing. Other model entries in the source database are not validated V1 compatibility claims.
+
+## Install
+
+Python 3.11 or newer is required.
+
+```powershell
+git clone https://github.com/abharrison1995-droid/Libre_Core-AutoLoader.git
+cd Libre_Core-AutoLoader
+python -m pip install -e ".[dev]"
+```
+
+## Commands
+
 ```text
- _      _ _                 _____               
-| |    (_) |               /  __ \              
-| |     _| |__  _ __ ___   | /  \/___  _ __ ___ 
-| |    | | '_ \| '__/ _ \  | |   / _ \| '__/ _ \
-| |____| | |_) | | |  __/  | \__/\ (_) | | |  __/
-\_____/|_|_.__/|_|  \___|   \____/\___/|_|  \___|
-           A u t o L o a d e r
+autoloader --help
+autoloader run
+autoloader detect
+autoloader status --profile x220-coreboot
+autoloader import-evidence --profile x220-coreboot --file device.json --save-to candidate.json
+autoloader prepare-workflow --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader backup --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader build-rom --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader accept-completed-artifact --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader verify --profile x220-coreboot
+autoloader flash --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader inspect-checkpoint --checkpoint path/to/workflow-journal.json
+autoloader resume-checkpoint --profile x220-coreboot --checkpoint C:\firmware-work\x220.json --request setup.json
+autoloader t430-stage --request handoff-stage.json --checkpoint C:\firmware-work\t430.json
+autoloader resume-checkpoint --profile t430-1vyrain --checkpoint C:\firmware-work\t430.json
+autoloader review-readiness --profile x220-coreboot --checkpoint C:\firmware-work\x220.json
+autoloader usb --output-dir ./iso_build
+autoloader build-usb --source-root /work/Libre_Core-AutoLoader --profile-dir /work/Libre_Core-AutoLoader/usb_builder/archiso_profile --snapshot-lock /work/Libre_Core-AutoLoader/usb_builder/snapshot.lock.json --output-dir /work/iso-output --work-parent /work/iso-work --network-mode online
 ```
 
-![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
-![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-![Platform: Linux](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)
+- `run` opens the Textual interface. Workflow choices and displayed next actions come from the shared controller. Explicit preparation, backup, and build actions use their reviewed backend services. The X200/X220 FLASH action opens a dedicated mounted-screen challenge; this route is software-only and is blocked on this Windows host by the durable approval fsync gate. Restore and boot actions remain unavailable.
+- `detect` explicitly captures read-only local DMI/BIOS evidence; startup does not automatically inspect hardware. Detection alone is not proof of compatibility.
+- `status` displays controller status for one of the three V1 profiles. Imported evidence remains an unauthenticated candidate and cannot by itself grant compatibility or workflow readiness.
+- `import-evidence` accepts typed raw `DeviceEvidence` JSON and saves a candidate to a new path. Existing paths are not overwritten. Its checksum detects accidental corruption; it does not authenticate the evidence or prove that it came from the device.
+- `prepare-workflow` requires a new absolute checkpoint path and a versioned operator request. On an explicit X200/X220 request it captures local DMI/BIOS and a read-only SPI probe; X220 also reads the original chip to inspect the pinned IFD map. These are explicit local hardware-read actions. The request's voltage, wiring, and storage values are human-reported evidence with actor, UTC time, instrument, and test point; they are not independently authenticated by the application. Candidate-evidence import cannot set observed chip or programmer fields.
+- `backup` (and its `accept-verified-backup` alias) captures two full-chip reads and stores them on the separately selected persistent destinations, or reopens and revalidates an existing verified backup. This is an explicit physical read action when run on a connected device.
+- `build-rom` routes through the shared controller and invokes only the pinned X200/X220 recipe after revalidating the saved intent and backup. X220 passes descriptor, ME, and GbE blobs sliced from the verified original backup. A supported Linux build environment is required; a native Windows invocation returns `LINUX_BUILD_ENV_REQUIRED` before starting a build command or creating output. Ubuntu 26.04 WSL is available, and the pinned Libreboot source checkout matches its commit/tree; the pinned dependency list was installed except for `g++-mipsel-linux-gnu`, which is not needed by the x86 X200 target. A subsequent pinned Libreboot 26.01 WSL diagnostic produced 31 X200 4-MiB variants; separate validation-only size/CBFS checks accepted their structure. This did not create or accept an ArtifactEngine COMPLETE manifest or a device-bound artifact. The device-bound X200/X220 build-and-acceptance path remains unvalidated. Passing software tests or structural diagnostics does not establish device compatibility or successful upstream artifact acceptance.
+- `accept-completed-artifact` reopens the persisted manifest and selected artifact, revalidates current local evidence, backup files, pinned source/tool records, and model-specific structure checks, then stages only `STAGED/HARDWARE_PENDING`.
+- `verify` reports read-back as `NOT_PERFORMED`; it does not probe or read physical flash.
+- `flash` accepts only an exact staged X200/X220 checkpoint and current versioned request; arbitrary `--rom` paths are not supported. It requires a real OS TTY, collects live meter/wiring attestations and asks for the exact operation challenge. The controller reopens the pinned artifact and complete backup, then repeats local DMI/SPI checks before the one-shot writer. Independent full-chip read-back is required before `WRITE_VERIFIED`; timeout, nonzero exit or a mismatch is `UNCERTAIN` and never retries. Windows is blocked because the durable approval ledger requires directory fsync. T430 remains a separate IVprep/1vyrain human handoff, and restore is disabled.
+- `inspect-checkpoint` validates and summarizes an operation journal read-only. X200/X220 `resume-checkpoint` requires a fresh versioned request, locally re-detects/re-probes the device, reopens the exact backup/artifact evidence, and resumes only the safe staged software state. T430 `t430-stage` and `resume-checkpoint` present human-run IVprep/1vyrain instructions and accept fresh return attestations; neither downloads nor executes upstream code.
+- The Textual interface uses the same controller and presents the same explicit preparation, backup, build, artifact, resume, and T430 stage actions. It does not automatically probe hardware at startup. Its X200/X220 write route uses a dedicated mounted-screen challenge and live setup form; the screen binds approval to its mount and challenge, and blocks navigation while the service is active. Workflow status refreshes from the controller when returning from an action screen.
+- `usb` creates an output directory only; it does not build or write an ISO. `build-usb` invokes the shared Archiso build contract and requires explicit absolute source/profile/lock/output/work paths and `--network-mode online|offline`. Offline mode also requires `--offline-repository` and `--offline-manifest`. It refuses non-Linux hosts and never writes removable media.
 
-## What is Libre_Core AutoLoader?
+## Live USB development
 
-Libre_Core AutoLoader is a comprehensive, USB-bootable ThinkPad firmware modification toolkit. It provides an automated, menu-driven interface (TUI) to simplify the process of replacing proprietary BIOS with open-source firmware like Coreboot, Libreboot, and Canoeboot on classic ThinkPad models.
+SOL accepted the Phase 09 corrective builder review after publication fault tests, exact archive redirect checks, and explicit pacman database-consumption evidence were added. The current derivative candidate is b2 (details below). Its same-hash BIOS and UEFI QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; no passing app/service boot validation exists. An earlier pre-initramfs candidate failed before app startup. After `mkarchiso`, the builder checks the image target root for the application venv interpreter, installed package and entrypoint metadata, required runtime imports, the startup script, systemd unit and enablement, customize-hook marker, and read-only CLI/import smoke results before publishing any output. Provenance records source/profile hashes, package snapshot, host package inventory, Archiso executable identity, pip/setuptools/wheel versions, installed image package inventory, target-root evidence, database-consumption evidence and log hashes. The app venv uses `--system-site-packages` and relies on runtime dependencies installed from the locked Arch package set. Pacman must verify package signatures; repository database detached signatures are optional only when absent from the dated archive, while exact `core.db` and `extra.db` SHA-256 pins are always required and any present signatures must verify. Offline repositories must match a complete local file/hash manifest, and offline subprocesses are run only after a route-free network namespace has been established. The invoking Python environment must already contain pip, setuptools 61.0 or newer, and wheel; the builder does not install host tools. Wheel creation uses a package-only temporary source copy and leaves the checkout unchanged. The ISO, logs, provenance and `SHA256SUMS` are published together inside `candidate-bundle` through one atomic directory rename. The builder records QEMU as `NOT_PERFORMED` in build-time provenance; separate emulator checks are required before release.
 
-## Supported ThinkPad Models
+The package source is fixed to the official 2026-09-30 archive, which contains Archiso 91-1; the 2026-09-29 archive contains Archiso 90-1 and does not satisfy this lock. The source also pins its reviewed source commit, exact repository database hashes and a SHA-256-pinned package list. The builder records the complete host package inventory, but versions other than Archiso and the `mkarchiso` executable are not pinned; exact host-environment reproducibility remains a release gate. The production preflight uses `unshare --user --map-root-user --net --mount --pid --fork --propagation private --mount-proc`. In Arch WSL, the real network probe passes with canonical package-owned `unshare` and `ip`. The errno gate first exposed a probe-plan bug: generic VFS flags (nosuid,nodev) were passed as tmpfs filesystem data, producing EINVAL. A disposable same-namespace comparison showed the old syscall failed, while the corrected MS_NOSUID|MS_NODEV flags with mode=0755 data and the exact util-linux mount command succeeded. The mount plan now splits VFS flags from filesystem data. At that earlier checkpoint, the root-oriented preflight returned ARCHISO_MOUNT_CAPABILITY_UNAVAILABLE for devtmpfs in Arch WSL and blocked both modes before work/output. That result is superseded for the online path by the later non-root Archiso -N mount-stack preflight described below; it remains historical WSL evidence, not a native Linux result. Focused USB tests pass 259/1 skipped on Arch WSL and 244/16 on Windows; native and Win32-targeted mypy pass on 104 files. Full diagnostic details are in docs/v1/evidence/offline-namespace-arch-wsl-20261015/tmpfs-option-split-diagnostic-20261015.txt. These are WSL-only results: native Linux behavior and a complete offline image build remain pending. The process-group timeout cleanup cannot stop a descendant that calls `setsid()`; such a process remains network-isolated but could continue local filesystem activity. The first real online candidate attempt stopped before `mkarchiso` because the package-list pin used CRLF-converted bytes instead of the checked-in LF content; the lock now pins the canonical LF hash and validation normalizes CRLF to LF; SOL accepted this correction in commit 3a146f8. The second attempt passed this check but stopped before `mkarchiso` on the symlinked `/usr/sbin/mkarchiso` path described below. The third attempt reached `mkarchiso` but failed BIOS profile validation before package installation because `syslinux` was missing; the profile now includes it. A fourth online attempt (2026-10-13) passed package validation and completed the Archiso build stages, then failed target-root validation because `/usr/sbin` inside the image is a usrmerge link to `/usr/bin`. The output directory remained empty and no ISO was published. The image-rooted resolver was accepted. A pre-fragment ISO failed both QEMU modes. The later candidate and its failed boot evidence are recorded below. The signature-verified Archiso 91-1 package is installed under Arch WSL; `pacman -Q archiso` reports 91-1 and `pacman -Qo /usr/bin/mkarchiso` reports that it is owned by archiso 91-1. Candidate b2 passed target-root install validation. Same-hash BIOS (310s) and UEFI (922s) QEMU reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Successful app/service and media checks remain pending. `build-usb` fails with `LINUX_BUILD_ENV_REQUIRED` on Windows. `usb` remains output-directory preparation only.
 
-| Model | Generation | IVprep Support | 1vyrain Support | Firmware Options |
-|-------|------------|----------------|-----------------|------------------|
-| X200  | Core 2 Duo | No | No | Coreboot, Libreboot, Canoeboot |
-| X201  | Arrandale | No | No | Coreboot, Canoeboot |
-| X220  | Sandy Bridge | No | No | Coreboot, Libreboot, Canoeboot |
-| X230  | Ivy Bridge | Yes | Yes | Coreboot, Libreboot, Canoeboot |
-| T400  | Core 2 Duo | No | No | Coreboot, Libreboot, Canoeboot |
-| T420  | Sandy Bridge | No | No | Coreboot, Libreboot, Canoeboot |
-| T430  | Ivy Bridge | Yes | Yes | Coreboot, Libreboot, Canoeboot |
-| T440p | Haswell | No | No | Coreboot, Libreboot, Canoeboot |
-| T480  | Kaby Lake | No | No | Coreboot, Libreboot |
-| T500  | Core 2 Duo | No | No | Coreboot, Libreboot, Canoeboot |
+### Earlier temporary ISO and emulator result (before package-policy correction)
 
-## Features
+The 2026-10-13 candidate ISO SHA-256 was `9d6fd80e5757b2f5a075fd46f5d60548c782166cacf95378d6bde2ad3dee42fc` (1,285,586,944 bytes), built from clean snapshot `349e7961264131f69019ad1ab61cfa950af688a8`. Same-hash QEMU BIOS and UEFI boots failed to mount the live root and dropped to `[rootfs~]#`; BIOS logged missing `archiso`, `archiso_loop_mnt` and PXE hooks. Neither reached the app or systemd service, so app/service/no-writer boot evidence is unavailable. The accepted package-policy correction now includes the pinned hook requirements and records them in provenance. Canonical LF package-list SHA-256: `7a7a3fa4127ab6fbaaf952be4bbde82f787a7da30d3111601a9e7fccd6334dbd`. Focused USB suites: Arch 105 passed, 2 skipped; Windows 94 passed, 13 skipped. `mypy usb_builder` is clean. At that earlier checkpoint a fresh build was pending; no USB media or hardware was accessed.
 
-* **Auto-detect ThinkPad model and BIOS version**
-* **Automated BIOS reversion via IVprep (xx30 series)**
-* **1vyrain exploit integration for software-based flashing**
-* **Custom Coreboot/Libreboot/Canoeboot ROM builder**
-* **Menu-driven payload selection (SeaBIOS, GRUB, TianoCore)**
-* **Intel ME neutering via me_cleaner**
-* **WiFi/battery whitelist removal**
-* **Custom bootsplash screen support**
-* **EC firmware modification (classic keyboard, battery bypass)**
-* **Interactive step-by-step flashing guides with ASCII diagrams**
-* **Automatic ROM backup with double-read verification**
-* **USB-bootable live Linux environment**
-* **Two-stage workflow (configure on host, flash from USB)**
+After that package-list correction, a second clean online candidate attempt stopped
+before invoking `mkarchiso`: Arch exposes `/usr/sbin/mkarchiso` through the
+usrmerge alias `/usr/sbin -> /usr/bin`. The output directory remained empty and
+no ISO was produced. The builder now resolves the alias, checks that the
+canonical target is an executable regular file, and requires `pacman -Qo` to
+exactly confirm that canonical path is owned by `archiso 91-1`. This correction was accepted by SOL. A third online attempt invoked mkarchiso but failed BIOS profile validation before package installation because syslinux was missing from the profile package list. The output directory remained empty and no ISO was produced. The exact pinned core.db contains syslinux 6.04.pre3.r3.g05ac953c-5 with package-signature metadata. The profile and required package policy now include syslinux; the updated canonical LF package-list SHA-256 is 520974f323810ab01ea39b7ea7b43c1e7ecbabb823bb4bed4ebab6b1a5cf3329; SOL accepted the syslinux package-list correction. At that checkpoint, no later retry had run; the fourth attempt is recorded in the current-status section below.
 
-## Quick Start
+An earlier candidate (b96, preceding b2) was from clean snapshot `d87bc03a6b94bdde86ff3e3ebf89b24df0b4b275` (tree `0a433bfc6382c56e24b0b5c2bb766ef3d6ff246a`), ISO SHA-256 `b96f83ba84e67ab7e747c95296319d549b57d167010d1ce98a43be2d45c3e4a5`, size 1,339,064,320 bytes. It passed target-root install validation. BIOS QEMU reached the Arch live-root shell but did not show the AutoLoader UI/service; tty2 and serial did not provide service evidence. UEFI QEMU reached early initramfs hooks and stalled before mounting the live root. Both used the same ISO hash, no network device and no write-capable firmware interface. Exact captures, command flags and hashes are in `usb_builder/LIVE_USB_RUNBOOK.md`. App/service/journal/no-writer boot validation remains failed or not evidenced; no emulator result is hardware validation.
 
-### Installation
+SOL accepted a separately pinned USB initramfs derivative that removes only `kms`, preserving all other hook order, the PXE hooks, xz compression and options. Source and staged derivative hashes are checked at pre-build, post-build and publication boundaries. The b96 candidate predates this derivative; b2 below includes it. Windows focused USB validation passed 102 tests, 13 skipped; derivative-specific cases passed 6; `mypy usb_builder` and diff-check passed. Same-hash BIOS/UEFI app/service evidence remains pending. No PXE or compression change is part of this experiment.
 
-```bash
-git clone https://github.com/Libre-Core/AutoLoader.git
-cd AutoLoader
-pip install -r requirements.txt
-pip install -e .
+### Current derivative candidate b2 (2026-10-14)
+
+Candidate b2 was built from clean USB-only snapshot commit `1197d9040a39d6da012f459b8bb1f45385ee0072`, tree `d2588ddff4f0c5d4115565f47360314553106d38`. Its ISO is 1,012,215,808 bytes with SHA-256 `afde8ba28025530852547ec5042dd94ecece5a9b1d24f5da141365861cc35cbd`. Target-root installation and packaged CLI checks passed. Inspection of the 79 MiB initramfs confirmed the `kms`-omitting derivative with PXE hooks retained. Same-hash BIOS (310s) and UEFI (922s) QEMU boots reached systemd on the live system but stalled before AutoLoader/service evidence; tty2 showed no login prompt. Later direct-kernel diagnostics captured some read-only systemd state but established no root cause and do not pass normal BIOS/UEFI startup acceptance. The earlier root-oriented Arch WSL production-mount preflight stopped at devtmpfs with `EPERM` before candidate-build work/output; that checkpoint is superseded by the later non-root Archiso `-N` preflight path. Current-source native attempts and their incomplete boot diagnostics are summarized below; no current-source product ISO was produced. The offline runner remains unavailable, and physical USB checks remain pending. The ISO and evidence are not hardware validation.
+
+Successful candidate publication places the ISO, build logs, provenance and `SHA256SUMS` together inside `candidate-bundle` through one atomic directory rename. When Archiso deletes its target sync database files, provenance records the pinned Archiso 91-1 source/config invariant and exact staged database hashes as `SOURCE_LEVEL_INVARIANT_ONLY`; retained database files, when present, are independently hashed and compared.
+
+Two later generic-guest debug-shell diagnostics were recorded on 2026-10-21.
+The Arch-boxes guest entered system initialization but waited for a missing
+root UUID; the Arch ISO attempt remained at SeaBIOS EDD probing. Neither
+produced a guest shell or command result. These are incomplete QEMU
+preparation attempts, not native Linux, current-source product ISO, or
+AutoLoader boot evidence. Captures and checksum manifests are in the
+[`Arch-boxes VM diagnostic`](docs/v1/evidence/vm-debug-shell-20261021/README.md)
+and [`Arch ISO diagnostic`](docs/v1/evidence/archiso-debug-shell-20261021/README.md).
+
+## Safety and validation status
+
+No physical hardware action, media write or real-device boot test was performed during the current implementation pass. An earlier X200 attempt compiled some upstream components but did not produce a complete validated ROM. Tests used fake evidence, runners and transports only. No real-device DMI capture, SPI probe/read, backup, voltage measurement, firmware write, IVprep downgrade, restoration, post-write read-back or hardware recovery occurred. The QEMU boots above are emulator evidence only and did not verify app/service startup. A later pinned Libreboot 26.01 X200 diagnostic produced 31 ROM variants that passed validation-only size and CBFS structure checks; it did not create an ArtifactEngine COMPLETE manifest or device-bound accepted artifact. The software services and synthetic tests do not establish an ArtifactEngine COMPLETE/device-bound accepted build or correct hardware installation. Hardware acceptance remains pending for all three V1 devices, and physical writes/recovery still require explicit human authorization.
+
+The implementation plan, current acceptance matrix, known issues and hardware report are in [`docs/v1/`](docs/v1/).
+
+## Development tests
+
+```powershell
+python -m pytest -q
+python -m mypy autoloader
 ```
-
-### Usage Modes
-
-1. **Host mode (pip install, run from desktop):**
-   Use this mode to configure ROMs and prepare the USB environment on your main workstation.
-   ```bash
-   autoloader run
-   ```
-
-2. **USB mode (boot from USB on target ThinkPad):**
-   The built ISO drops you right into the TUI, fully equipped with `flashrom` and other utilities to flash the target machine.
-
-3. **CLI mode (individual commands):**
-   For scripting and advanced usage.
-   ```bash
-   autoloader --help
-   autoloader generate-usb --output ./out
-   ```
-
-## Building the USB Image
-
-1. Prepare your ROMs on the host machine using the AutoLoader UI.
-2. Build the Arch Linux-based Live USB:
-   ```bash
-   sudo ./usb_builder/build_usb.sh --output-dir ./iso_out --include-roms ./workspace/roms
-   ```
-3. Flash the resulting `.iso` to a USB drive using Rufus, balenaEtcher, or Ventoy.
-4. Boot the target ThinkPad from the USB drive.
-
-## Two-Stage Workflow
-
-```mermaid
-graph TD
-    A[Host Machine] -->|1. Build Custom ROM| B(ROM Files)
-    A -->|2. Generate USB| C(Archiso USB Live Env)
-    B --> C
-    C -->|3. Boot Target ThinkPad| D[Target Machine]
-    D -->|4. Backup Original BIOS| E(BIOS Dump)
-    D -->|5. Flash Custom ROM| F[Open Source Firmware!]
-```
-
-## Supported Firmware
-
-| Feature | Coreboot | Libreboot | Canoeboot |
-|---------|----------|-----------|-----------|
-| **Philosophy** | Pragmatic | 100% Free Software | Blob-reduced |
-| **Intel ME** | Neutered | Removed/Disabled | Neutered |
-| **Microcode** | Yes (Intel) | No | Yes |
-| **Payloads** | SeaBIOS, TianoCore | GRUB, SeaBIOS | GRUB, SeaBIOS |
-
-## Safety
-
-> [!WARNING]
-> Flashing custom firmware modifies your motherboard's SPI flash chip. If something goes wrong, you could "brick" your device.
-> * ALWAYS create and verify backups of your original BIOS before flashing.
-> * Have a hardware SPI programmer (like a CH341A) ready just in case.
-> * Ensure your laptop is plugged into AC power and the battery is charged.
-
-## Architecture
-
-```mermaid
-graph LR
-    UI[Textual TUI] --> State[State Manager]
-    State --> Worker[Async Workers]
-    Worker --> Modules[Core Modules]
-    Modules --> Ext[External Tools (flashrom, me_cleaner)]
-    Modules --> Builder[ROM Builder]
-    Modules --> Exploits[1vyrain / IVprep]
-```
-
-## Contributing
-
-Contributions are welcome! Please submit Pull Requests on GitHub. Make sure your code passes linting and includes appropriate type hints.
 
 ## License
 
-This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under GPL-3.0; see [`LICENSE`](LICENSE).
 
-## Acknowledgements
+## Current-source software regression — 2026-10-21
 
-* **1vyrain**: Software-based flashing for xx30 series
-* **coreboot, libreboot, canoeboot**: The core firmware projects
-* **me_cleaner**: Intel ME deblobbing
-* **thinkpad-ec**: Embedded Controller firmware modifications
-* **flashrom**: The universal flash programming utility
-* **Skulls**: Inspiration for pre-configured ROMs
+The full suite passed on Windows (**921 passed, 68 skipped**, 989 collected;
+zero failures; 768.92 seconds) and Ubuntu 26.04 WSL (**985 passed, 4
+skipped**, 989 collected; zero failures; 687.55 seconds). Full-project mypy
+passed on 105 source files in both environments. All skipped tests remain
+unpassed. The exact Windows command and preserved Ubuntu WSL source record
+are in the [`2026-10-21 software-regression evidence`](docs/v1/evidence/software-regression-20261021/README.md).
+
+The read-only `review-readiness` report reopens persisted T430/X200/X220
+evidence; its maximum result is `REVIEW_INPUTS_COMPLETE`, with current device,
+boot and unrecorded recovery-volume checks left unknown. Focused checks passed
+11 tests with 1 skip on Windows and 9 tests on Ubuntu WSL. A direct WSL UNC
+temporary-path run failed in an X200 sidecar fixture and is diagnostic only,
+not a release result. Native Linux/Archiso build, current-source product ISO
+and Live USB app/service boot remain pending, as do all three hardware
+workflows. No hardware operation occurred.
+
+Current-source native Arch work remains incomplete. The focused X220 selection
+passed 50 tests with 4 skipped (972 deselected), and top-level plus
+`build-usb --help` passed. An exploratory full native suite stopped at about
+7% after errors with no JUnit; native targeted mypy raised an internal error.
+The four current-source Archiso build attempts produced no ISO; subsequent
+startup retries 3–16 were diagnostics, not native build/test gates, and also
+produced no ISO. Retry13 reached only a systemd debug shell: read-only `id` and
+`lsblk` showed root and the expected ISO, workspace, results, and read-only
+source devices. At that query snapshot, 88 jobs were pending around
+`systemd-nsresourced` and tmpfiles; later in the transcript systemd printed
+`[FAILED] Failed to start Namespace Resource Manager` (cause not established).
+No normal live boot, rootless preflight,
+native build gate, or product ISO passed. Retry14 then ran a 600.376-second
+observation-only diagnostic with the same ISO and fresh workspace/results
+overlays. The live stop-marker scanner did not strip ANSI escapes; the separate
+post-run normalized audit found four Namespace Resource Manager failures,
+zero normal startup target markers, and zero emergency/fatal markers. Its cause
+is unknown. ISO, kernel, initramfs, and source-image before/after hash records
+matched; free space stayed at 153.786 GiB. Retry15 was a helper/PTY handshake
+failure with empty serial capture and no guest input. Retry16 captured the PTY
+and four Namespace Resource Manager failure lines, but reached the 600-second
+cap without a stable post-failure shell prompt; no guest input or query was
+sent. Input hashes matched in both attempts. These remain unresolved generic
+ISO diagnostics: no normal boot, native tests, rootless preflight,
+current-source build, or product ISO passed. See the [current-source native Arch evidence](docs/v1/evidence/native-arch-build-20261021/README.md),
+[retry13 transcript and result](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/README.md),
+the [retry14 observation bundle](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/README.md),
+[retry15 PTY failure](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry15-pty-failure/README.md),
+and [retry16 service-timeout diagnostic](docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry16-service-timeout/README.md).
+Native build remains open until normal userspace and the reviewed rootless
+preflight are ready. Hardware remains pending for all three devices.
+
+## Earlier current-source software regression — 2026-10-20
+
+The current source passed the full automated suite on Windows and Ubuntu 26.04
+WSL. Windows passed **890 tests with 63 skipped** (953 collected; zero
+failures/errors; 562.40 seconds). Ubuntu WSL passed **949 with 4 skipped**
+(953 collected; zero failures/errors; 536.37 seconds). All skips remain
+unpassed. Windows skips include POSIX durability, process, ownership and
+symlink behavior, Linux namespace/device/package checks, host-specific checks,
+and a `WinError 1314` symlink privilege limitation. Ubuntu skips include two
+trusted Arch package-owner checks (Arch/pacman unavailable) and two
+Windows-only contracts. Both Win32-targeted and Ubuntu mypy runs passed on 109
+source files. A read-only Ubuntu package-owner smoke check resolved the
+canonical `gnutrue` executable to its root-owned Debian package; Ubuntu WSL
+has no `flashrom` or `flashprog`, so no flashrom probe or hardware access was
+performed. Exact commands, report hashes, skips and evidence limits are in
+the [`2026-10-20 software-regression evidence`](docs/v1/evidence/software-regression-20261020/README.md).
+
+These results establish automated software regression only. Ubuntu WSL is not
+native Linux; its package-owner smoke check is not flashrom integration. The
+current-source Live USB build/boot, complete X200/X220 ROM builds and all
+three real-device workflows remain pending. No physical firmware write or
+recovery operation has been performed.
+
+## Historical current-source software regression — 2026-10-17
+
+After the final fake-only write-service crash/replay tests, the corrected
+Windows full suite passed **876 tests with 63 skipped** (939 collected; zero
+failures/errors; 934.76 seconds) on Python 3.12.14 / pytest 9.1.1. Ubuntu
+26.04 WSL2 passed **935 with 4 skipped** (939 collected; zero failures/errors;
+1221.90 seconds). The initial Windows attempt used a pytest base outside the
+system temp root and failed one storage-preflight test; it is preserved as a
+failed environment setup, not a pass. The corrected run placed process-local
+`TEMP`/`TMP` and pytest base under the same short root. Windows skips include
+POSIX durability/process/ownership/symlink cases, Linux namespace/device/
+package checks, unvalidated host checks, and one account-specific symlink
+privilege limitation (`WinError 1314`). Ubuntu skips are two unvalidated
+trusted-Arch-pacman ownership checks and two Windows-specific contracts. All
+skipped checks remain unpassed. Exact commands, JUnit hashes, and the failed
+attempt are in the [`software regression evidence`](docs/v1/evidence/software-regression-20261017/README.md).
+
+The frozen six-file safety branch denominator is **577/678 (85.1%)** after
+meaningful fail-closed test additions; this is a test metric, not release
+acceptance. These software results do not establish native Linux builder
+readiness, a current ISO or successful Live USB startup, a complete ROM, or
+hardware validation. Those release gates remain pending.
+
+
+Earlier cross-platform suite counts are retained below for traceability; they do not supersede the current 2026-10-20 regression above. WSL results remain distinct from native Linux validation.
+
+The earlier Arch WSL2 full suite ran against Python source/tests at `72a302b`, using `setpriv` to test as UID/GID 65534 (`nobody`): **757 passed, 2 skipped** (759 collected; 1245.94s; exit 0). A docs-only commit `0d74d76` landed during the run; the tested Python source and test files remained at `72a302b`. Earlier Windows and Ubuntu WSL full suites were **699 passed, 60 skipped** and **755 passed, 4 skipped**, respectively, on `6cabb23d`; they do not cover the later source/test tree. Exact commands, skip reasons, reports and hashes are in [the software regression evidence](docs/v1/evidence/software-regression-20261016/README.md). The `nobody` test is WSL2 software evidence; it does not validate the dedicated build account, fixed privileged launcher, production offline route, native Linux, VM/ISO, ROM, boot, or hardware gates. Offline production execution remains fail-closed. Native Linux build, offline ISO build, successful Live USB app/service boot, and all hardware workflows remain pending; release is not complete.
+
+A separate Ubuntu 26.04 WSL production preflight stopped before namespace/mount checks because `pacman` is absent, so the trusted `pacman -Qo` ownership check could not start (`OFFLINE_NETWORK_ISOLATION_UNAVAILABLE`). It did not test devtmpfs or create candidate-build work/output. Ubuntu WSL is not the pinned Archiso 91-1 build host; exact evidence is in `docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/`. This does not change the distinct Arch WSL preflight result or establish native Linux build support.
+
+
+Current builder implementation checkpoint (2026-10-16): production online execution now uses pinned non-root/helper and isolated route-free Archiso -N mount preflights before creating work/output, then runs with a fixed sanitized environment and a hash-verified operation-owned pacstrap status overlay. The current-source disposable-VM package/build gate is being handled separately; this code change does not establish an ISO build or boot result. Offline execution remains fail-closed before work/output because a no-egress launcher compatible with the non-root -N contract has not been reviewed. Focused rootless software checks passed 70 tests (269 deselected), a direct route selection passed 7 (332 deselected), and native plus Win32-targeted mypy each passed on 5 USB-builder files. Existing b2 BIOS/UEFI evidence still stops before AutoLoader/service; native Linux, current-source candidate, app/service boot, and hardware checks remain open.

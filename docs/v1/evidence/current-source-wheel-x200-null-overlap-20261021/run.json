@@ -1,0 +1,33 @@
+{
+  "result": "PASS",
+  "environment": "Ubuntu 26.04 WSL; Python 3.14.4",
+  "source_snapshot_sha256": "626b26ed30b27ec0e4c7fcfc75d0fbaef09327ec3e58b906abcb1c5fca4215d2",
+  "source_file_count": 350,
+  "wheel": "libre_core_autoloader-0.1.0-py3-none-any.whl",
+  "wheel_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/current-source-wheel-x200-null-overlap-20261021/libre_core_autoloader-0.1.0-py3-none-any.whl",
+  "wheel_sha256": "12fa189a8b662183060d1c1c0d3a85af70e6b3d3099087f974896d3e26186da8",
+  "wheel_bytes": 417524,
+  "packaged_patch_resources": [
+    "autoloader/rom_builder/patches/0009-x86-use-output-target-for-efi.patch",
+    "autoloader/rom_builder/patches/0010-lbmk-grub-explicit-unifont.patch",
+    "autoloader/rom_builder/patches/0011-lbmk-vboot-cbfstool-keep-strchr-result-const.patch",
+    "usb_builder/patches/arch-install-scripts-31-2-pacstrap-status.patch"
+  ],
+  "required_patch_resources_present": true,
+  "extracted_import_target": "/mnt/wsl/PHYSICALDRIVE1p2/home/alex/codex-vm-workspace-librecore-20261021/tmp/librecore-wheel-schema4-obc5jzpv/target",
+  "extracted_import_module_paths": {
+    "autoloader": "/mnt/wsl/PHYSICALDRIVE1p2/home/alex/codex-vm-workspace-librecore-20261021/tmp/librecore-wheel-schema4-obc5jzpv/target/autoloader/__init__.py",
+    "usb_builder": "/mnt/wsl/PHYSICALDRIVE1p2/home/alex/codex-vm-workspace-librecore-20261021/tmp/librecore-wheel-schema4-obc5jzpv/target/usb_builder/__init__.py"
+  },
+  "extracted_wheel_cli": {
+    "--help": {
+      "exit_code": 0,
+      "first_line": "Usage: python -m autoloader [OPTIONS] COMMAND [ARGS]..."
+    },
+    "flash --help": {
+      "exit_code": 0,
+      "first_line": "Usage: python -m autoloader flash [OPTIONS]"
+    }
+  },
+  "build_log": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/current-source-wheel-x200-null-overlap-20261021/build.log"
+}

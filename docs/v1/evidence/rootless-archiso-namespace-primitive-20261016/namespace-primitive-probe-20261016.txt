@@ -1,0 +1,45 @@
+Arch WSL namespace primitive probe — 2026-10-16
+
+Source HEAD: 72a302b
+Clean recapture time: 2026-10-16T17:25:57Z
+Exit status: 0
+
+The initial 17:17:25Z observation is superseded by this clean recapture. The
+stdout below is preserved verbatim in
+[`raw-probe-output-20261016.txt`](raw-probe-output-20261016.txt), SHA-256
+`45e0f853750c16ffaa2bca6062e1ac678b7f5c6abcb2cb525a0efcd0ac46ff92`.
+
+Exact capture method: PowerShell stored the inner probe script in `$probe`,
+then piped it to `wsl -d archlinux -- sh -c 'tr -d "\r" | sh'`. The wrapper
+stripped carriage returns from the input before passing it to `sh` in the
+Arch Linux WSL distro. The earlier direct `wsl ... sh -c '...'` rendering was
+not the clean recapture invocation.
+
+Exact inner probe script supplied through `$probe`:
+
+```sh
+printf "UTC "; date -u +%FT%TZ; printf "HOST_NETNS "; readlink /proc/self/ns/net; unshare --net --fork -- setpriv --bounding-set=-all --inh-caps=-all --ambient-caps=-all --reuid=65534 --regid=65534 --clear-groups --no-new-privs --reset-env -- sh -c "printf CHILD_NETNS; readlink /proc/self/ns/net; id; /usr/bin/ip -j link show; /usr/bin/ip -j address show; /usr/bin/ip -j route show table all; /usr/bin/ip -j rule show; grep Cap /proc/self/status; grep NoNewPrivs /proc/self/status"
+```
+
+Observed output summary:
+
+- Host network namespace: `net:[4026531833]`.
+- Child network namespace: `net:[4026532308]`.
+- Child identity: UID/GID 65534 (`nobody`), with no supplementary groups.
+- Child interfaces: only `lo`, down; no addresses and no routes in any table. Only the default policy rules were present.
+- `CapInh`, `CapPrm`, `CapEff`, `CapBnd`, and `CapAmb` were all zero; `NoNewPrivs` was 1.
+
+The raw output matches the host/child namespace IDs, `id`, interface/address,
+route/rule JSON, capability fields, and `NoNewPrivs` summary above.
+
+This establishes only that an ephemeral root-created network namespace and a
+privilege drop to `nobody` worked on this Arch WSL2 host. It does not validate
+a fixed root-owned launcher, the dedicated `fwbuild` account or subordinate-ID
+mapping, pinned `pacstrap -N` / `arch-chroot -N`, namespace drift checks,
+descriptor/stdio isolation, timeout cleanup, or ISO build support. No file
+writes, network attempt, package command, build command, or candidate output
+occurred in the probe.
+
+Production offline execution remains explicitly closed with
+`OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE`. This is a diagnostic primitive result,
+not an offline-launcher validation or release acceptance.

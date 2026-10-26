@@ -1,0 +1,17 @@
+{
+  "path": "/tmp/lc-ubuntu-keyring-readonly-20261025",
+  "initially_absent": true,
+  "created_mode_uid_gid": "700:1000:1000",
+  "used_for": "Two list-only /usr/bin/gpg invocations with --no-options --no-default-keyring and an explicit --keyring file",
+  "key_imported": false,
+  "payload_binary_executed": false,
+  "only_observed_generated_entry": {
+    "path": "/tmp/lc-ubuntu-keyring-readonly-20261025/trustdb.gpg",
+    "mode_uid_gid_type_size": "600 alex alex f 1200",
+    "sha256": "6d73631e04eca41c2ce33737edee07c57121041ab65bedf9c97cb91ce0483a3b"
+  },
+  "cleanup_argv": "logs/gnupghome-exact-cleanup.argv.json",
+  "cleanup_exit": 0,
+  "post_cleanup_absence_check_argv": "logs/gnupghome-post-cleanup-check.argv.json",
+  "post_cleanup_absence_check_exit": 0
+}

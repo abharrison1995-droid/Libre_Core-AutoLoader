@@ -1,0 +1,9 @@
+........ssssssssssss.ssss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_worker.py:1596: guest publication exercises Linux-only runtime guards
+SKIPPED [11] tests\test_offline_vm_worker.py:1655: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1773: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1812: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1855: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1891: durable renameat2 publication is Linux-only
+9 passed, 16 skipped in 5.29s

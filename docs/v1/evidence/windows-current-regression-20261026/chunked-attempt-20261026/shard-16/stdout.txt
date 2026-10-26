@@ -1,0 +1,15 @@
+.s.ss.ssssss.ssssssss....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_worker.py:249: descriptor/fchmod policy is POSIX-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:290: approved worker storage policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:298: mountinfo filesystem policy is Linux-specific
+SKIPPED [2] tests\test_offline_vm_worker.py:313: sealed boot-input memfd policy is Linux-specific
+SKIPPED [2] tests\test_offline_vm_worker.py:337: sealed boot-input memfd policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:363: sealed boot-input memfd policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:391: sealed boot-input memfd policy is Linux-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:443: the sealed worker execution contract is Linux-only
+SKIPPED [1] tests\test_offline_vm_worker.py:463: process-group semantics are Linux-specific
+SKIPPED [4] tests\test_offline_vm_worker.py:524: worker process and output-volume contract is Linux-only
+SKIPPED [1] tests\test_offline_vm_worker.py:627: Linux worker path validation is POSIX-specific
+SKIPPED [1] tests\test_offline_vm_worker.py:651: opened-inode pass_fds policy is Linux-specific
+8 passed, 17 skipped in 3.10s

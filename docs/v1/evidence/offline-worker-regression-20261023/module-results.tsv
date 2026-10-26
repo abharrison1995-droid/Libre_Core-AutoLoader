@@ -1,0 +1,33 @@
+test_application_controller	0	21 passed in 25.61s	junit/test_application_controller.xml
+test_artifact_engine	0	73 passed in 16.30s	junit/test_artifact_engine.xml
+test_database	0	8 passed in 1.96s	junit/test_database.xml
+test_detection	0	11 passed in 1.76s	junit/test_detection.xml
+test_device_readiness	0	9 passed in 140.99s (0:02:20)	junit/test_device_readiness.xml
+test_ec_mod_fail_closed	0	6 passed in 1.75s	junit/test_ec_mod_fail_closed.xml
+test_flasher	0	26 passed in 7.48s	junit/test_flasher.xml
+test_flashrom_runner_isolation	0	8 passed in 2.16s	junit/test_flashrom_runner_isolation.xml
+test_guides	0	3 passed in 1.73s	junit/test_guides.xml
+test_live_iso_host_package_context	0	2 passed in 1.36s	junit/test_live_iso_host_package_context.xml
+test_local_application_adapter	0	13 passed in 7.85s	junit/test_local_application_adapter.xml
+test_offline_vm_build_executor	0	41 passed in 2.43s	junit/test_offline_vm_build_executor.xml
+test_offline_vm_evidence	0	43 passed in 3.89s	junit/test_offline_vm_evidence.xml
+test_offline_vm_evidence_adapter	0	14 passed in 4.70s	junit/test_offline_vm_evidence_adapter.xml
+test_offline_vm_worker	0	56 passed in 7.35s	junit/test_offline_vm_worker.xml
+test_orchestrator	0	10 passed in 4.90s	junit/test_orchestrator.xml
+test_phase03_spi_safety	0	91 passed in 29.85s	junit/test_phase03_spi_safety.xml
+test_phase10a_write_approval	0	20 passed, 1 skipped in 77.39s (0:01:17)	junit/test_phase10a_write_approval.xml
+test_phase10b_write_service	0	52 passed in 295.16s (0:04:55)	junit/test_phase10b_write_service.xml
+test_post_reboot_evidence	0	16 passed in 156.20s (0:02:36)	junit/test_post_reboot_evidence.xml
+test_recovery_runbook_package	0	1 passed in 9.99s	junit/test_recovery_runbook_package.xml
+test_rom_builder	0	12 passed in 2.15s	junit/test_rom_builder.xml
+test_rootless_offline_launcher_source	0	17 passed in 8.06s	junit/test_rootless_offline_launcher_source.xml
+test_rootless_offline_preflight	0	53 passed in 2.41s	junit/test_rootless_offline_preflight.xml
+test_splitter	0	6 passed in 2.13s	junit/test_splitter.xml
+test_t430_handoff	0	44 passed in 2.49s	junit/test_t430_handoff.xml
+test_ui	0	59 passed in 120.62s (0:02:00)	junit/test_ui.xml
+test_usb_builder	0	369 passed, 3 skipped in 23.28s	junit/test_usb_builder.xml
+test_workflow_safety	0	72 passed in 20.25s	junit/test_workflow_safety.xml
+test_write_runner_stdio	0	1 passed in 2.57s	junit/test_write_runner_stdio.xml
+test_x200_libreboot_workflow	0	27 passed in 31.51s	junit/test_x200_libreboot_workflow.xml
+test_x200_mac	0	10 passed in 4.90s	junit/test_x200_mac.xml
+test_x220_coreboot_workflow	0	27 passed in 33.60s	junit/test_x220_coreboot_workflow.xml

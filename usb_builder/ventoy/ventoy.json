@@ -14,13 +14,5 @@
             "image": "/libre_core_autoloader.iso",
             "alias": "Libre_Core AutoLoader (Live Environment)"
         }
-    ],
-    "auto_install": [
-        {
-            "image": "/libre_core_autoloader.iso",
-            "template": [
-                "/ventoy/script/arch_autoinstall.sh"
-            ]
-        }
     ]
 }

@@ -1,0 +1,226 @@
+{
+  "c_free_after_bytes": 6062088192,
+  "c_free_before_bytes": 6053621760,
+  "c_free_before_launch_bytes": 6053621760,
+  "c_free_floor_bytes": 2147483648,
+  "c_free_floor_preserved": true,
+  "diagnostic_complete": false,
+  "evidence_files": {
+    "argv.json": {
+      "sha256": "88ea5cf7460faff2587dbe44cdfa52d5944f9be7e23cab2e9fc6405398896955",
+      "size_bytes": 1719
+    },
+    "hmp-transcript.txt": {
+      "sha256": "2a760b9b885ced543a1964ee15fcae254b567c0454160ed00b482b5e236a40e8",
+      "size_bytes": 61738
+    },
+    "initramfs-linux.img": {
+      "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+      "size_bytes": 249467488
+    },
+    "qemu.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "serial.log": {
+      "sha256": "25ea9424fcf940869759c4322d2cc9896ef460a0e5080d4afee9ba4808ac4ab6",
+      "size_bytes": 812
+    },
+    "vga.ppm": {
+      "sha256": "711378f4bef4cce5f3c3b95aba1f01692d0368c8dc5e82b21762bd808db3beec",
+      "size_bytes": 3072016
+    },
+    "vmlinuz-linux": {
+      "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+      "size_bytes": 17224192
+    }
+  },
+  "expected_source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "guest_probe_sha256": "bbccb33541ec2a676367780cfedbc73b96278fe0a9fcf05da958b154146f1198",
+  "guest_shell_commands": [],
+  "hardware_or_firmware_validation": false,
+  "initramfs": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/initramfs-linux.img",
+    "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+    "size": 249467488
+  },
+  "iso_label_output": "ARCH_202610",
+  "iso_path": "/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_unchanged": true,
+  "kernel": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/vmlinuz-linux",
+    "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+    "size": 17224192
+  },
+  "last_c_free_bytes": 6062116864,
+  "launch_utc_epoch": 1792186279.7368593,
+  "monitor_connected": true,
+  "network": "QEMU user-mode NIC with restrict=on; no forwarding or host access configured",
+  "offline_launcher_status": "OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE; not invoked",
+  "output_dir": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1",
+  "output_filesystem_type": "ext4",
+  "output_parent_chain": [
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 493,
+      "path": "/var",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 1023,
+      "path": "/var/tmp",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 65534,
+      "mode": 448,
+      "path": "/var/tmp/lcvm",
+      "uid": 65534
+    }
+  ],
+  "package_install_or_sync_invoked": false,
+  "process_launched": true,
+  "product_build_invoked": false,
+  "purpose": "disposable generic Arch live guest and rootless preflight only",
+  "qemu_argv": [
+    "/usr/bin/qemu-system-x86_64",
+    "-machine",
+    "q35,accel=tcg",
+    "-nodefaults",
+    "-cpu",
+    "max",
+    "-m",
+    "2048",
+    "-smp",
+    "2",
+    "-kernel",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/vmlinuz-linux",
+    "-initrd",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/initramfs-linux.img",
+    "-append",
+    "archisobasedir=arch archisolabel=ARCH_202610 copytoram=n console=tty0 console=ttyS0,115200n8 systemd.getty_auto=1",
+    "-device",
+    "ich9-ahci,id=ahci",
+    "-drive",
+    "file=/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso,format=raw,media=cdrom,readonly=on,if=none,id=installer",
+    "-device",
+    "ide-cd,drive=installer,bus=ahci.0",
+    "-drive",
+    "if=none,id=scratch,file=/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/scratch-3g.raw,format=raw,cache=none",
+    "-device",
+    "virtio-blk-pci,drive=scratch,serial=LCV1SCRATCH3G",
+    "-fsdev",
+    "local,id=source,path=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader,security_model=none,readonly=on",
+    "-device",
+    "virtio-9p-pci,fsdev=source,mount_tag=source",
+    "-netdev",
+    "user,id=net0,restrict=on",
+    "-device",
+    "virtio-net-pci,netdev=net0",
+    "-chardev",
+    "socket,id=serial0,path=/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/serial.sock,server=on,wait=off",
+    "-serial",
+    "chardev:serial0",
+    "-monitor",
+    "unix:/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/monitor.sock,server=on,wait=off",
+    "-display",
+    "none",
+    "-vga",
+    "std",
+    "-no-reboot",
+    "-no-user-config",
+    "-name",
+    "librecore-disposable-arch-preflight-20261016"
+  ],
+  "qemu_exit_code": 0,
+  "qemu_pid": 276,
+  "qemu_terminated": true,
+  "qemu_version": "QEMU emulator version 11.1.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "runner_error": "RunnerError: 300-second bound, QEMU exit, or C: floor before serial root shell",
+  "runner_invocation": {
+    "argv": [
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py",
+      "--output-dir",
+      "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1"
+    ],
+    "capabilities_and_no_new_privs": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1"
+    },
+    "egid": 65534,
+    "euid": 65534,
+    "gid": 65534,
+    "home": "/var/tmp/lcvm",
+    "path": "/usr/bin:/bin",
+    "supplementary_groups": [],
+    "tmpdir": "/var/tmp/lcvm",
+    "uid": 65534
+  },
+  "runner_sha256": "0df42d17b0c8d947556ddc449486ca6e06f44604b91bbd219f2bee813a70851a",
+  "schema_version": 1,
+  "scratch": {
+    "allocated_bytes_before_guest": 0,
+    "format": "raw",
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry1/scratch-3g.raw",
+    "serial": "LCV1SCRATCH3G",
+    "virtual_size_bytes": 3221225472
+  },
+  "scratch_allocated_bytes_after": 0,
+  "scratch_format": "raw sparse file, exact maximum virtual size 3 GiB",
+  "serial_connected": true,
+  "source_git_validation": {
+    "core_autocrlf": "true",
+    "core_filemode": "false",
+    "git_optional_locks": "0",
+    "head_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "rev-parse",
+      "HEAD"
+    ],
+    "safe_directory": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+    "status_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ]
+  },
+  "source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "source_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+  "source_share_read_only": true,
+  "source_status": [
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py"
+  ],
+  "status": "GUEST_SHELL_NOT_REACHED",
+  "stop_reason": "300-second bound, QEMU exit, or C: floor before serial root shell",
+  "termination": "QEMU exited after HMP quit and process-group cleanup",
+  "wall_limit_seconds": 300
+}

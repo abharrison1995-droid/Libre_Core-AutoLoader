@@ -1,0 +1,140 @@
+# Latest copied-ISO TCG attempt — 2026-10-23
+
+This record describes the latest masked-service curses/HMP attempt and the
+preceding serial attempt, captured in the execution records for this run. The
+private ext4 workspace is now read-only.
+
+## Inputs
+
+- Official Arch ISO: `archlinux-2026.10.01-x86_64.iso`; source and copied
+  ISO SHA-256:
+  `684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5`.
+- Extracted kernel `vmlinuz-linux` SHA-256:
+  `8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901`.
+- Extracted initramfs `initramfs-linux.img` SHA-256:
+  `35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52`.
+- The ISO, kernel, and initramfs were in the approved ext4 workspace at
+  `/mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/`.
+  Those input files are not copied into this repository evidence folder;
+  their hashes above are captured run-record hashes.
+
+## Exact latest masked-service curses/HMP invocation
+
+Captured verbatim from the execution call:
+
+```text
+env TERM=xterm-256color qemu-system-x86_64 -accel tcg,thread=multi -machine pc -cpu qemu64 -m 2048 -smp 2 -kernel /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/vmlinuz-linux -initrd /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/initramfs-linux.img -append 'archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 nomodeset vga=normal console=tty0 systemd.mask=systemd-time-wait-sync.service systemd.mask=systemd-timesyncd.service systemd.mask=systemd-udev-settle.service rd.systemd.mask=systemd-time-wait-sync.service rd.systemd.mask=systemd-udev-settle.service systemd.default_timeout_start_sec=15s' -drive file=/mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/archlinux-2026.10.01-x86_64.iso,media=cdrom,readonly=on -nic none -display curses -monitor unix:/tmp/lc-qemu-final.sock,server=on,wait=off -serial none -no-reboot
+```
+
+This used TCG, the `pc` machine, `qemu64`, two vCPUs and 2 GiB RAM.
+The ISO was a read-only CD-ROM. `-nic none` disabled networking. No guest
+disk, writable host share, or passthrough device was attached. Kernel and
+initramfs were booted directly from the extracted ISO inputs.
+
+The preceding serial attempt used this exact command:
+
+```text
+qemu-system-x86_64 -accel tcg,thread=multi -machine pc -cpu qemu64 -m 2048 -smp 2 -kernel /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/vmlinuz-linux -initrd /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/initramfs-linux.img -append 'archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=tty0 console=ttyS0,115200n8' -drive file=/mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/archlinux-2026.10.01-x86_64.iso,media=cdrom,readonly=on -nic none -display none -serial stdio -monitor none -no-reboot
+```
+
+That attempt waited for the missing `/dev/ttyS0` and yielded no shell. An
+intermediate curses attempt used the latest command without the systemd masks
+and with HMP and serial disabled.
+
+## Latest observed output and screenshot
+
+The masked-service attempt reported a failed preset for the masked
+timesyncd unit and `[FAILED] Failed to start Namespace Resource Manager`.
+Systemd continued waiting for the static device-node `/dev` service; no guest
+prompt appeared. HMP `sendkey` requested Ctrl-Alt-F1, then `uname -a` and
+Enter. It produced no verified command output. The retained HMP screenshot
+command was `screendump /tmp/lcguest-final.ppm`.
+
+The QEMU screen capture is retained as
+[`boot-screen-20261023.bmp`](boot-screen-20261023.bmp), copied from the
+workspace-root scratch capture without modifying that original. Its SHA-256
+is `227b8bcb14c5e1d01e333cf2467660aec7aa852907469bc3d94830cde536f3dd`.
+
+## Read-only host virtualization query
+
+PowerShell command and output captured during this run:
+
+```text
+Get-CimInstance Win32_Processor | Select-Object Name,VirtualizationFirmwareEnabled,VMMonitorModeExtensions,SecondLevelAddressTranslationExtensions
+
+Name                                             VirtualizationFirmwareEnabled VMMonitorModeExtensions SecondLevelAddressTranslationExtensions
+----                                             ----------------------------- ------------------------ ---------------------------------------
+Intel(R) Core(TM) i3-3110M CPU @ 2.40GHz                                False                    False                                   False
+```
+
+## Bounded direct-kernel debug-shell attempt — 2026-10-23
+
+This later attempt used the same hash-verified ISO, extracted kernel, and
+initramfs listed above. It ran under the unprivileged WSL user with TCG,
+`pc`/`qemu64`, a read-only ISO CD-ROM, and no NIC, guest disk, writable share,
+or passthrough. The command requested the systemd debug shell with
+`systemd.debug_shell=1`; it did not otherwise change the NNP setting or verify
+an effective guest NNP state.
+
+Captured QEMU invocation:
+
+```text
+qemu-system-x86_64 -accel tcg,thread=multi -machine pc -cpu qemu64 -m 2048 -smp 2 -kernel /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/vmlinuz-linux -initrd /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/initramfs-linux.img -append 'archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 nomodeset vga=normal console=tty0 systemd.debug_shell=1 systemd.mask=systemd-nsresourced.service systemd.mask=systemd-nsresourced.socket systemd.default_timeout_start_sec=15s' -drive file=/mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/archlinux-2026.10.01-x86_64.iso,media=cdrom,readonly=on -nic none -display none -vga std -monitor unix:/tmp/lc-qemu-debug-shell.sock,server=on,wait=off -serial none -no-reboot -daemonize -pidfile /tmp/lc-qemu-debug-shell.pid -D /tmp/lc-qemu-debug-shell.log
+```
+
+The Python monitor script waited 120 seconds, sent `sendkey ctrl-alt-f9`,
+then `sendkey i`, `sendkey d`, `sendkey spc`, and `sendkey enter`, captured
+`/tmp/lcguest-debug-shell.ppm`, queried `info status`, and sent `quit`. The
+debug shell did not appear. At the 120-second screenshot, the guest remained
+at Arch initramfs hooks and the welcome screen. The HMP `id` input yielded no
+verified guest command. This is not a shell, worker, build, or boot pass.
+
+A 720x400 BMP screenshot was viewed during the run and was reported at
+`\\wsl.localhost\Ubuntu\tmp\lcguest-debug-shell.bmp`. After Ubuntu WSL cleaned
+`/tmp`, the file was absent from that path when checked for this update. It
+was not retained in the repository, so no screenshot artifact or hash is
+claimed.
+
+## Minimal initramfs shell — 2026-10-23
+
+This separate run used the approved ext4 workspace kernel and initramfs,
+QEMU TCG, one emulated vCPU, and 1 GiB RAM. It ran as an unprivileged Ubuntu
+WSL user with no NIC, guest disk, host share, or passthrough. The command was:
+
+```text
+qemu-system-x86_64 -accel tcg,thread=single -machine pc -cpu qemu64 -m 1024 -smp 1 -kernel /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/vmlinuz-linux -initrd /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/initramfs-linux.img -append 'rdinit=/bin/sh console=tty0 loglevel=7' -nic none -display none -vga std -monitor unix:/tmp/lc-qemu-rdinit3.sock,server=on,wait=off -serial none -no-reboot -daemonize -pidfile /tmp/lc-qemu-rdinit3.pid
+```
+
+After 55 seconds, the HMP commands were `sendkey u`, `sendkey n`, `sendkey a`,
+`sendkey m`, `sendkey e`, `sendkey ret`, `screendump /tmp/lcguest-rdinit3.ppm`,
+and `quit`. The screenshot shows `Run /bin/sh as init process`, a BusyBox
+prompt, and `uname` returning `Linux`.
+This proves only a minimal initramfs shell command, not an Arch live-ISO boot,
+worker, build, production boot, or hardware result. Capture:
+[`guest-initramfs-shell-capture-20261023.bmp`](guest-initramfs-shell-capture-20261023.bmp).
+
+## Final full-ISO attempt with floppy drives disabled — 2026-10-23
+
+This QEMU TCG run used `pc`/`qemu64`, two vCPUs, 2 GiB RAM, the same approved
+kernel/initramfs, and the official Arch ISO as a read-only CD-ROM. It had no
+NIC, writable guest disk, host share, or passthrough. The exact command was:
+
+```text
+qemu-system-x86_64 -accel tcg,thread=multi -machine pc -cpu qemu64 -m 2048 -smp 2 -global isa-fdc.fdtypeA=none -global isa-fdc.fdtypeB=none -kernel /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/vmlinuz-linux -initrd /mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/initramfs-linux.img -append 'archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 nomodeset vga=normal console=tty0 systemd.debug_shell=1 systemd.default_timeout_start_sec=20s' -drive file=/mnt/wsl/PHYSICALDRIVE1p2/librecore-v1-vm-workspace-20261023/inputs/archlinux-2026.10.01-x86_64.iso,media=cdrom,readonly=on -nic none -display none -vga std -monitor unix:/tmp/lc-qemu-nofdc.sock,server=on,wait=off -serial none -no-reboot -daemonize -pidfile /tmp/lc-qemu-nofdc.pid -D /tmp/lc-qemu-nofdc.log
+```
+
+After about 120 seconds, the HMP commands were `sendkey ctrl-alt-f9`, then
+`sendkey u`, `sendkey n`, `sendkey a`, `sendkey m`, `sendkey e`, `sendkey ret`,
+`screendump /tmp/lcguest-nofdc.ppm`, and `quit`. The screenshot shows `/dev/sr0`
+and loop mounted, a cleanup hook, and `Welcome to Arch Linux!`; no interactive
+shell or visible systemd appeared. Capture:
+[`boot-screen-no-fdc-20261023.bmp`](boot-screen-no-fdc-20261023.bmp).
+
+## Result
+
+One minimal initramfs run reached a BusyBox shell and returned `Linux` from
+`uname`. This is limited to that early-userspace command. No full live-ISO or
+product boot, worker boot, build, or hardware result is established. The final
+full-ISO attempt progressed through initramfs hooks to the Arch welcome
+screen, without an interactive shell or visible systemd. No physical firmware
+write or recovery operation was performed.

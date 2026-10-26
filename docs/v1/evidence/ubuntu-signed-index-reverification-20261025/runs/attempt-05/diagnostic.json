@@ -1,0 +1,9 @@
+{
+  "status": "EXPECTED_HARNESS_EMPTY_LOG_GUARD_FAILURE",
+  "run_id": "attempt-05",
+  "process_exit": 73,
+  "exact_error": "refusing non-empty run directory: /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05",
+  "cause": "The runner's own shell-created stdout/stderr log files were counted as pre-existing artifacts.",
+  "failed_before_extraction_or_gpgv": true,
+  "retry_policy": "Preserve this run and use a new unique run ID."
+}

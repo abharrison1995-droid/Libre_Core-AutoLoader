@@ -1,0 +1,4 @@
+exit=1
+elapsed_seconds=226.18
+free_after=1917472768
+space_guard_stopped=True

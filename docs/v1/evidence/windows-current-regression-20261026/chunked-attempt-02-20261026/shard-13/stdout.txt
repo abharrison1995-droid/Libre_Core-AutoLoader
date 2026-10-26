@@ -1,0 +1,14 @@
+ssssssssssssssssssss.....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_evidence.py:692: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:707: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:720: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [2] tests\test_offline_vm_evidence.py:726: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:737: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence_adapter.py:408: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [1] tests\test_offline_vm_evidence_adapter.py:428: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [8] tests\test_offline_vm_evidence_adapter.py:447: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [1] tests\test_offline_vm_evidence_adapter.py:512: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [1] tests\test_offline_vm_evidence_adapter.py:578: pending host adapter relies on Linux no-follow operation storage
+SKIPPED [2] tests\test_offline_vm_evidence_adapter.py:623: pending host adapter relies on Linux no-follow operation storage
+5 passed, 20 skipped in 2.48s

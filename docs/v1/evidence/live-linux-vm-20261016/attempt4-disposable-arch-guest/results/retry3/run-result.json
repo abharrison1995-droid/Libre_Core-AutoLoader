@@ -1,0 +1,270 @@
+{
+  "archived_evidence_hashes": {
+    "results/retry1/SHA256SUMS": "f854341312fe036d2104d424369f7425fde8d25988813f35f30900a1595227c6",
+    "results/retry1/hmp-transcript.txt": "2a760b9b885ced543a1964ee15fcae254b567c0454160ed00b482b5e236a40e8",
+    "results/retry1/run-result.json": "6aa456051d1bef66173e78cd6347e57fa486b0b34c2b3e25bc00237136d015e2",
+    "results/retry1/serial.log": "25ea9424fcf940869759c4322d2cc9896ef460a0e5080d4afee9ba4808ac4ab6",
+    "results/retry1/vga.ppm": "711378f4bef4cce5f3c3b95aba1f01692d0368c8dc5e82b21762bd808db3beec",
+    "results/retry2-prelaunch/SHA256SUMS": "74404c7156016d0c5290a0de6c78c8f6544416d3856e4920c8063dda0305daec",
+    "results/retry2-prelaunch/run-result.json": "01c0d7bac6bd7d2fa86996e113445559364169b03b716d8e239a009d353c246a"
+  },
+  "c_free_after_bytes": 6024753152,
+  "c_free_before_bytes": 6025183232,
+  "c_free_before_launch_bytes": 6025183232,
+  "c_free_floor_bytes": 2147483648,
+  "c_free_floor_preserved": true,
+  "diagnostic_complete": false,
+  "evidence_files": {
+    "argv.json": {
+      "sha256": "53e26c611c49fabb4a2500948e1cec4157e6c51a43d32470fcba8fc9946016d0",
+      "size_bytes": 1747
+    },
+    "hmp-transcript.txt": {
+      "sha256": "5586c683f668ecc0f915b2b506c590f53e7582ef2143aa4f2c24feaf6f789ef8",
+      "size_bytes": 61738
+    },
+    "initramfs-linux.img": {
+      "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+      "size_bytes": 249467488
+    },
+    "qemu.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "serial.log": {
+      "sha256": "c6de37f9c221b252f692d9ca0e1bff471f2c167ece33d4f8dacd9dbefeec2625",
+      "size_bytes": 844
+    },
+    "vga.ppm": {
+      "sha256": "2cb0382369604884fd63ae0b5ba6a6bc658e1cb66e6239d09a698ed50d8fcc25",
+      "size_bytes": 3072016
+    },
+    "vmlinuz-linux": {
+      "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+      "size_bytes": 17224192
+    }
+  },
+  "expected_source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "guest_probe_sha256": "b14913a049bdd0b9b7414e18d4537eb09f74485375c3bbf183dfe23d246c0c7a",
+  "guest_shell_commands": [],
+  "hardware_or_firmware_validation": false,
+  "ignored_serial_log_check_ignore_returncode": 0,
+  "ignored_serial_log_path": "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log",
+  "initramfs": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/initramfs-linux.img",
+    "sha256": "35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52",
+    "size": 249467488
+  },
+  "iso_label_output": "ARCH_202610",
+  "iso_path": "/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso",
+  "iso_sha256_after": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_sha256_before": "684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5",
+  "iso_unchanged": true,
+  "kernel": {
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/vmlinuz-linux",
+    "sha256": "8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901",
+    "size": 17224192
+  },
+  "last_c_free_bytes": 6024818688,
+  "launch_utc_epoch": 1792188278.9633353,
+  "monitor_connected": true,
+  "network": "QEMU user-mode NIC with restrict=on; no forwarding or host access configured",
+  "offline_launcher_status": "OFFLINE_ROOTLESS_LAUNCHER_UNAVAILABLE; not invoked",
+  "output_dir": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3",
+  "output_filesystem_type": "ext4",
+  "output_parent_chain": [
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 493,
+      "path": "/var",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 0,
+      "mode": 1023,
+      "path": "/var/tmp",
+      "uid": 0
+    },
+    {
+      "device": 2112,
+      "gid": 65534,
+      "mode": 448,
+      "path": "/var/tmp/lcvm",
+      "uid": 65534
+    }
+  ],
+  "package_install_or_sync_invoked": false,
+  "process_launched": true,
+  "product_build_invoked": false,
+  "purpose": "disposable generic Arch live guest and rootless preflight only",
+  "qemu_argv": [
+    "/usr/bin/qemu-system-x86_64",
+    "-machine",
+    "q35",
+    "-accel",
+    "tcg,thread=multi",
+    "-nodefaults",
+    "-cpu",
+    "max",
+    "-m",
+    "2048",
+    "-smp",
+    "2",
+    "-kernel",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/vmlinuz-linux",
+    "-initrd",
+    "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/initramfs-linux.img",
+    "-append",
+    "archisobasedir=arch archisolabel=ARCH_202610 copytoram=n console=tty0 console=ttyS0,115200n8 systemd.getty_auto=1",
+    "-device",
+    "ich9-ahci,id=ahci",
+    "-drive",
+    "file=/mnt/c/Users/Alex/Downloads/LibreCore-VMSetup-20261015/archlinux-2026.10.01-x86_64.iso,format=raw,media=cdrom,readonly=on,if=none,id=installer",
+    "-device",
+    "ide-cd,drive=installer,bus=ahci.0",
+    "-drive",
+    "if=none,id=scratch,file=/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/scratch-3g.raw,format=raw,cache=none",
+    "-device",
+    "virtio-blk-pci,drive=scratch,serial=LCV1SCRATCH3G",
+    "-fsdev",
+    "local,id=source,path=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader,security_model=none,readonly=on",
+    "-device",
+    "virtio-9p-pci,fsdev=source,mount_tag=source",
+    "-netdev",
+    "user,id=net0,restrict=on",
+    "-device",
+    "virtio-net-pci,netdev=net0",
+    "-chardev",
+    "socket,id=serial0,path=/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/serial.sock,server=on,wait=off",
+    "-serial",
+    "chardev:serial0",
+    "-monitor",
+    "unix:/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/monitor.sock,server=on,wait=off",
+    "-display",
+    "none",
+    "-vga",
+    "std",
+    "-no-reboot",
+    "-no-user-config",
+    "-name",
+    "librecore-disposable-arch-preflight-20261016"
+  ],
+  "qemu_exit_code": 0,
+  "qemu_pid": 274,
+  "qemu_terminated": true,
+  "qemu_version": "QEMU emulator version 11.1.2\nCopyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers",
+  "runner_error": "RunnerError: 300-second bound, QEMU exit, or C: floor before serial root shell",
+  "runner_invocation": {
+    "argv": [
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py",
+      "--output-dir",
+      "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3"
+    ],
+    "capabilities_and_no_new_privs": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1"
+    },
+    "egid": 65534,
+    "euid": 65534,
+    "gid": 65534,
+    "home": "/var/tmp/lcvm",
+    "path": "/usr/bin:/bin",
+    "supplementary_groups": [],
+    "tmpdir": "/var/tmp/lcvm",
+    "uid": 65534
+  },
+  "runner_sha256": "eec8b1137052c2ddc8fba9b65757b8362ee9645bb58f74fadd4e3c04db8b6c06",
+  "schema_version": 1,
+  "scratch": {
+    "allocated_bytes_before_guest": 0,
+    "format": "raw",
+    "path": "/var/tmp/lcvm/lc-vm-arch-guest-20261016-retry3/scratch-3g.raw",
+    "serial": "LCV1SCRATCH3G",
+    "virtual_size_bytes": 3221225472
+  },
+  "scratch_allocated_bytes_after": 0,
+  "scratch_format": "raw sparse file, exact maximum virtual size 3 GiB",
+  "serial_connected": true,
+  "source_git_validation": {
+    "check_ignore_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "check-ignore",
+      "--quiet",
+      "--",
+      "docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/serial.log"
+    ],
+    "check_ignore_returncode": 0,
+    "check_ignore_stdout": "",
+    "core_autocrlf": "true",
+    "core_filemode": "false",
+    "git_optional_locks": "0",
+    "head_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "rev-parse",
+      "HEAD"
+    ],
+    "head_returncode": 0,
+    "head_stdout": "0522fcb3ba68c32df428b998e6f26c0744a50860\n",
+    "safe_directory": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+    "status_argv": [
+      "/usr/bin/git",
+      "-C",
+      "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "safe.directory=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+      "-c",
+      "core.autocrlf=true",
+      "-c",
+      "core.filemode=false",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "status_returncode": 0,
+    "status_stdout": "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py\n"
+  },
+  "source_head": "0522fcb3ba68c32df428b998e6f26c0744a50860",
+  "source_head_output": "0522fcb3ba68c32df428b998e6f26c0744a50860\n",
+  "source_head_returncode": 0,
+  "source_path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader",
+  "source_share_read_only": true,
+  "source_status": [
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json",
+    "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py"
+  ],
+  "source_status_output": "?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/README.md\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/guest_probe.py\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/vga.ppm\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/SHA256SUMS\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry2-prelaunch/run-result.json\n?? docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/run_arch_guest.py\n",
+  "source_status_returncode": 0,
+  "status": "GUEST_SHELL_NOT_REACHED",
+  "stop_reason": "300-second bound, QEMU exit, or C: floor before serial root shell",
+  "termination": "QEMU exited after HMP quit and process-group cleanup",
+  "wall_limit_seconds": 300
+}

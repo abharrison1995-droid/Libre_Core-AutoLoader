@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="4.696" timestamp="2026-10-25T20:04:43.089950+00:00" hostname="DESKTOP-RUNVSTR"><testcase classname="tests.test_phase10a_write_approval" name="test_windows_directory_fsync_policy_keeps_approval_closed" time="1.991"><failure message="FileNotFoundError: [WinError 206] The filename or extension is too long: 'C:\\Users\\Alex\\AppData\\Local\\Temp\\librecore-autoloader-v1-pytest-windows-targeted-20261025\\test_windows_directory_fsync_p0\\artifact\\e6340709-feff-465b-a67b-cc0fd90e7861\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c'">tmp_path = WindowsPath('C:/Users/Alex/AppData/Local/Temp/librecore-autoloader-v1-pytest-windows-targeted-20261025/test_windows_directory_fsync_p0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x00000236F3339790&gt;
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific production durability policy")
+    def test_windows_directory_fsync_policy_keeps_approval_closed(tmp_path, monkeypatch):
+&gt;       _plan, intent, *_ = _prepared_write(tmp_path)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_phase10a_write_approval.py:841: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_phase10a_write_approval.py:169: in _prepared_write
+    synthetic_artifact = _fake_complete_result(
+tests\test_x200_libreboot_workflow.py:400: in _fake_complete_result
+    _write_fake_generated_coreboot_tree(run_dir, coreboot_evidence)
+tests\test_x200_libreboot_workflow.py:358: in _write_fake_generated_coreboot_tree
+    fsp.mkdir()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/Alex/AppData/Local/Temp/librecore-autoloader-v1-pytest-windows-targeted-20261025/test_windows_di...40709-feff-465b-a67b-cc0fd90e7861/work/lbmk/src/coreboot/default/3rdparty/fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c')
+mode = 511, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+&gt;           os.mkdir(self, mode)
+E           FileNotFoundError: [WinError 206] The filename or extension is too long: 'C:\\Users\\Alex\\AppData\\Local\\Temp\\librecore-autoloader-v1-pytest-windows-targeted-20261025\\test_windows_directory_fsync_p0\\artifact\\e6340709-feff-465b-a67b-cc0fd90e7861\\work\\lbmk\\src\\coreboot\\default\\3rdparty\\fspcc36ae2b5775fa7400cb3282680afc0f6cb37a3c'
+
+..\..\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\pathlib.py:1311: FileNotFoundError</failure></testcase><testcase classname="tests.test_usb_builder" name="test_real_build_usb_cli_fails_before_subprocess_on_windows" time="0.304" /></testsuite></testsuites>

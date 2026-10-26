@@ -1,0 +1,72 @@
+$ python3 -B -m autoloader --help
+Usage: python -m autoloader [OPTIONS] COMMAND [ARGS]...
+
+  In-development ThinkPad firmware workflow toolkit.
+
+Options:
+  -v, --verbose  Enable verbose logging.
+  --help         Show this message and exit.
+
+Commands:
+  accept-completed-artifact  Reopen and revalidate an existing pinned...
+  accept-verified-backup     Capture a new backup or reopen an existing...
+  backup                     Capture/reopen the model-specific full-chip...
+  build-rom                  Run the pinned profile-specific build...
+  build-usb                  Build a candidate ISO through the pinned...
+  detect                     Capture read-only DMI/BIOS evidence through...
+  flash                      Request one exact, interactively approved...
+  import-evidence            Import raw fields and persist them as an...
+  inspect-checkpoint         Validate and summarize an operation journal...
+  post-reboot-check          Record post-reboot observations as pending;...
+  prepare-workflow           Capture fresh identity/probe evidence and...
+  resume-checkpoint          Resume from freshly revalidated evidence and...
+  review-readiness           Review persisted operation inputs only;...
+  run                        Launch the Textual TUI app.
+  status                     Show the controller's status, evidence...
+  t430-stage                 Submit an explicit human T430 stage; no...
+  usb                        Prepare an output directory only; this does...
+  verify                     Report read-back status without probing or...
+exit 0
+
+$ python3 -B -m autoloader flash --help
+Usage: python -m autoloader flash [OPTIONS]
+
+  Request one exact, interactively approved X200/X220 external SPI write.
+
+Options:
+  --profile [t430-1vyrain|x200-libreboot|x220-coreboot]
+                                  Allowlisted V1 workflow profile.  [required]
+  --checkpoint FILE               Exact staged X200/X220 workflow checkpoint;
+                                  arbitrary ROM paths are not accepted.
+                                  [required]
+  --request FILE                  Current versioned operator setup request
+                                  used to reopen the staged plan.  [required]
+  --help                          Show this message and exit.
+exit 0
+
+$ python3 -B -m autoloader build-usb --help
+Usage: python -m autoloader build-usb [OPTIONS]
+
+  Build a candidate ISO through the pinned Archiso contract (Linux only).
+
+Options:
+  --source-root DIRECTORY         Absolute clean Git checkout containing this
+                                  project.  [required]
+  --profile-dir DIRECTORY         Absolute checked-in Archiso profile
+                                  directory.  [required]
+  --snapshot-lock FILE            Absolute checked-in package snapshot lock.
+                                  [required]
+  --output-dir DIRECTORY          Absolute existing empty output directory;
+                                  files are never overwritten.  [required]
+  --work-parent DIRECTORY         Absolute existing directory for an owned
+                                  temporary build tree.  [required]
+  --network-mode [online|offline]
+                                  Use the fixed dated archive or a verified
+                                  local package repository.  [required]
+  --offline-repository DIRECTORY  Absolute local repository root; required for
+                                  offline mode.
+  --offline-manifest FILE         Absolute file/hash manifest for the offline
+                                  repository.
+  --help                          Show this message and exit.
+exit 0
+

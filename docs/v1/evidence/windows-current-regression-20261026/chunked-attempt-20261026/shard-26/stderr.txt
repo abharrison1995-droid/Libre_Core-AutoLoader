@@ -1,0 +1,24 @@
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+
+ERROR: not found: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\tests\test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer
+(no match in any of [<Module test_phase10b_write_service.py>])
+

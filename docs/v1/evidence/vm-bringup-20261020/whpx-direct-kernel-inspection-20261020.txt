@@ -1,0 +1,72 @@
+Windows QEMU WHPX direct-kernel diagnostic — 2026-10-20
+
+Host and image identity
+- QEMU: 11.1.2, from the pre-existing MSYS2 installation at
+  C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe.
+- Official Arch ISO SHA-256:
+  684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5.
+- Extracted kernel SHA-256:
+  8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901.
+- Extracted initramfs: 249,467,488 bytes; SHA-256:
+  35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52.
+- Exact argument arrays are in the adjacent `archiso-whpx-direct-*-argv.json`
+  files. Each run used a read-only ISO CD-ROM, no writable guest disk, no
+  network, no USB device, and no physical-device passthrough.
+
+Observed WHPX runs
+- `archiso-whpx-direct-20261020-retry1-*`: `q35,pic=off`, 4096 MiB RAM,
+  2 vCPUs, direct kernel and initramfs, 150.8 seconds maximum harness window.
+  QMP connected, enabled capabilities, and reported guest status `running`.
+  Serial showed the kernel panic at 8.685770 seconds. The harness then sent
+  QMP `quit`; QEMU exited 0. No shell was observed.
+- `archiso-whpx-direct-picdefault-20261020-*`: `q35` with the default PIC,
+  otherwise the same diskless/read-only direct-kernel setup, 35-second bounded
+  harness window. QMP connected, enabled capabilities, and reported guest
+  status `running`. Serial showed the same failure at 9.355188 seconds. The
+  harness then sent QMP `quit`; QEMU exited 0. No shell was observed.
+- Both serial logs show `devtmpfs: unable to create devtmpfs -1`,
+  `Warning: unable to open an initial console`, `Failed to execute /init
+  (error -1)`, and `Kernel panic - not syncing: No working init found`.
+  QEMU remained `running` after the panic because `-no-shutdown` was used.
+  QMP status `running` and process exit 0 describe harness shutdown, not guest
+  success.
+- The earlier no-suffix files `archiso-whpx-direct-20261020-argv.json`,
+  `*-serial.log`, and `*-stderr.log` are an incomplete harness attempt. Its
+  Python code errored before serial capture and those files are not counted as
+  a boot diagnostic.
+
+Read-only initramfs structure inspection
+- The first CPIO archive had 3,268 entries and ended at byte 230,476,884.
+- The XZ stream began at byte 230,481,920. Python's standard-library LZMA
+  decoder expanded it to 67,665,920 bytes, ending at the main CPIO trailer.
+- The main archive had 893 entries plus its `TRAILER!!!` record (894 total).
+  `/init` is a regular mode-0755 file with a `#!/usr/bin/ash` shebang.
+  `/usr/bin/ash` is a symlink
+  to `busybox`; BusyBox is a regular mode-0755 x86-64 ELF file.
+- Both archives include `lib64 -> usr/lib`; the main archive includes
+  `usr/lib/ld-linux-x86-64.so.2` and `usr/lib/libc.so.6`. The observed paths
+  account for the expected BusyBox dynamic-loader references.
+- This verifies the inspected archive entries only. It does not explain the
+  guest's devtmpfs, initial-console, or `/init` errors, and no root cause is
+  asserted.
+
+Windows QEMU TCG comparison
+- A 45-second direct-kernel comparison used QEMU 11.1.2, `q35`,
+  `-accel tcg,thread=multi`, 4096 MiB RAM, and 2 vCPUs, with the same verified
+  read-only ISO and no writable guest disk, network, USB, or passthrough.
+- Serial reached `running early hook [udev]`, `archiso_pxe_nbd`, and
+  `Triggering uevents...`. It produced no kernel panic, but did not reach a
+  shell or verified guest command during the bound. QMP reported `running`;
+  the harness then sent `quit`, and QEMU exited 0.
+- Exact arguments, serial output and stderr are in
+  `archiso-tcg-direct-retry1-20261020-*`. The earlier
+  `archiso-tcg-direct-20261020-*` files are a command-line syntax error before
+  QEMU started and are not a guest result.
+
+Boundary
+- These were kernel-only WHPX diagnostics, not a normal BIOS/UEFI boot or a
+  successful Linux guest login. No native build, product ISO, firmware ROM,
+  physical hardware, firmware write, or recovery operation was completed.
+- No Windows optional feature, BIOS setting, or firmware configuration was
+  changed. The separately downloaded QEMU installer requesting administrator
+  privileges was not executed.

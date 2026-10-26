@@ -1,0 +1,9 @@
+python=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+arguments=-m pytest -q -p no:cacheprovider --basetemp=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-14-targeted\run-20261026T041620Z-a4c26d57afa3\pytest-temp --junitxml=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-14-targeted\run-20261026T041620Z-a4c26d57afa3\junit.xml tests/test_phase10a_write_approval.py::test_windows_directory_fsync_policy_keeps_approval_closed tests/test_usb_builder.py::test_real_build_usb_cli_fails_before_subprocess_on_windows
+working_directory=C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+started_utc=2026-10-26T04:16:20.0918892Z
+free_bytes_before=7996354560
+minimum_live_floor_bytes=2147483648
+pytest_cache=disabled
+basetemp=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-14-targeted\run-20261026T041620Z-a4c26d57afa3\pytest-temp
+selected_nodes=tests/test_phase10a_write_approval.py::test_windows_directory_fsync_policy_keeps_approval_closed,tests/test_usb_builder.py::test_real_build_usb_cli_fails_before_subprocess_on_windows

@@ -1,0 +1,65 @@
+846: Preset files say enable systemd-nsresourced.socket.
+1172: Created symlink '/etc/systemd/system/sockets.target.wants/systemd-nsresourced.socket' → '/usr/lib/systemd/system/systemd-nsresourced.socket'.
+3240: basic.target: starting held back, waiting for: tmp.mount
+3288: basic.target: starting held back, waiting for: tmp.mount
+3320: basic.target: starting held back, waiting for: tmp.mount
+3330: sysinit.target: starting held back, waiting for: systemd-sysext.service
+3342: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4008: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4036: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4046: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4056: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4088: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4108: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4176: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4208: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4220: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4278: systemd-sysext.service: starting held back, waiting for: local-fs.target
+4298: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4312: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4320: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4916: basic.target: starting held back, waiting for: systemd-pcrphase-sysinit.service
+4920: local-fs.target: starting held back, waiting for: var-lib-machines.mount
+4931: sysinit.target: starting held back, waiting for: systemd-sysext.service
+4963: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5001: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5065: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5258: varlink-api-79-79: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+5320: basic.target: starting held back, waiting for: systemd-pcrphase-sysinit.service
+5330: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5360: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5403: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5405: systemd-nsresourced.socket: Incoming traffic
+5425: varlink-api-88-88: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"audio","service":"io.systemd.DynamicUser"},"more":true}
+5429: varlink-api-88-88: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+5443: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5471: systemd-nsresourced.service: starting held back, waiting for: modprobe@tun.service
+5543: sysinit.target: starting held back, waiting for: systemd-sysext.service
+5545: systemd-nsresourced.service: Will spawn child (service_enter_start): /usr/lib/systemd/systemd-nsresourced
+5553: systemd-nsresourced.service: Forked /usr/lib/systemd/systemd-nsresourced as 491 (via CLONE_INTO_CGROUP)
+5586: systemd-nsresourced.service: Got notification message from PID 491: WATCHDOG=1
+5810: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+5838: varlink-api-101-101: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"audio","service":"io.systemd.DynamicUser"},"more":true}
+5842: varlink-api-101-101: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+6165: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+6191: varlink-api-100-100: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"disk","service":"io.systemd.DynamicUser"},"more":true}
+6195: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+6227: systemd-nsresourced.service: start operation timed out. Terminating.
+6462: systemd-nsresourced.service: Got notification message from PID 491: READY=1, STATUS=Processing requests...
+6467: systemd-nsresourced.service: Got notification message from PID 491: WATCHDOG=1
+6485: systemd-nsresourced.service: Failed with result 'timeout'.
+6538: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+6550: sysinit.target: starting held back, waiting for: systemd-sysext.service
+6566: systemd-nsresourced.socket: Incoming traffic
+6582: varlink-api-88-88: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"kvm","service":"io.systemd.DynamicUser"},"more":true}
+6586: varlink-api-88-88: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+6611: sysinit.target: starting held back, waiting for: systemd-sysext.service
+6621: sysinit.target: starting held back, waiting for: systemd-sysext.service
+6623: systemd-nsresourced.service: Will spawn child (service_enter_start): /usr/lib/systemd/systemd-nsresourced
+7003: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+7029: varlink-api-100-100: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"kvm","service":"io.systemd.DynamicUser"},"more":true}
+7033: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+7375: systemd-nsresourced.service: start operation timed out. Terminating.
+7388: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}
+7414: varlink-api-100-100: Received message: {"method":"io.systemd.UserDatabase.GetMemberships","parameters":{"groupName":"kvm","service":"io.systemd.DynamicUser"},"more":true}
+7421: varlink-api-100-100: Sending message: {"error":"io.systemd.UserDatabase.NoRecordFound"}

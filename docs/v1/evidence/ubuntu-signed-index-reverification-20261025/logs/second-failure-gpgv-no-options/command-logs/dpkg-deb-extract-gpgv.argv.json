@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/usr/bin/dpkg-deb",
+    "--extract",
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv"
+  ],
+  "cwd": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025",
+  "environment": {
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "TZ": "UTC"
+  }
+}

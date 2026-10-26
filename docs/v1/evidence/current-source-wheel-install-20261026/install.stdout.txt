@@ -1,0 +1,3 @@
+Processing C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\current-source-wheel-install-20261026\libre_core_autoloader-0.1.0-py3-none-any.whl
+Installing collected packages: libre-core-autoloader
+Successfully installed libre-core-autoloader-0.1.0

@@ -1,0 +1,2 @@
+.venv\Scripts\python.exe -m pytest -p no:cacheprovider -q --basetemp=C:\lcawt --junitxml=docs\v1\evidence\shared-controller-regression-20261026\short-path-rerun\junit.xml tests/test_ui.py::test_tui_cancel_or_unmount_wakes_actual_service_worker_without_writer_call tests/test_ui.py::test_tui_cancel_or_unmount_revokes_minted_receipt_before_service_consumption
+

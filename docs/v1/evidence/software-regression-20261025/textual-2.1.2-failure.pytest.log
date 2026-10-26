@@ -1,0 +1,91 @@
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 16%]
+........................................................................ [ 22%]
+........................................................................ [ 27%]
+........................................................................ [ 33%]
+........................................................................ [ 39%]
+..............s......................................................... [ 44%]
+...........s............................................................ [ 50%]
+........................................................................ [ 55%]
+..............................................F......................... [ 61%]
+........................................................................ [ 67%]
+........................................................................ [ 72%]
+...............................................ss....................... [ 78%]
+........................................................................ [ 83%]
+.....................................................................s.. [ 89%]
+........................................................................ [ 95%]
+................................................................         [100%]
+=================================== FAILURES ===================================
+________________ test_welcome_and_app_do_not_detect_implicitly _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73de0ab93f50>
+
+    def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
+        from autoloader.detection.model import ModelDetector
+        from autoloader.detection.bios import BIOSDetector
+    
+        def unexpected(*args, **kwargs):
+            raise AssertionError("startup must not read hardware")
+    
+        monkeypatch.setattr(ModelDetector, "detect", unexpected)
+        monkeypatch.setattr(BIOSDetector, "detect", unexpected)
+    
+        async def runner():
+            app = AutoLoaderApp()
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                assert "in development" in app.screen.query_one("#version", Static).render().plain.lower()
+                assert VERSION in app.screen.query_one("#version", Static).render().plain
+                description = app.screen.query_one("#description", Static).render().plain.lower()
+                assert "guarded x200/x220 rom builds" in description
+                assert "explicit approval" in description
+                assert "physical-device validation remains pending" in description
+                assert "unavailable" not in description
+                assert "not run" in app.screen.query_one("#detection-status", Static).render().plain.lower()
+                detection_status = app.screen.query_one("#detection-status", Static).render().plain.lower()
+                assert "start guided setup" in detection_status
+                assert "detect device" not in detection_status
+                assert app.screen.query_one("#btn-start", Button).label == "Start Guided Setup"
+    
+>       asyncio.run(runner())
+
+tests/test_ui.py:840: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.14/asyncio/runners.py:204: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.14/asyncio/runners.py:127: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.14/asyncio/base_events.py:719: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def runner():
+        app = AutoLoaderApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            assert "in development" in app.screen.query_one("#version", Static).render().plain.lower()
+            assert VERSION in app.screen.query_one("#version", Static).render().plain
+            description = app.screen.query_one("#description", Static).render().plain.lower()
+            assert "guarded x200/x220 rom builds" in description
+            assert "explicit approval" in description
+            assert "physical-device validation remains pending" in description
+            assert "unavailable" not in description
+            assert "not run" in app.screen.query_one("#detection-status", Static).render().plain.lower()
+            detection_status = app.screen.query_one("#detection-status", Static).render().plain.lower()
+            assert "start guided setup" in detection_status
+            assert "detect device" not in detection_status
+>           assert app.screen.query_one("#btn-start", Button).label == "Start Guided Setup"
+E           AssertionError: assert <text 'Start Guided Setup' [] ''> == 'Start Guided Setup'
+E            +  where <text 'Start Guided Setup' [] ''> = Button(id='btn-start', variant='primary').label
+E            +    where Button(id='btn-start', variant='primary') = query_one('#btn-start', Button)
+E            +      where query_one = WelcomeScreen().query_one
+E            +        where WelcomeScreen() = AutoLoaderApp(title='Libre_Core AutoLoader', classes={'-dark-mode'}, pseudo_classes={'dark', 'focus'}).screen
+
+tests/test_ui.py:838: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_ui.py::test_welcome_and_app_do_not_detect_implicitly - Asse...
+1 failed, 1282 passed, 5 skipped in 821.91s (0:13:41)

@@ -1,0 +1,6 @@
+exit=1
+elapsed_seconds=225.82
+free_after=880734208
+space_guard_stopped=True
+pytest_basetemp=C:\w\lc-v1wfr-20261026\pytest
+TEMP/TMP/TMPDIR=C:\w\lc-v1wfr-20261026\system-tmp

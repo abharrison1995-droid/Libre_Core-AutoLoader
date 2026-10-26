@@ -1,0 +1,17 @@
+Ubuntu 26.04.1 LTS under WSL 2
+Python 3.14.4
+pytest 9.1.1
+User: alex (uid 1000)
+/tmp: tmpfs remounted to 6 GiB; initial use 4 KiB, empty run-specific directory
+Working tree: codex/v1-development, recorded in commit.txt
+C: free before run: 3.48 GiB
+All test scratch: /tmp/librecore-autoloader-v1-current-20261026-linux-attempt-11
+
+Actual invocation working directory: /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader
+Actual source FS: /mnt/c (DrvFS)
+Actual pytest TMPDIR and basetemp: /tmp/librecore-autoloader-v1-current-20261026-linux-attempt-11
+Observed pytest summary: 839 passed, 189 failed, 1 skipped; interrupted at 626.54 seconds; exit 2
+Observed failure cause: pytest log contains Errno 28 after the 6 GiB tmpfs filled
+Current WSL /tmp after instance restart: default 3.9 GiB tmpfs, empty
+C: free after run: 3.44 GiB
+
