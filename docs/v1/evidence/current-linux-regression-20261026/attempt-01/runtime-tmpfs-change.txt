@@ -1,0 +1,16 @@
+# Runtime tmpfs adjustment
+
+The runner preflight observed /tmp at 4,020,516 KiB total and available.
+At approximately 46% pytest progress, df showed 3,632,348 KiB used and
+388,168 KiB available. The retained pytest temp directories were growing
+through the session.
+
+While pytest remained active, the temporary /tmp tmpfs limit was remounted
+with:
+
+wsl.exe -d Ubuntu -u root -- mount -o remount,size=6G /tmp
+
+The immediate post-remount reading was 6,291,456 KiB total, 3,897,948 KiB
+used, and 2,393,508 KiB available. No files were deleted or relocated by this
+change. Later WSL checks after the test run showed the default 4,020,516 KiB
+tmpfs with zero bytes used; the exact run-scoped scratch paths were absent.

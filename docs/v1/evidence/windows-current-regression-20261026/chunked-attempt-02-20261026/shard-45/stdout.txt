@@ -1,0 +1,6 @@
+.......ss.........s...ss                                                 [100%]
+=========================== short test summary info ===========================
+SKIPPED [2] tests\test_usb_builder.py:2471: target-root POSIX symlink contract
+SKIPPED [1] tests\test_usb_builder.py:2602: target-root POSIX symlink contract
+SKIPPED [2] tests\test_usb_builder.py:2638: target-root POSIX symlink contract
+19 passed, 5 skipped in 17.73s

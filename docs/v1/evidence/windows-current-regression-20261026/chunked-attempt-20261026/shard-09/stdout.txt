@@ -1,0 +1,10 @@
+ssss.ssss........s.......                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [3] tests\test_offline_vm_build_executor.py:417: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:454: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:540: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:580: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:658: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:711: fixed worker process-group contract requires POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:956: symlink creation is host-policy-specific
+16 passed, 9 skipped in 1.17s

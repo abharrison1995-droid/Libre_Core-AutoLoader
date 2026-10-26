@@ -1,0 +1,2 @@
+$env:PYTHONPATH = 'C:\Users\Alex\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\site-packages'
+& .\.venv\Scripts\python.exe docs\v1\evidence\current-source-wheel-install-20261026\smoke.py

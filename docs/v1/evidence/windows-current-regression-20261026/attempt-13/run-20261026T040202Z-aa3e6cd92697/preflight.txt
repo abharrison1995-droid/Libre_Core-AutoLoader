@@ -1,0 +1,5 @@
+status=aborted
+error=NTFS compression probe failed: GetCompressedFileSizeW reported 1048576 bytes for a 1048576-byte compressible probe. 
+free_bytes=7993835520
+minimum_start_free_bytes=10737418240
+pytest_started=False

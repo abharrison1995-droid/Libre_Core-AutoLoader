@@ -1,0 +1,5 @@
+ARGV_JSON=["/usr/bin/dpkg-deb", "--extract", "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/ubuntu-keyring_2023.11.28.1build1_all.deb", "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring"]
+STDOUT_BEGIN
+STDOUT_END
+STDERR_BEGIN
+STDERR_END

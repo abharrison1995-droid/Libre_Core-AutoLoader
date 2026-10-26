@@ -1,0 +1,14 @@
+{
+  "executable": "C:\\Windows\\System32\\wsl.exe",
+  "purpose": "private empty GnuPG homedir setup; no key import",
+  "argv": [
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/stat",
+    "-c",
+    "%a:%u:%g",
+    "--",
+    "/tmp/lc-ubuntu-keyring-readonly-20261025"
+  ]
+}

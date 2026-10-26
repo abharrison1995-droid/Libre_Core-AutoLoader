@@ -74,6 +74,26 @@ LOCKED_PACKAGES = {
     "libcap": "2.78-1",
 }
 SNAPSHOT_LOCK_PATH = Path(__file__).with_name("snapshot.lock.json")
+WORKER_IMAGE_FW_CFG_NAME = "opt/org.librecore/worker-image-sha256"
+# Concrete filesystem paths used only inside the Linux guest. The protocol
+# mount names are fixed POSIX strings in offline_vm_guest_worker.MOUNT_TARGETS;
+# keeping the two representations separate avoids host-dependent wire paths.
+OFFLINE_SOURCE_MOUNT = Path("/mnt/librecore-source")
+OFFLINE_PACKAGES_MOUNT = Path("/mnt/librecore-packages")
+
+# Direct-kernel boot contract for the future worker image. These values define
+# a fixed layout/command-line only; no matching disk or initramfs has been
+# built or validated. QEMU's default x86 firmware remains an unresolved host
+# dependency even when -kernel/-initrd are supplied.
+WORKER_ROOT_PARTITION_NUMBER = 1
+WORKER_ROOT_PARTITION_TYPE_GUID = "0fc63daf-8483-4772-8e79-3d69d8477de4"
+WORKER_ROOT_PARTUUID = "4c435752-0001-4000-8000-000000000001"
+WORKER_ROOT_FILESYSTEM = "ext4"
+WORKER_ROOT_FILESYSTEM_UUID = "4c435752-0001-4000-8000-000000000002"
+WORKER_KERNEL_APPEND = (
+    f"root=PARTUUID={WORKER_ROOT_PARTUUID} rootfstype={WORKER_ROOT_FILESYSTEM} "
+    "ro console=ttyS0,115200n8 loglevel=4"
+)
 
 GUEST_FIXED_ENV = {
     "PATH": "/usr/bin:/bin",
@@ -91,6 +111,13 @@ class OfflineVmContractError(RuntimeError):
 
 def _fail(message: str) -> NoReturn:
     raise OfflineVmContractError(message)
+
+
+def _fchmod(fd: int, mode: int) -> None:
+    fchmod = getattr(os, "fchmod", None)
+    if not callable(fchmod):
+        _fail("descriptor mode setting is unavailable on this platform")
+    fchmod(fd, mode)
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -148,6 +175,19 @@ class ImageIdentity:
     sha256: str
 
 
+def _validate_boot_asset_identities(deployment: WorkerDeployment) -> None:
+    for label, identity in (
+        ("kernel", deployment.kernel_image),
+        ("initramfs", deployment.initramfs_image),
+    ):
+        if not isinstance(identity, ImageIdentity):
+            _fail(f"fixed worker {label} identity is missing")
+        if isinstance(identity.size, bool) or not isinstance(identity.size, int) or identity.size <= 0:
+            _fail(f"fixed worker {label} identity size is invalid")
+        if not _is_sha256(identity.sha256):
+            _fail(f"fixed worker {label} identity digest is malformed")
+
+
 @dataclass(frozen=True)
 class VolumeIdentity:
     """Operation-owned writable disk; its identity is path/size, not content hash."""
@@ -158,10 +198,12 @@ class VolumeIdentity:
 
 @dataclass(frozen=True)
 class WorkerDeployment:
-    """Exact executable and worker-image identities for a reviewed deployment."""
+    """Exact QEMU, worker disk, kernel, and initramfs identities."""
 
     qemu: ImageIdentity
     worker_image: ImageIdentity
+    kernel_image: ImageIdentity
+    initramfs_image: ImageIdentity
     worker_image_format: str = "raw"
 
 
@@ -352,7 +394,7 @@ def write_request_volume(path: Path, request: Mapping[str, object]) -> ImageIden
     owned_fd = fd
     try:
         if os.name == "posix":
-            os.fchmod(owned_fd, OPERATION_FILE_MODE)
+            _fchmod(owned_fd, OPERATION_FILE_MODE)
         stream = os.fdopen(owned_fd, "wb")
         owned_fd = -1
         with stream:
@@ -600,6 +642,96 @@ def _hash_fd(fd: int) -> str:
     return digest.hexdigest()
 
 
+def _verify_sealed_boot_fd(fd: int, *, size: int, sha256: str, label: str) -> None:
+    try:
+        import fcntl
+    except ImportError as exc:
+        raise OfflineVmContractError("immutable boot-asset memfd sealing is unavailable") from exc
+    required = (
+        getattr(fcntl, "F_SEAL_SEAL", 0)
+        | getattr(fcntl, "F_SEAL_SHRINK", 0)
+        | getattr(fcntl, "F_SEAL_GROW", 0)
+        | getattr(fcntl, "F_SEAL_WRITE", 0)
+    )
+    get_seals = getattr(fcntl, "F_GET_SEALS", None)
+    fcntl_call = getattr(fcntl, "fcntl", None)
+    if required == 0 or get_seals is None or not callable(fcntl_call):
+        _fail("immutable boot-asset memfd sealing is unavailable")
+    info = os.fstat(fd)
+    try:
+        observed = fcntl_call(fd, get_seals)
+    except OSError as exc:
+        raise OfflineVmContractError(f"{label} sealed memfd cannot be inspected") from exc
+    if not stat.S_ISREG(info.st_mode) or info.st_size != size or observed & required != required:
+        _fail(f"{label} boot asset is not the exact-size sealed memfd")
+    if _hash_fd(fd) != sha256:
+        _fail(f"{label} sealed boot asset SHA-256 differs from its pin")
+
+
+def _sealed_boot_memfd(source_fd: int, *, size: int, sha256: str, label: str) -> int:
+    """Copy a boot input into an immutable memfd before QEMU can read it."""
+    create_memfd = getattr(os, "memfd_create", None)
+    allow_sealing = getattr(os, "MFD_ALLOW_SEALING", None)
+    cloexec = getattr(os, "MFD_CLOEXEC", 0)
+    if not callable(create_memfd) or allow_sealing is None:
+        _fail("immutable boot-asset memfd sealing is unavailable")
+    try:
+        import fcntl
+    except ImportError as exc:
+        raise OfflineVmContractError("immutable boot-asset memfd sealing is unavailable") from exc
+    required = (
+        getattr(fcntl, "F_SEAL_SEAL", 0)
+        | getattr(fcntl, "F_SEAL_SHRINK", 0)
+        | getattr(fcntl, "F_SEAL_GROW", 0)
+        | getattr(fcntl, "F_SEAL_WRITE", 0)
+    )
+    add_seals = getattr(fcntl, "F_ADD_SEALS", None)
+    fcntl_call = getattr(fcntl, "fcntl", None)
+    if required == 0 or add_seals is None or not callable(fcntl_call):
+        _fail("immutable boot-asset memfd sealing is unavailable")
+    try:
+        sealed_fd = create_memfd(f"librecore-{label}", allow_sealing | cloexec)
+    except OSError as exc:
+        raise OfflineVmContractError(f"{label} boot asset cannot be copied to a sealed memfd") from exc
+    try:
+        before = os.fstat(source_fd)
+        os.lseek(source_fd, 0, os.SEEK_SET)
+        digest = hashlib.sha256()
+        copied = 0
+        while copied <= size:
+            remaining = size - copied
+            chunk = os.read(source_fd, min(RESULT_HASH_CHUNK_BYTES, remaining + 1))
+            if not chunk:
+                break
+            if len(chunk) > remaining:
+                _fail(f"{label} boot asset grew beyond its pinned size while copying")
+            view = memoryview(chunk)
+            while view:
+                written = os.write(sealed_fd, view)
+                if written <= 0:
+                    raise OSError("short write while sealing boot asset")
+                digest.update(view[:written])
+                copied += written
+                view = view[written:]
+        after = os.fstat(source_fd)
+        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+            after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns
+        ):
+            _fail(f"{label} boot asset changed while copying to its sealed memfd")
+        if copied != size or digest.hexdigest() != sha256:
+            _fail(f"{label} boot asset bytes differ from their immutable pin")
+        os.lseek(sealed_fd, 0, os.SEEK_SET)
+        try:
+            fcntl_call(sealed_fd, add_seals, required)
+        except OSError as exc:
+            raise OfflineVmContractError(f"{label} boot asset could not be sealed against writes") from exc
+        _verify_sealed_boot_fd(sealed_fd, size=size, sha256=sha256, label=label)
+        return sealed_fd
+    except BaseException:
+        os.close(sealed_fd)
+        raise
+
+
 def _read_fd(fd: int, max_bytes: int) -> bytes:
     original = os.lseek(fd, 0, os.SEEK_CUR)
     chunks: list[bytes] = []
@@ -632,12 +764,15 @@ def _pread_exact(fd: int, size: int, offset: int) -> bytes:
 @contextmanager
 def _open_launch_files(plan: WorkerPlan, deployment: WorkerDeployment) -> Any:
     """Pin all QEMU file inputs to opened inodes and yield fd-backed paths."""
+    _validate_boot_asset_identities(deployment)
     operation_root = plan.scratch_volume.path.parent
     if os.name == "posix":
         _validate_operation_directory(operation_root, plan.operation_id)
     specs: tuple[tuple[str, Path, int, str | None, bool], ...] = (
         ("qemu", deployment.qemu.path, deployment.qemu.size, deployment.qemu.sha256, False),
         ("worker", deployment.worker_image.path, deployment.worker_image.size, deployment.worker_image.sha256, False),
+        ("kernel", deployment.kernel_image.path, deployment.kernel_image.size, deployment.kernel_image.sha256, False),
+        ("initramfs", deployment.initramfs_image.path, deployment.initramfs_image.size, deployment.initramfs_image.sha256, False),
         ("request", plan.request_image.path, plan.request_image.size, plan.request_image.sha256, False),
         ("source", plan.source_image.path, plan.source_image.size, plan.source_image.sha256, False),
         ("packages", plan.package_image.path, plan.package_image.size, plan.package_image.sha256, False),
@@ -681,11 +816,21 @@ def _open_launch_files(plan: WorkerPlan, deployment: WorkerDeployment) -> Any:
                 if actual_hash != expected_hash:
                     _fail(f"opened {key} launch image SHA-256 differs from its pin")
                 before[key] = actual_hash
+                if key in {"kernel", "initramfs"}:
+                    sealed_fd = _sealed_boot_memfd(fd, size=expected_size, sha256=expected_hash, label=key)
+                    descriptors[key] = sealed_fd
+                    os.close(fd)
+                    fd = sealed_fd
             paths[key] = f"/proc/self/fd/{fd}"
         yield paths, tuple(descriptors.values()), descriptors, before
         # Recheck both the held inode and its pathname after the child exits.
         for key, path, expected_size, expected_hash, writable in specs:
             fd = descriptors[key]
+            if key in {"kernel", "initramfs"}:
+                if expected_hash is None:
+                    _fail(f"{key} boot asset pin is missing")
+                _verify_sealed_boot_fd(fd, size=expected_size, sha256=expected_hash, label=key)
+                continue
             opened = _validate_open_file(
                 path=path,
                 fd=fd,
@@ -775,6 +920,7 @@ def build_qemu_argv(
     fd_paths: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
     """Build the only permitted QEMU argv; this function never executes it."""
+    _validate_boot_asset_identities(deployment)
     request = make_request(plan)
     if plan.worker_image_sha256 != deployment.worker_image.sha256:
         _fail("worker request guest-image hash differs from the pinned deployment")
@@ -782,6 +928,7 @@ def build_qemu_argv(
         _fail("request image must have the exact fixed volume size")
     for label, identity in (
         ("QEMU", deployment.qemu), ("worker base", deployment.worker_image),
+        ("worker kernel", deployment.kernel_image), ("worker initramfs", deployment.initramfs_image),
         ("source", plan.source_image), ("package repository", plan.package_image),
         ("request", plan.request_image),
     ):
@@ -795,7 +942,14 @@ def build_qemu_argv(
     _verify_operation_file_path(plan.request_image.path, plan.request_image.size, "request", operation_root)
     if deployment.worker_image_format != "raw":
         _fail("worker deployment image format must be raw")
-    identities = [deployment.worker_image, plan.source_image, plan.package_image, plan.request_image]
+    identities = [
+        deployment.worker_image,
+        deployment.kernel_image,
+        deployment.initramfs_image,
+        plan.source_image,
+        plan.package_image,
+        plan.request_image,
+    ]
     volume_paths = [plan.scratch_volume.path, plan.output_volume.path, plan.evidence_volume.path]
     if len({(p.stat().st_dev, p.stat().st_ino) for p in volume_paths}) != len(volume_paths):
         _fail("scratch and output volumes must be separate files")
@@ -822,12 +976,6 @@ def build_qemu_argv(
     if not plan.log_path.is_absolute() or plan.log_path.exists() or plan.log_path.parent != operation_root:
         _fail("worker log path must be new within the private operation directory")
 
-    argv: list[str] = [
-        str(deployment.qemu.path),
-        "-nodefaults", "-no-user-config", "-no-reboot",
-        "-machine", "q35,accel=tcg", "-cpu", "max", "-smp", "2", "-m", "4096",
-        "-display", "none", "-monitor", "none", "-serial", "null", "-nic", "none",
-    ]
     def block_path(key: str, path: Path) -> Path:
         if fd_paths is None:
             return path
@@ -835,6 +983,17 @@ def build_qemu_argv(
         if not isinstance(raw, str) or not raw.startswith("/proc/self/fd/"):
             _fail("launch file descriptor map is incomplete or malformed")
         return Path(raw)
+
+    argv: list[str] = [
+        str(deployment.qemu.path),
+        "-nodefaults", "-no-user-config", "-no-reboot",
+        "-machine", "q35,accel=tcg", "-cpu", "max", "-smp", "2", "-m", "4096",
+        "-display", "none", "-monitor", "none", "-serial", "null", "-nic", "none",
+        "-kernel", str(block_path("kernel", deployment.kernel_image.path)),
+        "-initrd", str(block_path("initramfs", deployment.initramfs_image.path)),
+        "-append", WORKER_KERNEL_APPEND,
+        "-fw_cfg", f"name={WORKER_IMAGE_FW_CFG_NAME},string={deployment.worker_image.sha256}",
+    ]
 
     disks = (
         ("worker-file", "worker-drive", deployment.worker_image, "worker", "LC-WORKER-RO", True),
@@ -863,6 +1022,8 @@ def _readonly_identities(deployment: WorkerDeployment, plan: WorkerPlan) -> dict
     return {
         "qemu": deployment.qemu,
         "worker": deployment.worker_image,
+        "kernel": deployment.kernel_image,
+        "initramfs": deployment.initramfs_image,
         "request": plan.request_image,
         "source": plan.source_image,
         "packages": plan.package_image,
@@ -893,7 +1054,7 @@ def _create_worker_log_fd(path: Path, operation_root: Path) -> int:
     except OSError as exc:
         raise OfflineVmContractError("QEMU log could not be created exclusively in the operation directory") from exc
     try:
-        os.fchmod(fd, OPERATION_FILE_MODE)
+        _fchmod(fd, OPERATION_FILE_MODE)
         info = os.fstat(fd)
         named = path.lstat()
         root_info = operation_root.stat()

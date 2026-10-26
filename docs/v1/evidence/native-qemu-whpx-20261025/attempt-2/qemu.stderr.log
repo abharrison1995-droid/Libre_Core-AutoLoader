@@ -1,0 +1,4 @@
+C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe: warning: WHPX: Failed to get performance monitoring features, hr=80370300
+C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe: warning: host doesn't support requested feature: CPUID[eax=80000001h].ECX.svm [bit 2]
+C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe: warning: host doesn't support requested feature: CPUID[eax=80000001h].ECX.svm [bit 2]
+

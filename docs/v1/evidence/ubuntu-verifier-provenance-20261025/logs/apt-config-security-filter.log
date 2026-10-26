@@ -1,0 +1,8 @@
+ARGV_JSON=["apt-config", "dump"]
+STDOUT_BEGIN
+Acquire::AllowInsecureRepositories "0";
+Acquire::AllowWeakRepositories "0";
+Acquire::AllowDowngradeToInsecureRepositories "0";
+STDOUT_END
+STDERR_BEGIN
+STDERR_END

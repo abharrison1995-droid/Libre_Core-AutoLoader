@@ -1,0 +1,7 @@
+.............sssss.......                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_usb_builder.py:2111: Linux usrmerge executable path contract
+SKIPPED [1] tests\test_usb_builder.py:2152: target-root uses POSIX symlink semantics
+SKIPPED [1] tests\test_usb_builder.py:2174: target-root uses POSIX symlink semantics
+SKIPPED [2] tests\test_usb_builder.py:2204: Linux Archiso ownership contract
+20 passed, 5 skipped in 14.59s

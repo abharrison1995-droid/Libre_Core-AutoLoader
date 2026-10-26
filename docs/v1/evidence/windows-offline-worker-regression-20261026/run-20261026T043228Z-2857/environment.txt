@@ -1,0 +1,7 @@
+run_id=20261026T043228Z-2857
+started_utc=2026-10-26T04:32:29.4633916Z
+free_before_bytes=7925096448
+python=Python 3.12.14
+pytest=pytest 9.1.1
+scratch=C:\w\lc-20261026T043228Z-2857
+

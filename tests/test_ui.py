@@ -835,7 +835,8 @@ def test_welcome_and_app_do_not_detect_implicitly(monkeypatch):
             detection_status = app.screen.query_one("#detection-status", Static).render().plain.lower()
             assert "start guided setup" in detection_status
             assert "detect device" not in detection_status
-            assert app.screen.query_one("#btn-start", Button).label == "Start Guided Setup"
+            start_label = app.screen.query_one("#btn-start", Button).label
+            assert getattr(start_label, "plain", start_label) == "Start Guided Setup"
 
     asyncio.run(runner())
 

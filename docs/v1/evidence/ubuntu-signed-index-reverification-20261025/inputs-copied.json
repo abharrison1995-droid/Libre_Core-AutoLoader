@@ -1,0 +1,50 @@
+[
+  {
+    "source": "docs\\v1\\evidence\\ubuntu-verifier-provenance-20261025\\apt-state\\lists\\archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\resolute_InRelease",
+    "size": 135549,
+    "sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c"
+  },
+  {
+    "source": "docs\\v1\\evidence\\ubuntu-verifier-provenance-20261025\\apt-state\\lists\\archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\resolute-updates_InRelease",
+    "size": 137401,
+    "sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad"
+  },
+  {
+    "source": "docs\\v1\\evidence\\ubuntu-verifier-provenance-20261025\\indices\\resolute-main-Packages.xz",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\resolute-main-Packages.xz",
+    "size": 1480032,
+    "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24"
+  },
+  {
+    "source": "docs\\v1\\evidence\\ubuntu-verifier-provenance-20261025\\indices\\resolute-updates-main-Packages.xz",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\resolute-updates-main-Packages.xz",
+    "size": 744388,
+    "sha256": "553c802aee13bedfcf262a111a16b41918ea3a8b1dc98c2fd49c465883af27e4"
+  },
+  {
+    "source": "docs\\v1\\evidence\\windows-tls-corroboration-20261025\\downloads\\gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+    "size": 155072,
+    "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09"
+  },
+  {
+    "source": "docs\\v1\\evidence\\windows-tls-corroboration-20261025\\downloads\\gpg_2.4.8-4ubuntu3.1_amd64.deb",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\gpg_2.4.8-4ubuntu3.1_amd64.deb",
+    "size": 636848,
+    "sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6"
+  },
+  {
+    "source": "docs\\v1\\evidence\\windows-tls-corroboration-20261025\\downloads\\ubuntu-keyring_2023.11.28.1build1_all.deb",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\ubuntu-keyring_2023.11.28.1build1_all.deb",
+    "size": 11228,
+    "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66"
+  },
+  {
+    "source": "docs\\v1\\evidence\\ubuntu-trust-corroboration-20261025\\downloads\\ubuntu-archive-keyring.gpg",
+    "copy": "docs\\v1\\evidence\\ubuntu-signed-index-reverification-20261025\\inputs\\ubuntu-archive-keyring.gpg",
+    "size": 3607,
+    "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+  }
+]

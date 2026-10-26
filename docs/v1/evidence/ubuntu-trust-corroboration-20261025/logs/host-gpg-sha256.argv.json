@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/sha256sum",
+    "/usr/bin/gpg"
+  ],
+  "operation": "Read-only key listing; no key import, payload execution, install, or network fetch",
+  "executable": "C:\\Windows\\System32\\wsl.exe"
+}

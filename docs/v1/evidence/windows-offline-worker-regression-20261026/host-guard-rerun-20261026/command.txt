@@ -1,0 +1,1 @@
+python -m pytest -q -p no:cacheprovider --junitxml "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-offline-worker-regression-20261026\host-guard-rerun-20261026\junit.xml" tests/test_usb_builder.py::test_windows_host_blocks_before_any_build_tool_or_output_creation

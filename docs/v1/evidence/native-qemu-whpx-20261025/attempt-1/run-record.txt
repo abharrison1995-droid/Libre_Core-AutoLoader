@@ -1,0 +1,18 @@
+Purpose: bounded native Windows WHPX diagnostic of the hash-verified Arch 2026.10.01 live ISO using its exact kernel, initramfs, and BIOS boot UUID.
+This is not the LibreCore product ISO, worker image, firmware build, hardware test, or release acceptance.
+QEMU: QEMU emulator version 11.1.2
+Copyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers
+ISO SHA-256 before: 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5
+Kernel SHA-256: 8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+Initramfs SHA-256: 35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52
+Guest network: none (-nic none); no guest disk, USB, writable share, host-device passthrough, or firmware device.
+The ISO is an explicit read-only CD-ROM. The only host-bound sockets are loopback HMP monitor and serial for this diagnostic.
+Timeout seconds: 600
+Command: "C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe" -nodefaults -machine pc,accel=whpx -cpu qemu64 -m 2048 -smp 2 -display none -vga std -nic none -kernel C:\Users\Alex\AppData\Local\Temp\lc-whpx-archiso-20261025\arch\boot\x86_64\vmlinuz-linux -initrd C:\Users\Alex\AppData\Local\Temp\lc-whpx-archiso-20261025\arch\boot\x86_64\initramfs-linux.img -append "archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=ttyS0,115200n8" -drive file=C:\Users\Alex\Downloads\LibreCore-VMSetup-20261015\archlinux-2026.10.01-x86_64.iso,format=raw,if=none,id=cd0,media=cdrom,readonly=on -device ide-cd,drive=cd0 -serial tcp:127.0.0.1:53235,server=on,wait=off -monitor tcp:127.0.0.1:53234,server=on,wait=off
+Start UTC: 2026-10-25T14:47:55.4524188Z
+End UTC: 2026-10-25T14:58:17.2844074Z
+Result: WHPX_ACCELERATOR_UNAVAILABLE_BEFORE_GUEST
+ISO SHA-256 after: 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5
+Guest read-only checks sent: False
+Guest read-only checks observed: False
+QEMU exit: 0

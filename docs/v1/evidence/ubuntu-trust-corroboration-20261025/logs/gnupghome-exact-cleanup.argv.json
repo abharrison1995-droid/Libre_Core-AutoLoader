@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/rm",
+    "-r",
+    "--",
+    "/tmp/lc-ubuntu-keyring-readonly-20261025"
+  ],
+  "executable": "C:\\Windows\\System32\\wsl.exe",
+  "exact_target": "/tmp/lc-ubuntu-keyring-readonly-20261025",
+  "authorization": "user-approved private GnuPG scratch cleanup"
+}

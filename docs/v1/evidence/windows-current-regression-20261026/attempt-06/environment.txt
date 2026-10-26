@@ -1,0 +1,1 @@
+utc_start=2026-10-26T01:21:58.5844611Z os=Microsoft Windows NT 10.0.19044.0 python=Python 3.12.14 pytest=pytest 9.1.1 commit=2e28a81b11e6a4fe97472ed0dadb8ea71429127b c_free_before=266067968 basetemp=C:\w\lc-t430-handoff-20261026

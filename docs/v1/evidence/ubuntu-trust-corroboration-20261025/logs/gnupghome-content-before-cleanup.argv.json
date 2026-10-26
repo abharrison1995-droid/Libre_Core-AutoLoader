@@ -1,0 +1,17 @@
+{
+  "target_exact": "/tmp/lc-ubuntu-keyring-readonly-20261025",
+  "argv": [
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/find",
+    "/tmp/lc-ubuntu-keyring-readonly-20261025",
+    "-mindepth",
+    "0",
+    "-maxdepth",
+    "2",
+    "-printf",
+    "%m %u %g %y %p %s\\n"
+  ],
+  "executable": "C:\\Windows\\System32\\wsl.exe"
+}

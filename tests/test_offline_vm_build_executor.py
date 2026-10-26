@@ -26,6 +26,9 @@ def _state(**overrides: 'Any') -> 'build.GuestSecurityState':
     values.update(overrides)
     return build.GuestSecurityState(**values)
 
+def _successful_process_result(invocation: 'build.BuildInvocation') -> 'build.BuildProcessResult':
+    return build.BuildProcessResult(service_name=build.BUILD_SERVICE_NAME, argv_sha256=build._invocation_sha256(invocation), returncode=0, timed_out=False, elapsed_seconds=0.5, no_new_privs_before=True, no_new_privs_during=False, network_namespace_before='net:[4026533000]', network_namespace_during='net:[4026533000]', pacstrap_exit_codes=(0, 0), account='fwbuild', uid=1000, gid=1000, supplementary_gids=(1000,), cap_effective='0000000000000000', cap_permitted='0000000000000000', cap_ambient='0000000000000000', interfaces=('lo',), ipv4_routes=(), ipv6_routes=(), cap_bounding=build.CAPABILITY_BOUNDING_MASK)
+
 def _private_file(path: 'Path', data: 'bytes', mode: 'int') -> 'None':
     path.write_bytes(data)
     if os.name == 'posix':
@@ -394,6 +397,59 @@ def test_service_result_requires_matching_final_ready_receipt(executor_case: 'tu
         __py_format10 = 'assert %(py9)s' % {'py9': __py_format8}
         raise AssertionError(__pytest_ar._format_explanation(__py_format10))
     __py_assert1 = __py_assert4 = __py_assert6 = None
+
+@pytest.mark.skipif(os.name != 'posix', reason='fixed worker file ownership and mode checks require POSIX')
+def test_candidate_service_result_roundtrips_the_observed_build_process_result(executor_case: 'tuple[Path, build.BuildInvocation, build.GuestSecurityState]', monkeypatch: 'pytest.MonkeyPatch') -> 'None':
+    scratch, invocation, _state_value = executor_case
+    result_path = scratch / 'build-service-result.json'
+    ready_path = scratch / 'build-service-result-ready.json'
+    started_path = scratch / 'build-service-started.json'
+    monkeypatch.setattr(build, 'BUILD_RESULT_PATH', str(result_path))
+    monkeypatch.setattr(build, 'BUILD_RESULT_READY_PATH', str(ready_path))
+    monkeypatch.setattr(build, 'BUILD_SERVICE_STARTED_PATH', str(started_path))
+    _private_file(started_path, build.canonical_json({'format': build.BUILD_RECEIPT_FORMAT, 'operation_id': invocation.operation_id, 'request_sha256': invocation.request_sha256}), 384)
+    from usb_builder import offline_vm_build_service
+    candidate = build.GuestBuildResult(status='CANDIDATE_ISO_PENDING_HOST_VALIDATION', operation_id=invocation.operation_id, request_sha256=invocation.request_sha256, iso_path=f'{build.WORKER_OUTPUT}/candidate.iso', iso_size=36864, iso_sha256='a' * 64, command_argv_sha256=build._invocation_sha256(invocation), elapsed_seconds=1.0, commands_run=(build.BUILD_SERVICE_NAME,), cleanup_complete=True, build_process_result=_successful_process_result(invocation))
+    offline_vm_build_service._write_result(candidate)
+    offline_vm_build_service._write_result_ready(candidate)
+    assert build._load_service_result(invocation) == candidate
+
+@pytest.mark.parametrize('mutation', ('missing-process', 'child-exit', 'pacstrap-exit', 'timeout', 'nnp-drift', 'namespace-drift', 'capability-drift', 'extra-command', 'reordered-command'))
+@pytest.mark.skipif(os.name != 'posix', reason='fixed worker file ownership and mode checks require POSIX')
+def test_candidate_service_result_rejects_invalid_observation_or_command_list(mutation: 'str', executor_case: 'tuple[Path, build.BuildInvocation, build.GuestSecurityState]', monkeypatch: 'pytest.MonkeyPatch') -> 'None':
+    scratch, invocation, _state_value = executor_case
+    result_path = scratch / 'build-service-result.json'
+    ready_path = scratch / 'build-service-result-ready.json'
+    started_path = scratch / 'build-service-started.json'
+    monkeypatch.setattr(build, 'BUILD_RESULT_PATH', str(result_path))
+    monkeypatch.setattr(build, 'BUILD_RESULT_READY_PATH', str(ready_path))
+    monkeypatch.setattr(build, 'BUILD_SERVICE_STARTED_PATH', str(started_path))
+    _private_file(started_path, build.canonical_json({'format': build.BUILD_RECEIPT_FORMAT, 'operation_id': invocation.operation_id, 'request_sha256': invocation.request_sha256}), 384)
+    from usb_builder import offline_vm_build_service
+    process_result = _successful_process_result(invocation)
+    candidate = build.GuestBuildResult(status='CANDIDATE_ISO_PENDING_HOST_VALIDATION', operation_id=invocation.operation_id, request_sha256=invocation.request_sha256, iso_path=f'{build.WORKER_OUTPUT}/candidate.iso', iso_size=36864, iso_sha256='a' * 64, command_argv_sha256=build._invocation_sha256(invocation), elapsed_seconds=1.0, commands_run=(build.BUILD_SERVICE_NAME,), cleanup_complete=True, build_process_result=process_result)
+    if mutation == 'missing-process':
+        candidate = replace(candidate, build_process_result=None)
+    elif mutation == 'child-exit':
+        candidate = replace(candidate, build_process_result=replace(process_result, returncode=1))
+    elif mutation == 'pacstrap-exit':
+        candidate = replace(candidate, build_process_result=replace(process_result, pacstrap_exit_codes=(0, 9)))
+    elif mutation == 'timeout':
+        candidate = replace(candidate, build_process_result=replace(process_result, timed_out=True))
+    elif mutation == 'nnp-drift':
+        candidate = replace(candidate, build_process_result=replace(process_result, no_new_privs_during=True))
+    elif mutation == 'namespace-drift':
+        candidate = replace(candidate, build_process_result=replace(process_result, network_namespace_during='net:[4026533001]'))
+    elif mutation == 'capability-drift':
+        candidate = replace(candidate, build_process_result=replace(process_result, cap_effective='0000000000000001'))
+    elif mutation == 'extra-command':
+        candidate = replace(candidate, commands_run=(build.BUILD_SERVICE_NAME, 'pacstrap'))
+    else:
+        candidate = replace(candidate, commands_run=('pacstrap', build.BUILD_SERVICE_NAME))
+    offline_vm_build_service._write_result(candidate)
+    offline_vm_build_service._write_result_ready(candidate)
+    with pytest.raises(build.OfflineVmBuildError):
+        build._load_service_result(invocation)
 
 @pytest.mark.skipif(os.name != 'posix', reason='fixed worker file ownership and mode checks require POSIX')
 def test_service_result_is_published_complete_and_new_only(monkeypatch: 'pytest.MonkeyPatch', tmp_path: 'Path') -> 'None':
@@ -911,7 +967,7 @@ def test_effective_systemd_validation_rejects_dangling_override_symlink(tmp_path
         build._verify_no_systemd_override_files('librecore-offline-build.service', canonical, root=tmp_path)
 
 def _effective_service_output(fragment_path: 'str'='/synthetic-root/usr/lib/systemd/system/librecore-offline-build.service', **overrides: 'str') -> 'bytes':
-    expected = {'LoadState': 'loaded', 'FragmentPath': fragment_path, 'DropInPaths': '', 'NeedDaemonReload': 'no', **build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages'), 'ExecStart': '{ path=/usr/bin/python ; argv[]=/usr/bin/python -B -m usb_builder.offline_vm_build_service ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }'}
+    expected = {'LoadState': 'loaded', 'FragmentPath': fragment_path, 'DropInPaths': '', 'NeedDaemonReload': 'no', **build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs'), 'ExecStart': '{ path=/usr/bin/python ; argv[]=/usr/bin/python -B -m usb_builder.offline_vm_build_service ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }'}
     expected.update(overrides)
     names = (*build._SYSTEMD_COMMON_PROPERTIES, *build._SYSTEMD_SERVICE_PROPERTIES)
     return ('\n'.join((f'{key}={expected[key]}' for key in names)) + '\n').encode('utf-8')
@@ -925,7 +981,7 @@ def test_effective_systemd_properties_are_read_with_fixed_query_and_accept_exact
     def query(executable: 'Path', args: 'tuple[str, ...]') -> 'bytes':
         calls.append((executable, args))
         return _effective_service_output(fragment_path=str(canonical))
-    expected = {**build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages'), 'ExecStart': '/usr/bin/python -B -m usb_builder.offline_vm_build_service'}
+    expected = {**build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs'), 'ExecStart': '/usr/bin/python -B -m usb_builder.offline_vm_build_service'}
     build._verify_effective_systemd_unit('librecore-offline-build.service', canonical, expected=expected, runner=query, root=root)
     __py_assert2 = [(Path('/usr/bin/systemctl'), ('show', '--no-pager', '--property=' + ','.join((*build._SYSTEMD_COMMON_PROPERTIES, *build._SYSTEMD_SERVICE_PROPERTIES)), 'librecore-offline-build.service'))]
     __py_assert1 = calls == __py_assert2
@@ -940,7 +996,7 @@ def test_effective_systemd_properties_reject_security_or_command_drift(key: 'str
     root = tmp_path / 'synthetic-root'
     canonical = root / 'usr' / 'lib' / 'systemd' / 'system' / 'librecore-offline-build.service'
     canonical.parent.mkdir(parents=True)
-    expected = {**build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages'), 'ExecStart': '/usr/bin/python -B -m usb_builder.offline_vm_build_service'}
+    expected = {**build._service_expected_properties(no_new_privileges='no', readonly_paths='/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs'), 'ExecStart': '/usr/bin/python -B -m usb_builder.offline_vm_build_service'}
     with pytest.raises(build.OfflineVmBuildError, match=message):
         build._verify_effective_systemd_unit('librecore-offline-build.service', canonical, expected=expected, runner=lambda _executable, _args: _effective_service_output(fragment_path=str(canonical), **{key: value}), root=root)
 
@@ -1061,3 +1117,222 @@ def test_package_metadata_queries_have_only_fixed_local_command_shapes(monkeypat
         __py_format8 = 'assert not %(py6)s\n{%(py6)s = %(py2)s\n{%(py2)s = %(py0)s.verify_detached_signature\n}(%(py3)s, %(py4)s)\n}' % {'py0': __pytest_ar._saferepr(operations) if 'operations' in __py_builtins.locals() or __pytest_ar._should_repr_global_name(operations) else 'operations', 'py2': __pytest_ar._saferepr(__py_assert1), 'py3': __pytest_ar._saferepr(signature) if 'signature' in __py_builtins.locals() or __pytest_ar._should_repr_global_name(signature) else 'signature', 'py4': __pytest_ar._saferepr(source) if 'source' in __py_builtins.locals() or __pytest_ar._should_repr_global_name(source) else 'source', 'py6': __pytest_ar._saferepr(__py_assert5)}
         raise AssertionError(__pytest_ar._format_explanation(__py_format8))
     __py_assert1 = __py_assert5 = __py_assert7 = None
+
+@pytest.mark.skipif(os.name != 'posix', reason='fixed builder process contract requires Linux/POSIX')
+def test_authorized_execution_returns_the_actual_bounded_process_observations(executor_case: 'tuple[Path, build.BuildInvocation, build.GuestSecurityState]') -> 'None':
+    scratch, invocation, state = executor_case
+    operations = build.FixedMkarchisoOperations(
+        state,
+        popen=_fake_popen_factory(scratch, builder_rc=0, pacstrap_codes=b'0\n7\n'),
+    )
+    result = build.execute_authorized_guest_build(invocation, state, operations)
+    assert result.status == 'INCOMPLETE_BUILD_EXECUTION'
+    assert result.build_process_result is not None
+    assert result.build_process_result.returncode == 0
+    assert result.build_process_result.timed_out is False
+    assert result.build_process_result.pacstrap_exit_codes == (0, 7)
+    assert result.build_process_result.argv_sha256 == build._invocation_sha256(invocation)
+
+@pytest.mark.skipif(os.name != 'posix', reason='fixed builder process contract requires Linux/POSIX')
+def test_authorized_execution_retains_timeout_observation(executor_case: 'tuple[Path, build.BuildInvocation, build.GuestSecurityState]', monkeypatch: 'pytest.MonkeyPatch') -> 'None':
+    _scratch, invocation, state = executor_case
+    process = _FakeProcess(-9, timeout=True)
+    monkeypatch.setattr(build, '_terminate_builder_process', lambda proc: setattr(proc, 'returncode', -9))
+    result = build.execute_authorized_guest_build(
+        invocation,
+        state,
+        build.FixedMkarchisoOperations(state, popen=lambda *_args, **_kwargs: process),
+    )
+    assert result.status == 'INCOMPLETE_BUILD_EXECUTION'
+    assert result.build_process_result is not None
+    assert result.build_process_result.returncode == -9
+    assert result.build_process_result.timed_out is True
+
+def _package_manifest_for_database_signature_policy(*, database_signature: bool) -> 'dict[str, Any]':
+    signature_path: str | None = 'repos/core/os/x86_64/core.db.sig' if database_signature else None
+    signature_sha256: str | None = 'a' * 64 if database_signature else None
+    return {
+        'repository_databases': {
+            'core': {
+                'path': build.PACMAN_DATABASE_RELATIVE['core'],
+                'sha256': 'b' * 64,
+                'signature_path': signature_path,
+                'signature_sha256': signature_sha256,
+            },
+            'extra': {
+                'path': build.PACMAN_DATABASE_RELATIVE['extra'],
+                'sha256': 'c' * 64,
+                'signature_path': None,
+                'signature_sha256': None,
+            },
+        },
+        'package_closure_path': build.PACKAGE_CLOSURE_RELATIVE,
+        'package_closure_sha256': '9' * 64,
+        'packages': [{
+            'repo': 'core',
+            'name': 'fixture',
+            'version': '1-1',
+            'arch': 'x86_64',
+            'filename': 'fixture-1-1-x86_64.pkg.tar.zst',
+            'database_sha256': 'b' * 64,
+            'archive_path': 'repos/core/os/x86_64/fixture-1-1-x86_64.pkg.tar.zst',
+            'archive_size': 1,
+            'archive_sha256': 'd' * 64,
+            'signature_blob_sha256': 'f' * 64,
+            'included_by': ['worker_root'],
+            'signature_path': 'repos/core/os/x86_64/fixture-1-1-x86_64.pkg.tar.zst.sig',
+            'signature_sha256': 'e' * 64,
+        }],
+        'pacstrap_overlay': {
+            'path': build.PACSTRAP_SOURCE_RELATIVE,
+            'source_sha256': 'f' * 64,
+            'patch_sha256': '1' * 64,
+            'patched_sha256': '2' * 64,
+        },
+    }
+
+def test_repository_database_signatures_follow_database_optional_policy() -> 'None':
+    unsigned = _package_manifest_for_database_signature_policy(database_signature=False)
+    expected = build._manifest_file_set(unsigned)
+    assert build.PACMAN_DATABASE_RELATIVE['core'] in expected
+    assert build.PACMAN_DATABASE_RELATIVE['core'] + '.sig' not in expected
+    assert build.PACMAN_DATABASE_RELATIVE['extra'] + '.sig' not in expected
+
+    signed = _package_manifest_for_database_signature_policy(database_signature=True)
+    signed_expected = build._manifest_file_set(signed)
+    assert signed['repository_databases']['core']['signature_path'] in signed_expected
+
+    malformed = _package_manifest_for_database_signature_policy(database_signature=False)
+    malformed['repository_databases']['core']['signature_sha256'] = 'a' * 64
+    with pytest.raises(build.OfflineVmBuildError, match='absent optional repository database signature has a hash'):
+        build._manifest_file_set(malformed)
+
+def test_repository_database_hashes_are_rechecked_after_builder_use(tmp_path: 'Path') -> 'None':
+    manifest = _package_manifest_for_database_signature_policy(database_signature=False)
+    database_root = tmp_path / 'repos'
+    pins: dict[str, object] = {}
+    for repo_name, relative in build.PACMAN_DATABASE_RELATIVE.items():
+        path = database_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = f'{repo_name}-database'.encode('ascii')
+        path.write_bytes(payload)
+        digest = build._sha256_bytes(payload)
+        manifest['repository_databases'][repo_name]['sha256'] = digest
+        if repo_name == 'core':
+            manifest['packages'][0]['database_sha256'] = digest
+        pins[repo_name] = digest
+
+    class SignatureVerifier:
+        @staticmethod
+        def verify_detached_signature(_signature: 'Path', _artifact: 'Path') -> 'bool':
+            return True
+
+    verified = build._verify_repository_database_inputs(manifest, database_root, SignatureVerifier(), pins)
+    assert set(verified) == {'core', 'extra'}
+
+    core_path = database_root / build.PACMAN_DATABASE_RELATIVE['core']
+    core_path.write_bytes(b'changed-after-builder')
+    with pytest.raises(build.OfflineVmBuildError, match='core database SHA-256 differs from its pinned identity'):
+        build._verify_repository_database_inputs(manifest, database_root, SignatureVerifier(), pins)
+
+def test_service_rejects_post_build_database_drift_before_candidate_volume_publication(
+    executor_case: 'tuple[Path, build.BuildInvocation, build.GuestSecurityState]',
+    monkeypatch: 'pytest.MonkeyPatch',
+) -> 'None':
+    _scratch, invocation, state = executor_case
+    from usb_builder import offline_vm_build_service
+
+    candidate = build.GuestBuildResult(
+        status='CANDIDATE_ISO_PENDING_HOST_VALIDATION',
+        operation_id=invocation.operation_id,
+        request_sha256=invocation.request_sha256,
+        iso_path=f'{build.WORKER_OUTPUT}/candidate.iso',
+        iso_size=36864,
+        iso_sha256='a' * 64,
+        command_argv_sha256=build._invocation_sha256(invocation),
+        elapsed_seconds=1.0,
+        commands_run=(build.BUILD_SERVICE_NAME,),
+        cleanup_complete=True,
+        build_process_result=_successful_process_result(invocation),
+    )
+    monkeypatch.setattr(build, '_verify_installed_service_unit', lambda: None)
+    monkeypatch.setattr(build, '_verify_installed_path_unit', lambda: None)
+    monkeypatch.setattr(offline_vm_build_service, 'load_invocation', lambda: (invocation, {}))
+    monkeypatch.setattr(build, '_write_exclusive_private', lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(offline_vm_build_service.guest, 'collect_guest_isolation', lambda: object())
+    monkeypatch.setattr(offline_vm_build_service.guest, 'validate_guest_isolation', lambda *_args: None)
+    monkeypatch.setattr(offline_vm_build_service, 'collect_build_service_security', lambda: state)
+    monkeypatch.setattr(build, 'LinuxGuestBuildOperations', lambda _state: object())
+    monkeypatch.setattr(build, 'execute_authorized_guest_build', lambda *_args: candidate)
+
+    def reject_changed_databases(*_args: object, **_kwargs: object) -> None:
+        raise build.OfflineVmBuildError('database changed after builder use')
+
+    monkeypatch.setattr(build, 'verify_repository_database_inputs_after_build', reject_changed_databases)
+    monkeypatch.setattr(
+        offline_vm_build_service,
+        'write_candidate_result_volume',
+        lambda *_args, **_kwargs: pytest.fail('candidate result volume was published after DB drift'),
+    )
+    assert offline_vm_build_service.main() == 2
+
+
+@pytest.mark.skipif(os.name != 'posix', reason='pacstrap receipt identity race requires POSIX inode metadata')
+def test_pacstrap_receipt_rejects_same_inode_same_size_rewrite_between_stat_and_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    receipt = tmp_path / 'pacstrap-exit-codes'
+    receipt.write_bytes(b'0\n')
+    receipt.chmod(0o600)
+    initial = receipt.lstat()
+    real_open = os.open
+    changed = False
+
+    def rewrite_then_open(open_path: object, flags: int, *args: object, **kwargs: object) -> int:
+        nonlocal changed
+        if Path(open_path) == receipt and not changed:
+            changed = True
+            writer = real_open(receipt, os.O_WRONLY | os.O_TRUNC)
+            try:
+                os.write(writer, b'1\n')
+            finally:
+                os.close(writer)
+            os.utime(receipt, ns=(initial.st_atime_ns, initial.st_mtime_ns + 1_000_000_000))
+        return real_open(open_path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(build.os, 'open', rewrite_then_open)
+    observed = build._read_pacstrap_exit_code_snapshot(receipt, initial)
+
+    after = receipt.lstat()
+    assert changed
+    assert (after.st_dev, after.st_ino, after.st_size) == (initial.st_dev, initial.st_ino, initial.st_size)
+    assert after.st_mtime_ns != initial.st_mtime_ns
+    assert observed == (-1,)
+
+
+@pytest.mark.skipif(os.name != 'posix', reason='pacstrap receipt identity and mode checks require POSIX')
+@pytest.mark.parametrize(
+    ('receipt_bytes', 'expected'),
+    (
+        (b'0\n', (0,)),
+        (b'0\n0\n', (0, 0)),
+        (b'0', (-1,)),
+        (b'0\r\n', (-1,)),
+        (b'0\v', (-1,)),
+        (b'00\n', (-1,)),
+        (b'0\n\n', (-1,)),
+    ),
+)
+def test_pacstrap_receipt_requires_complete_canonical_lf_rows(
+    receipt_bytes: bytes,
+    expected: tuple[int, ...],
+    tmp_path: Path,
+) -> None:
+    receipt = tmp_path / 'pacstrap-exit-codes'
+    receipt.write_bytes(receipt_bytes)
+    receipt.chmod(0o600)
+
+    observed = build._read_pacstrap_exit_code_snapshot(receipt, receipt.lstat())
+
+    assert observed == expected

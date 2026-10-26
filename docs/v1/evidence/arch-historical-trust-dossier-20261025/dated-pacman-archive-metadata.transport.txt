@@ -1,0 +1,129 @@
+http_code=200
+url_effective=https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst
+num_redirects=0
+ssl_verify_result=0
+certs=Subject:CN=archive.archlinux.org
+Issuer:C=US, O=Let's Encrypt, CN=YE1
+Version:2
+Serial Number:05:fa:fc:c4:71:d5:51:b6:6f:11:99:99:7b:51:4e:2c:b6:91:
+Signature Algorithm:ecdsa-with-SHA384
+Start Date:2026-10-09 23:54:00 GMT
+Expire Date:2027-01-07 23:53:59 GMT
+Public Key Algorithm:ecPublicKey
+ECC Public Key:256
+ecPublicKey:04:ec:ff:4d:97:43:ef:d9:5e:6f:34:6b:c4:b0:18:ba:b4:f6:33:d2:0c:2e:41:2b:17:17:fe:2c:0b:7b:ac:10:0f:68:18:7e:04:d3:23:ab:43:db:a7:67:64:30:e5:bb:1e:03:e7:19:cc:5c:bb:55:be:db:e1:4a:ec:a8:f1:19:ef:
+Signature:30:65:02:30:4e:6c:e2:7a:f3:c3:1a:23:99:14:e6:79:d8:7e:87:1a:18:92:cd:83:82:1d:57:92:25:c2:58:30:c0:b5:7e:02:e8:5e:51:9e:f7:07:f4:3f:c4:77:96:89:89:63:f8:4c:02:31:00:87:8d:d9:4a:09:d3:7f:a8:00:04:61:99:7b:62:3f:57:5a:fc:26:dc:15:13:18:ef:ad:32:60:66:f1:a4:5a:a4:f3:42:6b:b3:e3:52:cb:a1:79:55:a4:04:b3:49:8a:4b:
+-----BEGIN CERTIFICATE-----
+MIIDljCCAxygAwIBAgISBfr8xHHVUbZvEZmZe1FOLLaRMAoGCCqGSM49BAMDMDMx
+CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNZ
+RTEwHhcNMjYxMDA5MjM1NDAwWhcNMjcwMTA3MjM1MzU5WjAgMR4wHAYDVQQDExVh
+cmNoaXZlLmFyY2hsaW51eC5vcmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATs
+/02XQ+/ZXm80a8SwGLq09jPSDC5BKxcX/iwLe6wQD2gYfgTTI6tD26dnZDDlux4D
+5xnMXLtVvtvhSuyo8Rnvo4ICITCCAh0wDgYDVR0PAQH/BAQDAgeAMBMGA1UdJQQM
+MAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFGTV/+QCiAD+PwmI
+5S6s2j2AZ6zfMB8GA1UdIwQYMBaAFLsgykcL/tflnPmPCSqjjDdFsbzYMDMGCCsG
+AQUFBwEBBCcwJTAjBggrBgEFBQcwAoYXaHR0cDovL3llMS5pLmxlbmNyLm9yZy8w
+IAYDVR0RBBkwF4IVYXJjaGl2ZS5hcmNobGludXgub3JnMBMGA1UdIAQMMAowCAYG
+Z4EMAQIBMC4GA1UdHwQnMCUwI6AhoB+GHWh0dHA6Ly95ZTEuYy5sZW5jci5vcmcv
+MTguY3JsMIIBCgYKKwYBBAHWeQIEAgSB+wSB+AD2AH0AWW5sM4aUsllyolbIoOjd
+kEp26Ag92oc7AQg4KBQ87lkAAAGhI0wRuwAIAAAFAApgcYkEAwBGMEQCIBJcFdfz
+ag7UQ47O41co7rsjaISDkBDuLdwDFhS/zWwCAiBRLbBGlCcSNhAcGWzQGfH24BZu
+7/NGhBaz3C4o7PjLyQB1AGBMmq96f3dfAdQG/JINyJnrCxx9+MlSG/r6F3c7l4vJ
+AAABoSNMEiAAAAQDAEYwRAIgS5VPLLyGRP9g1ipOwqdslCXp5KtqqymCQl6cn0gY
+67ACIHN+DpORwPz18gbsURE6sK7GMxj4k6+xnz8/AnDF2LAMMAoGCCqGSM49BAMD
+A2gAMGUCME5s4nrzwxojmRTmedh+hxoYks2Dgh1XkiXCWDDAtX4C6F5RnvcH9D/E
+d5aJiWP4TAIxAIeN2UoJ03+oAARhmXtiP1da/CbcFRMY760yYGbxpFqk80Jrs+NS
+y6F5VaQEs0mKSw==
+-----END CERTIFICATE-----
+Subject:C=US, O=Let's Encrypt, CN=YE1
+Issuer:C=US, O=ISRG, CN=Root YE
+Version:2
+Serial Number:5d:dd:70:dd:31:f8:01:c8:5c:18:6a:7a:04:b8:0a:fe:
+Signature Algorithm:ecdsa-with-SHA384
+Start Date:2025-09-03 00:00:00 GMT
+Expire Date:2028-09-02 23:59:59 GMT
+Public Key Algorithm:ecPublicKey
+ECC Public Key:384
+ecPublicKey:04:07:65:50:75:fe:68:a6:95:ad:a1:7d:2b:ab:ca:54:9c:8c:f3:19:68:e2:57:2f:3f:cd:9c:07:36:b3:29:66:f1:60:f2:85:4f:42:72:9f:b3:01:24:22:e6:f4:b0:18:62:63:48:69:25:90:3f:5f:74:f4:7c:1a:9c:83:20:e2:23:08:47:eb:9d:bb:7f:bf:e6:52:10:f2:cb:10:66:da:33:a1:1c:70:36:cd:ee:9f:71:b5:e2:26:d8:0b:df:fa:bc:
+Signature:30:65:02:31:00:e0:8d:41:1a:84:54:ff:87:70:d1:6a:4a:a2:3d:9a:4b:bc:f8:1f:67:09:2d:e8:ad:84:38:c9:a1:d6:7b:c4:ce:5f:37:78:c2:d8:72:87:78:18:29:77:6f:42:75:36:7d:02:30:13:58:98:44:09:6f:80:84:1b:95:a8:39:ee:da:46:7f:cb:54:ab:ba:b1:a1:e6:1c:4c:a7:23:bc:ac:20:f7:7c:cd:0b:0a:d4:77:66:86:51:ca:97:0f:59:e4:6a:46:bc:
+-----BEGIN CERTIFICATE-----
+MIICizCCAhGgAwIBAgIQXd1w3TH4AchcGGp6BLgK/jAKBggqhkjOPQQDAzAuMQsw
+CQYDVQQGEwJVUzENMAsGA1UEChMESVNSRzEQMA4GA1UEAxMHUm9vdCBZRTAeFw0y
+NTA5MDMwMDAwMDBaFw0yODA5MDIyMzU5NTlaMDMxCzAJBgNVBAYTAlVTMRYwFAYD
+VQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNZRTEwdjAQBgcqhkjOPQIBBgUr
+gQQAIgNiAAQHZVB1/mimla2hfSurylScjPMZaOJXLz/NnAc2sylm8WDyhU9Ccp+z
+ASQi5vSwGGJjSGklkD9fdPR8GpyDIOIjCEfrnbt/v+ZSEPLLEGbaM6EccDbN7p9x
+teIm2Avf+ryjge4wgeswDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUF
+BwMBMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFLsgykcL/tflnPmPCSqj
+jDdFsbzYMB8GA1UdIwQYMBaAFKPIJlqOoUzQNWP8myPIOq5W809WMDIGCCsGAQUF
+BwEBBCYwJDAiBggrBgEFBQcwAoYWaHR0cDovL3llLmkubGVuY3Iub3JnLzATBgNV
+HSAEDDAKMAgGBmeBDAECATAnBgNVHR8EIDAeMBygGqAYhhZodHRwOi8veWUuYy5s
+ZW5jci5vcmcvMAoGCCqGSM49BAMDA2gAMGUCMQDgjUEahFT/h3DRakqiPZpLvPgf
+Zwkt6K2EOMmh1nvEzl83eMLYcod4GCl3b0J1Nn0CMBNYmEQJb4CEG5WoOe7aRn/L
+VKu6saHmHEynI7ysIPd8zQsK1HdmhlHKlw9Z5GpGvA==
+-----END CERTIFICATE-----
+Subject:C=US, O=ISRG, CN=Root YE
+Issuer:C=US, O=Internet Security Research Group, CN=ISRG Root X2
+Version:2
+Serial Number:00:87:21:65:fc:34:b6:e5:fb:a8:ad:d5:b3:70:5f:b5:3a:
+Signature Algorithm:ecdsa-with-SHA384
+Start Date:2026-05-13 00:00:00 GMT
+Expire Date:2032-09-02 23:59:59 GMT
+Public Key Algorithm:ecPublicKey
+ECC Public Key:384
+ecPublicKey:04:3c:12:ff:ab:e1:ad:c5:6a:71:b0:68:fb:08:1d:23:77:f0:9f:dc:7b:0c:d2:49:39:8f:e5:4c:eb:62:d2:f9:30:b9:13:7c:ed:18:44:85:31:f5:ec:4e:d7:c8:58:d6:b0:f6:21:20:fb:7f:c3:33:aa:c5:37:76:6f:ee:19:24:dc:bd:20:3d:38:63:2c:05:f5:4e:73:6a:c0:d5:c8:64:8d:12:b5:4d:b7:3f:2e:48:68:79:8b:35:bc:ee:3e:fb:19:
+Signature:30:66:02:31:00:c5:35:f5:60:ad:9b:15:4d:0f:c5:07:05:94:68:99:ae:3d:67:b8:cf:b3:ae:03:99:ad:1e:4e:ed:4e:0a:15:5b:07:fd:89:ec:65:77:9e:f6:0a:03:1e:78:ba:4d:46:f5:02:31:00:ed:26:88:b5:49:bb:c3:cb:36:25:d7:5e:48:84:fe:0b:0a:dc:24:d1:4c:5f:da:7a:8e:1b:31:7e:36:67:0e:34:72:c4:54:e8:00:b6:ea:14:96:d7:f2:16:69:ab:3a:76:
+-----BEGIN CERTIFICATE-----
+MIICpjCCAiugAwIBAgIRAIchZfw0tuX7qK3Vs3BftTowCgYIKoZIzj0EAwMwTzEL
+MAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2VhcmNo
+IEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDIwHhcNMjYwNTEzMDAwMDAwWhcN
+MzIwOTAyMjM1OTU5WjAuMQswCQYDVQQGEwJVUzENMAsGA1UEChMESVNSRzEQMA4G
+A1UEAxMHUm9vdCBZRTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDwS/6vhrcVqcbBo
++wgdI3fwn9x7DNJJOY/lTOti0vkwuRN87RhEhTH17E7XyFjWsPYhIPt/wzOqxTd2
+b+4ZJNy9ID04YywF9U5zasDVyGSNErVNtz8uSGh5izW87j77GaOB6zCB6DAOBgNV
+HQ8BAf8EBAMCAQYwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDwYDVR0TAQH/BAUwAwEB
+/zAdBgNVHQ4EFgQUo8gmWo6hTNA1Y/ybI8g6rlbzT1YwHwYDVR0jBBgwFoAUfEKW
+rt5LSDv6kviejM9ti6lyN5UwMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzAChhZo
+dHRwOi8veDIuaS5sZW5jci5vcmcvMBMGA1UdIAQMMAowCAYGZ4EMAQIBMCcGA1Ud
+HwQgMB4wHKAaoBiGFmh0dHA6Ly94Mi5jLmxlbmNyLm9yZy8wCgYIKoZIzj0EAwMD
+aQAwZgIxAMU19WCtmxVND8UHBZRoma49Z7jPs64Dma0eTu1OChVbB/2J7GV3nvYK
+Ax54uk1G9QIxAO0miLVJu8PLNiXXXkiE/gsK3CTRTF/aeo4bMX42Zw40csRU6AC2
+6hSW1/IWaas6dg==
+-----END CERTIFICATE-----
+Subject:C=US, O=Internet Security Research Group, CN=ISRG Root X2
+Issuer:C=US, O=Internet Security Research Group, CN=ISRG Root X1
+Version:2
+Serial Number:6c:8f:1d:c7:27:c7:11:7f:7b:af:85:3a:c9:80:f9:cd:
+Signature Algorithm:sha256WithRSAEncryption
+Start Date:2026-05-13 00:00:00 GMT
+Expire Date:2032-09-02 23:59:59 GMT
+Public Key Algorithm:ecPublicKey
+ECC Public Key:384
+ecPublicKey:04:cd:9b:d5:9f:80:83:0a:ec:09:4a:f3:16:4a:3e:5c:cf:77:ac:de:67:05:0d:1d:07:b6:dc:16:fb:5a:8b:14:db:e2:71:60:c4:ba:45:95:11:89:8e:ea:06:df:f7:2a:16:1c:a4:b9:c5:c5:32:e0:03:e0:1e:82:18:38:8b:d7:45:d8:0a:6a:6e:e6:00:77:fb:02:51:7d:22:d8:0a:6e:9a:5b:77:df:f0:fa:41:ec:39:dc:75:ca:68:07:0c:1f:ea:
+Signature:3d:bf:7b:d7:eb:98:cc:4d:a4:25:74:de:a5:07:7a:08:3e:31:5d:b0:cf:de:b8:e1:8a:17:76:ab:47:f1:1c:96:61:c0:4e:ef:17:e3:8c:61:17:75:4d:5e:fe:8d:0e:90:41:62:ca:75:02:39:22:24:fe:f2:cb:a3:bb:6d:cf:a0:8f:01:e3:65:59:f0:b4:5c:d9:28:19:e5:a0:2b:a8:e3:5e:fa:33:05:a1:ae:18:7e:67:d1:47:e8:b2:13:1e:59:3b:94:46:a3:4d:e4:6d:34:b1:25:c3:4c:1a:e9:a7:6f:a6:82:f7:59:42:36:fc:2b:5d:53:60:c0:36:e5:00:3e:60:73:5f:6c:81:0b:d0:19:e2:02:12:92:da:0b:27:26:34:b3:ad:d6:4b:23:e1:19:ed:21:32:a9:d4:76:ae:48:dd:d4:ab:ad:2c:35:3e:9f:74:c5:cb:18:e7:89:95:46:ba:be:18:96:13:0f:de:66:3f:75:5f:79:22:bb:80:92:48:ce:66:27:ab:ea:11:81:74:48:19:5d:7b:da:0b:3f:6e:f6:25:44:69:db:08:13:be:69:00:62:fc:a0:75:79:bf:17:40:44:38:a8:b5:1a:6e:97:52:0d:fd:46:70:cc:06:eb:7d:41:5c:c3:51:e4:01:c6:03:fe:69:59:7e:74:36:89:e0:85:d8:c4:bb:8f:75:61:bf:b2:4f:0c:aa:78:e5:f9:b2:92:6c:d8:35:2a:ee:99:15:b4:ba:91:45:28:30:4e:a0:5e:e1:b0:e6:fb:a0:bc:87:4b:e5:1f:b7:a8:ce:51:f3:ab:a2:08:fc:61:4c:77:f2:12:9b:d8:ad:b4:af:8d:8e:82:c4:9d:0d:dc:5d:79:85:9c:31:2d:d2:6f:a9:b0:25:e4:99:11:8c:49:da:06:97:9c:34:8f:68:a8:61:ac:d9:18:c2:58:f2:55:0c:ab:e0:da:be:30:42:72:b5:73:53:9c:7a:9a:01:ca:cd:c1:99:55:a5:c2:4b:d4:a0:67:32:b3:23:3f:b7:9a:9e:f5:30:2f:71:58:8f:77:05:d7:b8:ed:6e:82:ed:ee:02:e8:8b:8f:b6:ad:66:45:be:7f:b0:e7:88:e6:77:f1:48:ba:18:59:70:46:94:ff:0b:d4:e8:15:0d:32:d7:15:aa:e5:46:1e:9e:e2:b5:07:83:b6:1e:63:f9:72:f7:8f:85:89:d9:20:01:c3:35:25:e8:e7:98:76:0a:48:b7:f2:13:65:af:a9:4d:3d:26:43:fa:f9:5f:20:38:30:40:22:69:b9:fb:5c:98:ef:08:44:65:17:67:5c:9f:6c:2a:27:0f:82:ad:e4:e4:91:0d:91:
+-----BEGIN CERTIFICATE-----
+MIIEcDCCAligAwIBAgIQbI8dxyfHEX97r4U6yYD5zTANBgkqhkiG9w0BAQsFADBP
+MQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJuZXQgU2VjdXJpdHkgUmVzZWFy
+Y2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBYMTAeFw0yNjA1MTMwMDAwMDBa
+Fw0zMjA5MDIyMzU5NTlaME8xCzAJBgNVBAYTAlVTMSkwJwYDVQQKEyBJbnRlcm5l
+dCBTZWN1cml0eSBSZXNlYXJjaCBHcm91cDEVMBMGA1UEAxMMSVNSRyBSb290IFgy
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEzZvVn4CDCuwJSvMWSj5cz3es3mcFDR0H
+ttwW+1qLFNvicWDEukWVEYmO6gbf9yoWHKS5xcUy4APgHoIYOIvXRdgKam7mAHf7
+AlF9ItgKbppbd9/w+kHsOdx1ymgHDB/qo4H1MIHyMA4GA1UdDwEB/wQEAwIBBjAd
+BgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDwYDVR0TAQH/BAUwAwEB/zAd
+BgNVHQ4EFgQUfEKWrt5LSDv6kviejM9ti6lyN5UwHwYDVR0jBBgwFoAUebRZ5nu2
+5eQBc4AIiMgaWPbpm24wMgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzAChhZodHRw
+Oi8veDEuaS5sZW5jci5vcmcvMBMGA1UdIAQMMAowCAYGZ4EMAQIBMCcGA1UdHwQg
+MB4wHKAaoBiGFmh0dHA6Ly94MS5jLmxlbmNyLm9yZy8wDQYJKoZIhvcNAQELBQAD
+ggIBAD2/e9frmMxNpCV03qUHegg+MV2wz9644YoXdqtH8RyWYcBO7xfjjGEXdU1e
+/o0OkEFiynUCOSIk/vLLo7ttz6CPAeNlWfC0XNkoGeWgK6jjXvozBaGuGH5n0Ufo
+shMeWTuURqNN5G00sSXDTBrpp2+mgvdZQjb8K11TYMA25QA+YHNfbIEL0BniAhKS
+2gsnJjSzrdZLI+EZ7SEyqdR2rkjd1KutLDU+n3TFyxjniZVGur4YlhMP3mY/dV95
+IruAkkjOZier6hGBdEgZXXvaCz9u9iVEadsIE75pAGL8oHV5vxdARDiotRpul1IN
+/UZwzAbrfUFcw1HkAcYD/mlZfnQ2ieCF2MS7j3Vhv7JPDKp45fmykmzYNSrumRW0
+upFFKDBOoF7hsOb7oLyHS+Uft6jOUfOrogj8YUx38hKb2K20r42OgsSdDdxdeYWc
+MS3Sb6mwJeSZEYxJ2gaXnDSPaKhhrNkYwljyVQyr4Nq+MEJytXNTnHqaAcrNwZlV
+pcJL1KBnMrMjP7eanvUwL3FYj3cF17jtboLt7gLoi4+2rWZFvn+w54jmd/FIuhhZ
+cEaU/wvU6BUNMtcVquVGHp7itQeDth5j+XL3j4WJ2SABwzUl6OeYdgpIt/ITZa+p
+TT0mQ/r5XyA4MEAiabn7XJjvCERlF2dcn2wqJw+CreTkkQ2R
+-----END CERTIFICATE-----

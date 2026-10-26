@@ -1,0 +1,4 @@
+status=RECONSTRUCTED_POST_SESSION_OBSERVATION
+cleanup=both exact run-scoped scratch paths were absent in a fresh WSL session
+runner_cleanup=permission-denied output while removing read-only test fixtures was observed but not separately retained; no runner cleanup receipt was written
+fresh_session=/tmp reset to default 4020516 KiB with 0 KiB used; /run/user/1000 snapshot path absent

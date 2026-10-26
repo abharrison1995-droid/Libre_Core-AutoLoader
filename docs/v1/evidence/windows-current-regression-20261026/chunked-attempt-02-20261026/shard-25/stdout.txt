@@ -1,0 +1,4 @@
+....................s....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_phase03_spi_safety.py:1150: Windows symlink creation depends on account privilege
+24 passed, 1 skipped in 12.36s

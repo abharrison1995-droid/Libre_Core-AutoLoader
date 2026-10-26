@@ -1,7 +1,7 @@
 [Unit]
 Description=LibreCore sealed offline V1 image builder
 After=local-fs.target
-RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch
+RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs
 ConditionPathExists=/run/librecore-scratch/build-invocation.json
 ConditionPathExists=!/run/librecore-scratch/build-service-started.json
 ConditionPathExists=!/run/librecore-scratch/build-service-result.json
@@ -26,7 +26,7 @@ PrivateNetwork=yes
 RestrictAddressFamilies=AF_UNIX
 ProtectSystem=strict
 ProtectHome=yes
-ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages
+ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs
 ReadWritePaths=/run/librecore-scratch
 KillMode=control-group
 RuntimeMaxSec=4h

@@ -1,0 +1,16 @@
+sssssssssssssssssssssssss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_evidence.py:250: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:275: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:313: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:341: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [2] tests\test_offline_vm_evidence.py:368: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [8] tests\test_offline_vm_evidence.py:394: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:410: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [5] tests\test_offline_vm_evidence.py:416: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:436: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:449: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:468: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:485: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:501: evidence extraction contract requires POSIX no-follow and directory-fd operations
+25 skipped in 0.61s

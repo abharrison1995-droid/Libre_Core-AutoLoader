@@ -1,0 +1,8 @@
+started_utc=2026-10-26T04:19:18.0977810Z
+python=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+working_directory=C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+basetemp=C:\w\lc14-83a2dcdd203d429a8bc8\pytest
+process_temp=C:\w\lc14-83a2dcdd203d429a8bc8\tmp
+selected_nodes=tests/test_phase10a_write_approval.py::test_windows_directory_fsync_policy_keeps_approval_closed,tests/test_usb_builder.py::test_real_build_usb_cli_fails_before_subprocess_on_windows
+free_bytes_before=7983149056
+live_floor_bytes=2147483648

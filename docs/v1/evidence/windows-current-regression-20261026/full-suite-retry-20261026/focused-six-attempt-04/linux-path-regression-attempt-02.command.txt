@@ -1,0 +1,8 @@
+Working directory:
+  /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader
+
+Command:
+  /home/alex/.venvs/autoloader-v1/bin/python -m pytest -p no:cacheprovider -vv --color=no tests/test_offline_vm_worker.py::test_fixed_guest_evidence_uses_concrete_path_for_posix_mount_protocol
+
+WSL distribution:
+  Ubuntu

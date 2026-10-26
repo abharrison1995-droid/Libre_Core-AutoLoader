@@ -1,0 +1,6 @@
+utc=2026-10-26T00:46:55Z
+Microsoft Windows 10.0.19044
+Python 3.12.14
+pytest 9.1.1
+basetemp=C:\w\v1win08-02
+C_free_before=6569750528

@@ -1,0 +1,5 @@
+Windows 11 PowerShell
+Python 3.12.14 (.venv)
+mypy 2.4.0 (compiled: yes)
+Target: win32
+Source scope: autoloader and usb_builder

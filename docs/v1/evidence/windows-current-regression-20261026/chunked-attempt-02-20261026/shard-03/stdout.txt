@@ -1,0 +1,4 @@
+....s....................                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_artifact_engine.py:1223: Symlink creation is unavailable for this test host: [WinError 1314] A required privilege is not held by the client: 'C:\\w\\lc-v1-win-functions-20261026\\pytest\\test_x200_uboot_cache_origin_b0\\disposable-lbmk\\cache\\clone\\source.denx.de\\u-boot\\u-boot.git' -> 'C:\\w\\lc-v1-win-functions-20261026\\pytest\\test_x200_uboot_cache_origin_b0\\linked-lbmk\\cache\\clone\\source.denx.de\\u-boot\\u-boot.git'
+24 passed, 1 skipped in 29.59s

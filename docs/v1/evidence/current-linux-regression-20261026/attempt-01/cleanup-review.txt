@@ -1,0 +1,13 @@
+# Post-run scratch check
+
+The runner's original unprivileged-cleanup.status is preserved and reports
+PRIVILEGED_WRAPPER_CLEANUP_PENDING after test fixtures with restricted
+permissions caused removal warnings.
+
+A post-run WSL check found:
+- /tmp/librecore-autoloader-v1-exact-tests-20261026-r17 absent.
+- /run/user/1000/librecore-autoloader-v1-exact-source-20261026-r17 absent.
+- /tmp at 4,020,516 KiB total and zero bytes used.
+
+No privileged recursive cleanup was run. The exact scratch was already absent
+when checked; the original cleanup receipt was not rewritten.

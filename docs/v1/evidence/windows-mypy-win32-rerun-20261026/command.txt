@@ -1,0 +1,2 @@
+.venv\Scripts\python.exe -m mypy --no-incremental --platform win32 autoloader usb_builder
+

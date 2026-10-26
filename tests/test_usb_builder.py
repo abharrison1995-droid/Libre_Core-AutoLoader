@@ -5083,23 +5083,34 @@ def test_network_probe_timeout_kills_grandchild_after_leader_exits_on_sigterm(
     assert grandchild_pid_file.is_file()
     grandchild_pid = int(grandchild_pid_file.read_text(encoding="ascii"))
 
-    def is_alive(pid: int) -> bool:
-        proc_stat = Path(f"/proc/{pid}/stat")
-        try:
-            # A killed orphan may remain briefly as a zombie until PID 1 reaps
-            # it. It is no longer executing in either case.
-            fields = proc_stat.read_text(encoding="ascii").rsplit(")", 1)[1].split()
-        except FileNotFoundError:
-            return False
-        return bool(fields) and fields[0] != "Z"
-
     deadline = time.monotonic() + 2.0
-    while is_alive(grandchild_pid) and time.monotonic() < deadline:
+    while _proc_process_is_alive(grandchild_pid) and time.monotonic() < deadline:
         time.sleep(0.02)
-    if is_alive(grandchild_pid):
+    if _proc_process_is_alive(grandchild_pid):
         # Avoid leaking a process if the assertion catches a regression.
         os.kill(grandchild_pid, signal.SIGKILL)
         pytest.fail("grandchild survived after its process-group leader exited")
+
+
+def _proc_process_is_alive(pid: int) -> bool:
+    proc_stat = Path(f"/proc/{pid}/stat")
+    try:
+        # A killed orphan may remain briefly as a zombie until PID 1 reaps
+        # it. It is no longer executing in either case. The PID can also
+        # disappear between resolving /proc and opening or reading stat.
+        fields = proc_stat.read_text(encoding="ascii").rsplit(")", 1)[1].split()
+    except (FileNotFoundError, ProcessLookupError):
+        return False
+    return bool(fields) and fields[0] != "Z"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="requires Linux /proc")
+def test_proc_stat_disappearing_during_lookup_is_treated_as_dead(monkeypatch):
+    def disappeared(*_args, **_kwargs):
+        raise ProcessLookupError("synthetic proc race")
+
+    monkeypatch.setattr(Path, "read_text", disappeared)
+    assert _proc_process_is_alive(12345) is False
 
 
 @pytest.mark.parametrize(

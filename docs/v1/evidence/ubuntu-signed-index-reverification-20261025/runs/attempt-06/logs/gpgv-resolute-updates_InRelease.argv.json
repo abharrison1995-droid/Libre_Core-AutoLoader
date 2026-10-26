@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/usr/bin/gpgv",
+    "--homedir",
+    "/tmp/lc-ubuntu-gpgv-review-pn6ke52c",
+    "--keyring",
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/ubuntu-archive-keyring.gpg",
+    "--status-fd",
+    "1",
+    "--output",
+    "/dev/null",
+    "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/resolute-updates_InRelease"
+  ],
+  "cwd": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025",
+  "environment": {
+    "GNUPGHOME": "/tmp/lc-ubuntu-gpgv-review-pn6ke52c",
+    "HOME": "/tmp/lc-ubuntu-gpgv-review-pn6ke52c",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "TZ": "UTC"
+  }
+}

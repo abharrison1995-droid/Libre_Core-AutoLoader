@@ -1,0 +1,7 @@
+..........s......ssssssss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_build_executor.py:105: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:376: fixed worker file ownership and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:401: fixed worker file ownership and mode checks require POSIX
+SKIPPED [6] tests\test_offline_vm_build_executor.py:417: fixed worker file ownership and mode checks require POSIX
+16 passed, 9 skipped in 7.51s

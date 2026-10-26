@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "platform": "Microsoft Windows 10.0.19044",
+  "python": "Python 3.12.14",
+  "test_file": "tests/test_offline_vm_worker.py",
+  "test_file_sha256": "590b78218c5739fb356ed7dd91aeb07b7fc4c7e2f737d22f2ef949a094c4e463",
+  "selected_definitions": 17,
+  "junit_cases": 35,
+  "skipped": 35,
+  "failures": 0,
+  "errors": 0,
+  "pytest_exit_code": 0,
+  "source_before_sha256": "e071f9dbd6d8510eefa6c865b36475c08142b3c01f9efc8ca1ec8508a6b727b4",
+  "source_after_sha256": "e071f9dbd6d8510eefa6c865b36475c08142b3c01f9efc8ca1ec8508a6b727b4",
+  "source_file_count_before": 149,
+  "source_file_count_after": 149,
+  "source_unchanged": true,
+  "free_bytes_before": 5258498048,
+  "free_bytes_after": 5257986048,
+  "full_windows_suite": false,
+  "hardware_accessed": false,
+  "firmware_accessed": false
+}

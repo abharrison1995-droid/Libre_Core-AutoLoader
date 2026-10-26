@@ -1,0 +1,29 @@
+{
+  "captured_at_utc": "2026-10-25T21:01:31.0729225+00:00",
+  "operating_system": "Microsoft Windows NT 10.0.19044.0",
+  "powershell_version": "7.6.5",
+  "dotnet_runtime": ".NET 10.0.11",
+  "curl_executable": "C:\\Windows\\System32\\curl.exe",
+  "curl_sha256": "3345339164cf384eff527b6c3160fea8d849a4231ec6ca80513e3a739e505168",
+  "curl_file_size": 711736,
+  "curl_version_output": "curl 8.13.0 (Windows) libcurl/8.13.0 Schannel zlib/1.3.1 WinIDN\r\nRelease-Date: 2025-04-02\r\nProtocols: dict file ftp ftps http https imap imaps ipfs ipns mqtt pop3 pop3s smb smbs smtp smtps telnet tftp ws wss\r\nFeatures: alt-svc AsynchDNS HSTS HTTPS-proxy IDN IPv6 Kerberos Largefile libz NTLM SPNEGO SSL SSPI threadsafe Unicode UnixSockets",
+  "curl_backend": "Windows libcurl with Schannel",
+  "proxy_environment_variable_names_present": [],
+  "proxy_values_recorded": false,
+  "request_proxy_policy": "Every curl request passed --proxy \"\" and --noproxy *; direct transport required",
+  "windows_root_store_validation": "curl Schannel default peer verification; require ssl_verify_result=0; independently record a supplemental X509Chain build against Windows CurrentUser/LocalMachine Root stores",
+  "source_manifest_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+  "source_manifest_listed_sha256": "3d9c44258e9daf5cf7ed1fd5c09a3ea942809a470c8e9d09144755bc80a7900f",
+  "measured_c_free_bytes_before": 6349357056,
+  "curl_authenticode_signature": {
+    "record_file": "curl-authenticode-check.stdout.json",
+    "status": "Valid",
+    "signer_subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "signer_issuer": "CN=Microsoft Windows Production PCA 2026 RSA2048-SHA256, O=Microsoft Corporation, C=US",
+    "signer_thumbprint_sha1": "667BBA1E1F478221AA65DE4F75187A751B03A453",
+    "timestamp_subject": "CN=Microsoft Time-Stamp Service, OU=nShield TSS ESN:A935-03E0-D947, OU=Microsoft America Operations, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+    "timestamp_thumbprint_sha1": "231F3AAD84FC0ED060DC903300EB1E7894888C2A",
+    "file_sha256": "3345339164cf384eff527b6c3160fea8d849a4231ec6ca80513e3a739e505168",
+    "file_size": 711736
+  }
+}

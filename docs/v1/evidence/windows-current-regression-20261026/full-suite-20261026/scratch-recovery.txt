@@ -1,0 +1,9 @@
+Recovery record:
+- Scratch path: C:\w\lc-v1winfull-20261026
+- Generated files: 2164
+- Logical bytes before compression: 3677149527
+- Sample: scratch.raw (67108864 bytes)
+- Sample SHA-256 before: 3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351
+- Sample SHA-256 after:  3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351
+- C: free after scoped compression: 5491126272 bytes
+- No files deleted.

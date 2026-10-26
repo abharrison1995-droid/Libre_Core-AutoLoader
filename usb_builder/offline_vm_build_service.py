@@ -170,6 +170,7 @@ def _result_payload(result: build.GuestBuildResult) -> dict[str, object]:
         "elapsed_seconds": result.elapsed_seconds,
         "commands_run": list(result.commands_run),
         "cleanup_complete": result.cleanup_complete,
+        "build_process_result": build._build_process_result_payload(result.build_process_result),
     }
 
 
@@ -248,6 +249,34 @@ def _write_result_ready(result: build.GuestBuildResult) -> None:
         Path(build.BUILD_RESULT_READY_PATH), ready_payload,
         label="fixed build ready receipt",
     )
+
+
+def _publish_incomplete_service_failure(
+    invocation: build.BuildInvocation,
+    completed_result: build.GuestBuildResult | None,
+) -> None:
+    """Publish a bound non-candidate receipt if no result publication began."""
+    result_path = Path(build.BUILD_RESULT_PATH)
+    ready_path = Path(build.BUILD_RESULT_READY_PATH)
+    if any(path.exists() or path.is_symlink() for path in (result_path, ready_path)):
+        raise build.OfflineVmBuildError(
+            "incomplete service receipt cannot replace an existing result or ready record"
+        )
+    failure = build.GuestBuildResult(
+        status="INCOMPLETE_BUILD_EXECUTION",
+        operation_id=invocation.operation_id,
+        request_sha256=invocation.request_sha256,
+        iso_path=None,
+        iso_size=0,
+        iso_sha256=None,
+        command_argv_sha256=build._invocation_sha256(invocation),
+        elapsed_seconds=completed_result.elapsed_seconds if completed_result is not None else 0.0,
+        commands_run=(build.BUILD_SERVICE_NAME,),
+        cleanup_complete=completed_result.cleanup_complete if completed_result is not None else False,
+        build_process_result=completed_result.build_process_result if completed_result is not None else None,
+    )
+    _write_result(failure)
+    _write_result_ready(failure)
 
 
 def candidate_commit_is_present(request: dict[str, Any]) -> bool:
@@ -487,6 +516,9 @@ def _pwrite_all(fd: int, payload: bytes, offset: int) -> None:
 
 
 def main() -> int:
+    invocation: build.BuildInvocation | None = None
+    completed_result: build.GuestBuildResult | None = None
+    service_started = False
     try:
         build._verify_installed_service_unit()
         build._verify_installed_path_unit()
@@ -500,22 +532,44 @@ def main() -> int:
             }),
             0o600,
         )
+        service_started = True
         isolation = guest.collect_guest_isolation()
         guest.validate_guest_isolation(request, isolation)
         service_state = collect_build_service_security()
         operations = build.LinuxGuestBuildOperations(service_state)
         result = build.execute_authorized_guest_build(invocation, service_state, operations)
+        completed_result = result
         if result.status == "CANDIDATE_ISO_PENDING_HOST_VALIDATION" and result.cleanup_complete and result.iso_path:
+            build.verify_repository_database_inputs_after_build(
+                request,
+                build.SOURCE_MOUNT_PATH,
+                build.PACKAGE_DATABASE_SNAPSHOT_PATH,
+                operations,
+            )
+            fixed_evidence = guest.collect_fixed_build_evidence(request, isolation, result)
+            finalize_evidence = guest.make_fixed_guest_evidence_finalizer(
+                request, isolation, fixed_evidence
+            )
             write_candidate_result_volume(
                 Path(result.iso_path), result, request, isolation,
                 publish_service_result=lambda: _write_result(result),
                 publish_service_ready=lambda: _write_result_ready(result),
+                finalize_evidence_volume=finalize_evidence,
             )
         else:
             _write_result(result)
             _write_result_ready(result)
         return 0 if result.status == "CANDIDATE_ISO_PENDING_HOST_VALIDATION" and result.cleanup_complete and result.iso_path else 1
-    except (OSError, ValueError, build.OfflineVmBuildError) as exc:
+    except (OSError, ValueError, build.OfflineVmBuildError, offline_vm_worker.OfflineVmContractError) as exc:
+        if service_started and invocation is not None:
+            try:
+                _publish_incomplete_service_failure(invocation, completed_result)
+            except (OSError, ValueError, build.OfflineVmBuildError) as receipt_error:
+                print(json.dumps({
+                    "status": "INCOMPLETE_BUILD_SERVICE",
+                    "reason": f"{exc}; incomplete result receipt failed: {receipt_error}",
+                }, sort_keys=True, separators=(",", ":")))
+                return 2
         print(json.dumps({"status": "INCOMPLETE_BUILD_SERVICE", "reason": str(exc)}, sort_keys=True, separators=(",", ":")))
         return 2
 

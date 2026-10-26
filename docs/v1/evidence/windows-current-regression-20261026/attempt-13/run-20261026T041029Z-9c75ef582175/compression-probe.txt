@@ -1,0 +1,19 @@
+status=passed
+utc=2026-10-26T04:10:31.5448364Z
+probe_filesystem=NTFS
+directory_attributes=Directory, Compressed
+file_attributes_before_compact=Archive, Compressed
+file_attributes=Archive, Compressed
+compact_target=C:\w\lc-v1wfr-a13-87404bc557e84d8380e3853d2939b529\compression-probe\probe.bin
+compact_commands=compact.exe /C /I /Q "C:\w\lc-v1wfr-a13-87404bc557e84d8380e3853d2939b529\compression-probe\probe.bin" || compact.exe /C /I /Q /F "C:\w\lc-v1wfr-a13-87404bc557e84d8380e3853d2939b529\compression-probe\probe.bin"
+compact_exit_codes=0,0
+compact_output=first= | first= Compressing files in C:\w\lc-v1wfr-a13-87404bc557e84d8380e3853d2939b529\compression-probe\ | first= | first= | first=0 files within 1 directories were compressed. | first=0 total bytes of data are stored in 0 bytes. | first=The compression ratio is 1.0 to 1. | force= | force= Compressing files in C:\w\lc-v1wfr-a13-87404bc557e84d8380e3853d2939b529\compression-probe\ | force= | force= | force=1 files within 1 directories were compressed. | force=1,048,576 total bytes of data are stored in 65,536 bytes. | force=The compression ratio is 16.0 to 1.
+probe_logical_bytes=1048576
+probe_allocation_before_compact_bytes=1048576
+probe_allocation_after_compact_bytes=1048576
+probe_allocation_after_force_bytes=65536
+probe_compressed_allocation_bytes=65536
+probe_error=
+cleanup_error=
+probe_file_removed=True
+probe_directory_removed=True

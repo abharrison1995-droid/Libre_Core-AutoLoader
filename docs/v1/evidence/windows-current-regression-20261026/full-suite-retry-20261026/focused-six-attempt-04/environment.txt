@@ -1,0 +1,8 @@
+Python 3.12.14
+pytest 9.1.1
+Microsoft Windows 10.0.19044
+GIT_TEMPLATE_DIR=C:\w\lcwin-focused4-20261026\git-template-empty
+GIT_CONFIG_COUNT=1; core.longpaths=true
+TEMP/TMP/TMPDIR=C:\w\lcwin-focused4-20261026\system-tmp
+pytest_basetemp=C:\w\lcwin-focused4-20261026\pytest
+pytest_args=-p no:cacheprovider --basetemp C:\w\lcwin-focused4-20261026\pytest --junitxml <this-directory>\junit.xml -vv --color=no tests/test_offline_vm_package_closure.py::{test_seed_inventory_writer_refuses_closure_claim,test_seed_inventory_writer_cleans_failed_write} tests/test_offline_vm_worker.py::{test_worker_rejects_preexisting_output_header_before_qemu,test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands,test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry,test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result,test_fixed_guest_evidence_uses_concrete_path_for_posix_mount_protocol,test_fixed_guest_evidence_rejects_wrong_package_inventory}

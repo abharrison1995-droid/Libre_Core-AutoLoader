@@ -1,0 +1,33 @@
+Purpose: one bounded native Windows WHPX fw_cfg transport diagnostic using the hash-verified upstream Arch 2026.10.01 live ISO.
+Scope: verifies only read-only QEMU fw_cfg delivery to the guest serial shell; this is not a worker, image, product build, boot acceptance, or hardware pass.
+ISO: C:\Users\Alex\Downloads\LibreCore-VMSetup-20261015\archlinux-2026.10.01-x86_64.iso
+ISO SHA-256 before: 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5
+QEMU: C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe
+QEMU SHA-256 before: a812b50865ffcc7ddd43f9c33e9bb1ed7b3501c1f847ee99ede8d4b4a4a93742
+QEMU version: QEMU emulator version 11.1.2
+Copyright (c) 2003-2026 Fabrice Bellard and the QEMU Project developers
+QEMU accelerator availability: Accelerators supported in QEMU binary:; tcg; whpx
+Temporary extraction: C:\Users\Alex\AppData\Local\Temp\librecore-fwcfg-whpx-20261025-152000 (kernel and initramfs only; verified hashes recorded below)
+Kernel SHA-256: 8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+Initramfs SHA-256: 35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52
+Guest fw_cfg name: opt/org.librecore/worker-image-sha256
+Guest fw_cfg test fixture: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+Timeout seconds: 240
+Isolation: -nic none; read-only ISO CD-ROM only; no writable guest disk, host share, USB, physical device, or physical firmware device passthrough.
+Host sockets: serial 127.0.0.1:54000; HMP 127.0.0.1:53999.
+QEMU argument JSON: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\native-qemu-fwcfg-20261025\qemu.argv.json
+QEMU command: "C:\Users\Alex\msys64\ucrt64\bin\qemu-system-x86_64.exe" -nodefaults -no-user-config -no-reboot -machine pc,accel=whpx -cpu qemu64 -m 2048 -smp 2 -display none -vga std -nic none -kernel C:\Users\Alex\AppData\Local\Temp\librecore-fwcfg-whpx-20261025-152000\arch\boot\x86_64\vmlinuz-linux -initrd C:\Users\Alex\AppData\Local\Temp\librecore-fwcfg-whpx-20261025-152000\arch\boot\x86_64\initramfs-linux.img -append "archisobasedir=arch archisosearchuuid=2026-10-01-14-49-03-00 console=ttyS0,115200n8" -drive file=C:\Users\Alex\Downloads\LibreCore-VMSetup-20261015\archlinux-2026.10.01-x86_64.iso,format=raw,if=none,id=cd0,media=cdrom,readonly=on -device ide-cd,drive=cd0 -fw_cfg name=opt/org.librecore/worker-image-sha256,string=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef -serial tcp:127.0.0.1:54000,server=on,wait=off -monitor tcp:127.0.0.1:53999,server=on,wait=off
+Guest read-only check command: p=/sys/firmware/qemu_fw_cfg/by_name/opt/org.librecore/worker-image-sha256/raw; e=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef; n=$(wc -c < "$p"); n=$((n+0)); v=$(cat "$p"); if [ "$n" -eq 64 ] && [ "$v" = "$e" ]; then printf "%s%s bytes=%s actual=%s\n" "__LIBRECORE_FWCFG_" "PASS" "$n" "$v"; else printf "%s%s bytes=%s actual=%s\n" "__LIBRECORE_FWCFG_" "FAIL" "$n" "$v"; fi
+Start UTC: 2026-10-25T15:24:38.3049133Z
+End UTC: 2026-10-25T15:25:53.8476583Z
+Result: FW_CFG_TRANSPORT_PASS
+ISO SHA-256 after: 684ded26c63240ff4a41e8c25ee84ea6da233f557364821f13d12c2b0a9059a5
+QEMU SHA-256 after: a812b50865ffcc7ddd43f9c33e9bb1ed7b3501c1f847ee99ede8d4b4a4a93742
+Kernel SHA-256 after: 8ebc2c71271e000540f0a7545afd8e73504fcb724671f3d38c720b241842b901
+Initramfs SHA-256 after: 35b4362207fcabc66535444aea0b97f3508128b32e97e66aa5f56487007bfe52
+Guest serial shell observed: True
+Guest fw_cfg check sent: True
+Guest pass marker observed: True
+Guest fail marker observed: False
+QEMU exit: 0
+Harness error: none

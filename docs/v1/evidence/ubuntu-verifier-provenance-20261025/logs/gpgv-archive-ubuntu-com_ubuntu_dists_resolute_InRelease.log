@@ -1,0 +1,8 @@
+ARGV_JSON=["/usr/bin/gpgv", "--keyring", "/usr/share/keyrings/ubuntu-archive-keyring.gpg", "--output", "/dev/null", "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_InRelease"]
+STDOUT_BEGIN
+STDOUT_END
+STDERR_BEGIN
+gpgv: Signature made Thu Apr 23 18:07:30 2026 BST
+gpgv:                using RSA key F6ECB3762474EDA9D21B7022871920D1991BC93C
+gpgv: Good signature from "Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>"
+STDERR_END

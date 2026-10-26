@@ -1,0 +1,2 @@
+700 alex alex d /tmp/lc-ubuntu-keyring-readonly-20261025 60
+600 alex alex f /tmp/lc-ubuntu-keyring-readonly-20261025/trustdb.gpg 1200

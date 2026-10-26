@@ -1,0 +1,6 @@
+First launch: 2026-10-26
+Command: wsl.exe -d Ubuntu -- bash /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-12/run.sh
+Outcome: exit 88 before evidence writes or test execution.
+Preflight diagnostic: TMPFS_CAPACITY_OR_AVAILABLE_SPACE_TOO_LOW size_kib=4020516 available_kib=4020516
+Cause: the previous WSL invocation remounted /tmp to 6 GiB but the distro session ended before this launch; the fresh session restored the default 3.9 GiB tmpfs.
+No source snapshot, pytest scratch, JUnit, or suite result was created by this attempt.

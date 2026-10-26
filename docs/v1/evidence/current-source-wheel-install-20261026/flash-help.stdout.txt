@@ -1,0 +1,13 @@
+Usage: python -m autoloader flash [OPTIONS]
+
+  Request one exact, interactively approved X200/X220 external SPI write.
+
+Options:
+  --profile [t430-1vyrain|x200-libreboot|x220-coreboot]
+                                  Allowlisted V1 workflow profile.  [required]
+  --checkpoint FILE               Exact staged X200/X220 workflow checkpoint;
+                                  arbitrary ROM paths are not accepted.
+                                  [required]
+  --request FILE                  Current versioned operator setup request
+                                  used to reopen the staged plan.  [required]
+  --help                          Show this message and exit.

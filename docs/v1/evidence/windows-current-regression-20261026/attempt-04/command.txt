@@ -1,0 +1,1 @@
+.\.venv\Scripts\python.exe -m pytest -p no:cacheprovider -vv -ra --basetemp=C:\w\lc-x220-write-block-20261026-r2 --junitxml=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-04\junit.xml tests/test_x220_coreboot_workflow.py::test_x220_write_and_restore_entrypoints_are_unconditionally_blocked

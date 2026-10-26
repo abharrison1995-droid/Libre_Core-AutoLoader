@@ -1,0 +1,9 @@
+status=prelaunch-blocked
+mode=probe-only
+utc=2026-10-26T04:02:06.3969224Z
+pytest_started=False
+pytest_exit=not-started
+run_hash_manifest=passed
+run_hash_manifest_sha256=7cc247e55fff86060796a12a845529088fde1075a48be2c2f4df80dffbe6497b
+run_hash_manifest_error=
+error=NTFS compression probe failed: GetCompressedFileSizeW reported 1048576 bytes for a 1048576-byte compressible probe. 

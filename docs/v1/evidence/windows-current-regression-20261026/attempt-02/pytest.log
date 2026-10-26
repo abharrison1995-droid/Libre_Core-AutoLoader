@@ -1,0 +1,13 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+configfile: pyproject.toml
+plugins: platformdirs-4.13.0, cov-7.1.0
+collecting ... collected 2 items
+
+tests/test_phase10a_write_approval.py::test_windows_directory_fsync_policy_keeps_approval_closed PASSED [ 50%]
+tests/test_usb_builder.py::test_real_build_usb_cli_fails_before_subprocess_on_windows PASSED [100%]
+
+- generated xml file: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-02\junit.xml -
+============================== 2 passed in 8.94s ==============================

@@ -35,6 +35,7 @@ def _standard_files(bound: evidence.EvidenceBinding | None = None) -> dict[str, 
     command_status = evidence.canonical_json(
         {
             "format": evidence.FORMAT,
+            "service": "librecore-offline-build.service",
             "status": "EXITED_ZERO",
             "exit_code": 0,
             "argv_sha256": binding.command_argv_sha256,
@@ -42,6 +43,30 @@ def _standard_files(bound: evidence.EvidenceBinding | None = None) -> dict[str, 
             "request_sha256": binding.request_sha256,
             "candidate_iso_sha256": binding.candidate_iso_sha256,
             "candidate_iso_size": binding.candidate_iso_size,
+            "build_process_result": {
+                "format": "librecore-offline-vm-build-process-result-v1",
+                "service_name": "librecore-offline-build.service",
+                "argv_sha256": binding.command_argv_sha256,
+                "returncode": 0,
+                "timed_out": False,
+                "elapsed_seconds": 0.5,
+                "no_new_privs_before": True,
+                "no_new_privs_during": False,
+                "network_namespace_before": "net:[4026533000]",
+                "network_namespace_during": "net:[4026533000]",
+                "pacstrap_exit_codes": [0],
+                "account": "fwbuild",
+                "uid": 1000,
+                "gid": 1000,
+                "supplementary_gids": [1000],
+                "cap_effective": "0000000000000000",
+                "cap_permitted": "0000000000000000",
+                "cap_ambient": "0000000000000000",
+                "interfaces": ["lo"],
+                "ipv4_routes": [],
+                "ipv6_routes": [],
+                "cap_bounding": "00000000000000c0",
+            },
         }
     )
     return {
@@ -432,7 +457,7 @@ def test_rejects_incomplete_terminal_and_nonzero_exit_status(tmp_path: Path) -> 
     files = _standard_files()
     files["command-status.json"] = (
         "command-status", 0o600,
-        evidence.canonical_json({"format": evidence.FORMAT, "status": "EXITED_NONZERO", "exit_code": 7, "argv_sha256": "6" * 64}),
+        evidence.canonical_json({"format": evidence.FORMAT, "service": "librecore-offline-build.service", "status": "EXITED_NONZERO", "exit_code": 7, "argv_sha256": "6" * 64}),
     )
     volume.write_bytes(_volume_bytes(files=files))
     volume.chmod(0o600)

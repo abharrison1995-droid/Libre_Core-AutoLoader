@@ -1,0 +1,4 @@
+...................s.....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_artifact_engine.py:2753: UNVALIDATED: POSIX permission bits are not meaningful on Windows
+24 passed, 1 skipped in 3.93s

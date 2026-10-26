@@ -1,0 +1,2 @@
+TMPDIR=/tmp/librecore-autoloader-v1-exact-tests-20261025/system-tmp
+cd /run/user/1000/librecore-autoloader-v1-exact-source-20261025 && TMPDIR=/tmp/librecore-autoloader-v1-exact-tests-20261025/system-tmp /home/alex/.venvs/autoloader-v1/bin/python -m pytest -vv -ra --durations=25 --junitxml=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/junit.xml --basetemp=/tmp/librecore-autoloader-v1-exact-tests-20261025/pytest

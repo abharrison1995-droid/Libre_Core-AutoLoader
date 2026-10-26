@@ -1,0 +1,4 @@
+platform=Ubuntu WSL 2
+python=/home/alex/.venvs/autoloader-v1/bin/python
+python_version=3.14.4
+pytest_version=9.1.1

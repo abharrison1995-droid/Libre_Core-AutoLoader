@@ -1,0 +1,4 @@
+........................s                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_worker.py:1596: guest publication exercises Linux-only runtime guards
+24 passed, 1 skipped in 10.01s

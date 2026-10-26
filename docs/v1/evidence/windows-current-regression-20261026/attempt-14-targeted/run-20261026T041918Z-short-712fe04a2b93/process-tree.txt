@@ -1,0 +1,3 @@
+root_process=direct Python invocation returned to PowerShell
+pytest_exit=0
+post_run_processes_referencing_scratch=0

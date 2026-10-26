@@ -1,0 +1,881 @@
+1 .M N... 100644 100644 100644 64fc11ac091e0fe63a8a55de6f2ed12137ac41b2 64fc11ac091e0fe63a8a55de6f2ed12137ac41b2 .gitattributes
+1 .M N... 100644 100644 100644 da64bbbe19e50f514eb401e7033b83077d3cfc78 da64bbbe19e50f514eb401e7033b83077d3cfc78 .gitignore
+1 .M N... 100644 100644 100644 9a7766c780fbb2c18748ea2687c30e90c55616a8 9a7766c780fbb2c18748ea2687c30e90c55616a8 LICENSE
+1 .M N... 100644 100644 100644 74fafc64c2a7f007ba234cc64d5a79582d8d5415 74fafc64c2a7f007ba234cc64d5a79582d8d5415 autoloader.spec
+1 .M N... 100644 100644 100644 aed626547c77738965c3feab49cc48963975d01e aed626547c77738965c3feab49cc48963975d01e autoloader/__init__.py
+1 .M N... 100644 100644 100644 23e57021b9a192b05f3887d6a4b7fab1affcd28d 23e57021b9a192b05f3887d6a4b7fab1affcd28d autoloader/__main__.py
+1 .M N... 100644 100644 100644 d535b21d12d6b26bf5fa87a058d0a930fe711049 d535b21d12d6b26bf5fa87a058d0a930fe711049 autoloader/app.py
+1 .M N... 100644 100644 100644 ff05c2e36a99df8cf8c5617a620b72500f455592 ff05c2e36a99df8cf8c5617a620b72500f455592 autoloader/config.py
+1 .M N... 100644 100644 100644 16b66fb0e13ba4935120da9d45118953b22f68b7 16b66fb0e13ba4935120da9d45118953b22f68b7 autoloader/database/__init__.py
+1 .M N... 100644 100644 100644 3b11f17a70d205b64a66bd0c358d35c155cf8809 3b11f17a70d205b64a66bd0c358d35c155cf8809 autoloader/database/bios_versions.py
+1 .M N... 100644 100644 100644 9eafc4ee65594846c60309969dfe545d155ffb27 9eafc4ee65594846c60309969dfe545d155ffb27 autoloader/database/compatibility.py
+1 .M N... 100644 100644 100644 218dd5166c384f86993c46db44b233c35a066ef6 218dd5166c384f86993c46db44b233c35a066ef6 autoloader/database/flash_chips.py
+1 .M N... 100644 100644 100644 a10a7b08081fd1f969bb9daf5876a98a20f5d9c6 a10a7b08081fd1f969bb9daf5876a98a20f5d9c6 autoloader/database/middleton.py
+1 .M N... 100644 100644 100644 3b2712dc87428c5c845dd7d658426a766f88d187 3b2712dc87428c5c845dd7d658426a766f88d187 autoloader/database/models.py
+1 .M N... 100644 100644 100644 f8824c996c8353e6d3d15eaeacbfc9a050ee9efd f8824c996c8353e6d3d15eaeacbfc9a050ee9efd autoloader/detection/__init__.py
+1 .M N... 100644 100644 100644 01b1a9f683112062c39bcc462298b7a77500def8 01b1a9f683112062c39bcc462298b7a77500def8 autoloader/detection/bios.py
+1 .M N... 100644 100644 100644 706ca7bd531c51f410790f3b51345a826a88db30 706ca7bd531c51f410790f3b51345a826a88db30 autoloader/detection/ec.py
+1 .M N... 100644 100644 100644 73979b551344d8caf23a475b3f3cd4b27432b546 73979b551344d8caf23a475b3f3cd4b27432b546 autoloader/detection/model.py
+1 .M N... 100644 100644 100644 96d7c093057d71f37d2aeafd73512f87a675e300 96d7c093057d71f37d2aeafd73512f87a675e300 autoloader/ec_mod/__init__.py
+1 .M N... 100644 100644 100644 54d5f5f17caabc0424fe74c6ea2a35ff2ae9da43 54d5f5f17caabc0424fe74c6ea2a35ff2ae9da43 autoloader/ec_mod/battery.py
+1 .M N... 100644 100644 100644 c8bde510e27fccc04960fcee87dce11c8991202b c8bde510e27fccc04960fcee87dce11c8991202b autoloader/ec_mod/keyboard.py
+1 .M N... 100644 100644 100644 4dd7f8d99f8821897417818080bbe2650a97ba33 4dd7f8d99f8821897417818080bbe2650a97ba33 autoloader/exceptions.py
+1 .M N... 100644 100644 100644 1dda311375ef95a50284be877b38db63f076f96f 1dda311375ef95a50284be877b38db63f076f96f autoloader/flasher/__init__.py
+1 .M N... 100644 100644 100644 a527b5020893c94ea621ced7b1addd48748ba1c8 a527b5020893c94ea621ced7b1addd48748ba1c8 autoloader/flasher/backup.py
+1 .M N... 100644 100644 100644 faf1612b66958d831b900df94f07433e197b414f faf1612b66958d831b900df94f07433e197b414f autoloader/flasher/backup_service.py
+1 .M N... 100644 100644 100644 954b6eb8baa96e6606a6ec523cae8a7d32f37e8a 954b6eb8baa96e6606a6ec523cae8a7d32f37e8a autoloader/flasher/flashrom.py
+1 .M N... 100644 100644 100644 1d1ca8eccd51e8630ff40eee4b69a98d13010147 1d1ca8eccd51e8630ff40eee4b69a98d13010147 autoloader/flasher/internal.py
+1 .M N... 100644 100644 100644 d80215b0a5cac6d9a6a845b5571fb17334d33900 d80215b0a5cac6d9a6a845b5571fb17334d33900 autoloader/flasher/readback.py
+1 .M N... 100644 100644 100644 fe30a01cc4d604402aa67df5cea4f8ee433e8077 fe30a01cc4d604402aa67df5cea4f8ee433e8077 autoloader/flasher/recovery.py
+1 .M N... 100644 100644 100644 5c865dee032b4b325cf1022d082f2a06311fc98e 5c865dee032b4b325cf1022d082f2a06311fc98e autoloader/flasher/spi.py
+1 .M N... 100644 100644 100644 d5ccba473c79848438d541e885c8328e2710bc24 d5ccba473c79848438d541e885c8328e2710bc24 autoloader/flasher/splitter.py
+1 .M N... 100644 100644 100644 a56f75d00aa8ca511d6bd44749bb08e0fd8a0dc4 a56f75d00aa8ca511d6bd44749bb08e0fd8a0dc4 autoloader/flasher/verify.py
+1 .M N... 100644 100644 100644 40042e779478b489894508a19887c0f2d8fc8363 40042e779478b489894508a19887c0f2d8fc8363 autoloader/guides/__init__.py
+1 .M N... 100644 100644 100644 3c3d513bf6343146a3bc89cfdf094e1488268df0 3c3d513bf6343146a3bc89cfdf094e1488268df0 autoloader/guides/disassembly/__init__.py
+1 .M N... 100644 100644 100644 3ead42db41d320ff65d0193584732f8190064578 3ead42db41d320ff65d0193584732f8190064578 autoloader/guides/disassembly/t400.py
+1 .M N... 100644 100644 100644 7f384ce783fda42f34a8c3a727aaa73ef08eb18a 7f384ce783fda42f34a8c3a727aaa73ef08eb18a autoloader/guides/disassembly/t420.py
+1 .M N... 100644 100644 100644 bcd83a5af18060385ab3851542697d2a0e364f11 bcd83a5af18060385ab3851542697d2a0e364f11 autoloader/guides/disassembly/t430.py
+1 .M N... 100644 100644 100644 7abd669c938009809a11fed2843dfd60ca7a4c1c 7abd669c938009809a11fed2843dfd60ca7a4c1c autoloader/guides/disassembly/t440p.py
+1 .M N... 100644 100644 100644 beafc2a6ce2d87b965c0a7fac58a92237a8e657a beafc2a6ce2d87b965c0a7fac58a92237a8e657a autoloader/guides/disassembly/t480.py
+1 .M N... 100644 100644 100644 e86d44df61fc99951c702e272c7349f4b26b98ed e86d44df61fc99951c702e272c7349f4b26b98ed autoloader/guides/disassembly/t500.py
+1 .M N... 100644 100644 100644 25309ff665a4880fb7f9c2960a056f5772000c15 25309ff665a4880fb7f9c2960a056f5772000c15 autoloader/guides/disassembly/x200.py
+1 .M N... 100644 100644 100644 76436b7f115e01f1a082bffb77d4c40bd4177e0e 76436b7f115e01f1a082bffb77d4c40bd4177e0e autoloader/guides/disassembly/x201.py
+1 .M N... 100644 100644 100644 3175427dee86cbeda877ac9c23ceac1f223abc31 3175427dee86cbeda877ac9c23ceac1f223abc31 autoloader/guides/disassembly/x220.py
+1 .M N... 100644 100644 100644 79d7487f34f13745b97192df27c390722f14ff69 79d7487f34f13745b97192df27c390722f14ff69 autoloader/guides/disassembly/x230.py
+1 .M N... 100644 100644 100644 10ef83dff97d373eba6e9db0d3a3f3fc112fa6d9 10ef83dff97d373eba6e9db0d3a3f3fc112fa6d9 autoloader/guides/guide_engine.py
+1 .M N... 100644 100644 100644 60f5ae40c54b6a5a7848f0ea9a0d8bbf16fa942d 60f5ae40c54b6a5a7848f0ea9a0d8bbf16fa942d autoloader/guides/programmer_setup/__init__.py
+1 .M N... 100644 100644 100644 a842fecd54926c25b6f12ec6701abdc1008a3796 a842fecd54926c25b6f12ec6701abdc1008a3796 autoloader/guides/programmer_setup/bus_pirate.py
+1 .M N... 100644 100644 100644 1531b741d17e591cf5787aea4ffbe3e2bb25074c 1531b741d17e591cf5787aea4ffbe3e2bb25074c autoloader/guides/programmer_setup/ch341a.py
+1 .M N... 100644 100644 100644 842ce00ce8efabad74db8286dd52ddb918f2a577 842ce00ce8efabad74db8286dd52ddb918f2a577 autoloader/guides/programmer_setup/raspberry_pi.py
+1 .M N... 100644 100644 100644 f829a7bf721051df404954cfcecb44afea821217 f829a7bf721051df404954cfcecb44afea821217 autoloader/orchestrator.py
+1 .M N... 100644 100644 100644 b3e61ec9a6ef1f1527f7af79ca17b71f0934648b b3e61ec9a6ef1f1527f7af79ca17b71f0934648b autoloader/reversion/__init__.py
+1 .M N... 100644 100644 100644 b453ab76f71508d250b0810ccdaee13dad8d5fe5 b453ab76f71508d250b0810ccdaee13dad8d5fe5 autoloader/rom_builder/__init__.py
+1 .M N... 100644 100644 100644 ea6fd27538049e0fda4fbf7a3ad1d2a0397096ab ea6fd27538049e0fda4fbf7a3ad1d2a0397096ab autoloader/rom_builder/blob_extractor.py
+1 .M N... 100644 100644 100644 27defdd060851b8faea38a1e8df77e4f8b9a9d7c 27defdd060851b8faea38a1e8df77e4f8b9a9d7c autoloader/rom_builder/bootsplash.py
+1 .M N... 100644 100644 100644 5c3d723366c824939c1f2a371609f28c19b53d31 5c3d723366c824939c1f2a371609f28c19b53d31 autoloader/rom_builder/configurator.py
+1 .M N... 100644 100644 100644 39de20066a0d4954e6575c647a6a4339709236cb 39de20066a0d4954e6575c647a6a4339709236cb autoloader/rom_builder/me_cleaner.py
+1 .M N... 100644 100644 100644 3cb63228f130d0abeac4f52616a8593ffd11f6dc 3cb63228f130d0abeac4f52616a8593ffd11f6dc autoloader/ui/__init__.py
+1 .M N... 100644 100644 100644 8dbe91ac5fe4c87dd817af352dc8ab782dbe6df1 8dbe91ac5fe4c87dd817af352dc8ab782dbe6df1 autoloader/ui/screens/__init__.py
+1 .M N... 100644 100644 100644 22f55b100c0a99fd5a259a09c22dd61a29601c43 22f55b100c0a99fd5a259a09c22dd61a29601c43 autoloader/ui/screens/ec_config.py
+1 .M N... 100644 100644 100644 6fbfa74fb647c96fad3e12542aa6d025258ad3c3 6fbfa74fb647c96fad3e12542aa6d025258ad3c3 autoloader/ui/screens/verify_screen.py
+1 .M N... 100644 100644 100644 b7adbfecf7d0b48a555652143a9f03d363b947ca b7adbfecf7d0b48a555652143a9f03d363b947ca autoloader/ui/screens/welcome.py
+1 .M N... 100644 100644 100644 3e3074f33c36d0273048eb0986a0d0914273ce96 3e3074f33c36d0273048eb0986a0d0914273ce96 autoloader/ui/theme.py
+1 .M N... 100644 100644 100644 3793c713c2c164c725d83ba7544660b7de0daf46 3793c713c2c164c725d83ba7544660b7de0daf46 autoloader/ui/widgets/__init__.py
+1 .M N... 100644 100644 100644 02446a27baa029362379f85a5f11178389a3cbb2 02446a27baa029362379f85a5f11178389a3cbb2 autoloader/ui/widgets/checklist.py
+1 .M N... 100644 100644 100644 f951403ba5bdad9d310a0c789f6b4bcb6db91ca2 f951403ba5bdad9d310a0c789f6b4bcb6db91ca2 autoloader/ui/widgets/diagram_viewer.py
+1 .M N... 100644 100644 100644 ab6b14b88d281907d5efaa1fc9de5d6f1d233cf9 ab6b14b88d281907d5efaa1fc9de5d6f1d233cf9 autoloader/ui/widgets/log_panel.py
+1 .M N... 100644 100644 100644 32ba37a2a1f0e5e40b98f8ccd6d9116655c352bc 32ba37a2a1f0e5e40b98f8ccd6d9116655c352bc autoloader/ui/widgets/progress_bar.py
+1 .M N... 100644 100644 100644 3ad5c11a3005534738af50d40240b0450f3ab908 3ad5c11a3005534738af50d40240b0450f3ab908 autoloader/utils.py
+1 .M N... 100644 100644 100644 9e35fdbddc4c598f69bab23e8a4861265442090b 9e35fdbddc4c598f69bab23e8a4861265442090b docs/v1/ACCEPTANCE_MATRIX.md
+1 .M N... 100644 100644 100644 a67690df18c718995de371c0daf1dc3d5eda1c74 a67690df18c718995de371c0daf1dc3d5eda1c74 docs/v1/ARCHITECTURE.md
+1 .M N... 100644 100644 100644 a55eaa3d5209e90c1333aa73df523c5f0efed207 a55eaa3d5209e90c1333aa73df523c5f0efed207 docs/v1/DECISIONS.md
+1 .M N... 100644 100644 100644 9f78e44a79093120d04db0a4311ea37022e812c3 9f78e44a79093120d04db0a4311ea37022e812c3 docs/v1/KNOWN_ISSUES.md
+1 .M N... 100644 100644 100644 b4bf1d21e1858f2707e12b8d4d6492ffb50ceb88 b4bf1d21e1858f2707e12b8d4d6492ffb50ceb88 docs/v1/PROGRESS.md
+1 .M N... 100644 100644 100644 bcc565994cebc6dc38f25738f371e4652a906d49 bcc565994cebc6dc38f25738f371e4652a906d49 docs/v1/RELEASE_CHECKLIST.md
+1 .M N... 100644 100644 100644 8425b66d5e03cfcdd0619197835e2a4b168ecd28 8425b66d5e03cfcdd0619197835e2a4b168ecd28 docs/v1/evidence/current-source-wheel-20261021/README.md
+1 .M N... 100644 100644 100644 db6c5507a61fbac369108698b6f348fb17b3712e db6c5507a61fbac369108698b6f348fb17b3712e docs/v1/evidence/current-source-wheel-20261021/SHA256SUMS
+1 .M N... 100644 100644 100644 cdb9cc2bccf92d7002abad79a12532cbfe79429c cdb9cc2bccf92d7002abad79a12532cbfe79429c docs/v1/evidence/current-source-wheel-20261021/run.json
+1 .M N... 100644 100644 100644 127287a856afc2fba3b7af6e3c42e598a8c9a664 127287a856afc2fba3b7af6e3c42e598a8c9a664 docs/v1/evidence/live-linux-vm-20261016/attempt1-initial-run/hmp-transcript.txt
+1 .M N... 100644 100644 100644 dbe17b0b3345d5ae44238c62be3f97864bfbfb26 dbe17b0b3345d5ae44238c62be3f97864bfbfb26 docs/v1/evidence/live-linux-vm-20261016/attempt1-initial-run/run-result.json
+1 .M N... 100644 100644 100644 3573a0b9014096c0dadd6608893cfdd9536ad072 3573a0b9014096c0dadd6608893cfdd9536ad072 docs/v1/evidence/live-linux-vm-20261016/attempt2-bounded-run/hmp-transcript.txt
+1 .M N... 100644 100644 100644 e4c4982df9428a41878d1e065500ca2b25a6c6e5 e4c4982df9428a41878d1e065500ca2b25a6c6e5 docs/v1/evidence/live-linux-vm-20261016/attempt3-full-system-inspection/SHA256SUMS
+1 .M N... 100644 100644 100644 96217006caa79c7e4f218b799bb416490e83f2e4 96217006caa79c7e4f218b799bb416490e83f2e4 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt
+1 .M N... 100644 100644 100644 2aed1901b2e1c214b52a082bc25450cec4be55c5 2aed1901b2e1c214b52a082bc25450cec4be55c5 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/hmp-transcript.txt
+1 .M N... 100644 100644 100644 eb9d0b9a96554c941551e28f35cb7181d9d1daa3 eb9d0b9a96554c941551e28f35cb7181d9d1daa3 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/hmp-transcript.txt
+1 .M N... 100644 100644 100644 746466a0d6976144eebc4e6ce4a91995424d1309 746466a0d6976144eebc4e6ce4a91995424d1309 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/hmp-transcript.txt
+1 .M N... 100644 100644 100644 c7356ab85fe39150ef6d4ebbe1e2c4bbc390f21a c7356ab85fe39150ef6d4ebbe1e2c4bbc390f21a docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/hmp-transcript.txt
+1 .M N... 100644 100644 100644 ca539208420bf0305db0f8164bcbb7e25e99f524 ca539208420bf0305db0f8164bcbb7e25e99f524 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry7/hmp-transcript.txt
+1 .M N... 100644 100644 100644 3d693b9baa059593439859ef408f070422ffc8d8 3d693b9baa059593439859ef408f070422ffc8d8 docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry8/hmp-transcript.txt
+1 .M N... 100644 100644 100644 574cb08f5646b8ff0e23361efa79e713a91959f6 574cb08f5646b8ff0e23361efa79e713a91959f6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/README.md
+1 .M N... 100644 100644 100644 b96b5efb15f66ba55e5d11c494f788739f23de1f b96b5efb15f66ba55e5d11c494f788739f23de1f docs/v1/evidence/live-usb-b2-diagnostic-20261014/SHA256SUMS
+1 .M N... 100644 100644 100644 bfad8b362b4d2083cabc006140059ef0bf1500f1 bfad8b362b4d2083cabc006140059ef0bf1500f1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/bios/final-status.txt
+1 .M N... 100644 100644 100644 046033800655f8c529e1349c0d0e9cbbc5589c67 046033800655f8c529e1349c0d0e9cbbc5589c67 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/launcher-attempt-1.txt
+1 .M N... 100644 100644 100644 be6d3bc6db84400d3914c6b00ba960cc689e434e be6d3bc6db84400d3914c6b00ba960cc689e434e docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/analysis.txt
+1 .M N... 100644 100644 100644 be914a2dc021c6ab382c4599c22cf7a29a1d2f13 be914a2dc021c6ab382c4599c22cf7a29a1d2f13 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/checksums.sha256
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-banner.txt
+1 .M N... 100644 100644 100644 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-01.txt
+1 .M N... 100644 100644 100644 658f847d7428032e0cc2bc9dc5303dd0cfe4d890 658f847d7428032e0cc2bc9dc5303dd0cfe4d890 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-02.txt
+1 .M N... 100644 100644 100644 180ce29ca78706aec9a6583ba3d6b512b689214b 180ce29ca78706aec9a6583ba3d6b512b689214b docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-03.txt
+1 .M N... 100644 100644 100644 65de1695c3bfe05e2eb84bc35869df74d76eaa75 65de1695c3bfe05e2eb84bc35869df74d76eaa75 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-04.txt
+1 .M N... 100644 100644 100644 da6eb6b2af3fd937464fe21bf3b2abec93474563 da6eb6b2af3fd937464fe21bf3b2abec93474563 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-05.txt
+1 .M N... 100644 100644 100644 44d44354fadba0cfe39d235f87f336d8d5c5afc8 44d44354fadba0cfe39d235f87f336d8d5c5afc8 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-06.txt
+1 .M N... 100644 100644 100644 886f0aaf9183020afdfbe5e2628260b1abdd8f97 886f0aaf9183020afdfbe5e2628260b1abdd8f97 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-07.txt
+1 .M N... 100644 100644 100644 79f7907d31e0bb48fd53459ad34f4088a2a4d3f6 79f7907d31e0bb48fd53459ad34f4088a2a4d3f6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/launcher.py
+1 .M N... 100644 100644 100644 eff88ddaa1c906a28a48bba2ddb561118a7ba8ce eff88ddaa1c906a28a48bba2ddb561118a7ba8ce docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/checksums.sha256
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/hmp-banner.txt
+1 .M N... 100644 100644 100644 12a4e984cda4056535f56513f77d676feb1a7c32 12a4e984cda4056535f56513f77d676feb1a7c32 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-as-run.py
+1 .M N... 100644 100644 100644 12f356958de716f913a8919f89b13a9d89290522 12f356958de716f913a8919f89b13a9d89290522 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-exception.txt
+1 .M N... 100644 100644 100644 ae9d0f2b7735a0aad9d95a03e9766c517529207f ae9d0f2b7735a0aad9d95a03e9766c517529207f docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-failure-summary.txt
+1 .M N... 100644 100644 100644 4a7c859442cac7044f99cac2962d0e1c112862d7 4a7c859442cac7044f99cac2962d0e1c112862d7 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-traceback.txt
+1 .M N... 100644 100644 100644 6f057beb4f06d5b0f4b93901805003cf7b1056ed 6f057beb4f06d5b0f4b93901805003cf7b1056ed docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/result.txt
+1 .M N... 100644 100644 100644 e63e51900fea24c5f03c7ded2f215c9b3c74f145 e63e51900fea24c5f03c7ded2f215c9b3c74f145 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/analysis.txt
+1 .M N... 100644 100644 100644 d1d313d8000a3fd0a52e58fdc72f2e0580045f69 d1d313d8000a3fd0a52e58fdc72f2e0580045f69 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/checksums.sha256
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-banner.txt
+1 .M N... 100644 100644 100644 fe41265d05f87efcb22bfeffc2aee0aa0cb48556 fe41265d05f87efcb22bfeffc2aee0aa0cb48556 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-repeat-attempt.txt
+1 .M N... 100644 100644 100644 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-01.txt
+1 .M N... 100644 100644 100644 0d7afc79176cbf8734709cbd86f412304afc981b 0d7afc79176cbf8734709cbd86f412304afc981b docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-02.txt
+1 .M N... 100644 100644 100644 442258815457e55773c3daa11da9d8b83f5a1ead 442258815457e55773c3daa11da9d8b83f5a1ead docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-03.txt
+1 .M N... 100644 100644 100644 91019a3d78437bed8d44ee22b0363b816d6e4262 91019a3d78437bed8d44ee22b0363b816d6e4262 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-04.txt
+1 .M N... 100644 100644 100644 22363cf198fee582b9fbe06cb1076450d13308a5 22363cf198fee582b9fbe06cb1076450d13308a5 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-05.txt
+1 .M N... 100644 100644 100644 bae319a7deab44013bb2c60a3b5aab43998eaded bae319a7deab44013bb2c60a3b5aab43998eaded docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-06.txt
+1 .M N... 100644 100644 100644 df6cd0abc90418cca4f1906711e133fe1ab7e8d0 df6cd0abc90418cca4f1906711e133fe1ab7e8d0 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-07.txt
+1 .M N... 100644 100644 100644 3c8d4c4aba79938b74e510b9202b34d523e551eb 3c8d4c4aba79938b74e510b9202b34d523e551eb docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-08.txt
+1 .M N... 100644 100644 100644 e2b4e349b5fbf4233c868c30162424df1b600d29 e2b4e349b5fbf4233c868c30162424df1b600d29 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-09.txt
+1 .M N... 100644 100644 100644 5fc31e912a6db56c87e6c7f13dc23235bd817937 5fc31e912a6db56c87e6c7f13dc23235bd817937 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-10.txt
+1 .M N... 100644 100644 100644 96a4336302ffd01cb435e12ccec1c6b8f20756f9 96a4336302ffd01cb435e12ccec1c6b8f20756f9 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-11.txt
+1 .M N... 100644 100644 100644 29c435ee6c5575c5f10f44bb7aa6db784b00bb6f 29c435ee6c5575c5f10f44bb7aa6db784b00bb6f docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-12.txt
+1 .M N... 100644 100644 100644 8716e233d457f4d36ce24b101752dfb229be7c00 8716e233d457f4d36ce24b101752dfb229be7c00 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-13.txt
+1 .M N... 100644 100644 100644 435e527b1b7327c4d9ac0dd82898efc953b95341 435e527b1b7327c4d9ac0dd82898efc953b95341 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-14.txt
+1 .M N... 100644 100644 100644 275ac59de7983869c1a9aa325c9316082490c5d1 275ac59de7983869c1a9aa325c9316082490c5d1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-15.txt
+1 .M N... 100644 100644 100644 abef323b0d5a27257636b37acc0bd8ddd2a4355e abef323b0d5a27257636b37acc0bd8ddd2a4355e docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-16.txt
+1 .M N... 100644 100644 100644 a0a0f9fc46be27e3041ed14c65c47d762e3119d7 a0a0f9fc46be27e3041ed14c65c47d762e3119d7 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-17.txt
+1 .M N... 100644 100644 100644 26976a804742afae573b6fe86dd0fafed4879d31 26976a804742afae573b6fe86dd0fafed4879d31 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-18.txt
+1 .M N... 100644 100644 100644 f68365cbdeae3489c1f1640165dc872cba080a79 f68365cbdeae3489c1f1640165dc872cba080a79 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-19.txt
+1 .M N... 100644 100644 100644 383dd1cb48076ebb9c602673d5f10a6c165aaf63 383dd1cb48076ebb9c602673d5f10a6c165aaf63 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-20.txt
+1 .M N... 100644 100644 100644 20590cdf31fa8f24390b66e0eab2dd6ea784f7f3 20590cdf31fa8f24390b66e0eab2dd6ea784f7f3 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-21.txt
+1 .M N... 100644 100644 100644 d4584f7edd8fa7b7228aef6069c5c57a946bd712 d4584f7edd8fa7b7228aef6069c5c57a946bd712 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/launcher-traceback.txt
+1 .M N... 100644 100644 100644 4e0760bd1aafcf68af8f3d0f9e2a289400f60339 4e0760bd1aafcf68af8f3d0f9e2a289400f60339 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/launcher.py
+1 .M N... 100644 100644 100644 daf396e671ff4db89f3c7c83eec19b9ccdd6535b daf396e671ff4db89f3c7c83eec19b9ccdd6535b docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/result.txt
+1 .M N... 100644 100644 100644 72bc9fed4b5f86fee6642ebe4991f907fa0687b1 72bc9fed4b5f86fee6642ebe4991f907fa0687b1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run3-emergency/result.txt
+1 .M N... 100644 100644 100644 3ba76c1029ee5dd4c5cc8c563f670da1846ea5e3 3ba76c1029ee5dd4c5cc8c563f670da1846ea5e3 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run3-emergency/stop-reason.txt
+1 .M N... 100644 100644 100644 56304f2e6f23c38b65bd248c769c39d29197ce29 56304f2e6f23c38b65bd248c769c39d29197ce29 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/client-error.txt
+1 .M N... 100644 100644 100644 99ada98f382991beafc30d8376820edaf9dbd6b2 99ada98f382991beafc30d8376820edaf9dbd6b2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/result.txt
+1 .M N... 100644 100644 100644 c3aa1a64b3d4d8031de428cdb37949525f02913e c3aa1a64b3d4d8031de428cdb37949525f02913e docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/stop-reason.txt
+1 .M N... 100644 100644 100644 e02ed0fa8a41fc963ee07d3af4fcf1385d62509e e02ed0fa8a41fc963ee07d3af4fcf1385d62509e docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/launcher-error.txt
+1 .M N... 100644 100644 100644 38a1c88565cbee65fb972184c870085727d735e1 38a1c88565cbee65fb972184c870085727d735e1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/result.txt
+1 .M N... 100644 100644 100644 3909000265552f121af722ace78c59ffaf60f9e3 3909000265552f121af722ace78c59ffaf60f9e3 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/stop-reason.txt
+1 .M N... 100644 100644 100644 d483f0b53b42da88abc8652654f5419839e03ac2 d483f0b53b42da88abc8652654f5419839e03ac2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/analysis.txt
+1 .M N... 100644 100644 100644 e5ee7f4a26a69ae781c27011a4d75ae20cc5c7d0 e5ee7f4a26a69ae781c27011a4d75ae20cc5c7d0 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/checksums.sha256
+1 .M N... 100644 100644 100644 28e5ca9f5d2f6e552d270199d665cdac18d5ecc1 28e5ca9f5d2f6e552d270199d665cdac18d5ecc1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/grab.py
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-banner.txt
+1 .M N... 100644 100644 100644 85d1572e1bb3a07ebb5f835f3220ede570ab570a 85d1572e1bb3a07ebb5f835f3220ede570ab570a docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-marker-visible.txt
+1 .M N... 100644 100644 100644 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-tty9-before-marker.txt
+1 .M N... 100644 100644 100644 0bbf27be9c741293f3c9aae52aca7c1fac7da0a1 0bbf27be9c741293f3c9aae52aca7c1fac7da0a1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/rfb-second-client-attempt.txt
+1 .M N... 100644 100644 100644 b1cddcc4c0231801f61ba279ba4bb167793d4c5e b1cddcc4c0231801f61ba279ba4bb167793d4c5e docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/SHA256SUMS
+1 .M N... 100644 100644 100644 52f43b0ef4e16029d2a80bc774a216a1bb4d8cfa 52f43b0ef4e16029d2a80bc774a216a1bb4d8cfa docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/result.txt
+1 .M N... 100644 100644 100644 a8bc3d223b8fc4cf1170b0a4e847d2c8c58b1b5b a8bc3d223b8fc4cf1170b0a4e847d2c8c58b1b5b docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/run_mask_diag.py
+1 .M N... 100644 100644 100644 ea29407345c79637cfe95fcc36e2539ff496d0d2 ea29407345c79637cfe95fcc36e2539ff496d0d2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/runner-exception.txt
+1 .M N... 100644 100644 100644 40359f0b95385b754f65e25c4fef9c7d7688a180 40359f0b95385b754f65e25c4fef9c7d7688a180 docs/v1/evidence/live-usb-b2-diagnostic-20261014/rootfs-unit-inspection/run8-startup-chain-excerpt.txt
+1 .M N... 100644 100644 100644 87d693565715c4ff0f8922da2d8086ec98852530 87d693565715c4ff0f8922da2d8086ec98852530 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/bios-20261015/hmp-banner.txt
+1 .M N... 100644 100644 100644 27562ac754b0281ed515c95cff5d318797c387ef 27562ac754b0281ed515c95cff5d318797c387ef docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/bios-20261015/hmp-status.txt
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-20261015/hmp-banner.txt
+1 .M N... 100644 100644 100644 545d3930d3f075cab9185d349b9f745b167e813b 545d3930d3f075cab9185d349b9f745b167e813b docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-20261015/launcher.py
+1 .M N... 100644 100644 100644 87d693565715c4ff0f8922da2d8086ec98852530 87d693565715c4ff0f8922da2d8086ec98852530 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-banner.txt
+1 .M N... 100644 100644 100644 347f00aaa8d442fc3f455ee48e650cc8260498dd 347f00aaa8d442fc3f455ee48e650cc8260498dd docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-critical-chain.txt
+1 .M N... 100644 100644 100644 073d679f1836761c8f0d8930fd363ce9e98f1f58 073d679f1836761c8f0d8930fd363ce9e98f1f58 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-guest-time.txt
+1 .M N... 100644 100644 100644 56cba8ca0b3102c8bf3f57bee0c0b15261da441f 56cba8ca0b3102c8bf3f57bee0c0b15261da441f docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-initial-failed.txt
+1 .M N... 100644 100644 100644 caf0908f241b0d629ff168f180626c6dc1de9182 caf0908f241b0d629ff168f180626c6dc1de9182 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-initial-jobs.txt
+1 .M N... 100644 100644 100644 26b114a45ca4aba9dbe7224060f9f443beefa874 26b114a45ca4aba9dbe7224060f9f443beefa874 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-modprobe-at-overlay-service.txt
+1 .M N... 100644 100644 100644 f901b1bdaadb5ea8b670eb0d626c1a64328515d3 f901b1bdaadb5ea8b670eb0d626c1a64328515d3 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-modprobe-at-tun-service.txt
+1 .M N... 100644 100644 100644 e33989e097e9848dc991ae237c77992819575775 e33989e097e9848dc991ae237c77992819575775 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-nsresourced-service.txt
+1 .M N... 100644 100644 100644 a2333444c50ed4f2b2c01eae9695aad542a88f1a a2333444c50ed4f2b2c01eae9695aad542a88f1a docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-nsresourced-socket.txt
+1 .M N... 100644 100644 100644 d7ddc132abc703d174826ac3eebc9eaa2f22ad75 d7ddc132abc703d174826ac3eebc9eaa2f22ad75 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-pcrphase-sysinit-service.txt
+1 .M N... 100644 100644 100644 9df50aa1da658f19ce81c26d5db871d17ef26cdc 9df50aa1da658f19ce81c26d5db871d17ef26cdc docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-sysext-service.txt
+1 .M N... 100644 100644 100644 e079103bc1ade9e8d9b3371f293564812de5f0fe e079103bc1ade9e8d9b3371f293564812de5f0fe docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-time-wait-sync-service.txt
+1 .M N... 100644 100644 100644 fd3671b9f4d66bc2e1f58cf107d9ad4ba1c77b23 fd3671b9f4d66bc2e1f58cf107d9ad4ba1c77b23 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-tmpfiles-setup-dev-early-service.txt
+1 .M N... 100644 100644 100644 129ff0218e43309bf1853006c1316b48d032734a 129ff0218e43309bf1853006c1316b48d032734a docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-tmpfiles-setup-dev-service.txt
+1 .M N... 100644 100644 100644 af6c1be9c9e7eb2631f892e5e0901d9514612626 af6c1be9c9e7eb2631f892e5e0901d9514612626 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-var-lib-machines-mount.txt
+1 .M N... 100644 100644 100644 bf24c773cca952635d08d12b59459c5402cadd98 bf24c773cca952635d08d12b59459c5402cadd98 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-kernel-cmdline.txt
+1 .M N... 100644 100644 100644 cde8b240cc0f70e750377b3801e23cc3f4032f41 cde8b240cc0f70e750377b3801e23cc3f4032f41 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-kernel-release.txt
+1 .M N... 100644 100644 100644 767a436d2cc9ffac9eff5c7e1a12ee2542ce559d 767a436d2cc9ffac9eff5c7e1a12ee2542ce559d docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-marker-visible.txt
+1 .M N... 100644 100644 100644 1bed6d76fecc3ddc2cffdcef58593a667301a071 1bed6d76fecc3ddc2cffdcef58593a667301a071 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-proc-modules.txt
+1 .M N... 100644 100644 100644 58e84ed891c4540f7ed0a786ef675146c0b40026 58e84ed891c4540f7ed0a786ef675146c0b40026 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-processes.txt
+1 .M N... 100644 100644 100644 1582c3a283a2ef3f0889418998c186d80b886f31 1582c3a283a2ef3f0889418998c186d80b886f31 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-modprobe-at-overlay-service.txt
+1 .M N... 100644 100644 100644 dd61065edcf7a44dfd1ceee7344b8105bc514ead dd61065edcf7a44dfd1ceee7344b8105bc514ead docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-modprobe-at-tun-service.txt
+1 .M N... 100644 100644 100644 b846886bc27804c9693bf4c30b562324ff1e0db1 b846886bc27804c9693bf4c30b562324ff1e0db1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-nsresourced-service.txt
+1 .M N... 100644 100644 100644 e28755cbeccd906325879edf3b9d003a54f5f868 e28755cbeccd906325879edf3b9d003a54f5f868 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-nsresourced-socket.txt
+1 .M N... 100644 100644 100644 1f8357948b8e16c174574128fa2da9e0a8430746 1f8357948b8e16c174574128fa2da9e0a8430746 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-pcrphase-sysinit-service.txt
+1 .M N... 100644 100644 100644 56bffda6408bfde58c5409a878dd15d536b1fbb7 56bffda6408bfde58c5409a878dd15d536b1fbb7 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-sysext-service.txt
+1 .M N... 100644 100644 100644 6bffdf727f1b7b058c55717903ab0f15df09828e 6bffdf727f1b7b058c55717903ab0f15df09828e docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-time-wait-sync-service.txt
+1 .M N... 100644 100644 100644 743770b33ea169fda9688bf5c8763052ae7d18ae 743770b33ea169fda9688bf5c8763052ae7d18ae docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-tmpfiles-setup-dev-early-service.txt
+1 .M N... 100644 100644 100644 947c34d1db83b436e01cda52cf1444015e02c206 947c34d1db83b436e01cda52cf1444015e02c206 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-tmpfiles-setup-dev-service.txt
+1 .M N... 100644 100644 100644 b3cebc5e3a981bc4ac33063ad88d83faeea8ef7b b3cebc5e3a981bc4ac33063ad88d83faeea8ef7b docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-var-lib-machines-mount.txt
+1 .M N... 100644 100644 100644 3f1fb5bd54b07b1973605ff69608aa789481270b 3f1fb5bd54b07b1973605ff69608aa789481270b docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-modprobe-at-overlay-service.txt
+1 .M N... 100644 100644 100644 2cbc29b1833e82d574276ba9923117ad9d64aaf2 2cbc29b1833e82d574276ba9923117ad9d64aaf2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-modprobe-at-tun-service.txt
+1 .M N... 100644 100644 100644 8b103636b1ee850ad5ba3c35a30c86fee4655f98 8b103636b1ee850ad5ba3c35a30c86fee4655f98 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-nsresourced-service.txt
+1 .M N... 100644 100644 100644 7ffe05859877fc08f51f31ac1de1fc3becbb3ad0 7ffe05859877fc08f51f31ac1de1fc3becbb3ad0 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-nsresourced-socket.txt
+1 .M N... 100644 100644 100644 ce4ba70b1a0ebcb3928abdde868e8eda5aff8679 ce4ba70b1a0ebcb3928abdde868e8eda5aff8679 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-pcrphase-sysinit-service.txt
+1 .M N... 100644 100644 100644 8417cf35f02196245917ef3532acb782d394f4b1 8417cf35f02196245917ef3532acb782d394f4b1 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-sysext-service.txt
+1 .M N... 100644 100644 100644 6bf7b8db3a03773c91bc0cec0f7579abc4755b88 6bf7b8db3a03773c91bc0cec0f7579abc4755b88 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-time-wait-sync-service.txt
+1 .M N... 100644 100644 100644 0cfb04a275279d6ed7ccb6e5f76b77c8123e8fad 0cfb04a275279d6ed7ccb6e5f76b77c8123e8fad docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-tmpfiles-setup-dev-early-service.txt
+1 .M N... 100644 100644 100644 f605e2c267c1fd36b8279b4ccf339529db939602 f605e2c267c1fd36b8279b4ccf339529db939602 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-tmpfiles-setup-dev-service.txt
+1 .M N... 100644 100644 100644 92acf00ff771ea91699cc672ea204912145bff3c 92acf00ff771ea91699cc672ea204912145bff3c docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-var-lib-machines-mount.txt
+1 .M N... 100644 100644 100644 a451e81fcd3b8ed0e010e228f8c096606217e4d8 a451e81fcd3b8ed0e010e228f8c096606217e4d8 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-vga-after-f9-01.txt
+1 .M N... 100644 100644 100644 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-tty9-switch.txt
+1 .M N... 100644 100644 100644 44748e6902e8b3e9ca0eb76053238262c21ce224 44748e6902e8b3e9ca0eb76053238262c21ce224 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/launcher.py
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-info-20261015/hmp-banner.txt
+1 .M N... 100644 100644 100644 b3131b58b1725177de79a0829b0b432066e26eee b3131b58b1725177de79a0829b0b432066e26eee docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-info-20261015/launcher.py
+1 .M N... 100644 100644 100644 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 1acd938c32955ba7611157fbf2fcb6b3dcacfbb2 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-banner.txt
+1 .M N... 100644 100644 100644 df36e5f216c3d9f930750fc0cbfb60960c4ec6c3 df36e5f216c3d9f930750fc0cbfb60960c4ec6c3 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-quit.txt
+1 .M N... 100644 100644 100644 77c3dba6783d6b687d3065075472b526e22eb1a5 77c3dba6783d6b687d3065075472b526e22eb1a5 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-marker-visible.txt
+1 .M N... 100644 100644 100644 2accb25ecc8b7a2182305164c0a30af081f43a35 2accb25ecc8b7a2182305164c0a30af081f43a35 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-read-only-summary.txt
+1 .M N... 100644 100644 100644 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 f90ef9871ad8e8603bb9e2c19e060553824ccaa6 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-vga-after-f9-01.txt
+1 .M N... 100644 100644 100644 053155f3a9819aad29382f06d6a676fb78106fba 053155f3a9819aad29382f06d6a676fb78106fba docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/launcher.py
+1 .M N... 100644 100644 100644 8e446a7f577395a3981e9a469d83dbb380a17189 8e446a7f577395a3981e9a469d83dbb380a17189 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/generate_sums.py
+1 .M N... 100644 100644 100644 e247b107830dfb3f87be33f9bbf4cd6c4aa8a8fd e247b107830dfb3f87be33f9bbf4cd6c4aa8a8fd docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/offline-namespace-views-20261015.txt
+1 .M N... 100644 100644 100644 545d3930d3f075cab9185d349b9f745b167e813b 545d3930d3f075cab9185d349b9f745b167e813b docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell.py
+1 .M N... 100644 100644 100644 44748e6902e8b3e9ca0eb76053238262c21ce224 44748e6902e8b3e9ca0eb76053238262c21ce224 docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_capture.py
+1 .M N... 100644 100644 100644 b3131b58b1725177de79a0829b0b432066e26eee b3131b58b1725177de79a0829b0b432066e26eee docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_info.py
+1 .M N... 100644 100644 100644 053155f3a9819aad29382f06d6a676fb78106fba 053155f3a9819aad29382f06d6a676fb78106fba docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_readonly.py
+1 .M N... 100644 100644 100644 1964c33e98de733e8b8a93a5e08549fe6246b99a 1964c33e98de733e8b8a93a5e08549fe6246b99a docs/v1/evidence/live-usb-b2-diagnostic-20261014/uefi/final-status.txt
+1 .M N... 100644 100644 100644 8f225781e3402870ab00df2bc565a8beccd123fb 8f225781e3402870ab00df2bc565a8beccd123fb docs/v1/evidence/live-usb-b2/SHA256SUMS
+1 .M N... 100644 100644 100644 55ff3d8b3354c04734528005179bf639da760644 55ff3d8b3354c04734528005179bf639da760644 docs/v1/evidence/live-usb-b2/bios/run-evidence.json
+1 .M N... 100644 100644 100644 28c2ce6edb3a496ed8031accaf8e1c514e287158 28c2ce6edb3a496ed8031accaf8e1c514e287158 docs/v1/evidence/live-usb-b2/uefi/run-evidence.json
+1 .M N... 100644 100644 100644 9bec7282a1d58c2a0b7f9a23a483df94ca694a4a 9bec7282a1d58c2a0b7f9a23a483df94ca694a4a docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/protocol.txt
+1 .M N... 100644 100644 100644 85f21ee6378ccb5e5c786660a1c6b88aa33b7975 85f21ee6378ccb5e5c786660a1c6b88aa33b7975 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/pty_qemu_runner.py
+1 .M N... 100644 100644 100644 3745bb1d8cbad5394e524f0132230cb8b6316211 3745bb1d8cbad5394e524f0132230cb8b6316211 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/qmp_control.py
+1 .M N... 100644 100644 100644 f21ccef0fa1d874f74569a0e5f55e30ba2940078 f21ccef0fa1d874f74569a0e5f55e30ba2940078 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/SHA256SUMS
+1 .M N... 100644 100644 100644 f93cabd0126689ee75a64f338f306838108ac467 f93cabd0126689ee75a64f338f306838108ac467 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/audit_serial.py
+1 .M N... 100644 100644 100644 7ae04ce5d540a7487cebdea0b8fbc0198e938bb8 7ae04ce5d540a7487cebdea0b8fbc0198e938bb8 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/input-hashes-after.txt
+1 .M N... 100644 100644 100644 7ae04ce5d540a7487cebdea0b8fbc0198e938bb8 7ae04ce5d540a7487cebdea0b8fbc0198e938bb8 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/input-hashes-before.txt
+1 .M N... 100644 100644 100644 ec0d80c501f948dc94fd65820535d858c717d1fc ec0d80c501f948dc94fd65820535d858c717d1fc docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/launch_retry14.sh
+1 .M N... 100644 100644 100644 3d8ef895a727f4466b612fb2631bb5dd07ca9167 3d8ef895a727f4466b612fb2631bb5dd07ca9167 docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/observe_retry14.py
+1 .M N... 100644 100644 100644 4ff13446a0ed9677fc09b45d932afc9f9129cccf 4ff13446a0ed9677fc09b45d932afc9f9129cccf docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/protocol.txt
+1 .M N... 100644 100644 100644 50ca141bd73414e59b45197a81cd66d9e1750a4c 50ca141bd73414e59b45197a81cd66d9e1750a4c docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry6-tty2/attempt-result.txt
+1 .M N... 100644 100644 100644 81ca5c52bab28ad0bd7f34f3de60cea996a07f76 81ca5c52bab28ad0bd7f34f3de60cea996a07f76 docs/v1/evidence/native-qemu-windows-20261021/README.md
+1 .M N... 100644 100644 100644 84a83557e5c151aa4ac6e7a66db1393fec0195c8 84a83557e5c151aa4ac6e7a66db1393fec0195c8 docs/v1/evidence/native-qemu-windows-20261021/SHA256SUMS
+1 .M N... 100644 100644 100644 4a6d3f2b2408f81790a7b3af4022c21dbd85d84c 4a6d3f2b2408f81790a7b3af4022c21dbd85d84c docs/v1/evidence/native-qemu-windows-20261021/local-iso-copy.sha256
+1 .M N... 100644 100644 100644 3c643c77d148c6204ffd541c418a6a3c4c2eb222 3c643c77d148c6204ffd541c418a6a3c4c2eb222 docs/v1/evidence/native-qemu-windows-20261021/ppm_to_png.py
+1 .M N... 100644 100644 100644 c2f8516d8fdff47389adb41f2d8e0254f337c591 c2f8516d8fdff47389adb41f2d8e0254f337c591 docs/v1/evidence/native-qemu-windows-20261021/run.json
+1 .M N... 100644 100644 100644 4ef37f51894707a88379489a4c08e553be5f2917 4ef37f51894707a88379489a4c08e553be5f2917 docs/v1/evidence/offline-namespace-arch-wsl-20261015/production-mount-preflight-20261015.txt
+1 .M N... 100644 100644 100644 a4b08fb171a47ce6d1771d3c1f0a4679fb24718f a4b08fb171a47ce6d1771d3c1f0a4679fb24718f docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/result.txt
+1 .M N... 100644 100644 100644 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 docs/v1/evidence/offline-worker-regression-20261023/diff-check-windows.exit
+1 .M N... 100644 100644 100644 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 docs/v1/evidence/offline-worker-regression-20261023/windows-import-smoke.exit
+1 .M N... 100644 100644 100644 d00491fd7e5bb6fa28c517a0bb32b8b506539d4d d00491fd7e5bb6fa28c517a0bb32b8b506539d4d docs/v1/evidence/offline-worker-regression-20261023/windows-long-path-diagnostic.exit
+1 .M N... 100644 100644 100644 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 573541ac9702dd3969c9bc859d2b91ec1f7e6e56 docs/v1/evidence/offline-worker-regression-20261023/windows-platform-specific-tests.exit
+1 .M N... 100644 100644 100644 d00491fd7e5bb6fa28c517a0bb32b8b506539d4d d00491fd7e5bb6fa28c517a0bb32b8b506539d4d docs/v1/evidence/offline-worker-regression-20261023/windows-unc-basetemp-diagnostic.exit
+1 .M N... 100644 100644 100644 9a98db8ccfa31671f1905b05121cb6fd3294eb03 9a98db8ccfa31671f1905b05121cb6fd3294eb03 docs/v1/evidence/rootless-archiso-namespace-primitive-20261016/raw-probe-output-20261016.txt
+1 .M N... 100644 100644 100644 8025b97806b3c8d909def5d8696ab37dcec7dd21 8025b97806b3c8d909def5d8696ab37dcec7dd21 docs/v1/evidence/safety-coverage-20261017/SHA256SUMS
+1 .M N... 100644 100644 100644 139a28138dcdf393026cb30219c5b8f65cee9542 139a28138dcdf393026cb30219c5b8f65cee9542 docs/v1/evidence/software-regression-20261016/wheel-build-and-install-rc1.txt
+1 .M N... 100644 100644 100644 fabcdbaba67aac50273ab53d989f0ce1dfa51732 fabcdbaba67aac50273ab53d989f0ce1dfa51732 docs/v1/evidence/software-regression-20261016/windows-post-rc1-initial-failed.xml
+1 .M N... 100644 100644 100644 7d954675ec96c876197f47efc5cce27740712650 7d954675ec96c876197f47efc5cce27740712650 docs/v1/evidence/software-regression-20261017/SHA256SUMS
+1 .M N... 100644 100644 100644 7c4e3a05ec441615ad1f8f3f315816cfb7b16eeb 7c4e3a05ec441615ad1f8f3f315816cfb7b16eeb docs/v1/evidence/software-regression-20261017/windows-safety-coverage-followup-short.xml
+1 .M N... 100644 100644 100644 a4cf7b13e8ff01f4187dd3ff499ed56a945f3069 a4cf7b13e8ff01f4187dd3ff499ed56a945f3069 docs/v1/evidence/software-regression-20261017/windows-safety-coverage-followup.xml
+1 .M N... 100644 100644 100644 9507d706fedc03fca8aa7238f7c8e5500fc1fd8a 9507d706fedc03fca8aa7238f7c8e5500fc1fd8a docs/v1/evidence/software-regression-20261017/windows-safety-crash-replay-final.xml
+1 .M N... 100644 100644 100644 6f1cc58f623e9459eb5cab5127945c608023090e 6f1cc58f623e9459eb5cab5127945c608023090e docs/v1/evidence/software-regression-20261020/SHA256SUMS
+1 .M N... 100644 100644 100644 db8c25e6c8abc4161cb6fe43c60d8dd4fbc5c992 db8c25e6c8abc4161cb6fe43c60d8dd4fbc5c992 docs/v1/evidence/software-regression-20261020/windows-runtime-followup.xml
+1 .M N... 100644 100644 100644 43a3fdfbf649c95d786b0de5d85e029f3918eeba 43a3fdfbf649c95d786b0de5d85e029f3918eeba docs/v1/evidence/software-regression-20261021/SHA256SUMS
+1 .M N... 100644 100644 100644 553f9c3aa1db138c135cda65983fd930b5e00fc6 553f9c3aa1db138c135cda65983fd930b5e00fc6 docs/v1/evidence/software-regression-worker-20261022/executor-recovered-windows.xml
+1 .M N... 100644 100644 100644 4d379f82658785648bc0558b147287ad8b35a997 4d379f82658785648bc0558b147287ad8b35a997 docs/v1/evidence/software-regression-worker-20261022/windows-pytest.log
+1 .M N... 100644 100644 100644 4997ebbbe3e47d61246a98805c8300347dbcc09f 4997ebbbe3e47d61246a98805c8300347dbcc09f docs/v1/evidence/software-regression-worker-20261022/windows-ui-current.xml
+1 .M N... 100644 100644 100644 e2c1c0253d8f56ed98581b1114b4593d1d25e948 e2c1c0253d8f56ed98581b1114b4593d1d25e948 docs/v1/evidence/vm-arch-boxes-20261020/SHA256SUMS
+1 .M N... 100644 100644 100644 19f25002a94b9dd3fa99544ffbd1f2d1212cbcdd 19f25002a94b9dd3fa99544ffbd1f2d1212cbcdd docs/v1/evidence/vm-arch-boxes-virtio-20261020/SHA256SUMS
+1 .M N... 100644 100644 100644 bf49870863b23c2d1289654bddb8804df50c697a bf49870863b23c2d1289654bddb8804df50c697a docs/v1/evidence/vm-bringup-20261020/SHA256SUMS
+1 .M N... 100644 100644 100644 fc0543676ebe581df09e08f0db2db97cbf351c65 fc0543676ebe581df09e08f0db2db97cbf351c65 docs/v1/evidence/vm-bringup-20261020/archiso-tcg-direct-20261020-argv.json
+1 .M N... 100644 100644 100644 b52e4ba325cf113958a511e9d6241a10637df8b9 b52e4ba325cf113958a511e9d6241a10637df8b9 docs/v1/evidence/vm-bringup-20261020/archiso-tcg-direct-retry1-20261020-argv.json
+1 .M N... 100644 100644 100644 6449f5dae10c7f97d2506982572fb519b7f9277d 6449f5dae10c7f97d2506982572fb519b7f9277d docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-20261020-argv.json
+1 .M N... 100644 100644 100644 980627bd82c065e4b3988b4ce6860786e49a12d3 980627bd82c065e4b3988b4ce6860786e49a12d3 docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-20261020-retry1-argv.json
+1 .M N... 100644 100644 100644 fb4063839f2fd13f0768994062326e1f96abbadf fb4063839f2fd13f0768994062326e1f96abbadf docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-picdefault-20261020-argv.json
+1 .M N... 100644 100644 100644 34c43f0ea967eb8a79662c7e9b5f3f7e4ceafa22 34c43f0ea967eb8a79662c7e9b5f3f7e4ceafa22 docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/README.md
+1 .M N... 100644 100644 100644 7e88edd89e96f5f2a3419060b532632ca327602e 7e88edd89e96f5f2a3419060b532632ca327602e docs/v1/evidence/vm-preflight-20261017/SHA256SUMS
+1 .M N... 100644 100644 100644 7338aabe839fc5cb779baeb9d49c5788bbbfbb25 7338aabe839fc5cb779baeb9d49c5788bbbfbb25 docs/v1/evidence/x200-artifact-preflight-20261015/SHA256SUMS
+1 .M N... 100644 100644 100644 00a7c7af3957b905502b1df4f47beef2e8780911 00a7c7af3957b905502b1df4f47beef2e8780911 docs/v1/evidence/x200-upstream-compile-resume-20261021/SHA256SUMS
+1 .M N... 100644 100644 100644 daea0504797f03c2c65355a46ff0b5cada9282dc daea0504797f03c2c65355a46ff0b5cada9282dc docs/v1/evidence/x200-upstream-compile-smoke-20261015/README.md
+1 .M N... 100644 100644 100644 35d78efedf0387e4c941204b29598fa51313925a 35d78efedf0387e4c941204b29598fa51313925a docs/v1/evidence/x200-upstream-compile-smoke-20261015/SHA256SUMS
+1 .M N... 100644 100644 100644 dd35b567831b562f46b74705f6ffb64b90f8b154 dd35b567831b562f46b74705f6ffb64b90f8b154 docs/v1/evidence/x200-upstream-compile-smoke-20261015/assessment.json
+1 .M N... 100644 100644 100644 9b87b7f85d2c2223391839064791f1602bbaf7bd 9b87b7f85d2c2223391839064791f1602bbaf7bd install.ps1
+1 .M N... 100644 100644 100644 250a6d072eefaa90e71384ccb8a6f756aec159b9 250a6d072eefaa90e71384ccb8a6f756aec159b9 pyproject.toml
+1 .M N... 100644 100644 100644 c4b9cd322cba08fe9589314af216a73693594cad c4b9cd322cba08fe9589314af216a73693594cad requirements.txt
+1 .M N... 100644 100644 100644 bcc2cdf0e3a23fdb94bd732e50320422c922e909 bcc2cdf0e3a23fdb94bd732e50320422c922e909 test_vm/README.md
+1 .M N... 100644 100644 100644 a51895201a501c613753e632c59271358b024afe a51895201a501c613753e632c59271358b024afe test_vm/launch_vm.bat
+1 .M N... 100644 100644 100644 2542f197eecd09ba0b5b34d5650a691e8f8dd55f 2542f197eecd09ba0b5b34d5650a691e8f8dd55f test_vm/launch_vm.py
+1 .M N... 100644 100644 100644 db5759a57f177150266f079163b9f6195642d00f db5759a57f177150266f079163b9f6195642d00f test_vm/mock_chips/generate_mock_chips.py
+1 .M N... 100644 100644 100644 7a0a4f472f20e90bd7d6a936b1bdb5322756f28b 7a0a4f472f20e90bd7d6a936b1bdb5322756f28b test_vm/smbios_profiles.json
+1 .M N... 100644 100644 100644 b119a8c46f48becac3b94910eafb4e9818cca642 b119a8c46f48becac3b94910eafb4e9818cca642 tests/__init__.py
+1 .M N... 100644 100644 100644 bc8626d12805b5b00016a8e760ef6fd6585ef798 bc8626d12805b5b00016a8e760ef6fd6585ef798 tests/test_database.py
+1 .M N... 100644 100644 100644 fef92232ebca388651a6027f26e8f74894b6a475 fef92232ebca388651a6027f26e8f74894b6a475 tests/test_detection.py
+1 .M N... 100644 100644 100644 35818b0ee7d7e2a5303af91cddfa600ddda61f2c 35818b0ee7d7e2a5303af91cddfa600ddda61f2c tests/test_flasher.py
+1 .M N... 100644 100644 100644 e05b7ebf1c13151c48c894458eea3065e054cd05 e05b7ebf1c13151c48c894458eea3065e054cd05 tests/test_guides.py
+1 .M N... 100644 100644 100644 3fc433046a8c9c8cf42d33e0b40a11a955c93663 3fc433046a8c9c8cf42d33e0b40a11a955c93663 tests/test_offline_vm_build_executor.py
+1 .M N... 100644 100644 100644 43e47a2876bcfa9375723ffc99b37dbed58a0788 43e47a2876bcfa9375723ffc99b37dbed58a0788 tests/test_offline_vm_evidence.py
+1 .M N... 100644 100644 100644 16ac0b418638d267ca4b7125b5f4f6f2b05141ec 16ac0b418638d267ca4b7125b5f4f6f2b05141ec tests/test_offline_vm_evidence_adapter.py
+1 .M N... 100644 100644 100644 512ab43b53acc651b8962e6f6c1b4ed1dbc4024d 512ab43b53acc651b8962e6f6c1b4ed1dbc4024d tests/test_offline_vm_worker.py
+1 .M N... 100644 100644 100644 fb98d41043aaefc4de86db190d44c59966ec3fdc fb98d41043aaefc4de86db190d44c59966ec3fdc tests/test_orchestrator.py
+1 .M N... 100644 100644 100644 438d2ee61e40dccc976be27031e0319e00029aa0 438d2ee61e40dccc976be27031e0319e00029aa0 tests/test_phase03_spi_safety.py
+1 .M N... 100644 100644 100644 2e6392f0994adf897a60de64118bb6105896a970 2e6392f0994adf897a60de64118bb6105896a970 tests/test_rom_builder.py
+1 .M N... 100644 100644 100644 28c6366fe04c511f7fd340bef594d0a5d49569ef 28c6366fe04c511f7fd340bef594d0a5d49569ef tests/test_splitter.py
+1 .M N... 100644 100644 100644 8c7ce458d6655d8a0fbe97a98d9c68341934501e 8c7ce458d6655d8a0fbe97a98d9c68341934501e tests/test_ui.py
+1 .M N... 100644 100644 100644 41008b2a85bcc2a72b279f2d4ed66c61cce4fc61 41008b2a85bcc2a72b279f2d4ed66c61cce4fc61 tests/test_usb_builder.py
+1 .M N... 100644 100644 100644 4abecad44e70851038e9e65a994028e8ed7b82b0 4abecad44e70851038e9e65a994028e8ed7b82b0 usb_builder/offline_vm_build.py
+1 .M N... 100644 100644 100644 5c7116fdd2ae429250b643020115324aecd9be3d 5c7116fdd2ae429250b643020115324aecd9be3d usb_builder/offline_vm_build_service.py
+1 .M N... 100644 100644 100644 6dda06f866c81af34eef9d3ed76e2fefb8c1494b 6dda06f866c81af34eef9d3ed76e2fefb8c1494b usb_builder/offline_vm_evidence.py
+1 .M N... 100644 100644 100644 ceeabcf4c3104ec6e4d2ea66aa6e28bce042732b ceeabcf4c3104ec6e4d2ea66aa6e28bce042732b usb_builder/offline_vm_guest_worker.py
+1 .M N... 100644 100644 100644 9e7adc3838fafb81bb33be87ed84c4b8b306e266 9e7adc3838fafb81bb33be87ed84c4b8b306e266 usb_builder/offline_vm_worker.py
+1 .M N... 100644 100644 100644 8a6e27e31e78fa811bc2a589c2770ce3bccd69d2 8a6e27e31e78fa811bc2a589c2770ce3bccd69d2 usb_builder/systemd/librecore-offline-build.service
+1 .M N... 100644 100644 100644 6b9e1af3de415627ed93e882744d6938041793d4 6b9e1af3de415627ed93e882744d6938041793d4 usb_builder/systemd/librecore-offline-preflight.service
+1 .M N... 100644 100644 100644 d6e823c5736115850d660333610f4555a3e6d180 d6e823c5736115850d660333610f4555a3e6d180 usb_builder/ventoy/ventoy.json
+? current-8ea32c5.bundle
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/README.md
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/SHA256SUMS
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.html
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-package-page.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/archlinux-keyring-source-commit.html
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/capture-index.json
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-extra-db.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-keyring-archive-metadata.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/attempt-02-head-only/dated-pacman-archive-metadata.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/capture-archive-heads-retry.ps1
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/capture-index.json
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/capture-official-sources.ps1
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-db.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-core-index.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-extra-db.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-extra-db.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-extra-db.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-extra-db.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-extra-db.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-keyring-archive-metadata.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-keyring-archive-metadata.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-keyring-archive-metadata.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-keyring-archive-metadata.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-keyring-archive-metadata.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-pacman-archive-metadata.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-pacman-archive-metadata.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-pacman-archive-metadata.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-pacman-archive-metadata.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/dated-pacman-archive-metadata.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/host-curl-version.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/host-curl-version.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/host-curl-version.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/keyring-source-commit.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.html
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/master-keys-current.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.argv.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.exit
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.html
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.response-headers.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.stderr.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/pacman-current-package-page.transport.txt
+? docs/v1/evidence/arch-historical-trust-dossier-20261025/snapshot-binding.json
+? docs/v1/evidence/native-qemu-fwcfg-20261025/README.md
+? docs/v1/evidence/native-qemu-fwcfg-20261025/SHA256SUMS
+? docs/v1/evidence/native-qemu-fwcfg-20261025/qemu.argv.json
+? docs/v1/evidence/native-qemu-fwcfg-20261025/qemu.exit
+? docs/v1/evidence/native-qemu-fwcfg-20261025/result.json
+? docs/v1/evidence/native-qemu-fwcfg-20261025/run-fwcfg-transport.ps1
+? docs/v1/evidence/native-qemu-fwcfg-20261025/run-record.txt
+? docs/v1/evidence/native-qemu-whpx-20261025/README.md
+? docs/v1/evidence/native-qemu-whpx-20261025/SHA256SUMS
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-1/display.bmp
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-1/qemu.exit
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-1/result.json
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-1/run-record.txt
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-2/display.bmp
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-2/qemu.exit
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-2/result.json
+? docs/v1/evidence/native-qemu-whpx-20261025/attempt-2/run-record.txt
+? docs/v1/evidence/native-qemu-whpx-20261025/run-whpx-diagnostic.ps1
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/README.md
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/SHA256SUMS
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/command.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/curl-verbose.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/curl-version.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/curl.exit
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/headers.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/pacman-2.sig
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/parse-command.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/parse.exit
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/parse.stderr.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/signature-metadata.json
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/transport.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/attempt-02/url.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/command.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/curl-verbose.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/curl-version.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/curl.exit
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/headers.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/inspect-signature.py
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/pacman-2.sig
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/transport.txt
+? docs/v1/evidence/pacman-minus-two-signature-id-20261026/url.txt
+? docs/v1/evidence/pending-worker-child-status-20261026/README.md
+? docs/v1/evidence/pending-worker-child-status-20261026/SHA256SUMS
+? docs/v1/evidence/pending-worker-child-status-20261026/attempt-07-full-suite-status.md
+? docs/v1/evidence/pending-worker-child-status-20261026/focused-tests.txt
+? docs/v1/evidence/pending-worker-child-status-20261026/image-pin-followup-tests.txt
+? docs/v1/evidence/pending-worker-child-status-20261026/image-pin-followup.exit
+? docs/v1/evidence/pending-worker-child-status-20261026/pytest.exit
+? docs/v1/evidence/software-regression-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/cli-help.exit
+? docs/v1/evidence/software-regression-20261025/collection-missing-textual.junit.xml
+? docs/v1/evidence/software-regression-20261025/collection-missing-textual.pytest.exit
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/environment.txt
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/full.junit.xml
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/full.pytest.exit
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/source-files.sha256
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/README.md
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/environment.txt
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/full.junit.xml
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/full.pytest.exit
+? docs/v1/evidence/software-regression-20261025/direct-kernel-contract-followup/source-files-failed-run.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/STATUS.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-01-hash-scan-aborted/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/STATUS.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-02-destination-denied/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/STATUS.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-03/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/STATUS.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/junit.xml
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/pytest.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-04/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/STATUS.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/junit.xml
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/pytest.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-05/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/README.md
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/git-index-modes.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/junit.xml
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/pytest.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/run-exact-regression.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/snapshot-modes.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/tmpfs-size-kib.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/untracked-source-files.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/wrapper-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/cleanup.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/git-index-modes.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/junit.xml
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/pytest.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/snapshot-modes.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/tmpfs-size-kib.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/untracked-source-files.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-07/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/README.md
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/cleanup-followup.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/cleanup.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/command.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/environment.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/git-index-modes.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/junit.xml
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/pytest.exit
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/runner-execution.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/runner.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/snapshot-modes.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/source-manifest-postrun-recheck.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/source-manifest-postrun.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/source-manifest-recheck.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/source-manifest.sha256
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/tmpfs-size-kib.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/untracked-files.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/untracked-source-files.z
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/worktree.patch
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-09/tmpfs-size-kib.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-10/commit.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-10/git-status.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-10/tmpfs-size-kib.txt
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-07.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-08.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-09.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-10.sh
+? docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression.sh
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-20261025/pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/environment.json
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/final-current-source-posix-autouse-cleanup-v2-20261025/pytest_tmp_cleanup.py
+? docs/v1/evidence/software-regression-20261025/final-full.junit.xml
+? docs/v1/evidence/software-regression-20261025/final-full.pytest.exit
+? docs/v1/evidence/software-regression-20261025/focused-final.junit.xml
+? docs/v1/evidence/software-regression-20261025/focused-final.pytest.exit
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-20261025/environment.txt
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-20261025/pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/environment.txt
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/short-path.exit
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/short-path.junit.xml
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/targeted-clean.exit
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/targeted-clean.junit.xml
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/targeted.exit
+? docs/v1/evidence/software-regression-20261025/full-post-phase3-windows-20261025/targeted.junit.xml
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/README.md
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/SHA256SUMS
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/attempt1-interrupted.environment.txt
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/attempt1-windows-tmpdir.junit.xml
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/attempt2-windows-basetemp.environment.txt
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/attempt2-windows-basetemp.exit
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/environment.txt
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/full.junit.xml
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/full.pytest.exit
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/run-full-suite.sh
+? docs/v1/evidence/software-regression-20261025/fwcfg-followup/source-files.sha256
+? docs/v1/evidence/software-regression-20261025/mypy-native.exit
+? docs/v1/evidence/software-regression-20261025/mypy-win32.exit
+? docs/v1/evidence/software-regression-20261025/normal-umask-full.junit.xml
+? docs/v1/evidence/software-regression-20261025/normal-umask-full.pytest.exit
+? docs/v1/evidence/software-regression-20261025/phase1-service-mount-fix-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/phase1-service-mount-fix-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/image-pin-check.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest-initial-failure.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest-pre-type-check.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest-pre-type-check.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest-retry1-failure.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/phase2-manifest-closure-fix-20261025/pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/README.md
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/final-pytest-space-recovered.exit
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/final-pytest-space-recovered.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/final-pytest.exit
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/final-pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/focused-final.exit
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/focused-final.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/focused-stat-identity.exit
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/focused-stat-identity.junit.xml
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/pytest.junit.xml
+? docs/v1/evidence/software-regression-20261025/post-package-closure-20261025/junit.xml
+? docs/v1/evidence/software-regression-20261025/post-package-closure-20261025/pytest.exit
+? docs/v1/evidence/software-regression-20261025/rerun-software-gates.sh
+? docs/v1/evidence/software-regression-20261025/textual-2.1.2-failure.junit.xml
+? docs/v1/evidence/software-regression-20261025/textual-2.1.2-failure.pytest.exit
+? docs/v1/evidence/software-regression-20261025/umask-0002-mode-failure.junit.xml
+? docs/v1/evidence/software-regression-20261025/umask-0002-mode-failure.pytest.exit
+? docs/v1/evidence/software-regression-20261025/wheel-smoke-final.junit.xml
+? docs/v1/evidence/software-regression-20261025/wheel-smoke-final.pytest.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/README.md
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/SHA256SUMS
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/capture-process.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv/usr/bin/gpgv
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv/usr/share/doc/gpgv/NEWS.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv/usr/share/doc/gpgv/changelog.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv/usr/share/doc/gpgv/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/gpgv/usr/share/man/man1/gpgv.1.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/doc/ubuntu-keyring/changelog.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/doc/ubuntu-keyring/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-master-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/gpgv/usr/bin/gpgv
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/gpgv/usr/share/doc/gpgv/NEWS.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/gpgv/usr/share/doc/gpgv/changelog.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/gpgv/usr/share/doc/gpgv/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/gpgv/usr/share/man/man1/gpgv.1.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/doc/ubuntu-keyring/changelog.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/doc/ubuntu-keyring/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/extracted/verified-attempt-03/ubuntu-keyring/usr/share/keyrings/ubuntu-master-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/input-copy-invocation.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/input-copy.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs-copied.json
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/gpg_2.4.8-4ubuntu3.1_amd64.deb
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/gpgv_2.4.8-4ubuntu3.1_amd64.deb
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/resolute-main-Packages.xz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/resolute-updates-main-Packages.xz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/resolute-updates_InRelease
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/resolute_InRelease
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/ubuntu-archive-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/inputs/ubuntu-keyring_2023.11.28.1build1_all.deb
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/run-invocation.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/run_verification.sh
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05/diagnostic.json
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05/run-invocation.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05/verification.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05/windows-launch.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-05/windows-process.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/bin/gpgv
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/share/doc/gpgv/NEWS.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/share/doc/gpgv/changelog.Debian.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/share/doc/gpgv/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/share/man/man1/gpgv.1.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/doc/ubuntu-keyring/changelog.gz
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/doc/ubuntu-keyring/copyright
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-removed-keys.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/ubuntu-keyring/usr/share/keyrings/ubuntu-master-keyring.gpg
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/run-invocation.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/verification-summary.json
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/verification.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/windows-launch.txt
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/windows-process.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/verification-summary.json
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/verification.exit
+? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/verify_capture.py
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/README.md
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/SHA256SUMS
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-finish.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-invocation.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-process.exit
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-process.stderr.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-process.stdout.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-start.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture-summary.json
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/capture_ubuntu_sources.ps1
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/curl-identity.json
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/curl-version.exit
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/curl-version.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/gnupghome-cleanup.json
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-comparison.json
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser-corrected.exit
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser-corrected.stderr.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser-corrected.stdout.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser.exit
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser.stderr.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/keyring-fingerprint-parser.stdout.txt
+? docs/v1/evidence/ubuntu-trust-corroboration-20261025/parse_keyring_fingerprints.ps1
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/README.md
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/SHA256SUMS
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/SYMLINKS.txt
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_main_binary-amd64_Packages
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_main_cnf_Commands-amd64
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_main_dep11_Components-amd64.yml.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute-updates_main_i18n_Translation-en
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_InRelease
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_main_binary-amd64_Packages
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_main_cnf_Commands-amd64
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_main_dep11_Components-amd64.yml.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/archive.ubuntu.com_ubuntu_dists_resolute_main_i18n_Translation-en
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/lock
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_InRelease
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_main_binary-amd64_Packages
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_main_cnf_Commands-amd64
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_main_dep11_Components-amd64.yml.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/apt-state/lists/security.ubuntu.com_ubuntu_dists_resolute-security_main_i18n_Translation-en
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/capture_stage_a.py
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/bin/gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/doc/gpg/NEWS.Debian.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/doc/gpg/README.Debian
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/doc/gpg/changelog.Debian.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/doc/gpg/copyright
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/lintian/overrides/gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/man/man1/gpg.1.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpg/usr/share/man/man1/keyboxd.1.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/bin/gpgv
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/share/doc/gpgv/NEWS.Debian.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/share/doc/gpgv/changelog.Debian.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/share/doc/gpgv/copyright
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/gpgv/usr/share/man/man1/gpgv.1.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/doc/ubuntu-keyring/changelog.gz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/doc/ubuntu-keyring/copyright
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-removed-keys.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-keyring.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-cloudimage-removed-keys.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-master-keyring.gpg
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/focused-final.junit.xml
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/focused-final.pytest.exit
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/focused-initial-failed.junit.xml
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/focused-pass.junit.xml
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/indices/resolute-main-Packages.xz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/indices/resolute-security-main-Packages.xz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/indices/resolute-updates-main-Packages.xz
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/inspect_records.py
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/manifest.json
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/gpg_2.4.8-4ubuntu3.1_amd64.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/gpgv_2.4.8-4ubuntu3.1_amd64.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/ubuntu-keyring_2023.11.28.1build1_all.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_checks_hash_0/demo.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_checks_hash_current
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_rejects_syml0/linked.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_rejects_syml0/target.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_rejects_symlcurrent
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_checks_hash_0/demo.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_checks_hash_current
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_rejects_syml0/linked.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_rejects_syml0/target.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_rejects_symlcurrent
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_checks_hash_0/demo.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_checks_hash_current
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_syml0/linked.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_syml0/target.deb
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_symlcurrent
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/run_focused_checks.py
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/test_verify_bundle.py
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/ubuntu-main.sources
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/verify_bundle.py
+? docs/v1/evidence/ubuntu-verifier-provenance-20261025/write_checksums.py
+? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/SHA256SUMS
+? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-20261023.bmp
+? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-no-fdc-20261023.bmp
+? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/guest-initramfs-shell-capture-20261023.bmp
+? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt
+? docs/v1/evidence/windows-current-regression-20261026/README.md
+? docs/v1/evidence/windows-current-regression-20261026/SHA256SUMS
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/commit.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/junit.xml
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/pytest.exit
+? docs/v1/evidence/windows-current-regression-20261026/attempt-02/source-hashes.sha256
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/README.md
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/SHA256SUMS
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/pytest.exit
+? docs/v1/evidence/windows-current-regression-20261026/attempt-03/source-pins.sha256
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/README.md
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/SHA256SUMS
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/junit.xml
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/pytest.exit
+? docs/v1/evidence/windows-current-regression-20261026/attempt-04/source-pins.sha256
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/README.md
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/SHA256SUMS
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/junit.xml
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/pytest.exit
+? docs/v1/evidence/windows-current-regression-20261026/attempt-05/source-pins.sha256
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/README.md
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/SHA256SUMS
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/junit.xml
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/pytest.exit
+? docs/v1/evidence/windows-current-regression-20261026/attempt-06/source-pins.sha256
+? docs/v1/evidence/windows-current-regression-20261026/command.txt
+? docs/v1/evidence/windows-current-regression-20261026/environment.txt
+? docs/v1/evidence/windows-current-regression-20261026/pytest.exit
+? docs/v1/evidence/windows-targeted-typing-20261026/README.md
+? docs/v1/evidence/windows-targeted-typing-20261026/SHA256SUMS
+? docs/v1/evidence/windows-targeted-typing-20261026/command.txt
+? docs/v1/evidence/windows-targeted-typing-20261026/commit.txt
+? docs/v1/evidence/windows-targeted-typing-20261026/environment.txt
+? docs/v1/evidence/windows-targeted-typing-20261026/mypy.exit
+? docs/v1/evidence/windows-targeted-typing-20261026/source-pins.sha256
+? docs/v1/evidence/windows-tls-corroboration-20261025/README.md
+? docs/v1/evidence/windows-tls-corroboration-20261025/SHA256SUMS
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-invocation.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-process.exit
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-run.exit
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-run.stderr.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-run.stdout.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-run.timestamps.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-summary-correction.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture-summary.json
+? docs/v1/evidence/windows-tls-corroboration-20261025/capture_windows_tls.ps1
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-authenticode-check.command.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-authenticode-check.exit
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-authenticode-check.stderr.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-authenticode-check.stdout.json
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-version-check.argv.json
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-version-check.exit
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-version-check.stderr.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/curl-version-check.stdout.txt
+? docs/v1/evidence/windows-tls-corroboration-20261025/host-context.json
+? docs/v1/evidence/worker-package-seed-inventory-20261025/README.md
+? docs/v1/evidence/worker-package-seed-inventory-20261025/SHA256SUMS
+? docs/v1/evidence/worker-package-seed-inventory-20261025/seed-inventory.json
+? docs/v1/evidence/worker-package-seed-policy-20261025/README.md
+? docs/v1/evidence/worker-package-seed-policy-20261025/SHA256SUMS
+? docs/v1/evidence/worker-package-seed-policy-20261025/focused-resolver-gate-20261025/environment.txt
+? docs/v1/evidence/worker-package-seed-policy-20261025/focused-resolver-gate-20261025/mypy.exit
+? docs/v1/evidence/worker-package-seed-policy-20261025/focused-resolver-gate-20261025/pytest.exit
+? docs/v1/evidence/worker-package-seed-policy-20261025/focused-resolver-gate-20261025/pytest.junit.xml
+? docs/v1/evidence/worker-package-seed-policy-20261025/focused-resolver-gate-20261025/sources.sha256
+? docs/v1/evidence/worker-package-seed-policy-20261025/seed-policy.json
+? docs/v1/evidence/worker-package-seed-policy-20261025/trust-manifest-proposal-20261025.json
+? gates.sh
+? "label: dos\\nunit: sectors\\n\\nstart=2048, size=522240, type=c\\n"
+? native-arch-gates.exit
+? native-python-packages.txt
+? printf
+? qemu-qemu64-tcg.bmp
+? qemu-qemu64-tcg.png
+? qemu-screen-diagnostic.bmp
+? qemu-screen-diagnostic.ppm
+? retry.sh
+? source.tar.gz
+? tests/test_offline_vm_image.py
+? tests/test_offline_vm_package_closure.py
+? usb_builder/offline_vm_image.py
+? usb_builder/offline_vm_package_closure.py

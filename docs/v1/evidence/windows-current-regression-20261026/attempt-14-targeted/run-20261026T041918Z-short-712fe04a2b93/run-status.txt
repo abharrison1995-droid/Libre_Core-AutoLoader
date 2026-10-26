@@ -1,0 +1,16 @@
+status=targeted-tests-passed-scratch-preserved
+test_result=passed
+pytest_exit=0
+junit_tests=2
+failures=0
+errors=0
+skipped=0
+source_stable=True
+scratch_cleanup=preserved-command-safety-policy
+scratch_root=C:\w\lc14-83a2dcdd203d429a8bc8
+scratch_owner_verified=true
+scratch_reparse_entries=0
+active_process_references=0
+free_bytes_after=7952691200
+hardware_accessed=false
+firmware_accessed=false

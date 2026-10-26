@@ -1,0 +1,10 @@
+executable=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+arguments=-m pytest -p no:cacheprovider -q -ra --tb=short
+junit=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\chunked-attempt-02-20261026\shard-55\junit.xml
+basetemp=C:\w\lc-v1-win-functions-20261026\pytest
+expected_case_count=25
+environment_TEMP_TMP_TMPDIR=C:\w\lc-v1-win-functions-20261026\tmp-55
+environment_PYTHONDONTWRITEBYTECODE=1
+environment_PYTHONOPTIMIZE=0
+environment_GIT_CONFIG=core.longpaths=true
+stable selectors are listed in selectors.txt; parameter IDs are collected fresh

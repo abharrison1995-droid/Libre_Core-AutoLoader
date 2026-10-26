@@ -1,0 +1,4 @@
+Python 3.12.14
+pytest=pytest 9.1.1
+platform=Microsoft Windows 10.0.19044
+temp=C:\Users\Alex\AppData\Local\Temp\librecore-autoloader-v1-windows-targeted-20261026

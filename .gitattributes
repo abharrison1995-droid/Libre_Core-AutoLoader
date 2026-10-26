@@ -18,3 +18,4 @@
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/*.py whitespace=-blank-at-eof
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/protocol.txt whitespace=-blank-at-eof
 /docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/*.sh whitespace=-blank-at-eof
+/docs/v1/evidence/** -text

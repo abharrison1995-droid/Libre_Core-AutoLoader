@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Mon, 26 Oct 2026 01:11:39 GMT
+Content-Type: application/pgp-signature
+Content-Length: 119
+Last-Modified: Wed, 06 May 2026 08:56:37 GMT
+Connection: keep-alive
+ETag: "69fb0245-77"
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+Accept-Ranges: bytes
+

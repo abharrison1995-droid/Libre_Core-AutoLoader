@@ -1,0 +1,367 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+rootdir: C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+configfile: pyproject.toml
+plugins: platformdirs-4.13.0, cov-7.1.0
+collecting ... collected 6 items
+
+tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_refuses_closure_claim_and_cleans_failed_write FAILED [ 16%]
+tests/test_offline_vm_worker.py::test_worker_rejects_preexisting_output_header_before_qemu FAILED [ 33%]
+tests/test_offline_vm_worker.py::test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands FAILED [ 50%]
+tests/test_offline_vm_worker.py::test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry FAILED [ 66%]
+tests/test_offline_vm_worker.py::test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result FAILED [ 83%]
+tests/test_offline_vm_worker.py::test_fixed_guest_evidence_rejects_wrong_package_inventory FAILED [100%]
+
+================================== FAILURES ===================================
+__ test_seed_inventory_writer_refuses_closure_claim_and_cleans_failed_write ___
+
+path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_seed_inventory_writer_ref0/seed-inventory.json')
+inventory = {'format': 'librecore-arch-package-seed-policy-v2', 'status': 'SEED_POLICY_COMPLETE_CLOSURE_UNAVAILABLE'}
+
+    def write_seed_inventory(path: Path, inventory: Mapping[str, object]) -> None:
+        """Create one private, fsynced provisional inventory file without replace."""
+        if inventory.get("format") != SEED_INVENTORY_FORMAT or inventory.get("status") != "SEED_POLICY_COMPLETE_CLOSURE_UNAVAILABLE":
+            _fail("only the metadata-only seed policy with unavailable closures may be written by this phase")
+        if not path.is_absolute() or path.exists() or path.is_symlink():
+            _fail("seed inventory output must be an absolute new path")
+        parent = path.parent
+        parent_info = parent.lstat()
+        if not stat.S_ISDIR(parent_info.st_mode):
+            _fail("seed inventory output parent is not a real directory")
+        ancestor = parent
+        while True:
+            ancestor_info = ancestor.lstat()
+            if stat.S_ISLNK(ancestor_info.st_mode):
+                _fail("seed inventory output has a symlinked parent component")
+            if ancestor.parent == ancestor:
+                break
+            ancestor = ancestor.parent
+        raw = canonical_json(inventory) + b"\n"
+        if len(raw) > MAX_OUTPUT_BYTES:
+            _fail("seed inventory exceeds the fixed output bound")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        fd = -1
+        info: os.stat_result | None = None
+        try:
+            fd = os.open(path, flags, 0o600)
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                _fail("seed inventory output is not a single-link regular file")
+>           _fchmod(fd, 0o600)
+
+usb_builder\offline_vm_package_closure.py:1219: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+usb_builder\offline_vm_package_closure.py:81: in _fchmod
+    _unavailable("descriptor mode setting is unavailable on this platform")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+message = 'descriptor mode setting is unavailable on this platform'
+
+    def _unavailable(message: str) -> NoReturn:
+>       raise PackageClosureUnavailable(message)
+E       usb_builder.offline_vm_package_closure.PackageClosureUnavailable: descriptor mode setting is unavailable on this platform
+
+usb_builder\offline_vm_package_closure.py:75: PackageClosureUnavailable
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_seed_inventory_writer_ref0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E62375A5A0>
+
+    def test_seed_inventory_writer_refuses_closure_claim_and_cleans_failed_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        output = tmp_path / "seed-inventory.json"
+        for claimed_status in ("COMPLETE", "METADATA_CLOSURES_COMPLETE_SIGNATURES_UNVERIFIED", "SIGNED_CLOSURE_COMPLETE"):
+            with pytest.raises(closure.PackageClosureError, match="only the metadata-only seed policy"):
+                closure.write_seed_inventory(
+                    output,
+                    {"format": closure.SEED_INVENTORY_FORMAT, "status": claimed_status},
+                )
+        assert not output.exists()
+    
+        inventory = {"format": closure.SEED_INVENTORY_FORMAT, "status": "SEED_POLICY_COMPLETE_CLOSURE_UNAVAILABLE"}
+        real_write = closure.os.write
+    
+        def failed_write(fd: int, value: bytes | memoryview) -> int:
+            raise OSError("injected partial write")
+    
+        monkeypatch.setattr(closure.os, "write", failed_write)
+        with pytest.raises(OSError, match="partial write"):
+>           closure.write_seed_inventory(output, inventory)
+
+tests\test_offline_vm_package_closure.py:709: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_seed_inventory_writer_ref0/seed-inventory.json')
+inventory = {'format': 'librecore-arch-package-seed-policy-v2', 'status': 'SEED_POLICY_COMPLETE_CLOSURE_UNAVAILABLE'}
+
+    def write_seed_inventory(path: Path, inventory: Mapping[str, object]) -> None:
+        """Create one private, fsynced provisional inventory file without replace."""
+        if inventory.get("format") != SEED_INVENTORY_FORMAT or inventory.get("status") != "SEED_POLICY_COMPLETE_CLOSURE_UNAVAILABLE":
+            _fail("only the metadata-only seed policy with unavailable closures may be written by this phase")
+        if not path.is_absolute() or path.exists() or path.is_symlink():
+            _fail("seed inventory output must be an absolute new path")
+        parent = path.parent
+        parent_info = parent.lstat()
+        if not stat.S_ISDIR(parent_info.st_mode):
+            _fail("seed inventory output parent is not a real directory")
+        ancestor = parent
+        while True:
+            ancestor_info = ancestor.lstat()
+            if stat.S_ISLNK(ancestor_info.st_mode):
+                _fail("seed inventory output has a symlinked parent component")
+            if ancestor.parent == ancestor:
+                break
+            ancestor = ancestor.parent
+        raw = canonical_json(inventory) + b"\n"
+        if len(raw) > MAX_OUTPUT_BYTES:
+            _fail("seed inventory exceeds the fixed output bound")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        fd = -1
+        info: os.stat_result | None = None
+        try:
+            fd = os.open(path, flags, 0o600)
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                _fail("seed inventory output is not a single-link regular file")
+            _fchmod(fd, 0o600)
+            view = memoryview(raw)
+            while view:
+                written = os.write(fd, view)
+                if written <= 0:
+                    _fail("seed inventory output write made no progress")
+                view = view[written:]
+            os.fsync(fd)
+            os.close(fd)
+            fd = -1
+            dir_fd = os.open(parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0))
+            try:
+                current_parent = os.fstat(dir_fd)
+                if (parent_info.st_dev, parent_info.st_ino) != (current_parent.st_dev, current_parent.st_ino):
+                    _fail("seed inventory output parent changed during publication")
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except BaseException as original:
+            if fd >= 0:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            cleanup_error: BaseException | None = None
+            try:
+                current = path.lstat()
+                if info is not None and (current.st_dev, current.st_ino) == (info.st_dev, info.st_ino):
+                    path.unlink()
+                    dir_fd = os.open(parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0))
+                    try:
+                        os.fsync(dir_fd)
+                    finally:
+                        os.close(dir_fd)
+            except BaseException as exc:
+                cleanup_error = exc
+            if cleanup_error is not None:
+>               raise PackageClosureError(
+                    f"seed inventory publication failed and cleanup is uncertain; inspect {path}: {cleanup_error}"
+                ) from original
+E               usb_builder.offline_vm_package_closure.PackageClosureError: seed inventory publication failed and cleanup is uncertain; inspect C:\w\lcwin-focused-20261026\pytest\test_seed_inventory_writer_ref0\seed-inventory.json: [Errno 13] Permission denied: 'C:\\w\\lcwin-focused-20261026\\pytest\\test_seed_inventory_writer_ref0'
+
+usb_builder\offline_vm_package_closure.py:1256: PackageClosureError
+__________ test_worker_rejects_preexisting_output_header_before_qemu __________
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_worker_rejects_preexistin0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6259D3A40>
+
+    def test_worker_rejects_preexisting_output_header_before_qemu(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        plan, deployment, _ = _fixture_plan(tmp_path)
+        monkeypatch.setattr(offline_vm_worker, "PRODUCTION_WORKER_DEPLOYMENT", deployment)
+        with plan.output_volume.path.open("r+b") as stream:
+            stream.write(offline_vm_worker.RESULT_MAGIC)
+        calls: list[object] = []
+    
+        def fake_popen(*args: object, **kwargs: object) -> object:
+            calls.append((args, kwargs))
+            raise AssertionError("QEMU must not launch over a pre-existing result marker")
+    
+>       with pytest.raises(offline_vm_worker.OfflineVmContractError, match="not blank before the worker launch"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'not blank before the worker launch'
+E         Actual message: 'offline VM worker execution is supported only by the reviewed Linux host contract'
+
+tests\test_offline_vm_worker.py:445: AssertionError
+_______ test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands _______
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_guest_one_shot_checks_fix0')
+
+    def test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands(tmp_path: Path) -> None:
+        plan, deployment, request = _fixture_plan(tmp_path)
+        payload = offline_vm_worker.canonical_json(request)
+        source_root = tmp_path / "source-root"
+>       result = offline_vm_guest_worker.run_one_shot(payload, _valid_guest_state(deployment.worker_image.sha256, request), source_root)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:719: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+usb_builder\offline_vm_guest_worker.py:430: in run_one_shot
+    validate_guest_isolation(request, state)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = {'expected_boot_modes': ['bios', 'uefi'], 'format': 'librecore-offline-vm-request-v2', 'layout': {'evidence_capacity':...NCE-RW', 'iso_offset': 65536, 'output_capacity': 327680, ...}, 'operation_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}
+state = GuestIsolation(worker_image_sha256='fc653e205472032353d140e5cd5543e7d3e3de8dc2013b1a43e2f068a4260198', interfaces=('lo...97152)), readonly_device_roles=('request', 'source', 'packages'), all_mounted_devices=((0, 1), (8, 1), (8, 2), (8, 3)))
+
+    def validate_guest_isolation(request: Mapping[str, object], state: GuestIsolation) -> None:
+        parsed = parse_request(json.dumps(request, sort_keys=True, separators=(",", ":")).encode("ascii"))
+        if parsed.get("format") != REQUEST_FORMAT:
+            raise OfflineVmContractError("guest request format is unsupported")
+        if state.worker_image_sha256 != parsed.get("worker_image_sha256"):
+            raise OfflineVmContractError("guest worker image marker differs from the requested pinned image")
+        if set(state.interfaces) != {"lo"}:
+            raise OfflineVmContractError("worker guest has a non-loopback network interface")
+        if state.ipv4_routes or state.ipv6_routes:
+            raise OfflineVmContractError("worker guest has an IP route")
+        by_role: dict[str, GuestMount] = {}
+        for mount in state.mounts:
+            if mount.role in by_role:
+                raise OfflineVmContractError("worker guest reports duplicate mount roles")
+            by_role[mount.role] = mount
+        mounted_roles = {"source", "packages", "scratch"}
+        if set(by_role) != mounted_roles:
+            raise OfflineVmContractError("worker guest mount roles are incomplete or unexpected")
+        seen_devices: set[tuple[int, int]] = set()
+        for role in mounted_roles:
+            expected_id = DEVICE_IDS[role]
+            mount = by_role[role]
+            if mount.device_id != expected_id or mount.target != MOUNT_TARGETS[role] or mount.filesystem != "ext4":
+>               raise OfflineVmContractError(f"worker {role} mount does not match its fixed device/target")
+E               usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+
+usb_builder\offline_vm_guest_worker.py:195: OfflineVmContractError
+___ test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry ____
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_guest_worker_image_identi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6259D3380>
+
+    def test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        _plan, deployment, request = _fixture_plan(tmp_path)
+        fw_cfg_path = tmp_path / "fw_cfg-worker-image-sha256.raw"
+        monkeypatch.setattr(offline_vm_guest_worker, "WORKER_IMAGE_FW_CFG_PATH", fw_cfg_path)
+        expected = deployment.worker_image.sha256
+        fw_cfg_path.write_bytes(expected.encode("ascii"))
+        observed = offline_vm_guest_worker._read_fw_cfg_worker_image_sha256()
+        assert observed == expected
+>       offline_vm_guest_worker.validate_guest_isolation(
+            request, _valid_guest_state(observed, request)
+        )
+
+tests\test_offline_vm_worker.py:753: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = {'format': 'librecore-offline-vm-request-v2', 'operation_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'profile_id': 'librecore-v1', 'worker_image_sha256': 'fc653e205472032353d140e5cd5543e7d3e3de8dc2013b1a43e2f068a4260198', ...}
+state = GuestIsolation(worker_image_sha256='fc653e205472032353d140e5cd5543e7d3e3de8dc2013b1a43e2f068a4260198', interfaces=('lo...97152)), readonly_device_roles=('request', 'source', 'packages'), all_mounted_devices=((0, 1), (8, 1), (8, 2), (8, 3)))
+
+    def validate_guest_isolation(request: Mapping[str, object], state: GuestIsolation) -> None:
+        parsed = parse_request(json.dumps(request, sort_keys=True, separators=(",", ":")).encode("ascii"))
+        if parsed.get("format") != REQUEST_FORMAT:
+            raise OfflineVmContractError("guest request format is unsupported")
+        if state.worker_image_sha256 != parsed.get("worker_image_sha256"):
+            raise OfflineVmContractError("guest worker image marker differs from the requested pinned image")
+        if set(state.interfaces) != {"lo"}:
+            raise OfflineVmContractError("worker guest has a non-loopback network interface")
+        if state.ipv4_routes or state.ipv6_routes:
+            raise OfflineVmContractError("worker guest has an IP route")
+        by_role: dict[str, GuestMount] = {}
+        for mount in state.mounts:
+            if mount.role in by_role:
+                raise OfflineVmContractError("worker guest reports duplicate mount roles")
+            by_role[mount.role] = mount
+        mounted_roles = {"source", "packages", "scratch"}
+        if set(by_role) != mounted_roles:
+            raise OfflineVmContractError("worker guest mount roles are incomplete or unexpected")
+        seen_devices: set[tuple[int, int]] = set()
+        for role in mounted_roles:
+            expected_id = DEVICE_IDS[role]
+            mount = by_role[role]
+            if mount.device_id != expected_id or mount.target != MOUNT_TARGETS[role] or mount.filesystem != "ext4":
+>               raise OfflineVmContractError(f"worker {role} mount does not match its fixed device/target")
+E               usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+
+usb_builder\offline_vm_guest_worker.py:195: OfflineVmContractError
+___ test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result ___
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_fixed_guest_evidence_reco0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6259D0B90>
+
+    def test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        request, state, result, _output, _work, target_root, candidate = _fixed_evidence_case(tmp_path, monkeypatch)
+>       fixed = offline_vm_guest_worker.collect_fixed_build_evidence(request, state, result)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_offline_vm_worker.py:1224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+usb_builder\offline_vm_guest_worker.py:682: in collect_fixed_build_evidence
+    validate_guest_isolation(parsed, state)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = {'expected_boot_modes': ['bios', 'uefi'], 'format': 'librecore-offline-vm-request-v2', 'layout': {'evidence_capacity':...NCE-RW', 'iso_offset': 65536, 'output_capacity': 327680, ...}, 'operation_id': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', ...}
+state = GuestIsolation(worker_image_sha256='fc653e205472032353d140e5cd5543e7d3e3de8dc2013b1a43e2f068a4260198', interfaces=('lo...97152)), readonly_device_roles=('request', 'source', 'packages'), all_mounted_devices=((0, 1), (8, 1), (8, 2), (8, 3)))
+
+    def validate_guest_isolation(request: Mapping[str, object], state: GuestIsolation) -> None:
+        parsed = parse_request(json.dumps(request, sort_keys=True, separators=(",", ":")).encode("ascii"))
+        if parsed.get("format") != REQUEST_FORMAT:
+            raise OfflineVmContractError("guest request format is unsupported")
+        if state.worker_image_sha256 != parsed.get("worker_image_sha256"):
+            raise OfflineVmContractError("guest worker image marker differs from the requested pinned image")
+        if set(state.interfaces) != {"lo"}:
+            raise OfflineVmContractError("worker guest has a non-loopback network interface")
+        if state.ipv4_routes or state.ipv6_routes:
+            raise OfflineVmContractError("worker guest has an IP route")
+        by_role: dict[str, GuestMount] = {}
+        for mount in state.mounts:
+            if mount.role in by_role:
+                raise OfflineVmContractError("worker guest reports duplicate mount roles")
+            by_role[mount.role] = mount
+        mounted_roles = {"source", "packages", "scratch"}
+        if set(by_role) != mounted_roles:
+            raise OfflineVmContractError("worker guest mount roles are incomplete or unexpected")
+        seen_devices: set[tuple[int, int]] = set()
+        for role in mounted_roles:
+            expected_id = DEVICE_IDS[role]
+            mount = by_role[role]
+            if mount.device_id != expected_id or mount.target != MOUNT_TARGETS[role] or mount.filesystem != "ext4":
+>               raise OfflineVmContractError(f"worker {role} mount does not match its fixed device/target")
+E               usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+
+usb_builder\offline_vm_guest_worker.py:195: OfflineVmContractError
+__________ test_fixed_guest_evidence_rejects_wrong_package_inventory __________
+
+tmp_path = WindowsPath('C:/w/lcwin-focused-20261026/pytest/test_fixed_guest_evidence_reje0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6259A8620>
+
+    def test_fixed_guest_evidence_rejects_wrong_package_inventory(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        request, state, result, *_rest = _fixed_evidence_case(tmp_path, monkeypatch, package_query=b"other 1\n")
+>       with pytest.raises(offline_vm_worker.OfflineVmContractError, match="package inventory"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'package inventory'
+E         Actual message: 'worker packages mount does not match its fixed device/target'
+
+tests\test_offline_vm_worker.py:1312: AssertionError
+- generated xml file: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\full-suite-retry-20261026\focused-six-junit.xml -
+=========================== short test summary info ===========================
+FAILED tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_refuses_closure_claim_and_cleans_failed_write - usb_builder.offline_vm_package_closure.PackageClosureError: seed inventory publication failed and cleanup is uncertain; inspect C:\w\lcwin-focused-20261026\pytest\test_seed_inventory_writer_ref0\seed-inventory.json: [Errno 13] Permission denied: 'C:\\w\\lcwin-focused-20261026\\pytest\\test_seed_inventory_writer_ref0'
+FAILED tests/test_offline_vm_worker.py::test_worker_rejects_preexisting_output_header_before_qemu - AssertionError: Regex pattern did not match.
+  Expected regex: 'not blank before the worker launch'
+  Actual message: 'offline VM worker execution is supported only by the reviewed Linux host contract'
+FAILED tests/test_offline_vm_worker.py::test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands - usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+FAILED tests/test_offline_vm_worker.py::test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry - usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+FAILED tests/test_offline_vm_worker.py::test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result - usb_builder.offline_vm_worker.OfflineVmContractError: worker packages mount does not match its fixed device/target
+FAILED tests/test_offline_vm_worker.py::test_fixed_guest_evidence_rejects_wrong_package_inventory - AssertionError: Regex pattern did not match.
+  Expected regex: 'package inventory'
+  Actual message: 'worker packages mount does not match its fixed device/target'
+============================== 6 failed in 4.09s ==============================

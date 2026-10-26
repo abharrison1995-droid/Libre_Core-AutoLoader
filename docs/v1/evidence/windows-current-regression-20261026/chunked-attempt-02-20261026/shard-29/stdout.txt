@@ -1,0 +1,6 @@
+......................sss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_post_reboot_evidence.py:200: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:237: production sidecar durability requires POSIX directory fsync
+SKIPPED [1] tests\test_post_reboot_evidence.py:275: production sidecar durability requires POSIX directory fsync
+22 passed, 3 skipped in 161.48s (0:02:41)

@@ -1,0 +1,1 @@
+& "C:\Users\Alex\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.exe" -NoLogo -NoProfile -File "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\ubuntu-trust-corroboration-20261025\capture_ubuntu_sources.ps1"

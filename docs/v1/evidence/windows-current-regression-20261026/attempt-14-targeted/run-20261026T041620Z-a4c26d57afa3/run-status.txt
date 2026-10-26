@@ -1,0 +1,17 @@
+status=incomplete-or-failed
+guard=completed
+guard_detail=
+started_utc=2026-10-26T04:16:20.0918892Z
+finished_utc=2026-10-26T04:16:30.4879226Z
+pytest_exit=1
+junit_valid=False
+tests=2
+failures=1
+errors=0
+skipped=0
+source_stable=True
+free_bytes_before=7996354560
+free_bytes_after=7983480832
+pytest_started=true
+hardware_accessed=false
+firmware_accessed=false

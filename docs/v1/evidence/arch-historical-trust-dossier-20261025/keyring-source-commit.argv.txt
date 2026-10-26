@@ -1,0 +1,5 @@
+﻿curl.exe "--noproxy" "*" "--proto" "=https" "--proto-redir" "=https" "--max-redirs" "3" "--max-time" "30" "--max-filesize" "524288" "--silent" "--show-error" "--location" "--dump-header" "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\arch-historical-trust-dossier-20261025\keyring-source-commit.response-headers.txt" "--write-out" "http_code=%{http_code}
+url_effective=%{url_effective}
+num_redirects=%{num_redirects}
+ssl_verify_result=%{ssl_verify_result}
+certs=%{certs}" "--output" "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\arch-historical-trust-dossier-20261025\archlinux-keyring-source-commit.html" "https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046"

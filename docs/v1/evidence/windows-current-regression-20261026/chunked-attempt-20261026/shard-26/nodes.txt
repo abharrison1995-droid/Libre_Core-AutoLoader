@@ -1,0 +1,25 @@
+tests/test_phase10b_write_service.py::test_missing_physical_setup_attestation_blocks_before_confirmation_or_writer[removable_battery_removed]
+tests/test_phase10b_write_service.py::test_missing_physical_setup_attestation_blocks_before_confirmation_or_writer[chip_pin1_orientation_verified]
+tests/test_phase10b_write_service.py::test_missing_physical_setup_attestation_blocks_before_confirmation_or_writer[programmer_disconnect_before_repower]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[-----False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2-ec-observation:1-2026-10-26T10:37:33.747973+00:00-waived-Operator waives possible loss of later OEM EC updates.-False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2---waived-Operator waives possible loss of later OEM EC updates.-False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[-ec-observation:1--waived-Operator waives possible loss of later OEM EC updates.-False0]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[--2026-10-26T10:37:33.747973+00:00-waived-Operator waives possible loss of later OEM EC updates.-False0]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2-ec-observation:1--waived-Operator waives possible loss of later OEM EC updates.-False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2--2026-10-26T10:37:33.747973+00:00-waived-Operator waives possible loss of later OEM EC updates.-False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[-ec-observation:1-2026-10-26T10:37:33.747973+00:00-waived-Operator waives possible loss of later OEM EC updates.-False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2--2026-10-26T10:37:33.747973+00:00---False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[-ec-observation:1--waived-Operator waives possible loss of later OEM EC updates.-False1]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[--2026-10-26T10:37:33.747973+00:00-waived-Operator waives possible loss of later OEM EC updates.-False1]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2-ec-observation:1-2026-10-26T10:37:33.747973+00:00---False]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[1.2-ec-observation:1-2026-10-26T10:37:33.747973+00:00-already-current--True]
+tests/test_phase10b_write_service.py::test_ec_readiness_requires_observed_version_or_explicit_waiver_before_writer[---waived-Operator waives possible loss of later OEM EC updates.-True]
+tests/test_phase10b_write_service.py::test_x220_write_uses_same_service_profile_allowlist_and_full_chip_readback
+tests/test_phase10b_write_service.py::test_changed_probe_after_approval_burns_token_without_journal_or_writer
+tests/test_phase10b_write_service.py::test_changed_setup_after_challenge_burns_approval_before_write_started
+tests/test_phase10b_write_service.py::test_mutated_backup_copy_after_challenge_burns_approval_before_write_started
+tests/test_phase10b_write_service.py::test_artifact_change_at_writer_boundary_is_rejected_before_subprocess
+tests/test_phase10b_write_service.py::test_prewrite_artifact_mutation_after_durable_start_blocks_capability_and_writer
+tests/test_phase10b_write_service.py::test_mutated_backup_volume_identity_fails_revalidation_before_writer
+tests/test_phase10b_write_service.py::test_timeout_interruption_and_spawn_failure_never_retry_or_readback[exception0-write-uncertain-UNCERTAIN]

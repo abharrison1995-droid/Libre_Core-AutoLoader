@@ -1,0 +1,15 @@
+result=FAILED_RELEASE_BLOCKING_SOFTWARE_TESTS
+collected=1391
+passed=1380
+failed=7
+skipped=4
+pytest_exit=1
+failure_group=tests/test_offline_vm_worker.py
+failure_reason=INCOMPLETE_BUILD_SERVICE: evidence source mode is writable by group or others
+source_manifest_comparison=inferred_only (post-run manifest and source-mutation.diff absent; no explicit comparison receipt or outer runner exit receipt retained)
+first_launch=preflight-only exit 88; default WSL /tmp size 4020516 KiB; no tests executed
+second_launch=POSIX source snapshot; exact-tree manifest verified before pytest
+hardware_activity=none
+cleanup=RECONSTRUCTED_POST_SESSION_OBSERVATION; both exact run-scoped scratch paths were absent in a fresh session
+runner_cleanup=permission-denied output while removing read-only test fixtures was observed but not separately retained; no runner cleanup receipt was written
+fresh_session=/tmp reset to default 4020516 KiB with 0 KiB used; /run/user/1000 snapshot path absent

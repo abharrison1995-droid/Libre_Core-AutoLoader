@@ -1,0 +1,11 @@
+Attempt-08 runner execution record
+
+Exact invoked command:
+
+wsl -d Ubuntu -u alex -- bash /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/software-regression-20261025/exact-tree-recapture-20261025/run-exact-regression-attempt-08.sh
+
+The retained `runner.sh` is a byte-for-byte copy of the invoked runner. SHA-256: 71af3e7970655cd0aa8b9bb57cabb6dc098fc0990cd52e578344caf3d76803ea. The runner used the fixed attempt-08 source snapshot and test scratch paths recorded in `command.txt` and `environment.txt`.
+
+The completed WSL process returned exit code 0; pytest wrote `pytest.exit=0`. The runner checks the source snapshot manifest after pytest and exits 90 if the comparison differs. It returned the pytest status, so the process exit 0 also means the in-run comparison completed successfully. The successful comparison's temporary after-manifest is removed by the runner; the in-run logic and final status are now bound here to the retained runner identity.
+
+A second comparison was then performed against the current repository with the same 204-entry manifest scope. `source-manifest-postrun-recheck.sh` and its outputs are retained. `source-manifest-recheck.txt` records PASS and equal pre/post manifest-file hashes. Documentation and evidence edits made after the pytest run are outside the source-manifest scope; the 204 source entries match the exact pre-run manifest.

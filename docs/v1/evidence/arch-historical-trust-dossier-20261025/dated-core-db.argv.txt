@@ -1,0 +1,5 @@
+﻿curl.exe "--noproxy" "*" "--proto" "=https" "--proto-redir" "=https" "--max-redirs" "3" "--max-time" "30" "--max-filesize" "524288" "--silent" "--show-error" "--location" "--dump-header" "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\arch-historical-trust-dossier-20261025\dated-core-db.response-headers.txt" "--write-out" "http_code=%{http_code}
+url_effective=%{url_effective}
+num_redirects=%{num_redirects}
+ssl_verify_result=%{ssl_verify_result}
+certs=%{certs}" "--head" "--output" "NUL" "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/core.db"

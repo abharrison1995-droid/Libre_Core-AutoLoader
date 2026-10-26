@@ -1,0 +1,4 @@
+platform=Ubuntu WSL 2
+python=3.14.4
+pytest=9.1.1
+mypy=1.19.1

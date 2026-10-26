@@ -1,0 +1,9 @@
+Processing .\.
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: libre-core-autoloader
+  Building wheel for libre-core-autoloader (pyproject.toml): started
+  Building wheel for libre-core-autoloader (pyproject.toml): finished with status 'done'
+  Created wheel for libre-core-autoloader: filename=libre_core_autoloader-0.1.0-py3-none-any.whl size=551061 sha256=8dd04f50015e45b4bb58e8d38765d4a339d91f4af2002677e7d31dee726fcb86
+  Stored in directory: C:\Users\Alex\AppData\Local\Temp\pip-ephem-wheel-cache-_pql5fou\wheels\46\4b\6a\b4703ed559aa43326e089ad63312896c24e55e685af5780a3c
+Successfully built libre-core-autoloader

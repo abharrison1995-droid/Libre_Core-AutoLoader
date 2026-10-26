@@ -1,6 +1,258 @@
 # V1 acceptance matrix
 
+## Current-source Ubuntu WSL full regression — 2026-10-26
+
+The full current-source Linux selection passed **1,388 tests, skipped 4, and
+had 0 failures or errors** (1,392 JUnit cases; pytest exit 0; 798.83 seconds).
+The 204-path source manifest matches both the POSIX snapshot and post-run
+capture. Two Windows-specific checks were skipped on Linux. Two Arch pacman
+ownership probes remain **UNVALIDATED** pending trusted ownership evidence.
+See the [full regression evidence](evidence/current-linux-regression-20261026/attempt-01/README.md).
+
+This closes the current Linux software-suite gate for the captured tree when
+combined with the current-source Windows selection below. It does not close
+authenticated package acquisition, worker image deployment, product Live USB
+build and boot, or physical hardware acceptance. No hardware write or
+recovery was performed.
+
+## Current-source native Windows full selection — attempt 15 — 2026-10-26
+
+The complete Windows test selection passed across 61 stable function shards:
+**1,118 passed, 274 skipped, 0 failed, 0 errors** (1,392 cases; every shard
+exit `0`). JUnit case counts matched each shard's expected selection, and a
+204-path source/test manifest was identical before and after. The skips are
+predominantly Linux/POSIX contracts. The full-run environment skipped the
+wheel smoke because its project virtual environment lacked installed
+`setuptools` and `wheel`; a focused native Windows rerun with existing bundled
+tools then passed **1 test**. Linux host ownership probes remain
+`UNVALIDATED`. See the [wheel-smoke follow-up](evidence/windows-current-regression-20261026/wheel-smoke-bundled-runtime-20261026/README.md)
+and the full run's commands, JUnit, logs, per-shard exits, source hashes and
+checksums in the
+[attempt-15 evidence](evidence/windows-current-regression-20261026/chunked-attempt-02-20261026/README.md).
+
+The first sharded invocation covered 625 cases: 428 passed and 197 were
+skipped. It then stopped because dynamic timestamp-bearing parameter IDs had
+changed since collection. The rejected shard ran zero tests and is retained as
+a runner diagnostic. The function-selector rerun above executed and accounted
+for the complete 1,392-case selection. Neither Windows run validates Linux-only
+worker behavior, firmware builds, Live USB boot, or physical hardware.
+
+## Current-source CLI/Textual shared-controller regression — 2026-10-26
+
+The complete focused native Windows selection passed **8 tests, skipped 1**
+(pytest exit `0`). It exercises the shared `ApplicationController` routes for
+the CLI and Textual workflows, including T430 handoff, typed X200/X220
+workflow requests, write confirmation, and fail-closed cancellation. The skip
+requires POSIX directory-fsync support. An initial run with a long pytest temp
+path had two synthetic fixture failures in Git for Windows; the complete
+selection passed after rerun with a short temp root. Both invocations and the
+failure output are retained in the
+[shared-controller evidence bundle](evidence/shared-controller-regression-20261026/README.md).
+This does not validate a physical write, read-back, recovery, device boot, or
+the full Windows suite. No-incremental mypy checks passed with no issues in
+119 production Python files for both Win32 and Linux targets; see the
+[Win32 evidence](evidence/windows-mypy-win32-rerun-20261026/README.md) and
+[Linux evidence](evidence/linux-mypy-rerun-20261026/README.md). These are
+static-analysis results only.
+
+A separate read-only review of the retained Arch/Ubuntu trust evidence found
+Stage A still blocked: verifier provenance, historical signer state, and the
+authenticated package closure remain unresolved. The audit discloses the
+pre-existing 119-byte pacman signature packet and acquired no new material;
+see the [trust-gate audit](evidence/arch-trust-gate-audit-20261026/README.md).
+
+## Previous software regression — attempt 13 — 2026-10-26
+
+The full Ubuntu WSL 2 POSIX-snapshot suite passed **1,388, skipped 4, failed
+0** (1,392 cases; pytest exit `0`). The focused retry of the seven attempt-12
+fixture failures and the umask `0002` regression passed **8 cases**. The
+pre-test snapshot and post-test source comparison receipts match. Two
+Windows-only tests and two Arch executable-ownership probes were skipped; Arch
+ownership remains `UNVALIDATED`. See the
+[attempt-13 record](evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-13/README.md).
+
+This software pass does not satisfy worker VM/image deployment, authenticated
+package closure, product Live USB build/boot, or any of the three real-device
+firmware workflows. Those gates remain pending. No physical write or recovery
+was performed.
+
+## Current resolver and package-closure follow-up — 2026-10-25
+
+SOL accepted the fail-closed resolver slice. The pinned snapshot has no
+authenticated ALPM `vercmp` identity, so production closure generation rejects
+caller-supplied comparators before database parsing or comparison. Adding a
+resolver field to altered lock bytes fails the exact snapshot hash check. The
+focused closure/image regression passed **68 tests, 0 skipped, 0 failures or
+errors**; scoped mypy passed on both modules. Retained log, JUnit, exit files,
+environment, source hashes, and the unavailable trust/seed records are in the
+[resolver evidence bundle](evidence/worker-package-seed-policy-20261025/README.md).
+
+This follow-up did not rerun the full suite. Package signatures remain
+unverified and acquisition-blocked; no key or package was acquired, no closure
+was generated, and no image, VM, product ISO, or hardware workflow was run.
+
+## Historical post-Phase-3 regression — 2026-10-25
+
+Ubuntu WSL 2, Python 3.14.4, pytest 9.1.1: **1,375 passed, 4 skipped, 0 failed, 0 errors** (1,379 JUnit cases; 858.21 seconds; exit `0`). The two Windows-only skips were both run successfully in a targeted Windows-host run (**2 passed**). Two real Arch host probes remain `UNVALIDATED` because this host lacks trusted Arch pacman executable-ownership evidence. They are skips, not passes. Exact commands, captures, skip reasons and hashes are in the [post-Phase-3 full regression record](evidence/software-regression-20261025/full-post-phase3-20261025/README.md).
+
+The current full Windows suite was attempted but interrupted when C: fell to approximately 1.6 MiB free; it has no completed result. The two Windows-specific V1 checks passed in a separate short-path targeted run. See the [Windows host record](evidence/software-regression-20261025/full-post-phase3-windows-20261025/README.md). The previous 1,362-case full run with nine failures is historical and predates the Phase 1–3 fixes.
+
+This is software-only evidence. The package resolver and authenticated package closure, worker VM/image execution, product ISO build/boot, and all three representative hardware workflows remain pending. No package acquisition, firmware write, hardware recovery, or physical boot was performed.
+
+
 `Software tested` means exercised by automated tests or a non-destructive build. `Hardware pending` means no real-device evidence is present in this repository baseline.
+
+## Historical software regression after direct-kernel worker contract — 2026-10-25
+
+The latest full suite passed **1,336 tests, skipped 5**, with zero failures or
+errors in **851.40 seconds** (JUnit: 1,341 cases; exit `0`). It includes the
+package-seed parser, direct-kernel contract, sealed-memfd bounds, and corrected
+Linux process-group test. The exact worktree, invocation, skip reasons, and
+output hashes are in the
+[current regression record](evidence/software-regression-20261025/direct-kernel-contract-followup-rerun-20261025/README.md).
+
+The immediately preceding full-suite attempt had one failure in the
+`/proc/<pid>/stat` liveness helper after the terminated process disappeared
+between lookup and read. The test now handles `ProcessLookupError`; its
+targeted repeat and full builder-module runs passed before the successful full
+rerun. The failed run remains recorded at
+[`direct-kernel-contract-followup`](evidence/software-regression-20261025/direct-kernel-contract-followup/README.md).
+
+A separate bounded native-QEMU guest read the exact 64-byte fw_cfg digest from
+the fixed guest path. This validates only QEMU's transport for that value; it
+does not establish a deployed worker image, worker execution, build, product
+ISO, or BIOS/UEFI boot. See the
+[transport diagnostic](evidence/native-qemu-fwcfg-20261025/README.md).
+
+The source-level transport fix and regressions do not change release status:
+`PRODUCTION_WORKER_DEPLOYMENT` is still `None`, the default guest entrypoint
+is still unavailable, and `build_usb.execute_build` remains disconnected.
+Production worker deployment, effective isolation, current-source build and
+product-ISO boot remain open. The T430 1vyrain, X200 Libreboot, and X220
+Coreboot hardware workflows remain intentionally deferred; no firmware write,
+recovery operation, or physical-device test occurred.
+
+## Offline worker package seed metadata — INCOMPLETE / NOT AN ACCEPTANCE PASS
+
+The 2026-10-25 parser checked the staged snapshot-pinned Arch repository
+databases and recorded nine direct package metadata rows with a total
+database-declared compressed size of 37,264,803 bytes. This is
+`SEED_SET_INCOMPLETE`: the worker base/account and kernel/initramfs seed policy
+is unresolved, and no hash-pinned ALPM comparator identity exists for
+recursive dependency resolution. The inventory identifies `archiso` as a
+builder-host tool, not a target USB root package. Package archives were not
+downloaded and signature metadata was not verified against an Arch keyring.
+See the [machine-readable inventory and limits](evidence/worker-package-seed-inventory-20261025/README.md).
+
+The current 1,336/5 full-suite result above includes the parser regressions.
+No worker image, guest execution, product ISO, boot, or hardware result follows
+from this metadata inventory. Production deployment and the build path remain
+closed.
+
+### Current direct-root policy — 2026-10-25 / METADATA ONLY
+
+The earlier nine-row inventory remains preserved as a historical capture. The
+current evidence records 13 worker/build-host direct roots separately from
+the exact 29 roots in the hash-pinned target USB profile. `archiso` belongs to
+the worker build host and is absent from the target profile. Their
+database-declared direct archive size estimates are 206,233,344 bytes,
+231,413,691 bytes, and 245,814,629 bytes respectively for worker, target, and
+deduplicated union. They are metadata estimates, not acquired files or full
+closure sizes.
+
+Acceptance remains **incomplete**: the exact pacman `vercmp` executable is
+not hash-pinned in the snapshot, so both recursive graphs report
+`UNAVAILABLE_NO_PINNED_ALPM_RESOLVER`. The JSON records unverified signature
+blob identities only. Database signatures follow the fixed
+`Required DatabaseOptional` policy. Exact DB hashes are checked before use
+and after a successful builder run; supplied signatures are verified at both
+checks. Package archive signatures remain mandatory. The proposed
+archive/keyring acquisition chain is documented for
+separate review, but no downloads or keyring verification occurred. See the
+[current seed-policy evidence](evidence/worker-package-seed-policy-20261025/README.md).
+
+The 75 focused tests and targeted three-module mypy check establish only
+software parser/contract behavior. Production deployment, candidate
+publication, guest execution, worker image, product boot, and hardware
+acceptance remain pending.
+
+## Direct-kernel worker boot contract — 2026-10-25 / NOT AN ACCEPTANCE PASS
+
+The synthetic contract requires immutable kernel and deterministic initramfs
+identities, binds both hashes in the pending candidate sidecar, and passes
+their sealed read-only memfds to QEMU with a fixed direct-kernel command line.
+It fixes GPT root partition 1, its PARTUUID and type GUID, ext4 UUID, `ro`,
+and serial console. Caller boot arguments are forbidden. The 142 focused
+worker/image tests and 1,336/5 full software regression pass, but no matching
+worker root, kernel, or initramfs was built or booted.
+
+The initramfs still must be generated and checked to include virtio PCI/block
+and ext4 support and to mount the ext4 root read-only. The complete signed
+root closure must include base, systemd, Python, kernel, mkinitcpio, and exact
+initramfs contents. Direct kernel loading skips the disk bootloader but may
+still run QEMU's default x86 firmware. No `-bios` is supplied, and the default
+firmware/ROM identity is unresolved; SeaBIOS is a host-QEMU dependency, not a
+guest package pin. This does not establish firmware bypass or BIOS/UEFI boot.
+
+At this checkpoint the candidate publisher's post-rename cleanup/fsync
+uncertainty remained deferred; see the synthetic-only recovery follow-up below.
+The guest remains unavailable, `PRODUCTION_WORKER_DEPLOYMENT` is `None`, and
+`build_usb.execute_build` is disconnected. Package closure, launcher, image
+generation, QEMU firmware identity, worker execution, product ISO/boot, and
+hardware acceptance remain pending. No package was downloaded, no image was
+built, and QEMU was not launched in this phase.
+
+## Candidate publisher transaction recovery — 2026-10-25 / SYNTHETIC ONLY
+
+The private candidate helper now writes a durable sibling journal for
+`PRE_RENAME`, `RENAMED_UNCOMMITTED`, and `COMMITTED_REOPENED`. Its read-only
+inspector is idempotent, binds the destination inode and manifest digest, and
+reports interrupted or mismatched state. The helper preserves the destination
+after a possible rename, surfaces cleanup/lock/fsync errors, and blocks replay
+when recovery state remains. Failure-injection tests cover rename, parent
+fsync, reopen, stage cleanup, lock unlink, and post-unlink fsync; no deployment
+is returned on failure.
+
+The 35 focused image tests exercise only synthetic files. This hardening does
+not enable publication: the production deployment is unset, the default guest
+is unavailable, and the public build route remains disconnected. The 1,336/5
+full-suite result predates this follow-up. No image, package, QEMU, or hardware
+operation was involved.
+
+## Prior current-source software regression before fw_cfg handoff — 2026-10-25
+
+The full suite after the child-observation typing and strict boolean follow-up
+passed **1,285 tests, skipped 5**, with zero failures or errors in **813.16
+seconds** (JUnit: 1,290 tests; exit file: `0`). Captures and hashes are in the
+[2026-10-25 regression record](evidence/software-regression-20261025/README.md).
+Five skips remain: two Windows-only contracts, the full-run wheel smoke's
+setuptools/wheel dependency, and two unvalidated Arch network/preflight cases
+that lack trusted pacman ownership evidence. A separate one-test wheel smoke
+passed with the required build tools installed; it does not change the full
+suite's skip count.
+
+Native and Win32-targeted mypy 1.19.1 passed on 117 source files. The four
+focused offline worker/evidence modules passed 219 tests, and top-level,
+`flash`, and `build-usb` help checks exited 0. This is software-only WSL and
+synthetic evidence. The default guest entrypoint remains unavailable,
+`PRODUCTION_WORKER_DEPLOYMENT` remains `None`, and `build_usb.execute_build`
+is disconnected. Worker deployment, effective guest isolation, VM build,
+product/full-ISO boot, and all physical hardware acceptance remain pending.
+
+A separate 2026-10-25 native Windows QEMU 11.1.2 WHPX diagnostic loaded the
+kernel and initramfs directly from the hash-verified upstream Arch 2026.10.01
+ISO, attached read-only as a CD-ROM, and reached a serial root shell. It did
+not exercise the ISO bootloader. The guest ran `id`, read `/proc/cmdline`, and
+reported `starting` from `systemctl is-system-running`; the failed-unit list
+included `vmtoolsd.service`. This validates only this host's upstream Arch
+live environment; the
+LibreCore worker, current-source product ISO, application/service boot, build,
+and all hardware workflows remain open. See the
+[WHPX diagnostic record](evidence/native-qemu-whpx-20261025/README.md).
+
+The earlier 1,283-passed/5-skipped full run is retained as the checkpoint
+before the final type/test follow-up. The 1,262/4 run predates child-process
+observations; the 1,248/4 and 1,221/4 results are older historical evidence.
 
 ## Superseded 1,146-test Linux result — 2026-10-23
 
@@ -154,6 +406,43 @@ Earlier read-only storage checks are historical. On 2026-10-20, the user authori
 A later VM host check confirmed the i3-3110M supports VT-x/EPT but Windows 10 WSL 3.0.3 still does not expose usable nested VMX/KVM. The Windows Hypervisor Platform API is available. Two diskless QEMU WHPX direct-kernel diagnostics reached the kernel but panicked before a shell with devtmpfs/console errors and `Failed to execute /init (error -1)`; a default-PIC retry had the same result. Read-only initramfs inspection confirmed the expected `/init`, BusyBox shell link, and loader entries but did not identify the failure cause. This was not a normal BIOS/UEFI guest boot. WSL detached the authorized ext4 workspace on shutdown; the user subsequently ran the elevated mount command, and Ubuntu WSL now mounts it at `/mnt/wsl/PHYSICALDRIVE1p2`. No Windows feature or firmware setting was changed. See the host acceleration recheck and retained captures in the VM evidence folder. The guest, native build, product ISO, and hardware gates remain open.
 
 A bounded Windows QEMU TCG direct-kernel comparison progressed to Arch's early `udev`/`archiso_pxe_nbd` hooks and `Triggering uevents...`, but did not reach a shell or verified guest command. It was stopped by the harness; this is not a boot pass.
+
+The later 2026-10-23 Ubuntu WSL QEMU 10.2.1 TCG diagnostic used the
+hash-verified Arch ISO as a read-only CD-ROM with no NIC, disk, writable share,
+or passthrough. Direct-kernel boot reached systemd; serial, curses/VGA, and
+masked-service retries did not yield a verified prompt or `uname -a` output.
+The guest showed an unresolved Namespace Resource Manager failure and waited
+for static `/dev` nodes. The exact latest masked-service QEMU arguments and
+read-only Windows WMI query/output are in the
+[run record](evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt);
+the latest screen is retained at
+[`boot-screen-20261023.bmp`](evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-20261023.bmp).
+The approved ext4 workspace is now read-only. These observations are not a
+shell, worker, build, boot, or hardware pass. See the
+[2026-10-23 VM ISO diagnostic](evidence/vm-iso-tcg-diagnostic-20261023/README.md)
+and its [SHA256SUMS manifest](evidence/vm-iso-tcg-diagnostic-20261023/SHA256SUMS).
+
+The user explicitly approved the guest-only `NoNewPrivileges=0` policy on
+2026-10-23; D-009 records the approved boundary, while real VM/worker proof
+remains pending. A bounded direct-kernel TCG attempt requested
+`systemd.debug_shell=1` with NNP otherwise unchanged. At 120 seconds, Arch
+initramfs hooks/welcome remained visible, the debug shell did not appear, and
+HMP `id` yielded no verified guest command. This is not a shell, worker,
+build, or boot pass. See the exact invocation in the
+[run record](evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt).
+
+A separate minimal initramfs TCG run reached BusyBox with `rdinit=/bin/sh`;
+HMP `uname` returned `Linux`. This is only a minimal shell command. The final
+full-ISO TCG run with floppy drives disabled progressed through initramfs
+hooks, `/dev/sr0` and loop mounts, and a cleanup hook to the Arch welcome
+screen after about 120 seconds, with no interactive shell or visible systemd.
+The captures are
+[`guest-initramfs-shell-capture-20261023.bmp`](evidence/vm-iso-tcg-diagnostic-20261023/guest-initramfs-shell-capture-20261023.bmp)
+and
+[`boot-screen-no-fdc-20261023.bmp`](evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-no-fdc-20261023.bmp);
+exact QEMU arguments and HMP command sequences, with their outcomes, are in the
+[run record](evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt).
+Full-ISO/product boot, worker, build, and hardware acceptance remain pending.
 
 No row is hardware accepted. Automated tests and simulations cannot satisfy the real-device acceptance criteria.
 
@@ -350,3 +639,17 @@ device, physical read-back, boot, and recovery remain unproven/open. See the lat
 full regression evidence in the
 [safety coverage evidence](evidence/safety-coverage-20261017/README.md) and
 [software regression evidence](evidence/software-regression-20261017/README.md).
+
+### Operation-owned package DB copy — 2026-10-25 / SOFTWARE ONLY
+
+Synthetic tests exercise a per-operation private hash-checked database copy,
+source-mutation isolation during the fake builder call, per-entry owner
+validation, and prompt non-candidate result publication when post-build
+validation fails, including a same-inode/same-size pacstrap-status rewrite
+between stat and open. The six focused modules passed **307 tests**. File/directory modes do not make the copy immutable against
+its owner. The fixed builder unit and expected effective systemd policy include
+`/run/librecore-package-dbs` in `ReadOnlyPaths`, but runtime proof of that
+read-only mount remains pending. This does not prove a live package closure,
+signature verification, guest execution, image build, product boot, or hardware
+acceptance. Full-suite regression has not been rerun after this follow-up. See the
+[phase 3 evidence](evidence/software-regression-20261025/phase3-immutable-db-snapshot-20261025/README.md).

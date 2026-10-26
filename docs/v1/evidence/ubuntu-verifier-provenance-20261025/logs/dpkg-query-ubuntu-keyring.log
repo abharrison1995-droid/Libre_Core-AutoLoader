@@ -1,0 +1,6 @@
+ARGV_JSON=["dpkg-query", "-W", "-f=${Version}\t${Architecture}\t${db:Status-Abbrev}\n", "ubuntu-keyring"]
+STDOUT_BEGIN
+2023.11.28.1build1	all	ii 
+STDOUT_END
+STDERR_BEGIN
+STDERR_END

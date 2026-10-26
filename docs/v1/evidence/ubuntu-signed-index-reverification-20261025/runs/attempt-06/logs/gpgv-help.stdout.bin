@@ -1,0 +1,22 @@
+gpgv (GnuPG) 2.4.8
+libgcrypt 1.12.0
+Copyright (C) 2025 g10 Code GmbH
+License GNU GPL-3.0-or-later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Syntax: gpgv [options] [files]
+Check signatures against known trusted keys
+
+
+Options:
+ 
+ -v, --verbose                verbose
+ -q, --quiet                  be somewhat more quiet
+     --keyring FILE           take the keys from the keyring FILE
+ -o, --output FILE            write output to FILE
+     --ignore-time-conflict   make timestamp conflicts only a warning
+     --status-fd FD           write status info to this FD
+     --weak-digest ALGO       reject signatures made with ALGO
+
+Please report bugs to <https://bugs.gnupg.org>.

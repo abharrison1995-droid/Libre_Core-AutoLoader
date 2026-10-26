@@ -1,7 +1,7 @@
 [Unit]
 Description=LibreCore sealed offline V1 NNP=1 build preflight
 After=local-fs.target
-RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch
+RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs
 ConditionPathExists=/dev/disk/by-id/virtio-LC-REQUEST-RO
 ConditionPathExists=!/run/librecore-worker/preflight-started.json
 
@@ -25,8 +25,8 @@ RestrictAddressFamilies=AF_UNIX
 ProtectSystem=strict
 ProtectHome=yes
 ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /dev/disk/by-id/virtio-LC-REQUEST-RO
-ReadWritePaths=/run/librecore-scratch
-RuntimeDirectory=librecore-scratch librecore-worker
+ReadWritePaths=/run/librecore-scratch /run/librecore-package-dbs
+RuntimeDirectory=librecore-scratch librecore-worker librecore-package-dbs
 RuntimeDirectoryMode=0700
 KillMode=control-group
 RuntimeMaxSec=4h30min

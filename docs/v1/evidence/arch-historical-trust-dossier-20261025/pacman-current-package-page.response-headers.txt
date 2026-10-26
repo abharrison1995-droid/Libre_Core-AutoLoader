@@ -1,0 +1,16 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 25 Oct 2026 22:35:20 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 21901
+Connection: keep-alive
+Content-Security-Policy: base-uri 'none'; default-src 'self'; script-src 'self' 'nonce-RbbJw66O0wZprGUSKWVuqw=='; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'
+ETag: "eb1a3240fc0fa7a68aa11c9f87d5482a"
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin
+Cross-Origin-Opener-Policy: same-origin
+X-Frame-Options: DENY
+Vary: Cookie
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+X-Cache-Status: MISS
+

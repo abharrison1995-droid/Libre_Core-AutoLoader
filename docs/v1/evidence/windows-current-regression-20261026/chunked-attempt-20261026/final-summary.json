@@ -1,0 +1,18 @@
+{
+  "status": "INCOMPLETE_OR_FAILED",
+  "expected_tests": 1392,
+  "executed_tests": 625,
+  "shards_expected": 56.0,
+  "shards_completed": 26,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 197,
+  "passed": 428,
+  "source_manifest_entries": 204,
+  "source_manifest_unchanged": true,
+  "source_manifest_before_sha256": "ea6c662f697f48dcf7e80bc29b6ac5eb87065091dd26313d47f92469a1c3a942",
+  "source_manifest_after_sha256": "ea6c662f697f48dcf7e80bc29b6ac5eb87065091dd26313d47f92469a1c3a942",
+  "c_free_final_bytes": 5070458880,
+  "started_utc": "2026-10-26T10:41:42.4515676Z",
+  "completed_utc": "2026-10-26T10:49:53.1816963Z"
+}

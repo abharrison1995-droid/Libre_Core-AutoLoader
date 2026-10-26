@@ -1,0 +1,14 @@
+{
+  "command": "Get-AuthenticodeSignature -FilePath C:\\Windows\\System32\\curl.exe",
+  "status": "Valid",
+  "status_message": "Signature verified.",
+  "signer_subject": "CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+  "signer_issuer": "CN=Microsoft Windows Production PCA 2026 RSA2048-SHA256, O=Microsoft Corporation, C=US",
+  "signer_thumbprint_sha1": "667BBA1E1F478221AA65DE4F75187A751B03A453",
+  "signer_not_before_utc": "2026-08-06T17:49:20.0000000Z",
+  "signer_not_after_utc": "2027-08-05T17:49:20.0000000Z",
+  "timestamp_subject": "CN=Microsoft Time-Stamp Service, OU=nShield TSS ESN:A935-03E0-D947, OU=Microsoft America Operations, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+  "timestamp_thumbprint_sha1": "231F3AAD84FC0ED060DC903300EB1E7894888C2A",
+  "native_curl_sha256": "3345339164cf384eff527b6c3160fea8d849a4231ec6ca80513e3a739e505168",
+  "native_curl_size": 711736
+}

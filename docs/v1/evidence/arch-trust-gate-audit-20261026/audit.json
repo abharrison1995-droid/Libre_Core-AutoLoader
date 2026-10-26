@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-26",
+  "result": "STOP_STAGE_A_BLOCKED",
+  "scope": "read-only review of previously retained local evidence",
+  "upstream_authentication_performed": false,
+  "arch_material_acquired_by_audit": false,
+  "arch_key_imported_by_audit": false,
+  "package_payload_executed_by_audit": false,
+  "vm_started_by_audit": false,
+  "hardware_accessed_by_audit": false,
+  "firmware_accessed_by_audit": false,
+  "preexisting_arch_detached_signature_packet_bytes": 119,
+  "preexisting_arch_package_archive_present_in_reviewed_evidence": false,
+  "preexisting_arch_public_key_imported_by_audit": false,
+  "listed_manifest_hashes": {
+    "arch-historical-trust-dossier-20261025": {
+      "entries": 73,
+      "mismatches": 0
+    },
+    "ubuntu-verifier-provenance-20261025": {
+      "entries": 104,
+      "mismatches": 0
+    },
+    "ubuntu-trust-corroboration-20261025": {
+      "entries": 91,
+      "mismatches": 0
+    },
+    "pacman-minus-two-signature-id-20261026": {
+      "entries": 22,
+      "mismatches": 0
+    },
+    "worker-package-seed-inventory-20261025": {
+      "entries": 2,
+      "mismatches": 0
+    },
+    "worker-package-seed-policy-20261025": {
+      "entries": 10,
+      "mismatches": 0
+    }
+  },
+  "blockers": [
+    "Ubuntu verifier and root-keyring provisioning are not independently authenticated",
+    "historical Arch master-key certifications and revocation state are not established",
+    "the exact pacman -2 signer is identified only by unverified signature-packet metadata",
+    "Arch package archives and detached signatures have not been cryptographically verified",
+    "the worker seed set and recursive package closure are incomplete",
+    "no exact authenticated ALPM version-comparator identity is pinned"
+  ]
+}

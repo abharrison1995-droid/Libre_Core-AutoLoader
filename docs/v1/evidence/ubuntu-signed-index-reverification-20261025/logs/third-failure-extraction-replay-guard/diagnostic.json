@@ -1,0 +1,7 @@
+{
+  "no_signature_attempt": true,
+  "refusal": "The helper correctly refused to reuse extraction outputs from prior failed attempts",
+  "status": "EXPECTED_EXTRACTION_REPLAY_GUARD",
+  "no_overwrite": true,
+  "fix": "Use a fresh, fixed verified-attempt-03 extraction directory without deleting prior outputs"
+}

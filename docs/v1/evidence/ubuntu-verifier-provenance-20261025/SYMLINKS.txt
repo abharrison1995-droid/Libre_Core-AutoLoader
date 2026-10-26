@@ -1,0 +1,11 @@
+extracted/gpg/usr/share/doc/gpg/NEWS.Debian.gz -> ../gpgconf/NEWS.Debian.gz
+extracted/gpg/usr/share/doc/gpg/changelog.Debian.gz -> ../gpgconf/changelog.Debian.gz
+pytest-tmp-final/test_archive_file_checks_hash_current -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_checks_hash_0
+pytest-tmp-final/test_archive_file_rejects_syml0/linked.deb -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_rejects_syml0/target.deb
+pytest-tmp-final/test_archive_file_rejects_symlcurrent -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-final/test_archive_file_rejects_syml0
+pytest-tmp-pass/test_archive_file_checks_hash_current -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_checks_hash_0
+pytest-tmp-pass/test_archive_file_rejects_syml0/linked.deb -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_rejects_syml0/target.deb
+pytest-tmp-pass/test_archive_file_rejects_symlcurrent -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp-pass/test_archive_file_rejects_syml0
+pytest-tmp/test_archive_file_checks_hash_current -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_checks_hash_0
+pytest-tmp/test_archive_file_rejects_syml0/linked.deb -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_syml0/target.deb
+pytest-tmp/test_archive_file_rejects_symlcurrent -> /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_syml0

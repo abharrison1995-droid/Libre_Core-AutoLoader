@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import stat
@@ -165,6 +166,13 @@ def _require_hash(value: object, label: str) -> str:
     if not isinstance(value, str) or _HEX256.fullmatch(value) is None:
         raise EvidenceBundleError(f"invalid {label} SHA-256")
     return value
+
+
+def _fchmod(fd: int, mode: int) -> None:
+    fchmod = getattr(os, "fchmod", None)
+    if not callable(fchmod):
+        raise EvidenceBundleError("descriptor mode setting is unavailable on this platform")
+    fchmod(fd, mode)
 
 
 def _current_uid() -> int:
@@ -754,16 +762,18 @@ def _validate_command_status(fd: int, entry: VerifiedEntry, binding: EvidenceBin
     raw = _read_exact(fd, entry.size, entry.offset)
     status = _parse_canonical_json(raw, "command status")
     if set(status) != {
-        "format", "status", "exit_code", "argv_sha256", "operation_id", "request_sha256",
-        "candidate_iso_sha256", "candidate_iso_size",
+        "format", "service", "status", "exit_code", "argv_sha256", "operation_id", "request_sha256",
+        "candidate_iso_sha256", "candidate_iso_size", "build_process_result",
     }:
         raise EvidenceBundleError("command status has missing or unexpected fields")
     argv_digest = status.get("argv_sha256")
     exit_code = status.get("exit_code")
     if (
         status.get("format") != FORMAT
+        or status.get("service") != "librecore-offline-build.service"
         or status.get("status") != "EXITED_ZERO"
         or isinstance(exit_code, bool)
+        or not isinstance(exit_code, int)
         or exit_code != 0
         or not isinstance(argv_digest, str)
         or _HEX256.fullmatch(argv_digest) is None
@@ -771,9 +781,71 @@ def _validate_command_status(fd: int, entry: VerifiedEntry, binding: EvidenceBin
         or status.get("operation_id") != binding.operation_id
         or status.get("request_sha256") != binding.request_sha256
         or status.get("candidate_iso_sha256") != binding.candidate_iso_sha256
+        or isinstance(status.get("candidate_iso_size"), bool)
+        or not isinstance(status.get("candidate_iso_size"), int)
         or status.get("candidate_iso_size") != binding.candidate_iso_size
     ):
         raise EvidenceBundleError("command status lacks a valid reported zero-exit record")
+    process = status.get("build_process_result")
+    process_keys = {
+        "format", "service_name", "argv_sha256", "returncode", "timed_out", "elapsed_seconds",
+        "no_new_privs_before", "no_new_privs_during", "network_namespace_before",
+        "network_namespace_during", "pacstrap_exit_codes", "account", "uid", "gid",
+        "supplementary_gids", "cap_effective", "cap_permitted", "cap_ambient", "interfaces",
+        "ipv4_routes", "ipv6_routes", "cap_bounding",
+    }
+    if not isinstance(process, dict) or set(process) != process_keys:
+        raise EvidenceBundleError("command status build-process result has missing or unexpected fields")
+    process_returncode = process.get("returncode")
+    process_elapsed = process.get("elapsed_seconds")
+    if (
+        process.get("format") != "librecore-offline-vm-build-process-result-v1"
+        or not isinstance(process.get("service_name"), str)
+        or not isinstance(process.get("argv_sha256"), str)
+        or _HEX256.fullmatch(process["argv_sha256"]) is None
+        or (process_returncode is not None and (
+            isinstance(process_returncode, bool)
+            or not isinstance(process_returncode, int)
+            or not -255 <= process_returncode <= 255
+        ))
+        or type(process.get("timed_out")) is not bool
+        or isinstance(process_elapsed, bool)
+        or not isinstance(process_elapsed, (int, float))
+        or not math.isfinite(float(process_elapsed))
+        or not 0 <= float(process_elapsed) <= 24 * 60 * 60
+        or type(process.get("no_new_privs_before")) is not bool
+        or type(process.get("no_new_privs_during")) is not bool
+        or not isinstance(process.get("network_namespace_before"), str)
+        or not isinstance(process.get("network_namespace_during"), str)
+        or not isinstance(process.get("account"), str)
+        or any(
+            isinstance(process.get(name), bool)
+            or not isinstance(process.get(name), int)
+            or not 0 <= process[name] <= 2**31 - 1
+            for name in ("uid", "gid")
+        )
+    ):
+        raise EvidenceBundleError("command status build-process result has malformed scalar values")
+    for name, minimum, maximum, limit in (
+        ("pacstrap_exit_codes", -1, 255, 4096),
+        ("supplementary_gids", 0, 2**31 - 1, 64),
+    ):
+        values = process.get(name)
+        if not isinstance(values, list) or len(values) > limit or any(
+            isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum
+            for value in values
+        ):
+            raise EvidenceBundleError(f"command status build-process result {name} are malformed")
+    for name in ("interfaces", "ipv4_routes", "ipv6_routes"):
+        values = process.get(name)
+        if not isinstance(values, list) or len(values) > 64 or any(not isinstance(value, str) for value in values):
+            raise EvidenceBundleError(f"command status build-process result {name} are malformed")
+    for name in (
+        "cap_effective", "cap_permitted", "cap_ambient", "cap_bounding",
+    ):
+        value = process.get(name)
+        if not isinstance(value, str) or len(value) > 32:
+            raise EvidenceBundleError(f"command status build-process result {name} is malformed")
 
 
 def _parse_entries(raw_entries: object, volume_size: int, trailer_offset: int) -> tuple[VerifiedEntry, ...]:
@@ -1021,7 +1093,7 @@ def _open_directory_chain(root_fd: int, components: Sequence[str], *, create: bo
             next_fd = os.open(component, flags, dir_fd=current_fd)
             try:
                 if create:
-                    os.fchmod(next_fd, 0o700)
+                    _fchmod(next_fd, 0o700)
                 info = os.fstat(next_fd)
                 if (
                     not stat.S_ISDIR(info.st_mode)
@@ -1053,7 +1125,7 @@ def _create_directory_chain(root_fd: int, components: Sequence[str]) -> int:
         flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
         final_fd = os.open(components[-1], flags, dir_fd=parent_fd)
         try:
-            os.fchmod(final_fd, 0o700)
+            _fchmod(final_fd, 0o700)
             info = os.fstat(final_fd)
             if not stat.S_ISDIR(info.st_mode) or info.st_uid != _current_uid() or info.st_nlink < 2:
                 raise EvidenceBundleError("unsafe directory created during evidence extraction")
@@ -1151,7 +1223,7 @@ def extract_evidence_volume(
                     remaining -= len(chunk)
                 if digest.hexdigest() != entry.sha256:
                     raise EvidenceBundleError(f"evidence changed during extraction: {entry.path}")
-                os.fchmod(file_fd, entry.mode)
+                _fchmod(file_fd, entry.mode)
                 os.fsync(file_fd)
                 extracted = os.fstat(file_fd)
                 if (
@@ -1196,7 +1268,7 @@ def extract_evidence_volume(
         # Preserve safe source directory modes after all children have been created.
         for entry in sorted(directory_entries, key=lambda item: item.path.count("/"), reverse=True):
             fd = open_directories[entry.path]
-            os.fchmod(fd, entry.mode)
+            _fchmod(fd, entry.mode)
             os.fsync(fd)
         # Persist the populated tree before publishing the completion marker.
         os.fsync(destination_fd)
@@ -1217,7 +1289,7 @@ def extract_evidence_volume(
         )
         marker_created = True
         try:
-            os.fchmod(marker_fd, 0o600)
+            _fchmod(marker_fd, 0o600)
             marker_view = memoryview(marker_bytes)
             while marker_view:
                 marker_written = os.write(marker_fd, marker_view)

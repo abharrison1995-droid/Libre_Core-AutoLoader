@@ -1,0 +1,4537 @@
+suite: resolute
+component: main
+arch: amd64
+
+
+name: 3cpio
+version: 0.14.0-1ubuntu1
+commands: 3cpio
+
+name: acct
+version: 6.6.4-10build1
+commands: ac,accton,dump-acct,dump-utmp,lastcomm,sa
+
+name: acl
+version: 2.3.2-2
+commands: chacl,getfacl,setfacl
+
+name: acpid
+version: 1:2.0.34-1ubuntu3
+commands: acpi_listen,acpid
+
+name: adcli
+version: 0.9.2-1ubuntu3
+commands: adcli
+
+name: adduser
+version: 3.153ubuntu1
+commands: addgroup,adduser,delgroup,deluser
+
+name: adsys
+version: 0.16.4ubuntu1
+commands: adsysctl,adsysd
+
+name: advancecomp
+version: 2.5-1build2
+commands: advdef,advmng,advpng,advzip
+
+name: aide
+version: 0.19.2-3
+commands: aide
+
+name: aide-common
+version: 0.19.2-3
+commands: aideinit
+
+name: alembic
+version: 1.18.4-1
+commands: alembic
+
+name: alsa-base
+version: 1.0.25+dfsg-0ubuntu9
+commands: alsa
+
+name: alsa-utils
+version: 1.2.15.2-1ubuntu1
+commands: aconnect,alsa-info,alsabat,alsabat-test,alsactl,alsaloop,alsamixer,alsatplg,alsaucm,amidi,amixer,aplay,aplaymidi,aplaymidi2,arecord,arecordmidi,arecordmidi2,aseqdump,aseqnet,aseqsend,axfer,iecset,nhlt-dmic-info,speaker-test
+
+name: amavisd-new
+version: 1:2.13.0-7ubuntu2
+commands: amavis-mc,amavis-services,amavisd,amavisd-agent,amavisd-nanny,amavisd-new-cronjob,amavisd-release,amavisd-signer,amavisd-snmp-subagent,amavisd-submit,p0f-analyzer
+
+name: anacron
+version: 2.3-45ubuntu1
+commands: anacron
+
+name: anope
+version: 2.0.17-1.1
+commands: anope
+
+name: apache2
+version: 2.4.66-2ubuntu2
+commands: a2disconf,a2dismod,a2dissite,a2enconf,a2enmod,a2ensite,a2query,apache2ctl,apachectl
+
+name: apache2-bin
+version: 2.4.66-2ubuntu2
+commands: apache2
+
+name: apache2-dev
+version: 2.4.66-2ubuntu2
+commands: apxs,apxs2,dh_apache2
+
+name: apache2-utils
+version: 2.4.66-2ubuntu2
+commands: ab,check_forensic,checkgid,fcgistarter,htcacheclean,htdbm,htdigest,htpasswd,httxt2dbm,logresolve,rotatelogs,split-logfile
+
+name: apparmor
+version: 5.0.0~beta1-0ubuntu7
+commands: aa-enabled,aa-exec,aa-features-abi,aa-load,aa-remove-unknown,aa-status,aa-teardown,apparmor_parser,apparmor_status
+
+name: apparmor-utils
+version: 5.0.0~beta1-0ubuntu7
+commands: aa-audit,aa-autodep,aa-cleanprof,aa-complain,aa-decode,aa-disable,aa-easyprof,aa-enforce,aa-genprof,aa-logprof,aa-mergeprof,aa-show-usage,aa-unconfined,aa-update-browser
+
+name: apport
+version: 2.34.0-0ubuntu2
+commands: apport-bug,apport-cli,apport-collect,apport-unpack,oem-getlogs,ubuntu-bug
+
+name: apport-retrace
+version: 2.34.0-0ubuntu2
+commands: apport-retrace,crash-digger,dupdb-admin
+
+name: appstream
+version: 1.1.2-1
+commands: appstreamcli
+
+name: apt
+version: 3.2.0
+commands: apt,apt-cache,apt-cdrom,apt-config,apt-get,apt-mark
+
+name: apt-listchanges
+version: 4.8+nmu1
+commands: apt-listchanges
+
+name: apt-utils
+version: 3.2.0
+commands: apt-extracttemplates,apt-ftparchive,apt-sortpkgs
+
+name: aptdaemon
+version: 2.0.2build1
+commands: aptd,aptdcon
+
+name: aspell
+version: 0.60.8.2-3
+commands: aspell,aspell-import,precat,preunzip,prezip,prezip-bin,run-with-aspell,word-list-compress
+
+name: attr
+version: 1:2.5.2-4
+commands: attr,getfattr,setfattr
+
+name: auditd
+version: 1:4.1.2-1build1
+commands: audisp-af_unix,audisp-filter,audisp-syslog,auditctl,auditd,augenrules,aulast,aulastlog,aureport,ausearch,ausyscall
+
+name: authbind
+version: 2.2.0ubuntu2
+commands: authbind
+
+name: autoconf
+version: 2.72-3.1ubuntu2
+commands: autoconf,autoheader,autom4te,autoreconf,autoscan,autoupdate,ifnames
+
+name: autodep8
+version: 0.30build1
+commands: autodep8
+
+name: autofs
+version: 5.1.9-1.2ubuntu4
+commands: automount
+
+name: automake
+version: 1:1.18.1-3build1
+commands: aclocal,aclocal-1.18,automake,automake-1.18
+
+name: autopkgtest
+version: 5.55
+commands: autopkgtest,autopkgtest-build-docker,autopkgtest-build-incus,autopkgtest-build-lxc,autopkgtest-build-lxd,autopkgtest-build-podman,autopkgtest-build-qemu,autopkgtest-buildvm-ubuntu-cloud,autopkgtest-virt-chroot,autopkgtest-virt-docker,autopkgtest-virt-incus,autopkgtest-virt-lxc,autopkgtest-virt-lxd,autopkgtest-virt-null,autopkgtest-virt-podman,autopkgtest-virt-qemu,autopkgtest-virt-schroot,autopkgtest-virt-ssh,autopkgtest-virt-unshare
+
+name: autopoint
+version: 0.23.2-1
+commands: autopoint
+
+name: autotools-dev
+version: 20240727.1build1
+commands: dh_autotools-dev_restoreconfig,dh_autotools-dev_updateconfig
+
+name: avahi-daemon
+version: 0.8-18ubuntu1
+commands: avahi-daemon
+
+name: avahi-utils
+version: 0.8-18ubuntu1
+commands: avahi-browse,avahi-browse-domains,avahi-publish,avahi-publish-address,avahi-publish-service,avahi-resolve,avahi-resolve-address,avahi-resolve-host-name,avahi-set-host-name
+
+name: awstats
+version: 8.0-4
+commands: awstats
+
+name: azure-proxy-agent
+version: 1.0.30-0ubuntu7
+commands: azure-proxy-agent
+
+name: azure-vm-utils
+version: 0.6.0-4build1
+commands: azure-nvme-id
+
+name: b43-fwcutter
+version: 1:019-14build1
+commands: b43-fwcutter
+
+name: baobab
+version: 49.1-2
+commands: baobab
+
+name: base-files
+version: 14ubuntu6
+commands: locale-check
+
+name: base-passwd
+version: 3.6.8
+commands: update-passwd
+
+name: bash
+version: 5.3-2ubuntu1
+commands: bash,bashbug,clear_console,rbash
+
+name: bash-completion
+version: 1:2.16.0-8build1
+commands: dh_bash-completion
+
+name: bc
+version: 1.07.1-4build1
+commands: bc
+
+name: bcache-tools
+version: 1.0.8-5ubuntu1
+commands: bcache-super-show,make-bcache
+
+name: bind9
+version: 1:9.20.18-1ubuntu2
+commands: arpaname,ddns-confgen,dnssec-importkey,named,named-journalprint,named-nzd2nzf,named-rrchecker,nsec3hash,tsig-keygen
+
+name: bind9-dnsutils
+version: 1:9.20.18-1ubuntu2
+commands: delv,dig,mdig,nslookup,nsupdate
+
+name: bind9-host
+version: 1:9.20.18-1ubuntu2
+commands: host
+
+name: bind9-utils
+version: 1:9.20.18-1ubuntu2
+commands: dnssec-cds,dnssec-dsfromkey,dnssec-keyfromlabel,dnssec-keygen,dnssec-ksr,dnssec-revoke,dnssec-settime,dnssec-signzone,dnssec-verify,named-checkconf,named-checkzone,named-compilezone,rndc,rndc-confgen
+
+name: binutils
+version: 2.46-3ubuntu2
+commands: addr2line,ar,as,c++filt,elfedit,gp-archive,gp-collect-app,gp-display-html,gp-display-src,gp-display-text,gprof,gprofng,gprofng-archive,gprofng-collect-app,gprofng-display-html,gprofng-display-src,gprofng-display-text,gprofng-gmon,ld,ld.bfd,nm,objcopy,objdump,ranlib,readelf,size,strings,strip
+
+name: binutils-aarch64-linux-gnu
+version: 2.46-3ubuntu2
+commands: aarch64-linux-gnu-addr2line,aarch64-linux-gnu-ar,aarch64-linux-gnu-as,aarch64-linux-gnu-c++filt,aarch64-linux-gnu-elfedit,aarch64-linux-gnu-gprof,aarch64-linux-gnu-ld,aarch64-linux-gnu-ld.bfd,aarch64-linux-gnu-nm,aarch64-linux-gnu-objcopy,aarch64-linux-gnu-objdump,aarch64-linux-gnu-ranlib,aarch64-linux-gnu-readelf,aarch64-linux-gnu-size,aarch64-linux-gnu-strings,aarch64-linux-gnu-strip
+
+name: binutils-arm-linux-gnueabihf
+version: 2.46-3ubuntu2
+commands: arm-linux-gnueabihf-addr2line,arm-linux-gnueabihf-ar,arm-linux-gnueabihf-as,arm-linux-gnueabihf-c++filt,arm-linux-gnueabihf-elfedit,arm-linux-gnueabihf-gprof,arm-linux-gnueabihf-ld,arm-linux-gnueabihf-ld.bfd,arm-linux-gnueabihf-nm,arm-linux-gnueabihf-objcopy,arm-linux-gnueabihf-objdump,arm-linux-gnueabihf-ranlib,arm-linux-gnueabihf-readelf,arm-linux-gnueabihf-size,arm-linux-gnueabihf-strings,arm-linux-gnueabihf-strip
+
+name: binutils-gold
+version: 2.44-3build1
+commands: dwp,gold,ld.gold
+
+name: binutils-gold-aarch64-linux-gnu
+version: 2.44-3build1
+commands: aarch64-linux-gnu-dwp,aarch64-linux-gnu-gold,aarch64-linux-gnu-ld.gold
+
+name: binutils-gold-arm-linux-gnueabi
+version: 2.44-3build1
+commands: arm-linux-gnueabi-dwp,arm-linux-gnueabi-gold,arm-linux-gnueabi-ld.gold
+
+name: binutils-gold-arm-linux-gnueabihf
+version: 2.44-3build1
+commands: arm-linux-gnueabihf-dwp,arm-linux-gnueabihf-gold,arm-linux-gnueabihf-ld.gold
+
+name: binutils-gold-i686-linux-gnu
+version: 2.44-3build1
+commands: i686-linux-gnu-dwp,i686-linux-gnu-gold,i686-linux-gnu-ld.gold
+
+name: binutils-gold-powerpc-linux-gnu
+version: 2.44-3build1
+commands: powerpc-linux-gnu-dwp,powerpc-linux-gnu-gold,powerpc-linux-gnu-ld.gold
+
+name: binutils-gold-powerpc64le-linux-gnu
+version: 2.44-3build1
+commands: powerpc64le-linux-gnu-dwp,powerpc64le-linux-gnu-gold,powerpc64le-linux-gnu-ld.gold
+
+name: binutils-gold-s390x-linux-gnu
+version: 2.44-3build1
+commands: s390x-linux-gnu-dwp,s390x-linux-gnu-gold,s390x-linux-gnu-ld.gold
+
+name: binutils-gold-sparc-linux-gnu
+version: 2.44-3build1
+commands: sparc-linux-gnu-dwp,sparc-linux-gnu-gold,sparc-linux-gnu-ld.gold
+
+name: binutils-gold-sparc64-linux-gnu
+version: 2.44-3build1
+commands: sparc64-linux-gnu-dwp,sparc64-linux-gnu-gold,sparc64-linux-gnu-ld.gold
+
+name: binutils-gold-x86-64-linux-gnu
+version: 2.44-3build1
+commands: x86_64-linux-gnu-dwp,x86_64-linux-gnu-gold,x86_64-linux-gnu-ld.gold
+
+name: binutils-gold-x86-64-linux-gnux32
+version: 2.44-3build1
+commands: x86_64-linux-gnux32-dwp,x86_64-linux-gnux32-gold,x86_64-linux-gnux32-ld.gold
+
+name: binutils-i686-gnu
+version: 2.46-3ubuntu2
+commands: i686-gnu-addr2line,i686-gnu-ar,i686-gnu-as,i686-gnu-c++filt,i686-gnu-elfedit,i686-gnu-gprof,i686-gnu-ld,i686-gnu-ld.bfd,i686-gnu-nm,i686-gnu-objcopy,i686-gnu-objdump,i686-gnu-ranlib,i686-gnu-readelf,i686-gnu-size,i686-gnu-strings,i686-gnu-strip
+
+name: binutils-i686-linux-gnu
+version: 2.46-3ubuntu2
+commands: i686-linux-gnu-addr2line,i686-linux-gnu-ar,i686-linux-gnu-as,i686-linux-gnu-c++filt,i686-linux-gnu-elfedit,i686-linux-gnu-gprof,i686-linux-gnu-ld,i686-linux-gnu-ld.bfd,i686-linux-gnu-nm,i686-linux-gnu-objcopy,i686-linux-gnu-objdump,i686-linux-gnu-ranlib,i686-linux-gnu-readelf,i686-linux-gnu-size,i686-linux-gnu-strings,i686-linux-gnu-strip
+
+name: binutils-loongarch64-linux-gnu
+version: 2.46-3ubuntu2
+commands: loongarch64-linux-gnu-addr2line,loongarch64-linux-gnu-ar,loongarch64-linux-gnu-as,loongarch64-linux-gnu-c++filt,loongarch64-linux-gnu-elfedit,loongarch64-linux-gnu-gprof,loongarch64-linux-gnu-ld,loongarch64-linux-gnu-ld.bfd,loongarch64-linux-gnu-nm,loongarch64-linux-gnu-objcopy,loongarch64-linux-gnu-objdump,loongarch64-linux-gnu-ranlib,loongarch64-linux-gnu-readelf,loongarch64-linux-gnu-size,loongarch64-linux-gnu-strings,loongarch64-linux-gnu-strip
+
+name: binutils-multiarch
+version: 2.46-3ubuntu2
+commands: x86_64-linux-gnu-addr2line,x86_64-linux-gnu-ar,x86_64-linux-gnu-gprof,x86_64-linux-gnu-nm,x86_64-linux-gnu-objcopy,x86_64-linux-gnu-objdump,x86_64-linux-gnu-ranlib,x86_64-linux-gnu-readelf,x86_64-linux-gnu-size,x86_64-linux-gnu-strings,x86_64-linux-gnu-strip
+
+name: binutils-powerpc-linux-gnu
+version: 2.46-3ubuntu2
+commands: powerpc-linux-gnu-addr2line,powerpc-linux-gnu-ar,powerpc-linux-gnu-as,powerpc-linux-gnu-c++filt,powerpc-linux-gnu-elfedit,powerpc-linux-gnu-gprof,powerpc-linux-gnu-ld,powerpc-linux-gnu-ld.bfd,powerpc-linux-gnu-nm,powerpc-linux-gnu-objcopy,powerpc-linux-gnu-objdump,powerpc-linux-gnu-ranlib,powerpc-linux-gnu-readelf,powerpc-linux-gnu-size,powerpc-linux-gnu-strings,powerpc-linux-gnu-strip
+
+name: binutils-powerpc64le-linux-gnu
+version: 2.46-3ubuntu2
+commands: powerpc64le-linux-gnu-addr2line,powerpc64le-linux-gnu-ar,powerpc64le-linux-gnu-as,powerpc64le-linux-gnu-c++filt,powerpc64le-linux-gnu-elfedit,powerpc64le-linux-gnu-gprof,powerpc64le-linux-gnu-ld,powerpc64le-linux-gnu-ld.bfd,powerpc64le-linux-gnu-nm,powerpc64le-linux-gnu-objcopy,powerpc64le-linux-gnu-objdump,powerpc64le-linux-gnu-ranlib,powerpc64le-linux-gnu-readelf,powerpc64le-linux-gnu-size,powerpc64le-linux-gnu-strings,powerpc64le-linux-gnu-strip
+
+name: binutils-riscv64-linux-gnu
+version: 2.46-3ubuntu2
+commands: riscv64-linux-gnu-addr2line,riscv64-linux-gnu-ar,riscv64-linux-gnu-as,riscv64-linux-gnu-c++filt,riscv64-linux-gnu-elfedit,riscv64-linux-gnu-gprof,riscv64-linux-gnu-ld,riscv64-linux-gnu-ld.bfd,riscv64-linux-gnu-nm,riscv64-linux-gnu-objcopy,riscv64-linux-gnu-objdump,riscv64-linux-gnu-ranlib,riscv64-linux-gnu-readelf,riscv64-linux-gnu-size,riscv64-linux-gnu-strings,riscv64-linux-gnu-strip
+
+name: binutils-s390x-linux-gnu
+version: 2.46-3ubuntu2
+commands: s390x-linux-gnu-addr2line,s390x-linux-gnu-ar,s390x-linux-gnu-as,s390x-linux-gnu-c++filt,s390x-linux-gnu-elfedit,s390x-linux-gnu-gprof,s390x-linux-gnu-ld,s390x-linux-gnu-ld.bfd,s390x-linux-gnu-nm,s390x-linux-gnu-objcopy,s390x-linux-gnu-objdump,s390x-linux-gnu-ranlib,s390x-linux-gnu-readelf,s390x-linux-gnu-size,s390x-linux-gnu-strings,s390x-linux-gnu-strip
+
+name: binutils-sparc-linux-gnu
+version: 2.46-3ubuntu2
+commands: sparc-linux-gnu-addr2line,sparc-linux-gnu-ar,sparc-linux-gnu-as,sparc-linux-gnu-c++filt,sparc-linux-gnu-elfedit,sparc-linux-gnu-gprof,sparc-linux-gnu-ld,sparc-linux-gnu-ld.bfd,sparc-linux-gnu-nm,sparc-linux-gnu-objcopy,sparc-linux-gnu-objdump,sparc-linux-gnu-ranlib,sparc-linux-gnu-readelf,sparc-linux-gnu-size,sparc-linux-gnu-strings,sparc-linux-gnu-strip
+
+name: binutils-x86-64-gnu
+version: 2.46-3ubuntu2
+commands: x86_64-gnu-addr2line,x86_64-gnu-ar,x86_64-gnu-as,x86_64-gnu-c++filt,x86_64-gnu-elfedit,x86_64-gnu-gprof,x86_64-gnu-ld,x86_64-gnu-ld.bfd,x86_64-gnu-nm,x86_64-gnu-objcopy,x86_64-gnu-objdump,x86_64-gnu-ranlib,x86_64-gnu-readelf,x86_64-gnu-size,x86_64-gnu-strings,x86_64-gnu-strip
+
+name: binutils-x86-64-linux-gnu
+version: 2.46-3ubuntu2
+commands: x86_64-linux-gnu-addr2line,x86_64-linux-gnu-ar,x86_64-linux-gnu-as,x86_64-linux-gnu-c++filt,x86_64-linux-gnu-elfedit,x86_64-linux-gnu-gprof,x86_64-linux-gnu-ld,x86_64-linux-gnu-ld.bfd,x86_64-linux-gnu-nm,x86_64-linux-gnu-objcopy,x86_64-linux-gnu-objdump,x86_64-linux-gnu-ranlib,x86_64-linux-gnu-readelf,x86_64-linux-gnu-size,x86_64-linux-gnu-strings,x86_64-linux-gnu-strip
+
+name: binutils-x86-64-linux-gnux32
+version: 2.46-3ubuntu2
+commands: x86_64-linux-gnux32-addr2line,x86_64-linux-gnux32-ar,x86_64-linux-gnux32-as,x86_64-linux-gnux32-c++filt,x86_64-linux-gnux32-elfedit,x86_64-linux-gnux32-gprof,x86_64-linux-gnux32-ld,x86_64-linux-gnux32-ld.bfd,x86_64-linux-gnux32-nm,x86_64-linux-gnux32-objcopy,x86_64-linux-gnux32-objdump,x86_64-linux-gnux32-ranlib,x86_64-linux-gnux32-readelf,x86_64-linux-gnux32-size,x86_64-linux-gnux32-strings,x86_64-linux-gnux32-strip
+
+name: bison
+version: 2:3.8.2+dfsg-1build4
+commands: bison,bison.yacc,yacc
+
+name: blueprint-compiler
+version: 0.19.0-2
+commands: blueprint-compiler
+
+name: bluez
+version: 5.85-4
+commands: bluemoon,bluetoothctl,bluetoothd,btattach,btmgmt,btmon,ciptool,gatttool,hciattach,hciconfig,hcitool,hex2hcd,l2ping,l2test,mpris-proxy,obexctl,rctest,rfcomm,sdptool
+
+name: bogl-bterm
+version: 0.1.18-23ubuntu2
+commands: bterm
+
+name: bogl-utils
+version: 0.1.18-23ubuntu2
+commands: bdftobogl,boglinfo,mergebdf,pngtobogl,reduce-font
+
+name: bolt
+version: 0.9.10-1
+commands: boltctl
+
+name: bonnie++
+version: 2.00a+nmu2ubuntu2
+commands: bon_csv2html,bon_csv2txt,bonnie,bonnie++,generate_randfile,getc_putc,getc_putc_helper,zcav
+
+name: bpfcc-tools
+version: 0.35.0+ds-1ubuntu2
+commands: argdist-bpfcc,bashreadline-bpfcc,bindsnoop-bpfcc,biolatency-bpfcc,biolatpcts-bpfcc,biopattern-bpfcc,biosnoop-bpfcc,biotop-bpfcc,bitesize-bpfcc,bpflist-bpfcc,btrfsdist-bpfcc,btrfsslower-bpfcc,cachestat-bpfcc,cachetop-bpfcc,capable-bpfcc,cobjnew-bpfcc,compactsnoop-bpfcc,cpudist-bpfcc,cpuunclaimed-bpfcc,criticalstat-bpfcc,dbslower-bpfcc,dbstat-bpfcc,dcsnoop-bpfcc,dcstat-bpfcc,deadlock-bpfcc,dirtop-bpfcc,drsnoop-bpfcc,execsnoop-bpfcc,exitsnoop-bpfcc,ext4dist-bpfcc,ext4slower-bpfcc,f2fsslower-bpfcc,filegone-bpfcc,filelife-bpfcc,fileslower-bpfcc,filetop-bpfcc,funccount-bpfcc,funcinterval-bpfcc,funclatency-bpfcc,funcslower-bpfcc,gethostlatency-bpfcc,hardirqs-bpfcc,inject-bpfcc,javacalls-bpfcc,javaflow-bpfcc,javagc-bpfcc,javaobjnew-bpfcc,javastat-bpfcc,javathreads-bpfcc,killsnoop-bpfcc,klockstat-bpfcc,kvmexit-bpfcc,llcstat-bpfcc,mdflush-bpfcc,memleak-bpfcc,mountsnoop-bpfcc,mptcpify-bpfcc,mysqld_qslower-bpfcc,netqtop-bpfcc,nfsdist-bpfcc,nfsslower-bpfcc,nodegc-bpfcc,nodestat-bpfcc,numasched-bpfcc,offcputime-bpfcc,offwaketime-bpfcc,oomkill-bpfcc,opensnoop-bpfcc,perlcalls-bpfcc,perlflow-bpfcc,perlstat-bpfcc,phpcalls-bpfcc,phpflow-bpfcc,phpstat-bpfcc,pidpersec-bpfcc,ppchcalls-bpfcc,profile-bpfcc,pythoncalls-bpfcc,pythonflow-bpfcc,pythongc-bpfcc,pythonstat-bpfcc,rdmaucma-bpfcc,readahead-bpfcc,reset-trace-bpfcc,rubycalls-bpfcc,rubyflow-bpfcc,rubygc-bpfcc,rubyobjnew-bpfcc,rubystat-bpfcc,runqlat-bpfcc,runqlen-bpfcc,runqslower-bpfcc,shmsnoop-bpfcc,slabratetop-bpfcc,sofdsnoop-bpfcc,softirqs-bpfcc,solisten-bpfcc,sslsniff-bpfcc,stackcount-bpfcc,statsnoop-bpfcc,syncsnoop-bpfcc,syscount-bpfcc,tclcalls-bpfcc,tclflow-bpfcc,tclobjnew-bpfcc,tclstat-bpfcc,tcpaccept-bpfcc,tcpcong-bpfcc,tcpconnect-bpfcc,tcpconnlat-bpfcc,tcpdrop-bpfcc,tcplife-bpfcc,tcpretrans-bpfcc,tcprtt-bpfcc,tcpstates-bpfcc,tcpsubnet-bpfcc,tcpsynbl-bpfcc,tcptop-bpfcc,tcptracer-bpfcc,threadsnoop-bpfcc,tplist-bpfcc,trace-bpfcc,ttysnoop-bpfcc,ucalls,uflow,ugc,uobjnew,ustat,uthreads,vfscount-bpfcc,vfsstat-bpfcc,virtiostat-bpfcc,wakeuptime-bpfcc,wqlat-bpfcc,xfsdist-bpfcc,xfsslower-bpfcc,zfsdist-bpfcc,zfsslower-bpfcc
+
+name: bpftool
+version: 7.7.0+7.0.0-14.14
+commands: bpftool
+
+name: bpftrace
+version: 0.25.0-1ubuntu1
+commands: bashreadline.bt,biolatency-kp.bt,biolatency.bt,biosnoop.bt,biostacks.bt,bitesize.bt,bpftrace,bpftrace-aotrt,capable.bt,cpuwalk.bt,dcsnoop.bt,execsnoop.bt,gethostlatency.bt,killsnoop.bt,loads.bt,mdflush.bt,naptime.bt,oomkill.bt,opensnoop.bt,pidpersec.bt,runqlat.bt,runqlen.bt,setuids.bt,ssllatency.bt,sslsnoop.bt,statsnoop.bt,swapin.bt,syncsnoop.bt,syscount.bt,tcpaccept.bt,tcpconnect.bt,tcpdrop.bt,tcplife.bt,tcpretrans.bt,tcpsynbl.bt,threadsnoop.bt,undump.bt,vfscount.bt,vfsstat.bt,writeback.bt,xfsdist.bt
+
+name: bridge-utils
+version: 1.7.1-4ubuntu3
+commands: brctl
+
+name: brltty
+version: 6.7-1ubuntu6
+commands: brltty,brltty-atb,brltty-clip,brltty-ctb,brltty-hid,brltty-ktb,brltty-lscmds,brltty-morse,brltty-setup,brltty-trtxt,brltty-ttb,brltty-tune,eutp,vstp
+
+name: bsd-mailx
+version: 8.1.2-0.20220412cvs-1.1build1
+commands: bsd-mailx
+
+name: bsdextrautils
+version: 2.41.3-3ubuntu2
+commands: col,colcrt,colrm,column,hd,hexdump,look,rev,ul
+
+name: bsdutils
+version: 1:2.41.3-3ubuntu2
+commands: renice,script,scriptlive,scriptreplay,wall
+
+name: btrfs-progs
+version: 6.17.1-1build1
+commands: btrfs,btrfs-convert,btrfs-find-root,btrfs-image,btrfs-map-logical,btrfs-select-super,btrfsck,btrfstune,fsck.btrfs,mkfs.btrfs
+
+name: bubblewrap
+version: 0.11.1-1
+commands: bwrap
+
+name: busybox-static
+version: 1:1.37.0-7ubuntu1
+commands: busybox,static-sh
+
+name: busybox-syslogd
+version: 1:1.37.0-7ubuntu1
+commands: klogd,logread,syslogd
+
+name: byobu
+version: 6.11-0ubuntu3
+commands: NF,byobu,byobu-config,byobu-ctrl-a,byobu-disable,byobu-disable-prompt,byobu-enable,byobu-enable-prompt,byobu-export,byobu-janitor,byobu-keybindings,byobu-launch,byobu-launcher,byobu-launcher-install,byobu-launcher-uninstall,byobu-layout,byobu-prompt,byobu-quiet,byobu-reconnect-sockets,byobu-screen,byobu-select-backend,byobu-select-profile,byobu-select-session,byobu-shell,byobu-silent,byobu-status,byobu-status-detail,byobu-tmux,byobu-ugraph,byobu-ulevel,col1,col2,col3,col4,col5,col6,col7,col8,col9,ctail,manifest,purge-old-kernels,vigpg,wifi-status
+
+name: bzip2
+version: 1.0.8-6build2
+commands: bunzip2,bzcat,bzcmp,bzdiff,bzegrep,bzexe,bzfgrep,bzgrep,bzip2,bzip2recover,bzless,bzmore
+
+name: ca-certificates
+version: 20260223
+commands: update-ca-certificates
+
+name: cargo
+version: 1.93.1ubuntu1
+commands: cargo
+
+name: cargo-1.93
+version: 1.93.1+dfsg-0ubuntu6
+commands: cargo-1.93
+
+name: casper
+version: 26.04.2
+commands: casper-getty,casper-login,casper-new-uuid,casper-snapshot,casper-stop
+
+name: ceph-base
+version: 20.2.0-0ubuntu2
+commands: ceph-crash,ceph-create-keys,ceph-diff-sorted,ceph-kvstore-tool,ceph-run,crushtool,monmaptool,osdmaptool
+
+name: ceph-common
+version: 20.2.0-0ubuntu2
+commands: ceph,ceph-authtool,ceph-conf,ceph-dencoder,ceph-post-file,ceph-rbdnamer,ceph-syn,cephfs-data-scan,cephfs-journal-tool,cephfs-table-tool,crushdiff,mount.ceph,rados,radosgw-admin,rbd,rbd-replay,rbd-replay-many,rbd-replay-prep,rbdmap
+
+name: ceph-mds
+version: 20.2.0-0ubuntu2
+commands: ceph-mds
+
+name: ceph-mgr
+version: 20.2.0-0ubuntu2
+commands: ceph-mgr
+
+name: ceph-mon
+version: 20.2.0-0ubuntu2
+commands: ceph-mon,ceph-monstore-tool
+
+name: ceph-osd
+version: 20.2.0-0ubuntu2
+commands: ceph-bluestore-tool,ceph-clsinfo,ceph-erasure-code-tool,ceph-objectstore-tool,ceph-osd
+
+name: ceph-volume
+version: 20.2.0-0ubuntu2
+commands: ceph-volume,ceph-volume-systemd
+
+name: charon-systemd
+version: 6.0.4-1ubuntu2
+commands: charon-systemd
+
+name: checksecurity
+version: 2.0.18build1
+commands: checksecurity
+
+name: chrony
+version: 4.8-2ubuntu1
+commands: chronyc,chronyd
+
+name: cifs-utils
+version: 2:7.4-1build1
+commands: cifs.idmap,cifs.upcall,cifscreds,getcifsacl,mount.cifs,mount.smb3,setcifsacl,smb2-quota,smbinfo
+
+name: cinder-api
+version: 2:28.0.0-0ubuntu1
+commands: cinder-wsgi
+
+name: clamav
+version: 1.4.3+dfsg-2ubuntu3
+commands: clambc,clamscan,clamsubmit,sigtool
+
+name: clamav-daemon
+version: 1.4.3+dfsg-2ubuntu3
+commands: clamconf,clamd,clamdtop,clamonacc
+
+name: clamav-freshclam
+version: 1.4.3+dfsg-2ubuntu3
+commands: freshclam
+
+name: clamdscan
+version: 1.4.3+dfsg-2ubuntu3
+commands: clamdscan
+
+name: cloud-guest-utils
+version: 0.33-1build1
+commands: ec2metadata,growpart,vcs-run
+
+name: cloud-image-utils
+version: 0.33-1build1
+commands: cloud-localds,mount-image-callback,resize-part-image,ubuntu-cloudimg-query,write-mime-multipart
+
+name: cloud-init-base
+version: 26.1-0ubuntu2
+commands: cloud-id,cloud-init,cloud-init-per
+
+name: cmake
+version: 4.2.3-2ubuntu2
+commands: cmake,cpack,ctest
+
+name: colord
+version: 1.4.8-3
+commands: cd-create-profile,cd-fix-profile,cd-iccdump,cd-it8,colormgr
+
+name: comerr-dev
+version: 2.1-1.47.2-3ubuntu4
+commands: compile_et
+
+name: conntrack
+version: 1:1.4.9-1
+commands: conntrack
+
+name: console-setup
+version: 1.237ubuntu3
+commands: ckbcomp,setupcon
+
+name: containerd
+version: 2.2.2-0ubuntu1
+commands: containerd,containerd-shim-runc-v2,containerd-stress,ctr
+
+name: containerd-stable
+version: 2.2.2-0ubuntu1
+commands: containerd,containerd-shim-runc-v2,containerd-stress,ctr
+
+name: coreutils-from-gnu
+version: 0.0.0~ubuntu25
+commands: [,arch,b2sum,base32,base64,basename,basenc,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,dd,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,id,install,join,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,users,vdir,wc,who,whoami,yes
+
+name: coreutils-from-uutils
+version: 0.0.0~ubuntu25
+commands: [,arch,b2sum,base32,base64,basename,basenc,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,dd,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,hashsum,head,hostid,id,install,join,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha3-224sum,sha3-256sum,sha3-384sum,sha3-512sum,sha384sum,sha3sum,sha512sum,shake128sum,shake256sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,users,vdir,wc,who,whoami,yes
+
+name: corosync
+version: 3.1.9-2ubuntu3
+commands: corosync,corosync-blackbox,corosync-cfgtool,corosync-cmapctl,corosync-cpgtool,corosync-keygen,corosync-quorumtool,corosync-xmlproc
+
+name: cpio
+version: 2.15+dfsg-2.1
+commands: cpio,mt,mt-gnu
+
+name: cpp
+version: 4:15.2.0-5ubuntu1
+commands: cpp
+
+name: cpp-15
+version: 15.2.0-16ubuntu1
+commands: cpp-15
+
+name: cpp-15-aarch64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: aarch64-linux-gnu-cpp-15
+
+name: cpp-15-arm-linux-gnueabihf
+version: 15.2.0-16ubuntu1cross1
+commands: arm-linux-gnueabihf-cpp-15
+
+name: cpp-15-i686-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: i686-linux-gnu-cpp-15
+
+name: cpp-15-powerpc64le-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: powerpc64le-linux-gnu-cpp-15
+
+name: cpp-15-riscv64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: riscv64-linux-gnu-cpp-15
+
+name: cpp-15-s390x-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: s390x-linux-gnu-cpp-15
+
+name: cpp-15-x86-64-linux-gnu
+version: 15.2.0-16ubuntu1
+commands: x86_64-linux-gnu-cpp-15
+
+name: cpp-aarch64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: aarch64-linux-gnu-cpp
+
+name: cpp-arm-linux-gnueabihf
+version: 4:15.2.0-5ubuntu1
+commands: arm-linux-gnueabihf-cpp
+
+name: cpp-i686-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: i686-linux-gnu-cpp
+
+name: cpp-powerpc64le-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: powerpc64le-linux-gnu-cpp
+
+name: cpp-riscv64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: riscv64-linux-gnu-cpp
+
+name: cpp-s390x-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: s390x-linux-gnu-cpp
+
+name: cpp-x86-64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: x86_64-linux-gnu-cpp
+
+name: cpu-checker
+version: 0.7-1.4build1
+commands: check-bios-nx,kvm-ok
+
+name: cracklib-runtime
+version: 2.9.6-5.2build3
+commands: cracklib-check,cracklib-format,cracklib-packer,cracklib-unpacker,create-cracklib-dict,update-cracklib
+
+name: crash
+version: 9.0.1+~16.3-1ubuntu1
+commands: crash
+
+name: cron
+version: 3.0pl1-200ubuntu1
+commands: cron,crontab
+
+name: cryptsetup
+version: 2:2.8.4-1ubuntu4
+commands: cryptdisks_start,cryptdisks_stop,luksformat
+
+name: cryptsetup-bin
+version: 2:2.8.4-1ubuntu4
+commands: cryptsetup,integritysetup,veritysetup
+
+name: cu
+version: 1.07-31build1
+commands: cu
+
+name: cups
+version: 2.4.16-1ubuntu1
+commands: cupsfilter
+
+name: cups-browsed
+version: 2.1.1-0ubuntu3
+commands: cups-browsed
+
+name: cups-bsd
+version: 2.4.16-1ubuntu1
+commands: lpc,lpq,lpr,lprm
+
+name: cups-client
+version: 2.4.16-1ubuntu1
+commands: cancel,cupsaccept,cupsctl,cupsdisable,cupsenable,cupsreject,cupstestppd,lp,lpadmin,lpinfo,lpmove,lpoptions,lpstat
+
+name: cups-daemon
+version: 2.4.16-1ubuntu1
+commands: cupsd
+
+name: cups-filters
+version: 2.0.1-0ubuntu4
+commands: driverless-fax,foomatic-rip
+
+name: cups-filters-core-drivers
+version: 2.0.1-0ubuntu4
+commands: driverless
+
+name: cups-ipp-utils
+version: 2.4.16-1ubuntu1
+commands: ippevepcl,ippeveprinter,ippeveps,ippfind,ipptool
+
+name: cups-ppdc
+version: 2.4.16-1ubuntu1
+commands: ppdc,ppdhtml,ppdi,ppdmerge,ppdpo
+
+name: curl
+version: 8.18.0-1ubuntu2
+commands: curl,wcurl
+
+name: cxl
+version: 81-1ubuntu1
+commands: cxl
+
+name: dash
+version: 0.5.12-12ubuntu3
+commands: dash,sh
+
+name: db-util
+version: 1:5.3.21ubuntu4
+commands: db_archive,db_checkpoint,db_deadlock,db_dump,db_hotbackup,db_load,db_log_verify,db_printlog,db_recover,db_replicate,db_stat,db_upgrade,db_verify
+
+name: db5.3-util
+version: 5.3.28+dfsg2-10ubuntu1
+commands: db5.3_archive,db5.3_checkpoint,db5.3_deadlock,db5.3_dump,db5.3_hotbackup,db5.3_load,db5.3_log_verify,db5.3_printlog,db5.3_recover,db5.3_replicate,db5.3_stat,db5.3_tuner,db5.3_upgrade,db5.3_verify
+
+name: dbus-bin
+version: 1.16.2-2ubuntu4
+commands: dbus-cleanup-sockets,dbus-monitor,dbus-send,dbus-update-activation-environment,dbus-uuidgen
+
+name: dbus-daemon
+version: 1.16.2-2ubuntu4
+commands: dbus-daemon,dbus-run-session
+
+name: dbus-x11
+version: 1.16.2-2ubuntu4
+commands: dbus-launch
+
+name: dc
+version: 1.07.1-4build1
+commands: dc
+
+name: dconf-cli
+version: 0.49.0-4
+commands: dconf
+
+name: dctrl-tools
+version: 2.24-3build4
+commands: grep-aptavail,grep-available,grep-dctrl,grep-debtags,grep-status,join-dctrl,sort-dctrl,sync-available,tbl-dctrl
+
+name: debconf
+version: 1.5.92
+commands: debconf,debconf-apt-progress,debconf-communicate,debconf-copydb,debconf-escape,debconf-set-selections,debconf-show,dpkg-preconfigure,dpkg-reconfigure
+
+name: debhelper
+version: 13.31ubuntu1
+commands: dh,dh_assistant,dh_auto_build,dh_auto_clean,dh_auto_configure,dh_auto_install,dh_auto_test,dh_bugfiles,dh_builddeb,dh_clean,dh_compress,dh_computeautosubstvars,dh_dwz,dh_fixperms,dh_gencontrol,dh_icons,dh_install,dh_installalternatives,dh_installcatalogs,dh_installchangelogs,dh_installcron,dh_installdeb,dh_installdebconf,dh_installdirs,dh_installdocs,dh_installemacsen,dh_installexamples,dh_installgsettings,dh_installifupdown,dh_installinfo,dh_installinit,dh_installinitramfs,dh_installlogcheck,dh_installlogrotate,dh_installman,dh_installmanpages,dh_installmenu,dh_installmime,dh_installmodules,dh_installpam,dh_installppp,dh_installsystemd,dh_installsystemduser,dh_installsysusers,dh_installtmpfiles,dh_installudev,dh_installwm,dh_installxfonts,dh_link,dh_lintian,dh_listpackages,dh_makeshlibs,dh_md5sums,dh_missing,dh_movefiles,dh_movetousr,dh_perl,dh_prep,dh_shlibdeps,dh_strip,dh_systemd_enable,dh_systemd_start,dh_testdir,dh_testroot,dh_ucf,dh_update_autotools_config,dh_usrlocal
+
+name: debian-goodies
+version: 0.88.2ubuntu2
+commands: check-enhancements,checkrestart,debget,debman,debmany,degrep,dfgrep,dglob,dgrep,dhomepage,dman,dpigs,dpkg-info,dzegrep,dzfgrep,dzgrep,find-dbgsym-packages,popbugs,which-pkg-broke,which-pkg-broke-build
+
+name: debianutils
+version: 5.23.2build1
+commands: add-shell,installkernel,ischroot,remove-shell,run-parts,savelog,tempfile,update-shells,which,which.debianutils
+
+name: debootstrap
+version: 1.0.142ubuntu1
+commands: debootstrap
+
+name: debugedit
+version: 1:5.3-4
+commands: debugedit,debugedit-classify-ar,find-debuginfo,sepdebugcrcfix
+
+name: default-jdk
+version: 2:1.25-77
+commands: jar,javac,javadoc
+
+name: default-jre
+version: 2:1.25-77
+commands: java,jexec
+
+name: deja-dup
+version: 50.0-3
+commands: deja-dup
+
+name: designate-api
+version: 1:22.0.0-0ubuntu2
+commands: designate-api-wsgi
+
+name: desktop-file-utils
+version: 0.28-1build1
+commands: desktop-file-edit,desktop-file-install,desktop-file-validate,update-desktop-database
+
+name: device-tree-compiler
+version: 1.7.2-2ubuntu1
+commands: convert-dtsv0,dtc,dtdiff,fdtdump,fdtget,fdtoverlay,fdtput
+
+name: devio
+version: 1.2-5
+commands: devio
+
+name: devscripts
+version: 2.26.7
+commands: add-patch,annotate-output,archpath,bts,build-rdeps,chdist,checkbashisms,cowpoke,dch,dcmd,dd-list,deb-check-file-conflicts,deb-janitor,deb-reversion,deb-why-removed,deb2apptainer,deb2docker,deb2singularity,debbisect,debc,debchange,debcheckout,debclean,debcommit,debdiff,debdiff-apply,debftbfs,debi,debootsnap,debrebuild,debrelease,debrepro,debrsign,debsign,debsnap,debuild,dep-14-convert-git-branch-names,dep3changelog,dget,diff2patches,dpkg-depcheck,dpkg-genbuilddeps,dscextract,dscverify,edit-patch,getbuildlog,grep-excuses,hardening-check,list-unreleased,ltnu,manpage-alert,mass-bug,mergechanges,mk-build-deps,mk-origtargz,namecheck,nmudiff,origtargz,plotchangelog,pts-subscribe,pts-unsubscribe,rc-alert,reproducible-check,rmadison,sadt,salsa,suspicious-source,svnpath,tagpending,transition-check,uscan,uupdate,who-permits-upload,who-uploads,whodepends,wnpp-alert,wnpp-check,wrap-and-sort
+
+name: dh-autoreconf
+version: 21+nmu1
+commands: dh_autoreconf,dh_autoreconf_clean
+
+name: dh-di
+version: 11build1
+commands: dh_di_kernel_gencontrol,dh_di_kernel_install,dh_di_numbers
+
+name: dh-exec
+version: 0.31
+commands: dh-exec
+
+name: dh-golang
+version: 1.63build1
+commands: dh_golang,dh_golang_autopkgtest
+
+name: dh-make
+version: 2.202503build1
+commands: dh_make,dh_makefont
+
+name: dh-strip-nondeterminism
+version: 1.15.0-1build1
+commands: dh_strip_nondeterminism
+
+name: dhcpcd-base
+version: 1:10.3.0-7
+commands: dhcpcd
+
+name: dict
+version: 1.13.1+dfsg-1.3
+commands: colorit,dict,dict_lookup,dictl
+
+name: dictd
+version: 1.13.1+dfsg-1.3
+commands: dictd,dictdconfig
+
+name: dictionaries-common
+version: 1.31.4
+commands: aspell-autobuildhash,ispell-autobuildhash,ispell-wrapper,remove-default-ispell,remove-default-wordlist,select-default-ispell,select-default-iwrap,select-default-wordlist,update-default-aspell,update-default-ispell,update-default-wordlist,update-dictcommon-aspell,update-dictcommon-hunspell
+
+name: dictionaries-common-dev
+version: 1.31.4
+commands: dh_aspell-simple,installdeb-aspell,installdeb-hunspell,installdeb-ispell,installdeb-myspell,installdeb-wordlist
+
+name: dictzip
+version: 1.13.1+dfsg-1.3
+commands: dictunzip,dictzcat,dictzip
+
+name: diffstat
+version: 1.68-1
+commands: diffstat
+
+name: diffutils
+version: 1:3.12-1
+commands: cmp,diff,diff3,sdiff
+
+name: dirmngr
+version: 2.4.8-4ubuntu3
+commands: dirmngr,dirmngr-client
+
+name: distro-info
+version: 1.15
+commands: debian-distro-info,distro-info,ubuntu-distro-info
+
+name: dkms
+version: 3.2.2-1ubuntu1
+commands: dkms
+
+name: dmeventd
+version: 2:1.02.205-2ubuntu3
+commands: dmeventd
+
+name: dmidecode
+version: 3.6-2build1
+commands: biosdecode,dmidecode,ownership,vpddecode
+
+name: dmsetup
+version: 2:1.02.205-2ubuntu3
+commands: blkdeactivate,dmsetup,dmstats
+
+name: dnsmasq-base
+version: 2.92-1
+commands: dnsmasq
+
+name: dnsmasq-utils
+version: 2.92-1
+commands: dhcp_lease_time,dhcp_release,dhcp_release6
+
+name: dnstracer
+version: 1.9-8build2
+commands: dnstracer
+
+name: doc-base
+version: 0.11.2build1
+commands: install-docs
+
+name: dosfstools
+version: 4.2-1.2build1
+commands: dosfsck,dosfslabel,fatlabel,fsck.fat,fsck.msdos,fsck.vfat,mkdosfs,mkfs.fat,mkfs.msdos,mkfs.vfat
+
+name: dotnet-host-10.0
+version: 10.0.5-0ubuntu1
+commands: dnx,dotnet
+
+name: dovecot-core
+version: 1:2.4.2+dfsg1-3ubuntu2
+commands: doveadm,doveconf,dovecot,dovecot-sysreport,maildirmake.dovecot
+
+name: dovecot-sieve
+version: 1:2.4.2+dfsg1-3ubuntu2
+commands: sieve-dump,sieve-filter,sieve-test,sievec
+
+name: dpdk
+version: 25.11-2
+commands: dpdk-devbind.py,dpdk-hugepages.py,dpdk-pmdinfo.py,dpdk-telemetry-exporter.py,dpdk-telemetry.py
+
+name: dpkg
+version: 1.23.7ubuntu1
+commands: dpkg,dpkg-deb,dpkg-divert,dpkg-maintscript-helper,dpkg-query,dpkg-realpath,dpkg-split,dpkg-statoverride,dpkg-trigger,start-stop-daemon,update-alternatives
+
+name: dpkg-dev
+version: 1.23.7ubuntu1
+commands: dpkg-architecture,dpkg-buildapi,dpkg-buildflags,dpkg-buildpackage,dpkg-buildtree,dpkg-checkbuilddeps,dpkg-distaddfile,dpkg-genbuildinfo,dpkg-genchanges,dpkg-gencontrol,dpkg-gensymbols,dpkg-mergechangelogs,dpkg-name,dpkg-parsechangelog,dpkg-scanpackages,dpkg-scansources,dpkg-shlibdeps,dpkg-source,dpkg-vendor
+
+name: dpkg-repack
+version: 1.54build1
+commands: dpkg-repack
+
+name: dput
+version: 1.2.4ubuntu4
+commands: dcut,dput
+
+name: dput-ng
+version: 1.44ubuntu3
+commands: dcut,dirt,dput
+
+name: dracut
+version: 110-11
+commands: update-initramfs
+
+name: dracut-core
+version: 110-11
+commands: dracut,dracut-catimages,lsinitrd
+
+name: drbd-utils
+version: 9.22.0-1.2build1
+commands: drbdadm,drbdmeta,drbdmon,drbdsetup
+
+name: dselect
+version: 1.23.7ubuntu1
+commands: dselect
+
+name: dupload
+version: 2.13.2build1
+commands: dupload
+
+name: dwz
+version: 0.16-4
+commands: dwz
+
+name: e2fsprogs
+version: 1.47.2-3ubuntu4
+commands: badblocks,chattr,debugfs,dumpe2fs,e2freefrag,e2fsck,e2image,e2label,e2mmpstatus,e2scrub,e2scrub_all,e2undo,e4crypt,e4defrag,filefrag,fsck.ext2,fsck.ext3,fsck.ext4,lsattr,mke2fs,mkfs.ext2,mkfs.ext3,mkfs.ext4,mklost+found,resize2fs,tune2fs
+
+name: eatmydata
+version: 131-2build1
+commands: eatmydata
+
+name: ebtables
+version: 2.0.11-6build2
+commands: ebtables,ebtables-legacy,ebtables-legacy-restore,ebtables-legacy-save,ebtables-restore,ebtables-save,ebtablesd,ebtablesu
+
+name: ec2-hibinit-agent
+version: 1.0.9-0ubuntu1
+commands: hibinit-agent
+
+name: ed
+version: 1.22.4-1
+commands: ed,editor,red
+
+name: efibootmgr
+version: 18-4ubuntu1
+commands: efibootdump,efibootmgr
+
+name: efivar
+version: 39-2
+commands: efisecdb,efivar
+
+name: eject
+version: 2.41.3-3ubuntu2
+commands: eject
+
+name: elfutils
+version: 0.194-4
+commands: eu-addr2line,eu-ar,eu-elfclassify,eu-elfcmp,eu-elfcompress,eu-elflint,eu-findtextrel,eu-make-debug-archive,eu-nm,eu-objdump,eu-ranlib,eu-readelf,eu-size,eu-srcfiles,eu-stack,eu-strings,eu-strip,eu-unstrip
+
+name: enchant-2
+version: 2.8.2+dfsg1-3build1
+commands: enchant-2,enchant-lsmod-2
+
+name: equivs
+version: 2.3.2build1
+commands: equivs-build,equivs-control
+
+name: erlang-base
+version: 1:27.3.4.6+dfsg-1
+commands: epmd,erl,erl_call,erlc,escript,run_erl,start_embedded,start_erl,to_erl
+
+name: erlang-dev
+version: 1:27.3.4.6+dfsg-1
+commands: erlang-depends
+
+name: erlang-snmp
+version: 1:27.3.4.6+dfsg-1
+commands: snmpc
+
+name: etckeeper
+version: 1.18.23-2build1
+commands: etckeeper
+
+name: ethtool
+version: 1:6.19-1
+commands: ethtool
+
+name: exfatprogs
+version: 1.3.2-1
+commands: dump.exfat,exfat2img,exfatlabel,fsck.exfat,mkfs.exfat,tune.exfat
+
+name: exim4-base
+version: 4.99.1-1ubuntu1
+commands: exicyclog,exigrep,exim_checkaccess,exim_dbmbuild,exim_dumpdb,exim_fixdb,exim_id_update,exim_lock,exim_msgdate,exim_tidydb,eximstats,exinext,exipick,exiqgrep,exiqsumm,exiwhat,mailtest,syslog2eximlog
+
+name: exim4-config
+version: 4.99.1-1ubuntu1
+commands: update-exim4.conf,update-exim4.conf.template
+
+name: exim4-daemon-heavy
+version: 4.99.1-1ubuntu1
+commands: exim,exim4,mailq,newaliases,rmail,rsmtp,runq,sendmail
+
+name: exim4-daemon-light
+version: 4.99.1-1ubuntu1
+commands: exim,exim4,mailq,newaliases,rmail,rsmtp,runq,sendmail
+
+name: exim4-dev
+version: 4.99.1-1ubuntu1
+commands: exim4-localscan-plugin-config
+
+name: exuberant-ctags
+version: 1:5.9~svn20110310-20
+commands: ctags,ctags-exuberant,etags
+
+name: fakeroot
+version: 1.37.2-1
+commands: faked-sysv,faked-tcp,fakeroot,fakeroot-sysv,fakeroot-tcp
+
+name: fbset
+version: 2.1-35
+commands: con2fbmap,fbset,modeline2fb
+
+name: fdisk
+version: 2.41.3-3ubuntu2
+commands: cfdisk,fdisk,sfdisk
+
+name: fence-agents-ipmilan
+version: 4.17.0-1ubuntu1
+commands: fence_idrac,fence_ilo3,fence_ilo4,fence_ilo5,fence_imm,fence_ipmilan,fence_ipmilanplus
+
+name: fence-agents-mpath
+version: 4.17.0-1ubuntu1
+commands: fence_mpath
+
+name: fence-agents-sbd
+version: 4.17.0-1ubuntu1
+commands: fence_sbd
+
+name: fence-agents-scsi
+version: 4.17.0-1ubuntu1
+commands: fence_scsi
+
+name: fence-agents-virsh
+version: 4.17.0-1ubuntu1
+commands: fence_virsh
+
+name: fetchmail
+version: 6.6.2-2
+commands: fetchmail,popclient
+
+name: file
+version: 1:5.46-5build2
+commands: file
+
+name: file-roller
+version: 44.6-3
+commands: file-roller
+
+name: finalrd
+version: 9build2
+commands: finalrd
+
+name: findutils
+version: 4.10.0-3build2
+commands: find,xargs
+
+name: firefox
+version: 1:1snap1-0ubuntu8
+commands: firefox,gnome-www-browser,x-www-browser
+
+name: flac
+version: 1.5.0+ds-5
+commands: flac,metaflac
+
+name: flashrom
+version: 1.6.0-2ubuntu1
+commands: flashrom
+
+name: flex
+version: 2.6.4-8.2build2
+commands: flex,flex++,lex
+
+name: fontconfig
+version: 2.17.1-3ubuntu1
+commands: fc-cache,fc-cat,fc-conflist,fc-list,fc-match,fc-pattern,fc-query,fc-scan,fc-validate
+
+name: fprintd
+version: 1.94.5-4
+commands: fprintd-delete,fprintd-enroll,fprintd-list,fprintd-verify
+
+name: freeipmi-tools
+version: 1.6.16-1
+commands: bmc-config,bmc-device,bmc-info,ipmi-chassis,ipmi-chassis-config,ipmi-config,ipmi-console,ipmi-dcmi,ipmi-fru,ipmi-locate,ipmi-oem,ipmi-pef-config,ipmi-pet,ipmi-ping,ipmi-power,ipmi-raw,ipmi-sel,ipmi-sensors,ipmi-sensors-config,ipmiconsole,ipmimonitoring,ipmiping,ipmipower,pef-config,rmcp-ping,rmcpping
+
+name: freeradius
+version: 3.2.8+dfsg-1ubuntu2
+commands: checkrad,freeradius,rad_counter,raddebug,radmin,rlm_sqlippool_tool
+
+name: freeradius-utils
+version: 3.2.8+dfsg-1ubuntu2
+commands: radclient,radcrypt,radeapclient,radsecret,radsniff,radsqlrelay,radtest,radwho,radzap,rlm_ippool_tool,smbencrypt
+
+name: frr
+version: 10.5.1-1ubuntu4
+commands: mtracebis,vtysh
+
+name: fuse3
+version: 3.18.2-1
+commands: fusermount,fusermount3,mount.fuse,mount.fuse3
+
+name: fwupd
+version: 2.1.1-1ubuntu3
+commands: dbxtool,fwupdmgr,fwupdtool
+
+name: g++
+version: 4:15.2.0-5ubuntu1
+commands: c++,g++
+
+name: g++-15
+version: 15.2.0-16ubuntu1
+commands: g++-15
+
+name: g++-15-aarch64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: aarch64-linux-gnu-g++-15
+
+name: g++-15-arm-linux-gnueabihf
+version: 15.2.0-16ubuntu1cross1
+commands: arm-linux-gnueabihf-g++-15
+
+name: g++-15-i686-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: i686-linux-gnu-g++-15
+
+name: g++-15-powerpc64le-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: powerpc64le-linux-gnu-g++-15
+
+name: g++-15-riscv64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: riscv64-linux-gnu-g++-15
+
+name: g++-15-s390x-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: s390x-linux-gnu-g++-15
+
+name: g++-15-x86-64-linux-gnu
+version: 15.2.0-16ubuntu1
+commands: x86_64-linux-gnu-g++-15
+
+name: g++-aarch64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: aarch64-linux-gnu-g++
+
+name: g++-arm-linux-gnueabihf
+version: 4:15.2.0-5ubuntu1
+commands: arm-linux-gnueabihf-g++
+
+name: g++-i686-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: i686-linux-gnu-g++
+
+name: g++-powerpc64le-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: powerpc64le-linux-gnu-g++
+
+name: g++-riscv64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: riscv64-linux-gnu-g++
+
+name: g++-s390x-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: s390x-linux-gnu-g++
+
+name: g++-x86-64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: x86_64-linux-gnu-g++
+
+name: gamemode
+version: 1.8.2-2build1
+commands: gamemode-simulate-game,gamemodelist,gamemoderun
+
+name: gamemode-daemon
+version: 1.8.2-2build1
+commands: gamemoded
+
+name: gawk
+version: 1:5.3.2-1ubuntu1
+commands: awk,gawk,gawkbug,nawk
+
+name: gcc
+version: 4:15.2.0-5ubuntu1
+commands: c89,c89-gcc,c99,c99-gcc,cc,gcc,gcc-ar,gcc-nm,gcc-ranlib,gcov,gcov-dump,gcov-tool,lto-dump
+
+name: gcc-15
+version: 15.2.0-16ubuntu1
+commands: gcc-15,gcc-ar-15,gcc-nm-15,gcc-ranlib-15,gcov-15,gcov-dump-15,gcov-tool-15,lto-dump-15
+
+name: gcc-15-aarch64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: aarch64-linux-gnu-gcc-15,aarch64-linux-gnu-gcc-ar-15,aarch64-linux-gnu-gcc-nm-15,aarch64-linux-gnu-gcc-ranlib-15,aarch64-linux-gnu-gcov-15,aarch64-linux-gnu-gcov-dump-15,aarch64-linux-gnu-gcov-tool-15,aarch64-linux-gnu-lto-dump-15
+
+name: gcc-15-arm-linux-gnueabihf
+version: 15.2.0-16ubuntu1cross1
+commands: arm-linux-gnueabihf-gcc-15,arm-linux-gnueabihf-gcc-ar-15,arm-linux-gnueabihf-gcc-nm-15,arm-linux-gnueabihf-gcc-ranlib-15,arm-linux-gnueabihf-gcov-15,arm-linux-gnueabihf-gcov-dump-15,arm-linux-gnueabihf-gcov-tool-15,arm-linux-gnueabihf-lto-dump-15
+
+name: gcc-15-i686-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: i686-linux-gnu-gcc-15,i686-linux-gnu-gcc-ar-15,i686-linux-gnu-gcc-nm-15,i686-linux-gnu-gcc-ranlib-15,i686-linux-gnu-gcov-15,i686-linux-gnu-gcov-dump-15,i686-linux-gnu-gcov-tool-15,i686-linux-gnu-lto-dump-15
+
+name: gcc-15-powerpc64le-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: powerpc64le-linux-gnu-gcc-15,powerpc64le-linux-gnu-gcc-ar-15,powerpc64le-linux-gnu-gcc-nm-15,powerpc64le-linux-gnu-gcc-ranlib-15,powerpc64le-linux-gnu-gcov-15,powerpc64le-linux-gnu-gcov-dump-15,powerpc64le-linux-gnu-gcov-tool-15,powerpc64le-linux-gnu-lto-dump-15
+
+name: gcc-15-riscv64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: riscv64-linux-gnu-gcc-15,riscv64-linux-gnu-gcc-ar-15,riscv64-linux-gnu-gcc-nm-15,riscv64-linux-gnu-gcc-ranlib-15,riscv64-linux-gnu-gcov-15,riscv64-linux-gnu-gcov-dump-15,riscv64-linux-gnu-gcov-tool-15,riscv64-linux-gnu-lto-dump-15
+
+name: gcc-15-s390x-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: s390x-linux-gnu-gcc-15,s390x-linux-gnu-gcc-ar-15,s390x-linux-gnu-gcc-nm-15,s390x-linux-gnu-gcc-ranlib-15,s390x-linux-gnu-gcov-15,s390x-linux-gnu-gcov-dump-15,s390x-linux-gnu-gcov-tool-15,s390x-linux-gnu-lto-dump-15
+
+name: gcc-15-x86-64-linux-gnu
+version: 15.2.0-16ubuntu1
+commands: x86_64-linux-gnu-gcc-15,x86_64-linux-gnu-gcc-ar-15,x86_64-linux-gnu-gcc-nm-15,x86_64-linux-gnu-gcc-ranlib-15,x86_64-linux-gnu-gcov-15,x86_64-linux-gnu-gcov-dump-15,x86_64-linux-gnu-gcov-tool-15,x86_64-linux-gnu-lto-dump-15
+
+name: gcc-aarch64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: aarch64-linux-gnu-gcc,aarch64-linux-gnu-gcc-ar,aarch64-linux-gnu-gcc-nm,aarch64-linux-gnu-gcc-ranlib,aarch64-linux-gnu-gcov,aarch64-linux-gnu-gcov-dump,aarch64-linux-gnu-gcov-tool,aarch64-linux-gnu-lto-dump
+
+name: gcc-arm-linux-gnueabihf
+version: 4:15.2.0-5ubuntu1
+commands: arm-linux-gnueabihf-gcc,arm-linux-gnueabihf-gcc-ar,arm-linux-gnueabihf-gcc-nm,arm-linux-gnueabihf-gcc-ranlib,arm-linux-gnueabihf-gcov,arm-linux-gnueabihf-gcov-dump,arm-linux-gnueabihf-gcov-tool,arm-linux-gnueabihf-lto-dump
+
+name: gcc-i686-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: i686-linux-gnu-gcc,i686-linux-gnu-gcc-ar,i686-linux-gnu-gcc-nm,i686-linux-gnu-gcc-ranlib,i686-linux-gnu-gcov,i686-linux-gnu-gcov-dump,i686-linux-gnu-gcov-tool,i686-linux-gnu-lto-dump
+
+name: gcc-powerpc64le-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: powerpc64le-linux-gnu-gcc,powerpc64le-linux-gnu-gcc-ar,powerpc64le-linux-gnu-gcc-nm,powerpc64le-linux-gnu-gcc-ranlib,powerpc64le-linux-gnu-gcov,powerpc64le-linux-gnu-gcov-dump,powerpc64le-linux-gnu-gcov-tool,powerpc64le-linux-gnu-lto-dump
+
+name: gcc-riscv64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: riscv64-linux-gnu-gcc,riscv64-linux-gnu-gcc-ar,riscv64-linux-gnu-gcc-nm,riscv64-linux-gnu-gcc-ranlib,riscv64-linux-gnu-gcov,riscv64-linux-gnu-gcov-dump,riscv64-linux-gnu-gcov-tool,riscv64-linux-gnu-lto-dump
+
+name: gcc-s390x-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: s390x-linux-gnu-gcc,s390x-linux-gnu-gcc-ar,s390x-linux-gnu-gcc-nm,s390x-linux-gnu-gcc-ranlib,s390x-linux-gnu-gcov,s390x-linux-gnu-gcov-dump,s390x-linux-gnu-gcov-tool,s390x-linux-gnu-lto-dump
+
+name: gcc-x86-64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: x86_64-linux-gnu-gcc,x86_64-linux-gnu-gcc-ar,x86_64-linux-gnu-gcc-nm,x86_64-linux-gnu-gcc-ranlib,x86_64-linux-gnu-gcov,x86_64-linux-gnu-gcov-dump,x86_64-linux-gnu-gcov-tool,x86_64-linux-gnu-lto-dump
+
+name: gcr
+version: 3.41.2-6
+commands: gcr-viewer
+
+name: gcr4
+version: 4.4.0.1-8
+commands: gcr-viewer-gtk4
+
+name: gdb
+version: 17.1-2ubuntu1
+commands: gcore,gdb,gdb-add-index,gdbtui,gstack
+
+name: gdisk
+version: 1.0.10-2build1
+commands: cgdisk,fixparts,gdisk,sgdisk
+
+name: gdm3
+version: 50.0-0ubuntu1
+commands: gdm-config,gdm3
+
+name: genisoimage
+version: 9:1.1.11-5
+commands: devdump,dirsplit,genisoimage,geteltorito,isodump,isoinfo,isovfy,mkisofs,mkzftree
+
+name: germinate
+version: 2.49
+commands: dh_germinate_clean,dh_germinate_metapackage,germinate,germinate-pkg-diff,germinate-update-metapackage
+
+name: gettext
+version: 0.23.2-1
+commands: gettextize,msgattrib,msgcat,msgcmp,msgcomm,msgconv,msgen,msgexec,msgfilter,msgfmt,msggrep,msginit,msgmerge,msgunfmt,msguniq,recode-sr-latin,xgettext
+
+name: gettext-base
+version: 0.23.2-1
+commands: envsubst,gettext,gettext.sh,ngettext
+
+name: gfortran
+version: 4:15.2.0-5ubuntu1
+commands: f77,f95,gfortran
+
+name: gfortran-15
+version: 15.2.0-16ubuntu1
+commands: gfortran-15
+
+name: gfortran-15-aarch64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: aarch64-linux-gnu-gfortran-15
+
+name: gfortran-15-arm-linux-gnueabihf
+version: 15.2.0-16ubuntu1cross1
+commands: arm-linux-gnueabihf-gfortran-15
+
+name: gfortran-15-i686-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: i686-linux-gnu-gfortran-15
+
+name: gfortran-15-powerpc64le-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: powerpc64le-linux-gnu-gfortran-15
+
+name: gfortran-15-riscv64-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: riscv64-linux-gnu-gfortran-15
+
+name: gfortran-15-s390x-linux-gnu
+version: 15.2.0-16ubuntu1cross1
+commands: s390x-linux-gnu-gfortran-15
+
+name: gfortran-15-x86-64-linux-gnu
+version: 15.2.0-16ubuntu1
+commands: x86_64-linux-gnu-gfortran-15
+
+name: gfortran-aarch64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: aarch64-linux-gnu-gfortran
+
+name: gfortran-arm-linux-gnueabihf
+version: 4:15.2.0-5ubuntu1
+commands: arm-linux-gnueabihf-gfortran
+
+name: gfortran-i686-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: i686-linux-gnu-gfortran
+
+name: gfortran-powerpc64le-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: powerpc64le-linux-gnu-gfortran
+
+name: gfortran-riscv64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: riscv64-linux-gnu-gfortran
+
+name: gfortran-s390x-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: s390x-linux-gnu-gfortran
+
+name: gfortran-x86-64-linux-gnu
+version: 4:15.2.0-5ubuntu1
+commands: x86_64-linux-gnu-gfortran
+
+name: ghostscript
+version: 10.06.0~dfsg-3ubuntu1
+commands: dvipdf,eps2eps,ghostscript,gs,gsbj,gsdj,gsdj500,gslj,gslp,gsnd,pdf2dsc,pdf2ps,pf2afm,pfbtopfa,pphs,printafm,ps2ascii,ps2epsi,ps2pdf,ps2pdf12,ps2pdf13,ps2pdf14,ps2pdfwr,ps2ps,ps2ps2,ps2txt,update-gsfontmap
+
+name: girepository-tools
+version: 2.88.0-1
+commands: x86_64-linux-gnu-gi-compile-repository,x86_64-linux-gnu-gi-decompile-typelib,x86_64-linux-gnu-gi-inspect-typelib
+
+name: git
+version: 1:2.53.0-1ubuntu1
+commands: git,git-receive-pack,git-shell,git-upload-archive,git-upload-pack,scalar
+
+name: gjs
+version: 1.88.0-1
+commands: gjs,gjs-console
+
+name: glycin-thumbnailers
+version: 2.1.1+ds-0ubuntu1
+commands: glycin-thumbnailer
+
+name: gnome-bluetooth-sendto
+version: 47.1-5
+commands: bluetooth-sendto
+
+name: gnome-calculator
+version: 1:50.0-1ubuntu1
+commands: gcalccmd,gnome-calculator
+
+name: gnome-calendar
+version: 50.0-1
+commands: gnome-calendar
+
+name: gnome-characters
+version: 50.0-1
+commands: gnome-characters
+
+name: gnome-clocks
+version: 50.0-1
+commands: gnome-clocks
+
+name: gnome-control-center
+version: 1:50.0-0ubuntu6
+commands: gnome-control-center
+
+name: gnome-disk-utility
+version: 46.1-2ubuntu2
+commands: gnome-disk-image-mounter,gnome-disks
+
+name: gnome-font-viewer
+version: 49.0-1
+commands: gnome-font-viewer,gnome-thumbnail-font
+
+name: gnome-keyring
+version: 50.0-1
+commands: gnome-keyring,gnome-keyring-3,gnome-keyring-daemon
+
+name: gnome-logs
+version: 49.0-1
+commands: gnome-logs
+
+name: gnome-menus
+version: 3.38.1-1ubuntu1
+commands: gnome-menus-blacklist
+
+name: gnome-remote-desktop
+version: 50.0-0ubuntu2
+commands: grdctl
+
+name: gnome-session-bin
+version: 50.0-0ubuntu3
+commands: gnome-session,gnome-session-inhibit,gnome-session-quit,x-session-manager
+
+name: gnome-session-canberra
+version: 0.30-18ubuntu3
+commands: canberra-gtk-play
+
+name: gnome-shell
+version: 50.1-0ubuntu1
+commands: gnome-extensions,gnome-shell,gnome-shell-extension-tool,gnome-shell-test-tool
+
+name: gnome-snapshot
+version: 50.0-0ubuntu1
+commands: snapshot
+
+name: gnome-text-editor
+version: 50.0-1
+commands: gnome-text-editor,gted
+
+name: gnu-coreutils
+version: 9.7-3ubuntu2
+commands: gnu[,gnuarch,gnub2sum,gnubase32,gnubase64,gnubasename,gnubasenc,gnucat,gnuchcon,gnuchgrp,gnuchmod,gnuchown,gnuchroot,gnucksum,gnucomm,gnucp,gnucsplit,gnucut,gnudate,gnudd,gnudf,gnudir,gnudircolors,gnudirname,gnudu,gnuecho,gnuenv,gnuexpand,gnuexpr,gnufactor,gnufalse,gnufmt,gnufold,gnugroups,gnuhead,gnuhostid,gnuid,gnuinstall,gnujoin,gnulink,gnuln,gnulogname,gnuls,gnumd5sum,gnumkdir,gnumkfifo,gnumknod,gnumktemp,gnumv,gnunice,gnunl,gnunohup,gnunproc,gnunumfmt,gnuod,gnupaste,gnupathchk,gnupinky,gnupr,gnuprintenv,gnuprintf,gnuptx,gnupwd,gnureadlink,gnurealpath,gnurm,gnurmdir,gnuruncon,gnuseq,gnusha1sum,gnusha224sum,gnusha256sum,gnusha384sum,gnusha512sum,gnushred,gnushuf,gnusleep,gnusort,gnusplit,gnustat,gnustdbuf,gnustty,gnusum,gnusync,gnutac,gnutail,gnutee,gnutest,gnutimeout,gnutouch,gnutr,gnutrue,gnutruncate,gnutsort,gnutty,gnuuname,gnuunexpand,gnuuniq,gnuunlink,gnuusers,gnuvdir,gnuwc,gnuwho,gnuwhoami,gnuyes
+
+name: gnupg-utils
+version: 2.4.8-4ubuntu3
+commands: addgnupghome,applygnupgdefaults,gpg-mail-tube,gpgparsemail,gpgsplit,gpgtar,kbxutil,lspgpot,migrate-pubring-from-classic-gpg,watchgnupg
+
+name: gobject-introspection
+version: 1.86.0-6build1
+commands: x86_64-linux-gnu-g-ir-annotation-tool,x86_64-linux-gnu-g-ir-compiler,x86_64-linux-gnu-g-ir-doc-tool,x86_64-linux-gnu-g-ir-generate,x86_64-linux-gnu-g-ir-inspect,x86_64-linux-gnu-g-ir-scanner
+
+name: gobject-introspection-bin
+version: 1.86.0-6build1
+commands: deb-gir-tool,dh_girepository,g-ir-annotation-tool,g-ir-compiler,g-ir-doc-tool,g-ir-generate,g-ir-inspect,g-ir-scanner
+
+name: golang-go
+version: 2:1.26~1
+commands: go,gofmt
+
+name: google-compute-engine
+version: 20260116.00-0ubuntu1
+commands: gce-nic-naming,google_optimize_local_ssd,google_set_hostname,google_set_multiqueue
+
+name: google-compute-engine-oslogin
+version: 20260116.00-0ubuntu1
+commands: google_authorized_keys,google_authorized_keys_sk,google_authorized_principals,google_oslogin_nss_cache
+
+name: google-guest-agent
+version: 20250506.01-0ubuntu2
+commands: gce_workload_cert_refresh,google_guest_agent,google_metadata_script_runner
+
+name: google-osconfig-agent
+version: 20251028.00-0ubuntu2
+commands: google_osconfig_agent
+
+name: gparted
+version: 1.8.0-1
+commands: gparted
+
+name: gpg
+version: 2.4.8-4ubuntu3
+commands: gpg
+
+name: gpg-agent
+version: 2.4.8-4ubuntu3
+commands: gpg-agent
+
+name: gpg-wks-client
+version: 2.4.8-4ubuntu3
+commands: gpg-wks-client
+
+name: gpgconf
+version: 2.4.8-4ubuntu3
+commands: gpg-connect-agent,gpgconf
+
+name: gpgsm
+version: 2.4.8-4ubuntu3
+commands: gpgsm
+
+name: gpgv
+version: 2.4.8-4ubuntu3
+commands: gpgv
+
+name: gpsd
+version: 3.27.5-0.1
+commands: gpsctl,gpsd,gpsdctl,gpsdebuginfo,gpsinit,ntpshmmon,ppscheck,ubxtool
+
+name: gpsd-tools
+version: 3.27.5-0.1
+commands: cgps,gpsmon,gpssnmp
+
+name: grep
+version: 3.12-1
+commands: egrep,fgrep,grep,rgrep
+
+name: groff-base
+version: 1.23.0-10
+commands: eqn,geqn,gpic,groff,grog,grops,grotty,gtbl,neqn,nroff,pic,preconv,soelim,tbl,troff
+
+name: grub-gfxpayload-lists
+version: 0.7build3
+commands: update-grub-gfxpayload
+
+name: grub-legacy-ec2
+version: 1:1ubuntu3
+commands: grub-set-default,grub-set-default-legacy-ec2,update-grub-legacy-ec2
+
+name: grub-pc
+version: 2.14-2ubuntu2
+commands: grub-bios-setup,grub-ntldr-img
+
+name: grub2-common
+version: 2.14-2ubuntu2
+commands: grub-editenv,grub-file,grub-fstest,grub-glue-efi,grub-install,grub-kbdcomp,grub-macbless,grub-menulst2cfg,grub-mkconfig,grub-mkdevicemap,grub-mkfont,grub-mkimage,grub-mklayout,grub-mknetdir,grub-mkpasswd-pbkdf2,grub-mkrelpath,grub-mkrescue,grub-mkstandalone,grub-mount,grub-probe,grub-reboot,grub-render-label,grub-script-check,grub-set-default,grub-syslinux2cfg,update-grub,update-grub2
+
+name: gst-audio-thumbnailer
+version: 1.0.0-0ubuntu1
+commands: gst-audio-thumbnailer
+
+name: gst-video-thumbnailer
+version: 1.0.0-0ubuntu1
+commands: gst-video-thumbnailer
+
+name: gstreamer1.0-packagekit
+version: 1.3.4-3
+commands: gstreamer-codec-install
+
+name: gstreamer1.0-plugins-base-apps
+version: 1.28.2-1
+commands: gst-device-monitor-1.0,gst-discoverer-1.0,gst-play-1.0
+
+name: gstreamer1.0-tools
+version: 1.28.2-1
+commands: gst-inspect-1.0,gst-launch-1.0,gst-stats-1.0,gst-tester-1.0,gst-typefind-1.0
+
+name: gtk-3-examples
+version: 3.24.52-0ubuntu1
+commands: gtk3-demo,gtk3-demo-application,gtk3-icon-browser,gtk3-widget-factory
+
+name: gtk-update-icon-cache
+version: 4.22.2+ds-1ubuntu1
+commands: gtk-update-icon-cache,gtk4-update-icon-cache,update-icon-caches
+
+name: gzip
+version: 1.14-1~exp2ubuntu1
+commands: gunzip,gzexe,gzip,uncompress,zcat,zcmp,zdiff,zegrep,zfgrep,zforce,zgrep,zless,zmore,znew
+
+name: handy-1-examples
+version: 1.8.3-3build1
+commands: handy-1-demo
+
+name: haproxy
+version: 3.2.9-1ubuntu2
+commands: halog,haproxy
+
+name: hdparm
+version: 9.65+ds-1.1build1
+commands: hdparm
+
+name: heif-thumbnailer
+version: 1.21.2-3
+commands: heif-thumbnailer
+
+name: hello
+version: 2.10-5build1
+commands: hello
+
+name: hfsplus
+version: 1.0.4-19build1
+commands: hpcd,hpcopy,hpfsck,hpls,hpmkdir,hpmount,hppwd,hprm,hpumount
+
+name: hfst-ospell
+version: 0.5.4-1build5
+commands: hfst-ospell,hfst-ospell-office,hfst-ospell-predict
+
+name: hfsutils
+version: 3.2.6-16ubuntu2
+commands: hattrib,hcd,hcopy,hdel,hdir,hformat,hls,hmkdir,hmount,hpwd,hrename,hrmdir,humount,hvol
+
+name: hostname
+version: 3.25build1
+commands: dnsdomainname,domainname,hostname,nisdomainname,ypdomainname
+
+name: hplip
+version: 3.24.4+dfsg0-0ubuntu8
+commands: hp-align,hp-check,hp-clean,hp-colorcal,hp-config_usb_printer,hp-doctor,hp-firmware,hp-info,hp-levels,hp-logcapture,hp-makeuri,hp-pkservice,hp-plugin,hp-plugin-ubuntu,hp-probe,hp-query,hp-scan,hp-setup,hp-testpage,hp-timedate
+
+name: htop
+version: 3.4.1-5build2
+commands: htop
+
+name: hunspell-tools
+version: 1.7.2+really1.7.2-11
+commands: affixcompress,ispellaff2myspell,munch,unmunch,wordlist2hunspell
+
+name: hwctl
+version: 0.11.0-0ubuntu1
+commands: hwctl
+
+name: ibus
+version: 1.5.34~rc2-1
+commands: ibus,ibus-daemon,ibus-setup
+
+name: ibus-hangul
+version: 1.5.5-3
+commands: ibus-setup-hangul
+
+name: ibus-table
+version: 1.17.16-1build1
+commands: ibus-table-createdb
+
+name: icu-devtools
+version: 78.2-2ubuntu1
+commands: derb,escapesrc,genbrk,genccode,gencfu,gencmn,gencnval,gendict,gennorm2,genrb,gensprep,icuexportdata,icuinfo,icupkg,makeconv,pkgdata,uconv
+
+name: ieee-data
+version: 20240722build1
+commands: update-ieee-data
+
+name: iio-sensor-proxy
+version: 3.8-1
+commands: monitor-sensor
+
+name: im-config
+version: 0.62
+commands: im-config,im-launch
+
+name: indent
+version: 2.2.13-8
+commands: indent
+
+name: inetutils-telnet
+version: 2:2.7-2ubuntu1
+commands: inetutils-telnet,telnet
+
+name: info
+version: 7.2-5ubuntu2
+commands: info,infobrowser
+
+name: init-system-helpers
+version: 1.69
+commands: deb-systemd-helper,deb-systemd-invoke,invoke-rc.d,service,update-rc.d
+
+name: initramfs-tools
+version: 0.151ubuntu1
+commands: update-initramfs
+
+name: initramfs-tools-bin
+version: 0.151ubuntu1
+commands: unmkinitramfs
+
+name: initramfs-tools-core
+version: 0.151ubuntu1
+commands: lsinitramfs,mkinitramfs
+
+name: inputattach
+version: 1:1.8.1-2build2
+commands: inputattach
+
+name: install-info
+version: 7.2-5ubuntu2
+commands: ginstall-info,install-info,update-info-dir
+
+name: iotop-c
+version: 1.31-1
+commands: iotop,iotop-c
+
+name: ipp-usb
+version: 0.9.31-1
+commands: ipp-usb
+
+name: iproute2
+version: 6.19.0-1ubuntu1
+commands: arpd,bridge,ctstat,dcb,devlink,dpll,genl,ip,lnstat,netshaper,nstat,rdma,routel,rtacct,rtmon,rtstat,ss,tc,tipc,vdpa
+
+name: iprutils
+version: 2.4.19-4
+commands: iprconfig,iprdbg,iprdump,iprdumpfmt,iprinit,iprsos,iprupdate
+
+name: ipset
+version: 7.19-1ubuntu3
+commands: ipset,ipset-translate
+
+name: iptables
+version: 1.8.11-2ubuntu3
+commands: arptables,arptables-nft,arptables-nft-restore,arptables-nft-save,arptables-restore,arptables-save,arptables-translate,ebtables,ebtables-nft,ebtables-nft-restore,ebtables-nft-save,ebtables-restore,ebtables-save,ebtables-translate,ip6tables,ip6tables-apply,ip6tables-legacy,ip6tables-legacy-restore,ip6tables-legacy-save,ip6tables-nft,ip6tables-nft-restore,ip6tables-nft-save,ip6tables-restore,ip6tables-restore-translate,ip6tables-save,ip6tables-translate,iptables,iptables-apply,iptables-legacy,iptables-legacy-restore,iptables-legacy-save,iptables-nft,iptables-nft-restore,iptables-nft-save,iptables-restore,iptables-restore-translate,iptables-save,iptables-translate,iptables-xml,nfnl_osf,xtables-legacy-multi,xtables-monitor,xtables-nft-multi
+
+name: iptraf-ng
+version: 1:1.2.2-1
+commands: iptraf,iptraf-ng
+
+name: iputils-arping
+version: 3:20250605-1ubuntu1
+commands: arping
+
+name: iputils-ping
+version: 3:20250605-1ubuntu1
+commands: ping,ping4,ping6
+
+name: iputils-tracepath
+version: 3:20250605-1ubuntu1
+commands: tracepath
+
+name: ipvsadm
+version: 1:1.31-5build1
+commands: ipvsadm,ipvsadm-restore,ipvsadm-save
+
+name: irqbalance
+version: 1.9.4-3
+commands: irqbalance,irqbalance-ui
+
+name: irssi
+version: 1.4.5-1ubuntu7
+commands: irssi
+
+name: iucode-tool
+version: 2.3.1-3build2
+commands: iucode-tool,iucode_tool
+
+name: iw
+version: 6.17-1
+commands: iw
+
+name: java-common
+version: 0.77
+commands: update-java-alternatives
+
+name: jfsutils
+version: 1.1.15-7
+commands: fsck.jfs,jfs_debugfs,jfs_fsck,jfs_fscklog,jfs_logdump,jfs_mkfs,jfs_tune,mkfs.jfs
+
+name: john
+version: 1.9.0-3build1
+commands: john,mailer,unafs,unique,unshadow
+
+name: jq
+version: 1.8.1-4ubuntu1
+commands: jq
+
+name: kbd
+version: 2.7.1-2ubuntu2
+commands: chvt,codepage,deallocvt,dumpkeys,fgconsole,getkeycodes,kbd_mode,kbdinfo,kbdrate,loadkeys,loadunimap,mapscrn,mk_modmap,openvt,psfaddtable,psfgettable,psfstriptable,psfxtable,resizecons,screendump,setfont,setkeycodes,setleds,setlogcons,setmetamode,setvesablank,setvtrgb,showconsolefont,showkey,splitfont,unicode_start,unicode_stop,vcstime
+
+name: kdump-tools
+version: 1:1.10.7ubuntu3
+commands: kdump-config
+
+name: kea-admin
+version: 3.0.3-1
+commands: kea-admin,perfdhcp
+
+name: kea-common
+version: 3.0.3-1
+commands: kea-lfc
+
+name: kea-ctrl-agent
+version: 3.0.3-1
+commands: kea-ctrl-agent,kea-shell
+
+name: kea-dev
+version: 3.0.3-1
+commands: kea-msg-compiler
+
+name: kea-dhcp-ddns-server
+version: 3.0.3-1
+commands: kea-dhcp-ddns
+
+name: kea-dhcp4-server
+version: 3.0.3-1
+commands: kea-dhcp4
+
+name: kea-dhcp6-server
+version: 3.0.3-1
+commands: kea-dhcp6
+
+name: keepalived
+version: 1:2.3.4-1
+commands: genhash,keepalived
+
+name: kexec-tools
+version: 1:2.0.32-3ubuntu1
+commands: coldreboot,kexec,kexec-load-kernel,vmcore-dmesg
+
+name: keyutils
+version: 1.6.3-6ubuntu3
+commands: key.dns_resolver,keyctl,request-key
+
+name: kmod
+version: 34.2-2ubuntu2
+commands: depmod,insmod,kmod,lsmod,modinfo,modprobe,rmmod
+
+name: kpartx
+version: 0.14.3-2ubuntu1
+commands: kpartx
+
+name: krb5-multidev
+version: 1.22.1-2ubuntu4
+commands: krb5-config.mit
+
+name: landscape-client
+version: 26.02.2-0ubuntu1
+commands: landscape-broker,landscape-client,landscape-config,landscape-manager,landscape-monitor,landscape-package-changer,landscape-package-reporter,landscape-release-upgrader
+
+name: landscape-common
+version: 26.02.2-0ubuntu1
+commands: landscape-sysinfo
+
+name: language-selector-common
+version: 0.228build1
+commands: check-language-support
+
+name: language-selector-gnome
+version: 0.228build1
+commands: gnome-language-selector
+
+name: laptop-detect
+version: 0.16+nmu1build1
+commands: laptop-detect
+
+name: lbdb
+version: 0.57-1
+commands: lbdb-fetchaddr,lbdb_dotlock,lbdbq,mutt_ldap_query,nodelist2lbdb
+
+name: ldap-utils
+version: 2.6.10+dfsg-1ubuntu5
+commands: ldapadd,ldapcompare,ldapdelete,ldapexop,ldapmodify,ldapmodrdn,ldappasswd,ldapsearch,ldapurl,ldapwhoami
+
+name: less
+version: 668-1build1
+commands: less,lessecho,lessfile,lesskey,lesspipe,pager
+
+name: lftp
+version: 4.9.3-1.1ubuntu2
+commands: lftp,lftpget
+
+name: libaa1-dev
+version: 1.4p5-51.1build1
+commands: aalib-config
+
+name: libadwaita-1-examples
+version: 1.9.0-0ubuntu1
+commands: adwaita-1-demo
+
+name: libapache2-mod-auth-mellon
+version: 0.19.1-1build1
+commands: mellon_create_metadata
+
+name: libapr1-dev
+version: 1.7.6-3
+commands: apr-1-config,apr-config
+
+name: libaprutil1-dev
+version: 1.6.3-3ubuntu3
+commands: apu-1-config,apu-config
+
+name: libarchive-cpio-perl
+version: 0.10-3
+commands: cpio-filter
+
+name: libarchive-zip-perl
+version: 1.68-1
+commands: crc32
+
+name: libboost1.90-tools-dev
+version: 1.90.0-6ubuntu1
+commands: b2,bcp,bjam,quickbook
+
+name: libc-bin
+version: 2.43-2ubuntu2
+commands: getconf,getent,iconv,iconvconfig,ld.so,ldconfig,ldd,locale,localedef,pldd,tzselect,zdump,zic
+
+name: libc-dev-bin
+version: 2.43-2ubuntu2
+commands: gencat
+
+name: libcaca-dev
+version: 0.99.beta20-6ubuntu2
+commands: caca-config
+
+name: libcap2-bin
+version: 1:2.75-10ubuntu2
+commands: capsh,getcap,getpcaps,setcap
+
+name: libclamav-dev
+version: 1.4.3+dfsg-2ubuntu3
+commands: clamav-config
+
+name: libcpanel-json-xs-perl
+version: 4.40-1
+commands: cpanel_json_xs
+
+name: libcups2-dev
+version: 2.4.16-1ubuntu1
+commands: cups-config
+
+name: libcurl4-gnutls-dev
+version: 8.18.0-1ubuntu2
+commands: curl-config
+
+name: libcurl4-openssl-dev
+version: 8.18.0-1ubuntu2
+commands: curl-config
+
+name: libdbi-perl
+version: 1.647-1build1
+commands: dbilogstrip,dbiprof,dbiproxy,dh_perl_dbi
+
+name: libdbus-glib-1-dev-bin
+version: 0.114-2
+commands: dbus-binding-tool
+
+name: libecpg-dev
+version: 18.3-1
+commands: ecpg
+
+name: libfcgi-bin
+version: 2.4.5-0.1build2
+commands: cgi-fcgi
+
+name: libfftw3-bin
+version: 3.3.10-2fakesync1build3
+commands: fftw-wisdom,fftw-wisdom-to-conf,fftwf-wisdom,fftwl-wisdom,fftwq-wisdom
+
+name: libfile-find-rule-perl
+version: 0.35-1build1
+commands: findrule
+
+name: libfile-mimeinfo-perl
+version: 0.36-2
+commands: mimeopen,mimetype
+
+name: libftdi1-dev
+version: 1.6~rc1-1build1
+commands: libftdi1-config
+
+name: libgd-perl
+version: 2.84-2
+commands: bdf2gdfont
+
+name: libgdk-pixbuf2.0-bin
+version: 2.44.5+dfsg-4ubuntu1
+commands: gdk-pixbuf-csource,gdk-pixbuf-pixdata
+
+name: libgio-2.0-dev-bin
+version: 2.88.0-1
+commands: gdbus-codegen,glib-compile-resources,glib-genmarshal,glib-gettextize,glib-mkenums,gobject-query,gtester,gtester-report
+
+name: libglib-object-introspection-perl
+version: 0.052-1
+commands: perli11ndoc
+
+name: libglib2.0-bin
+version: 2.88.0-1
+commands: gapplication,gdbus,gio,gio-querymodules,glib-compile-schemas,gresource,gsettings
+
+name: libglib2.0-dev-bin
+version: 2.88.0-1
+commands: gi-compile-repository,gi-decompile-typelib,gi-inspect-typelib
+
+name: libgpg-error-dev
+version: 1.58-2
+commands: gpgrt-config
+
+name: libgpgme-dev
+version: 2.0.1-2build1
+commands: gpgme-tool
+
+name: libgpod-common
+version: 0.8.3-23
+commands: ipod-read-sysinfo-extended,ipod-time-sync
+
+name: libgstreamer1.0-dev
+version: 1.28.2-1
+commands: dh_gstscancodecs
+
+name: libgtk-3-bin
+version: 3.24.52-0ubuntu1
+commands: broadwayd,gtk-builder-tool,gtk-encode-symbolic-svg,gtk-launch,gtk-query-settings
+
+name: libgtk-4-bin
+version: 4.22.2+ds-1ubuntu1
+commands: gtk4-broadwayd,gtk4-builder-tool,gtk4-encode-symbolic-svg,gtk4-image-tool,gtk4-launch,gtk4-path-tool,gtk4-query-settings,gtk4-rendernode-tool
+
+name: libgupnp-1.6-dev
+version: 1.6.9-4
+commands: gupnp-binding-tool-1.6
+
+name: libgusb-dev
+version: 0.4.9-7
+commands: gusbcmd
+
+name: libheif-examples
+version: 1.21.2-3
+commands: heif-convert,heif-dec,heif-enc,heif-info
+
+name: libiec61883-dev
+version: 1.2.0-8
+commands: plugctl,plugreport
+
+name: libjemalloc-dev
+version: 5.3.0-4
+commands: jeprof
+
+name: libjson-xs-perl
+version: 4.040-1
+commands: json_xs
+
+name: libklibc-dev
+version: 2.0.14-1ubuntu2
+commands: klcc
+
+name: libkrb5-dev
+version: 1.22.1-2ubuntu4
+commands: krb5-config
+
+name: liblcms2-utils
+version: 2.17-1
+commands: jpgicc,linkicc,psicc,tificc,transicc
+
+name: liblockfile-bin
+version: 1.17-2build2
+commands: dotlockfile
+
+name: liblouisutdml-bin
+version: 2.12.0-8build1
+commands: file2brl
+
+name: liblttng-ust-dev
+version: 2.14.0-1.1
+commands: lttng-gen-tp
+
+name: libmail-dkim-perl
+version: 1.20230212-1ubuntu1
+commands: dkimproxy-sign,dkimproxy-verify
+
+name: libmail-dmarc-perl
+version: 1.20250805-1ubuntu1
+commands: dmarc_lookup,dmarc_receive,dmarc_send_reports,dmarc_update_public_suffix_list,dmarc_view_reports
+
+name: libmariadb-dev
+version: 1:11.8.6-5
+commands: mariadb-config,mariadb_config
+
+name: libmbim-utils
+version: 1.32.0-2ubuntu1
+commands: mbim-network,mbimcli
+
+name: libmecab-dev
+version: 0.996-15.1build4
+commands: mecab-config
+
+name: libmemcached-tools
+version: 1.1.4-1.1build5
+commands: memcaslap,memccapable,memccat,memccp,memcdump,memcerror,memcexist,memcflush,memcparse,memcping,memcrm,memcslap,memcstat,memctouch
+
+name: libmirwayland-bin
+version: 2.25.2-5
+commands: mir_wayland_generator
+
+name: libmysqlclient-dev
+version: 8.4.8-0ubuntu1
+commands: mysql_config
+
+name: libncurses-dev
+version: 6.6+20251231-1
+commands: ncurses6-config,ncursesw6-config
+
+name: libnet-server-perl
+version: 2.016-2
+commands: net-server
+
+name: libnet-snmp-perl
+version: 6.0.1-8
+commands: snmpkey
+
+name: libnet1-dev
+version: 1.3+dfsg-3
+commands: libnet-config
+
+name: libnotify-bin
+version: 0.8.8-1
+commands: notify-send
+
+name: libnspr4-dev
+version: 2:4.38.2-1ubuntu1
+commands: nspr-config
+
+name: libnss-db
+version: 2.2.3pre1-10build5
+commands: makedb
+
+name: libnss3-dev
+version: 2:3.120-1ubuntu2
+commands: nss-config
+
+name: libnss3-tools
+version: 2:3.120-1ubuntu2
+commands: certutil,chktest,cmsutil,crlutil,derdump,httpserv,modutil,nss-addbuiltin,nss-dbtest,nss-pp,ocspclnt,p7content,p7env,p7sign,p7verify,pk12util,pk1sign,pwdecrypt,rsaperf,selfserv,shlibsign,signtool,signver,ssltap,strsclnt,symkeyutil,tstclnt,vfychain,vfyserv
+
+name: liborc-0.4-dev-bin
+version: 1:0.4.42-2
+commands: orc-bugreport,orcc
+
+name: libpam-modules-bin
+version: 1.7.0-5ubuntu3
+commands: faillock,mkhomedir_helper,pam_extrausers_chkpwd,pam_extrausers_update,pam_namespace_helper,pam_timestamp_check,pwhistory_helper,unix_chkpwd,unix_update
+
+name: libpam-mount-bin
+version: 2.22-2
+commands: mount.crypt,mount.crypt_LUKS,mount.crypto_LUKS,pmt-ehd,pmvarrun,umount.crypt,umount.crypt_LUKS,umount.crypto_LUKS
+
+name: libpam-runtime
+version: 1.7.0-5ubuntu3
+commands: pam-auth-update,pam_getenv
+
+name: libpaper-utils
+version: 2.2.5-0.3maysync1
+commands: paper,paperconf,paperconfig
+
+name: libpcap0.8-dev
+version: 1.10.6-1ubuntu1
+commands: pcap-config
+
+name: libpcre2-dev
+version: 10.46-1build1
+commands: pcre2-config
+
+name: libpcsclite-dev
+version: 2.4.1-1
+commands: pcsc-spy
+
+name: libpeas-doc
+version: 1.38.1-4ubuntu1
+commands: peas-demo
+
+name: libperl5.40
+version: 5.40.1-7build1
+commands: cpan5.40-x86_64-linux-gnu,perl5.40-x86_64-linux-gnu
+
+name: libpinyin-utils
+version: 2.10.3-1
+commands: gen_binary_files,gen_unigram,import_interpolation
+
+name: libpng-dev
+version: 1.6.57-1
+commands: libpng-config,libpng16-config
+
+name: libpng-tools
+version: 1.6.57-1
+commands: png-fix-itxt,pngfix
+
+name: libpod-parser-perl
+version: 1.67-1
+commands: podselect
+
+name: libpq-dev
+version: 18.3-1
+commands: pg_config
+
+name: libpspell-dev
+version: 0.60.8.2-3
+commands: pspell-config
+
+name: libpython3-dbg
+version: 3.14.3-0ubuntu2
+commands: x86_64-linux-gnu-python3-dbg-config,x86_64-linux-gnu-python3d-config
+
+name: libpython3-dev
+version: 3.14.3-0ubuntu2
+commands: x86_64-linux-gnu-python3-config
+
+name: libpython3.14-dbg
+version: 3.14.4-1
+commands: x86_64-linux-gnu-python3.14-dbg-config,x86_64-linux-gnu-python3.14d-config
+
+name: libpython3.14-dev
+version: 3.14.4-1
+commands: x86_64-linux-gnu-python3.14-config
+
+name: libqb-tools
+version: 2.0.9-1ubuntu1
+commands: qb-blackbox
+
+name: libqmi-utils
+version: 1.38.0-1
+commands: qmi-firmware-update,qmi-network,qmicli
+
+name: librados-dev
+version: 20.2.0-0ubuntu2
+commands: librados-config
+
+name: librasqal3-dev
+version: 0.9.33-3
+commands: rasqal-config
+
+name: libraw1394-tools
+version: 2.1.2-2build4
+commands: dumpiso,sendiso,testlibraw
+
+name: librdf0-dev
+version: 1.0.17-8
+commands: redland-config
+
+name: libreoffice-calc
+version: 4:26.2.2.2-0ubuntu1
+commands: localc
+
+name: libreoffice-common
+version: 4:26.2.2.2-0ubuntu1
+commands: libreoffice,loffice,lofromtemplate,soffice,unopkg
+
+name: libreoffice-draw
+version: 4:26.2.2.2-0ubuntu1
+commands: lodraw
+
+name: libreoffice-impress
+version: 4:26.2.2.2-0ubuntu1
+commands: loimpress
+
+name: libreoffice-math
+version: 4:26.2.2.2-0ubuntu1
+commands: lomath
+
+name: libreoffice-writer
+version: 4:26.2.2.2-0ubuntu1
+commands: loweb,lowriter
+
+name: libstring-shellquote-perl
+version: 1.04-3
+commands: shell-quote
+
+name: libtag-dev
+version: 2.2.1-3
+commands: taglib-config
+
+name: libtemplate-perl
+version: 3.102-1
+commands: tpage,ttree
+
+name: libtext-xslate-perl
+version: 3.5.9-2build1
+commands: xslate
+
+name: libtool
+version: 2.5.4-9
+commands: libtoolize
+
+name: libtool-bin
+version: 2.5.4-9
+commands: libtool
+
+name: libubootenv-tool
+version: 0.3.5-0.2
+commands: fw_printenv,fw_setenv
+
+name: libunity9
+version: 7.1.4+19.04.20190319-6.1ubuntu1
+commands: unity-scope-loader
+
+name: libusb-dev
+version: 2:0.1.12-35build2
+commands: libusb-config
+
+name: libvirt-clients
+version: 12.0.0-1ubuntu5
+commands: virsh,virt-pki-query-dn,virt-pki-validate,virt-xml-validate
+
+name: libvirt-clients-hwe
+version: 12.0.0-1ubuntu5
+commands: virsh,virt-pki-query-dn,virt-pki-validate,virt-xml-validate
+
+name: libvirt-daemon
+version: 12.0.0-1ubuntu5
+commands: libvirtd
+
+name: libvirt-daemon-common
+version: 12.0.0-1ubuntu5
+commands: virt-admin,virt-host-validate,virt-ssh-helper
+
+name: libvirt-daemon-common-hwe
+version: 12.0.0-1ubuntu5
+commands: virt-admin,virt-host-validate,virt-ssh-helper
+
+name: libvirt-daemon-driver-qemu
+version: 12.0.0-1ubuntu5
+commands: virt-qemu-run
+
+name: libvirt-daemon-driver-qemu-hwe
+version: 12.0.0-1ubuntu5
+commands: virt-qemu-run
+
+name: libvirt-daemon-hwe
+version: 12.0.0-1ubuntu5
+commands: libvirtd
+
+name: libvirt-daemon-lock
+version: 12.0.0-1ubuntu5
+commands: virtlockd
+
+name: libvirt-daemon-lock-hwe
+version: 12.0.0-1ubuntu5
+commands: virtlockd
+
+name: libvirt-daemon-log
+version: 12.0.0-1ubuntu5
+commands: virtlogd
+
+name: libvirt-daemon-log-hwe
+version: 12.0.0-1ubuntu5
+commands: virtlogd
+
+name: libvoikko-dev
+version: 4.3.3-1
+commands: voikkogc,voikkohyphenate,voikkospell,voikkovfstc
+
+name: libwayland-bin
+version: 1.24.0-2
+commands: wayland-scanner
+
+name: libwnck-3-dev
+version: 43.3-1build1
+commands: wnck-urgency-monitor,wnckprop
+
+name: libwww-mechanize-perl
+version: 2.20-1ubuntu1
+commands: mech-dump
+
+name: libwww-perl
+version: 6.81-1build1
+commands: GET,HEAD,POST,lwp-download,lwp-dump,lwp-mirror,lwp-request
+
+name: libxml-sax-perl
+version: 1.02+dfsg-4
+commands: update-perl-sax-parsers
+
+name: libxml2-dev
+version: 2.15.2+dfsg-0.1
+commands: xml2-config
+
+name: libxml2-utils
+version: 2.15.2+dfsg-0.1
+commands: xmlcatalog,xmllint
+
+name: libxmlsec1-dev
+version: 1.3.9-1
+commands: xmlsec1-config
+
+name: libxslt1-dev
+version: 1.1.45-0.1
+commands: xslt-config
+
+name: licensecheck
+version: 3.3.9-1ubuntu2
+commands: licensecheck
+
+name: lintian
+version: 2.129.0ubuntu2
+commands: lintian,lintian-annotate-hints,lintian-explain-tags,lintian-info,spellintian
+
+name: linux-base
+version: 4.15ubuntu5
+commands: linux-check-removal,linux-run-hooks,linux-update-symlinks,linux-version
+
+name: linux-cloud-tools-common
+version: 7.0.0-14.14
+commands: hv_fcopy_uio_daemon,hv_get_dhcp_info,hv_get_dns_info,hv_kvp_daemon,hv_set_ifconfig,hv_vss_daemon,lsvmbus
+
+name: linux-perf
+version: 7.0.0-14.14
+commands: perf
+
+name: linux-tools-common
+version: 7.0.0-14.14
+commands: acpidbg,cpupower,rtla,turbostat,usbip,usbipd,x86_energy_perf_policy
+
+name: linux-tools-host
+version: 7.0.0-14.14
+commands: kvm_stat
+
+name: live-build
+version: 3.0~a57-1ubuntu54
+commands: lb,live-build
+
+name: livecd-rootfs
+version: 26.04.34
+commands: build-livefs
+
+name: locales
+version: 2.43-2ubuntu2
+commands: locale-gen,update-locale,validlocale
+
+name: localsearch
+version: 3.11.0-1ubuntu1
+commands: localsearch
+
+name: lockfile-progs
+version: 0.2.0build1
+commands: lockfile-check,lockfile-create,lockfile-remove,lockfile-touch,mail-lock,mail-touchlock,mail-unlock
+
+name: logcheck
+version: 1.4.7build1
+commands: logcheck,logcheck-test
+
+name: login
+version: 1:4.16.0-2+really2.41.3-3ubuntu2
+commands: login,nologin
+
+name: logrotate
+version: 3.22.0-1build1
+commands: logrotate
+
+name: logsave
+version: 1.47.2-3ubuntu4
+commands: logsave
+
+name: logtail
+version: 1.4.7build1
+commands: logtail,logtail2
+
+name: logwatch
+version: 7.12-3ubuntu2
+commands: logwatch
+
+name: loupe
+version: 50.0-0ubuntu2
+commands: loupe
+
+name: lp-solve
+version: 5.5.2.14-5
+commands: lp_solve
+
+name: lsb-release
+version: 12.1-2build1
+commands: lsb_release
+
+name: lshw
+version: 02.19.git.2021.06.19.996aaad9c7-2.1ubuntu3
+commands: lshw
+
+name: lsof
+version: 4.99.4+dfsg-2build2
+commands: lsof
+
+name: lsscsi
+version: 0.32-2build1
+commands: lsscsi
+
+name: luit
+version: 2.0.20250912-1
+commands: luit
+
+name: lvm2
+version: 2.03.31-2ubuntu3
+commands: fsadm,lvchange,lvconvert,lvcreate,lvdisplay,lvextend,lvm,lvmconfig,lvmdiskscan,lvmdump,lvmpolld,lvmsadc,lvmsar,lvreduce,lvremove,lvrename,lvresize,lvs,lvscan,pvchange,pvck,pvcreate,pvdisplay,pvmove,pvremove,pvresize,pvs,pvscan,vgcfgbackup,vgcfgrestore,vgchange,vgck,vgconvert,vgcreate,vgdisplay,vgexport,vgextend,vgimport,vgimportclone,vgmerge,vgmknodes,vgreduce,vgremove,vgrename,vgs,vgscan,vgsplit
+
+name: lvm2-dbusd
+version: 2.03.31-2ubuntu3
+commands: lvmdbusd
+
+name: lxd-installer
+version: 14ubuntu0
+commands: lxc,lxd
+
+name: lzip
+version: 1.26~rc1-2
+commands: lzip,lzip-compressor,lzip-decompressor,lzip.lzip
+
+name: lzop
+version: 1.04-2build4
+commands: lzop
+
+name: m17n-db
+version: 1.8.10-1build1
+commands: m17n-db
+
+name: m4
+version: 1.4.21-1
+commands: m4
+
+name: mailcap
+version: 3.75ubuntu1
+commands: cautious-launcher,compose,edit,open,print,run-mailcap,see,update-mime
+
+name: make
+version: 4.4.1-3
+commands: gmake,make,make-first-existing-target
+
+name: makedumpfile
+version: 1:1.7.7-1
+commands: makedumpfile,makedumpfile-R.pl
+
+name: malcontent
+version: 0.14.0-0ubuntu1
+commands: malcontent-client
+
+name: man-db
+version: 2.13.1-1build1
+commands: accessdb,apropos,catman,lexgrog,man,man-recode,mandb,manpath,whatis
+
+name: mariadb-client
+version: 1:11.8.6-5
+commands: innotop,mariadb-access,mariadb-admin,mariadb-analyze,mariadb-binlog,mariadb-conv,mariadb-convert-table-format,mariadb-dump,mariadb-dumpslow,mariadb-find-rows,mariadb-fix-extensions,mariadb-hotcopy,mariadb-import,mariadb-optimize,mariadb-plugin,mariadb-repair,mariadb-report,mariadb-secure-installation,mariadb-setpermission,mariadb-show,mariadb-slap,mariadb-tzinfo-to-sql,mariadb-waitpid,mariadbcheck,msql2mysql,mysqladmin,mysqldump,mytop,perror,replace,resolve_stack_dump
+
+name: mariadb-client-core
+version: 1:11.8.6-5
+commands: mariadb,mariadb-check,my_print_defaults,mysql
+
+name: mariadb-server
+version: 1:11.8.6-5
+commands: aria_chk,aria_dump_log,aria_ftdump,aria_pack,aria_read_log,galera_new_cluster,galera_recovery,mariadb-service-convert,mariadbd-multi,mariadbd-safe,mariadbd-safe-helper,myisam_ftdump,myisamchk,myisamlog,myisampack,mysqld_safe,wsrep_sst_backup,wsrep_sst_common,wsrep_sst_mariabackup,wsrep_sst_mysqldump,wsrep_sst_rsync,wsrep_sst_rsync_wan
+
+name: mariadb-server-core
+version: 1:11.8.6-5
+commands: innochecksum,mariadb-install-db,mariadb-upgrade,mariadbd,mysql_install_db,mysql_upgrade,mysqld,resolveip
+
+name: masakari-api
+version: 21.0.0-0ubuntu1
+commands: masakari-api-wsgi
+
+name: mawk
+version: 1.3.4.20260129-1
+commands: awk,mawk,nawk
+
+name: mdadm
+version: 4.5-5ubuntu1
+commands: mdadm,mdmon
+
+name: mdevctl
+version: 1.4.0-1ubuntu3
+commands: lsmdev,mdevctl
+
+name: memcached
+version: 1.6.40-1
+commands: memcached
+
+name: mesa-vulkan-drivers
+version: 26.0.3-1ubuntu1
+commands: mesa-overlay-control.py,mesa-screenshot-control.py
+
+name: microcode-initrd
+version: 4ubuntu
+commands: update-microcode-initrd
+
+name: mime-construct
+version: 1.12+really1.11-1build1
+commands: mime-construct
+
+name: modemmanager
+version: 1.25.95-1ubuntu1
+commands: ModemManager,mmcli
+
+name: mokutil
+version: 0.7.2-2
+commands: mokutil
+
+name: mosh
+version: 1.4.0-1ubuntu5
+commands: mosh,mosh-client,mosh-server
+
+name: mount
+version: 2.41.3-3ubuntu2
+commands: losetup,mount,swapoff,swapon,umount
+
+name: mscompress
+version: 0.4-10build2
+commands: mscompress,msexpand
+
+name: msr-tools
+version: 1.3+git20220805.7d78c80-1build1
+commands: rdmsr,wrmsr
+
+name: mtd-utils
+version: 1:2.3.0-1ubuntu2
+commands: doc_loadbios,docfdisk,fectest,flash_erase,flash_eraseall,flash_lock,flash_otp_dump,flash_otp_erase,flash_otp_info,flash_otp_lock,flash_otp_write,flash_unlock,flashcp,fsck.ubifs,ftl_check,ftl_format,jffs2dump,jffs2reader,lsmtd,mkfs.jffs2,mkfs.ubifs,mount.ubifs,mtd_debug,mtdinfo,mtdpart,nanddump,nandflipbits,nandtest,nandwrite,nftl_format,nftldump,recv_image,rfddump,rfdformat,serve_image,sumtool,ubiattach,ubiblock,ubicrc32,ubidetach,ubiformat,ubihealthd,ubimkvol,ubinfo,ubinize,ubirename,ubirmvol,ubirsvol,ubiscan,ubiupdatevol
+
+name: mtools
+version: 4.0.49-1
+commands: amuFormat.sh,lz,mattrib,mbadblocks,mcat,mcd,mcheck,mcomp,mcopy,mdel,mdeltree,mdir,mdoctorfat,mdu,mformat,minfo,mkmanifest,mlabel,mmd,mmount,mmove,mpartition,mrd,mren,mshortname,mshowfat,mtools,mtoolstest,mtype,mxtar,mzip,tgz,uz
+
+name: mtr-tiny
+version: 0.95-1.1ubuntu2
+commands: mtr,mtr-packet
+
+name: mtx
+version: 1.3.12-18build1
+commands: loaderinfo,mtx,scsieject,scsitape,tapeinfo
+
+name: multipath-tools
+version: 0.14.3-2ubuntu1
+commands: mpathpersist,multipath,multipathc,multipathd
+
+name: mutt
+version: 2.2.13-1build2
+commands: mutt,mutt_dotlock,smime_keys
+
+name: mutter-common
+version: 50.1-0ubuntu2
+commands: gnome-service-client
+
+name: mutter-common-bin
+version: 50.1-0ubuntu2
+commands: gdctl
+
+name: mysql-client
+version: 8.4.8-0ubuntu1
+commands: mysqlanalyze,mysqloptimize,mysqlrepair
+
+name: mysql-client-core
+version: 8.4.8-0ubuntu1
+commands: mysql,mysql_config_editor,mysqladmin,mysqlcheck,mysqldump,mysqlimport,mysqlshow,mysqlslap
+
+name: mysql-server-core
+version: 8.4.8-0ubuntu1
+commands: ibd2sdi,innochecksum,my_print_defaults,myisam_ftdump,myisamchk,myisamlog,myisampack,mysql_migrate_keyring,mysql_secure_installation,mysql_tzinfo_to_sql,mysqlbinlog,mysqld,mysqld_multi,mysqld_safe,mysqldumpslow,perror
+
+name: nano
+version: 8.7.1-1
+commands: editor,nano,pico,rnano
+
+name: nautilus
+version: 1:50.0-0ubuntu2
+commands: nautilus,nautilus-autorun-software
+
+name: nautilus-sendto
+version: 3.8.6-8ubuntu1
+commands: nautilus-sendto
+
+name: nbd-client
+version: 1:3.26.1-6.1ubuntu2
+commands: nbd-client
+
+name: nbd-server
+version: 1:3.26.1-6.1ubuntu2
+commands: nbd-server,nbd-trdump,nbd-trplay
+
+name: ncurses-bin
+version: 6.6+20251231-1
+commands: captoinfo,clear,infocmp,infotocap,reset,tabs,tic,toe,tput,tset
+
+name: ndctl
+version: 81-1ubuntu1
+commands: ndctl
+
+name: needrestart
+version: 3.11-1ubuntu2
+commands: needrestart
+
+name: net-tools
+version: 2.10-2ubuntu1
+commands: arp,ifconfig,ipmaddr,iptunnel,mii-tool,nameif,netstat,plipconfig,rarp,route,slattach
+
+name: netcat-openbsd
+version: 1.234-1
+commands: nc,nc.openbsd,netcat
+
+name: netplan.io
+version: 1.2-1ubuntu5
+commands: netplan
+
+name: network-manager
+version: 1.54.3-2ubuntu3
+commands: NetworkManager,nm-online,nmcli,nmtui,nmtui-connect,nmtui-edit,nmtui-hostname
+
+name: networkd-dispatcher
+version: 2.2.4-1.1ubuntu1
+commands: networkd-dispatcher
+
+name: nfs-common
+version: 1:2.8.5-1ubuntu1
+commands: mount.nfs,mount.nfs4,mountstats,nfsconf,nfsidmap,nfsiostat,nfsstat,rpc.gssd,rpc.idmapd,rpc.statd,rpc.svcgssd,rpcctl,rpcdebug,showmount,sm-notify,start-statd,umount.nfs,umount.nfs4
+
+name: nfs-ganesha
+version: 6.5-8
+commands: ganesha.nfsd,sm_notify.ganesha
+
+name: nfs-kernel-server
+version: 1:2.8.5-1ubuntu1
+commands: exportfs,fsidd,nfsdcld,nfsdclddb,nfsdclnts,nfsdctl,nfsref,rpc.mountd,rpc.nfsd
+
+name: nftables
+version: 1.1.6-1
+commands: nft
+
+name: nginx
+version: 1.28.3-2ubuntu1
+commands: nginx
+
+name: nm-connection-editor
+version: 1.36.0-4ubuntu1
+commands: nm-connection-editor
+
+name: nova-api
+version: 3:33.0.0-0ubuntu3
+commands: nova-api-wsgi
+
+name: ntfs-3g
+version: 1:2022.10.3-5build1
+commands: lowntfs-3g,mkfs.ntfs,mkntfs,mount.lowntfs-3g,mount.ntfs,mount.ntfs-3g,ntfs-3g,ntfs-3g.probe,ntfscat,ntfsclone,ntfscluster,ntfscmp,ntfscp,ntfsdecrypt,ntfsfallocate,ntfsfix,ntfsinfo,ntfslabel,ntfsls,ntfsmove,ntfsrecover,ntfsresize,ntfssecaudit,ntfstruncate,ntfsundelete,ntfsusermap,ntfswipe
+
+name: ntfs-3g-dev
+version: 1:2022.10.3-5build1
+commands: ntfsck,ntfsdump_logfile,ntfsmftalloc
+
+name: nullboot
+version: 0.5.3-0ubuntu2
+commands: nullbootctl
+
+name: numactl
+version: 2.0.19-1build1
+commands: memhog,migratepages,migspeed,numactl,numastat
+
+name: nut-client
+version: 2.8.4+really-2
+commands: nutconf,upsc,upscmd,upslog,upsmon,upsrw,upssched,upssched-cmd
+
+name: nut-server
+version: 2.8.4+really-2
+commands: nut-scanner,upsd,upsdrvctl,upsdrvsvcctl
+
+name: nvidia-prime
+version: 0.8.17.2build1
+commands: get-quirk-options,prime-offload,prime-select,prime-supported,prime-switch
+
+name: nvidia-settings
+version: 510.47.03-0ubuntu7
+commands: nvidia-settings
+
+name: nvme-cli
+version: 2.16-1
+commands: nvme
+
+name: nvme-stas
+version: 2.4.1-3build1
+commands: stacctl,stacd,stafctl,stafd,stasadm
+
+name: ocfs2-tools
+version: 1.8.9-1
+commands: debugfs.ocfs2,defragfs.ocfs2,fsck.ocfs2,mkfs.ocfs2,mount.ocfs2,mounted.ocfs2,o2cb,o2cb.init,o2cb_ctl,o2cluster,o2hbmonitor,o2image,o2info,ocfs2.init,ocfs2_hb_ctl,tunefs.ocfs2
+
+name: odbcinst
+version: 2.3.14-1
+commands: odbcinst
+
+name: oem-config
+version: 26.04.1
+commands: oem-config,oem-config-firstboot,oem-config-prepare,oem-config-remove,oem-config-wrapper
+
+name: oem-config-gtk
+version: 26.04.1
+commands: oem-config-remove-gtk
+
+name: open-iscsi
+version: 2.1.11-3ubuntu3
+commands: iscsi-iname,iscsi_discovery,iscsiadm,iscsid,iscsistart
+
+name: open-vm-tools
+version: 2:13.0.10-1ubuntu1
+commands: VGAuthService,vm-support,vmhgfs-fuse,vmtoolsd,vmware-alias-import,vmware-checkvm,vmware-hgfsclient,vmware-namespace-cmd,vmware-rpctool,vmware-toolbox-cmd,vmware-vgauth-cmd,vmware-vmblock-fuse,vmware-xferlogs
+
+name: open-vm-tools-desktop
+version: 2:13.0.10-1ubuntu1
+commands: vmware-user,vmware-user-suid-wrapper,vmwgfxctrl
+
+name: openipmi
+version: 2.0.37-1build1
+commands: ipmi_sim,ipmi_ui,ipmicmd,ipmilan,ipmish,openipmi_eventd,openipmicmd,openipmish,rmcp_ping,sdrcomp,solterm
+
+name: openjdk-25-jdk
+version: 25.0.3~7ea-2
+commands: jconsole
+
+name: openjdk-25-jdk-headless
+version: 25.0.3~7ea-2
+commands: jar,jarsigner,javac,javadoc,javap,jcmd,jdb,jdeprscan,jdeps,jfr,jhsdb,jimage,jinfo,jlink,jmap,jmod,jnativescan,jps,jrunscript,jshell,jstack,jstat,jstatd,jwebserver,serialver
+
+name: openjdk-25-jre-headless
+version: 25.0.3~7ea-2
+commands: java,jexec,jpackage,keytool,rmiregistry
+
+name: openssh-client
+version: 1:10.2p1-2ubuntu3
+commands: scp,sftp,ssh,ssh-add,ssh-agent,ssh-argv0,ssh-copy-id,ssh-keygen,ssh-keyscan
+
+name: openssh-server
+version: 1:10.2p1-2ubuntu3
+commands: sshd
+
+name: openssl
+version: 3.5.5-1ubuntu3
+commands: c_rehash,openssl
+
+name: openvpn
+version: 2.7.0-1ubuntu1
+commands: openvpn
+
+name: openvswitch-common
+version: 3.7.1-2
+commands: ovs-appctl,ovs-bugtool,ovs-docker,ovs-flowviz,ovs-ofctl,ovs-parse-backtrace,ovs-pki,ovsdb-client,ovsdb-server,ovsdb-tool
+
+name: openvswitch-switch
+version: 3.7.1-2
+commands: ovs-dpctl,ovs-dpctl-top,ovs-pcap,ovs-tcpdump,ovs-tcpundump,ovs-vlan-test,ovs-vsctl,ovs-vswitchd
+
+name: openvswitch-switch-dpdk
+version: 3.7.1-2
+commands: ovs-vswitchd
+
+name: optipng
+version: 7.9.1+ds-2build1
+commands: optipng
+
+name: orca
+version: 50.1.2-1ubuntu1
+commands: orca,orca-dm-wrapper
+
+name: os-prober
+version: 1.84ubuntu1
+commands: linux-boot-prober,os-prober
+
+name: overlayroot
+version: 0.58ubuntu
+commands: overlayroot-chroot
+
+name: ovn-central
+version: 26.03.0-2
+commands: ovn-northd
+
+name: ovn-common
+version: 26.03.0-2
+commands: ovn-appctl,ovn-brctl,ovn-debug,ovn-detrace,ovn-ic-nbctl,ovn-ic-sbctl,ovn-nbctl,ovn-sbctl,ovn-trace
+
+name: ovn-host
+version: 26.03.0-2
+commands: ovn-br-controller,ovn-controller
+
+name: p11-kit
+version: 0.26.2-2
+commands: p11-kit,trust
+
+name: pacemaker
+version: 3.0.1-1ubuntu2
+commands: crm_node,fence_legacy,fence_watchdog,pacemakerd
+
+name: pacemaker-cli-utils
+version: 3.0.1-1ubuntu2
+commands: attrd_updater,cibadmin,cibsecret,crm_attribute,crm_diff,crm_error,crm_failcount,crm_master,crm_mon,crm_report,crm_resource,crm_rule,crm_shadow,crm_simulate,crm_standby,crm_ticket,crm_verify,crmadmin,iso8601,stonith_admin
+
+name: packagekit
+version: 1.3.4-3
+commands: pkgcli
+
+name: pango1.0-tools
+version: 1.57.0-1
+commands: pango-list,pango-segmentation,pango-view
+
+name: papers
+version: 50.1-0ubuntu1
+commands: papers,papers-previewer,papers-thumbnailer
+
+name: parted
+version: 3.6-6
+commands: parted,partprobe
+
+name: passwd
+version: 1:4.17.4-2ubuntu3
+commands: chage,chfn,chgpasswd,chpasswd,chsh,expiry,gpasswd,groupadd,groupdel,groupmod,grpck,grpconv,grpunconv,newusers,passwd,pwck,pwconv,pwunconv,shadowconfig,useradd,userdel,usermod,vigr,vipw
+
+name: pastebinit
+version: 1.8.0-1
+commands: pastebinit,pbget,pbput,pbputs
+
+name: patch
+version: 2.8-2build1
+commands: patch
+
+name: patchutils
+version: 0.4.3-1ubuntu1
+commands: combinediff,dehtmldiff,editdiff,espdiff,filterdiff,fixcvsdiff,flipdiff,gitdiff,gitdiffview,grepdiff,interdiff,lsdiff,patchview,recountdiff,rediff,splitdiff,svndiff,svndiffview,unwrapdiff
+
+name: pax
+version: 1:20240817-1build1
+commands: pax,paxcpio,paxtar
+
+name: pciutils
+version: 1:3.14.0-1build2
+commands: lspci,pcilmr,setpci,update-pciids
+
+name: pcmciautils
+version: 018-19
+commands: lspcmcia,pccardctl
+
+name: pcs
+version: 0.12.1-2ubuntu3
+commands: pcs,pcsd
+
+name: pemmican-desktop
+version: 1.0.3-0ubuntu3
+commands: pemmican-mon,pemmican-reset
+
+name: pemmican-server
+version: 1.0.3-0ubuntu3
+commands: pemmican-cli
+
+name: perl
+version: 5.40.1-7build1
+commands: corelist,cpan,enc2xs,encguess,h2ph,h2xs,instmodsh,json_pp,libnetcfg,perlbug,perldoc,perlivp,perlthanks,piconv,pl2pm,pod2html,pod2man,pod2text,pod2usage,podchecker,prove,ptar,ptardiff,ptargrep,shasum,splain,streamzip,xsubpp,zipdetails
+
+name: perl-base
+version: 5.40.1-7build1
+commands: perl,perl5.40.1
+
+name: perl-debug
+version: 5.40.1-7build1
+commands: debugperl
+
+name: perl-doc
+version: 5.40.1-7build1
+commands: perldoc
+
+name: perl-openssl-defaults
+version: 7build4
+commands: dh_perl_openssl
+
+name: php-cgi
+version: 2:8.5+99ubuntu1
+commands: php-cgi,php-cgi.default
+
+name: php-cli
+version: 2:8.5+99ubuntu1
+commands: phar,phar.default,phar.phar,phar.phar.default,php,php.default
+
+name: php-common
+version: 2:99ubuntu1
+commands: phpdismod,phpenmod,phpquery
+
+name: php-dev
+version: 2:8.5+99ubuntu1
+commands: php-config,php-config.default,phpize,phpize.default
+
+name: php-pear
+version: 1:1.10.16+submodules+notgz-3ubuntu1
+commands: pear,peardev,pecl
+
+name: php8.5-cgi
+version: 8.5.4-0ubuntu1
+commands: php-cgi,php-cgi8.5
+
+name: php8.5-cli
+version: 8.5.4-0ubuntu1
+commands: phar,phar.phar,phar.phar8.5,phar8.5,phar8.5.phar,php,php8.5
+
+name: php8.5-dev
+version: 8.5.4-0ubuntu1
+commands: php-config,php-config8.5,phpize,phpize8.5
+
+name: pinentry-curses
+version: 1.3.2-3ubuntu1
+commands: pinentry,pinentry-curses
+
+name: pinentry-gnome3
+version: 1.3.2-3ubuntu1
+commands: pinentry,pinentry-gnome3,pinentry-x11
+
+name: pipewire-bin
+version: 1.6.2-1ubuntu1
+commands: pipewire,pipewire-aes67,pipewire-avb,pw-cat,pw-cli,pw-config,pw-container,pw-dot,pw-dsdplay,pw-dump,pw-encplay,pw-link,pw-loopback,pw-metadata,pw-midi2play,pw-midi2record,pw-mididump,pw-midiplay,pw-midirecord,pw-mon,pw-play,pw-profiler,pw-record,pw-reserve,pw-sysex,pw-top,spa-acp-tool,spa-inspect,spa-json-dump,spa-monitor,spa-resample
+
+name: pipewire-pulse
+version: 1.6.2-1ubuntu1
+commands: pipewire-pulse
+
+name: pkexec
+version: 127-2ubuntu1
+commands: pkexec
+
+name: pkg-php-tools
+version: 1.49build1
+commands: dh_phpcomposer,dh_phppear,phpabtpl,phpunit-autopkgtest,pkgtools
+
+name: pkgbinarymangler
+version: 157ubuntu
+commands: dh_builddeb,dpkg-deb,pkgmaintainermangler,pkgsanitychecks,pkgstripfiles,pkgstriptranslations
+
+name: pkgconf
+version: 2.5.1-4
+commands: pkg-config,x86_64-linux-gnu-pkg-config,x86_64-linux-gnu-pkgconf
+
+name: pkgconf-bin
+version: 2.5.1-4
+commands: pkgconf
+
+name: placement-api
+version: 1:15.0.0-0ubuntu1
+commands: placement-api
+
+name: plymouth
+version: 24.004.60+git20250831.4a3c171d-0ubuntu8
+commands: plymouth,plymouthd
+
+name: po-debconf
+version: 1.0.22
+commands: debconf-gettextize,debconf-updatepo,po2debconf,podebconf-display-po,podebconf-report-po
+
+name: policyrcd-script-zg2
+version: 0.2-1build1
+commands: policy-rc.d,zg-policy-rc.d
+
+name: polkitd
+version: 127-2ubuntu1
+commands: pkaction,pkcheck,pkttyagent
+
+name: pollinate
+version: 4.33-4ubuntu6
+commands: pollinate
+
+name: poppler-utils
+version: 26.01.0-2build2
+commands: pdfattach,pdfdetach,pdffonts,pdfimages,pdfinfo,pdfseparate,pdfsig,pdftocairo,pdftohtml,pdftoppm,pdftops,pdftotext,pdfunite
+
+name: postfix
+version: 3.10.6-4ubuntu2
+commands: mailq,newaliases,postalias,postcat,postconf,postdrop,postfix,postfix-add-filter,postfix-add-policy,postfix-collate,postkick,postlock,postlog,postmap,postmulti,postqueue,postsuper,posttls-finger,qmqp-sink,qmqp-source,qshape,rmail,sendmail,smtp-sink,smtp-source
+
+name: postgresql-client-common
+version: 290ubuntu1
+commands: clusterdb,createdb,createlang,createuser,dropdb,droplang,dropuser,pg_basebackup,pg_dump,pg_dumpall,pg_isready,pg_receivewal,pg_receivexlog,pg_recvlogical,pg_restore,pgbench,psql,reindexdb,vacuumdb,vacuumlo
+
+name: postgresql-common
+version: 290ubuntu1
+commands: pg_archivecleanup,pg_backupcluster,pg_config,pg_conftool,pg_createcluster,pg_ctlcluster,pg_dropcluster,pg_lsclusters,pg_renamecluster,pg_restorecluster,pg_updatedicts,pg_upgradecluster,pg_virtualenv
+
+name: postgresql-common-dev
+version: 290ubuntu1
+commands: dh_make_pgxs,dh_pgxs_test,pg_buildext
+
+name: power-profiles-daemon
+version: 0.30-2
+commands: powerprofilesctl
+
+name: powermgmt-base
+version: 1.38ubuntu2
+commands: lspower,on_ac_power
+
+name: powertop
+version: 2.15-5
+commands: powertop
+
+name: ppp
+version: 2.5.2-1+1.2
+commands: chat,plog,poff,pon,pppd,pppdump,pppoe-discovery,pppstats
+
+name: ppp-dev
+version: 2.5.2-1+1.2
+commands: dh_ppp
+
+name: pppconfig
+version: 2.3.30build1
+commands: pppconfig
+
+name: pptp-linux
+version: 1.10.0-2build1
+commands: pptp,pptpsetup
+
+name: printer-driver-foo2zjs
+version: 20200505dfsg0-3ubuntu1
+commands: arm2hpdl,ddstdecode,foo2ddst,foo2hbpl2,foo2hiperc,foo2hp,foo2lava,foo2oak,foo2qpdl,foo2slx,foo2xqx,foo2zjs,foo2zjs-icc2ps,gipddecode,hbpldecode,hipercdecode,lavadecode,oakdecode,opldecode,qpdldecode,slxdecode,usb_printerid,xqxdecode,zjsdecode
+
+name: printer-driver-foo2zjs-common
+version: 20200505dfsg0-3ubuntu1
+commands: foo2ddst-wrapper,foo2hbpl2-wrapper,foo2hiperc-wrapper,foo2hp2600-wrapper,foo2lava-wrapper,foo2oak-wrapper,foo2qpdl-wrapper,foo2slx-wrapper,foo2xqx-wrapper,foo2zjs-pstops,foo2zjs-wrapper,getweb,printer-profile
+
+name: printer-driver-gutenprint
+version: 5.3.4.20220624T01008808d602-4ubuntu2
+commands: cups-calibrate,cups-genppdupdate
+
+name: printer-driver-hpijs
+version: 3.24.4+dfsg0-0ubuntu8
+commands: hpijs
+
+name: printer-driver-m2300w
+version: 0.51-15build3
+commands: m2300w,m2300w-wrapper,m2400w
+
+name: printer-driver-min12xxw
+version: 0.0.9-11build4
+commands: esc-m,min12xxw
+
+name: printer-driver-pnm2ppa
+version: 1.13+nondbs-0ubuntu11
+commands: calibrate_ppa,pnm2ppa
+
+name: printer-driver-pxljr
+version: 1.4+repack0-6build3
+commands: ijs_pxljr
+
+name: prips
+version: 1.3.1-1
+commands: prips
+
+name: procmail
+version: 3.24-1ubuntu5
+commands: formail,lockfile,mailstat,procmail
+
+name: procps
+version: 2:4.0.4-9ubuntu1
+commands: free,kill,pgrep,pidwait,pkill,pmap,ps,pwdx,skill,slabtop,snice,sysctl,tload,top,uptime,vmstat,w,watch
+
+name: protection-domain-mapper
+version: 1.0-4ubuntu6
+commands: pd-mapper
+
+name: psmisc
+version: 23.7-2ubuntu2
+commands: fuser,killall,peekfd,prtstat,pslog,pstree,pstree.x11
+
+name: ptyxis
+version: 50.1-1ubuntu2
+commands: ptyxis,x-terminal-emulator
+
+name: puma
+version: 6.6.0-4build1
+commands: puma,pumactl
+
+name: pv
+version: 1.10.3-1
+commands: pv
+
+name: python-dev-is-python3
+version: 3.13.3-1+build1
+commands: pdb,python-config
+ignore-commands: python-config
+
+name: python-is-python3
+version: 3.13.3-1+build1
+commands: pydoc,python
+ignore-commands: python
+
+name: python3
+version: 3.14.3-0ubuntu2
+commands: pdb3,pydoc3,pygettext3
+
+name: python3-aodh
+version: 1:22.0.0-0ubuntu1
+commands: aodh-api,aodh-config-generator,aodh-dbsync,aodh-evaluator,aodh-expirer,aodh-listener,aodh-notifier,aodh-status
+
+name: python3-aodhclient
+version: 3.10.1-1
+commands: aodh
+
+name: python3-automat
+version: 25.4.16-1build1
+commands: automat-visualize3
+
+name: python3-awscurl
+version: 0.36-1
+commands: awscurl
+
+name: python3-babel
+version: 2.17.0-2
+commands: pybabel,pybabel-python3
+
+name: python3-barbican
+version: 2:22.0.0-0ubuntu1
+commands: barbican-db-manage,barbican-keystone-listener,barbican-manage,barbican-retry,barbican-status,barbican-worker,barbican-wsgi-api,pkcs11-kek-rewrap,pkcs11-key-generation
+
+name: python3-barbicanclient
+version: 7.3.0-1
+commands: barbican
+
+name: python3-blazarclient
+version: 4.5.0-1
+commands: blazar
+
+name: python3-ceilometer
+version: 2:26.0.0-0ubuntu1
+commands: ceilometer-agent-notification,ceilometer-polling,ceilometer-rootwrap,ceilometer-send-sample,ceilometer-status,ceilometer-upgrade
+
+name: python3-chardet
+version: 5.2.0+dfsg-2build1
+commands: chardet,chardetect
+
+name: python3-cheroot
+version: 11.1.2+ds1-1
+commands: cheroot
+
+name: python3-cherrypy3
+version: 18.10.0-2
+commands: cherryd3
+
+name: python3-cinder
+version: 2:28.0.0-0ubuntu1
+commands: cinder-api,cinder-backup,cinder-manage,cinder-rootwrap,cinder-rtstool,cinder-scheduler,cinder-status,cinder-volume,cinder-volume-usage-audit
+
+name: python3-cinderclient
+version: 1:9.9.0-1
+commands: cinder
+
+name: python3-dbg
+version: 3.14.3-0ubuntu2
+commands: python3-dbg,python3-dbg-config,python3d,python3d-config
+
+name: python3-designate
+version: 1:22.0.0-0ubuntu2
+commands: designate-api,designate-central,designate-manage,designate-mdns,designate-producer,designate-rootwrap,designate-sink,designate-status,designate-worker
+
+name: python3-dev
+version: 3.14.3-0ubuntu2
+commands: python3-config
+
+name: python3-django
+version: 3:5.2.9-0ubuntu4
+commands: django-admin
+
+name: python3-docutils
+version: 0.22.4+dfsg-1
+commands: docutils,rst-buildhtml,rst2html,rst2html4,rst2html5,rst2latex,rst2man,rst2odt,rst2pseudoxml,rst2s5,rst2xetex,rst2xml,rstpep2html
+
+name: python3-flask
+version: 3.1.3-1ubuntu1
+commands: flask
+
+name: python3-glance
+version: 2:32.0.0-0ubuntu1
+commands: glance-api,glance-cache-cleaner,glance-cache-manage,glance-cache-prefetcher,glance-cache-pruner,glance-control,glance-manage,glance-replicator,glance-scrubber,glance-status
+
+name: python3-glance-store
+version: 5.2.0-0ubuntu1
+commands: glance-rootwrap
+
+name: python3-glanceclient
+version: 1:4.11.0-1
+commands: glance
+
+name: python3-gnocchiclient
+version: 7.2.0-2ubuntu1
+commands: gnocchi
+
+name: python3-heat
+version: 1:26.0.0-0ubuntu1
+commands: heat-db-setup,heat-engine,heat-keystone-setup-domain,heat-manage,heat-status,heat-wsgi-api,heat-wsgi-api-cfn
+
+name: python3-heatclient
+version: 5.0.0-0ubuntu2
+commands: heat
+
+name: python3-ironicclient
+version: 6.0.0-1
+commands: baremetal
+
+name: python3-json-pointer
+version: 2.4-4
+commands: jsonpointer
+
+name: python3-jsonpatch
+version: 1.32-6
+commands: json-patch-jsondiff,jsondiff,jsonpatch
+
+name: python3-jsonpath-rw
+version: 1.4.0-8
+commands: jsonpath.py
+
+name: python3-jsonschema
+version: 4.19.2-6ubuntu2
+commands: jsonschema
+
+name: python3-keystone
+version: 2:29.0.0-0ubuntu1
+commands: keystone-manage,keystone-status,keystone-wsgi-admin,keystone-wsgi-public
+
+name: python3-magnumclient
+version: 4.10.0-3
+commands: magnum
+
+name: python3-mako
+version: 1.3.10-3build1
+commands: mako-render
+
+name: python3-markdown
+version: 3.10.2-1
+commands: markdown_py
+
+name: python3-markdown-it
+version: 3.0.0-3build1
+commands: markdown-it
+
+name: python3-masakari
+version: 21.0.0-0ubuntu1
+commands: masakari-api,masakari-engine,masakari-manage,masakari-status
+
+name: python3-masakari-monitors
+version: 21.0.0-0ubuntu1
+commands: masakari-hostmonitor,masakari-instancemonitor,masakari-introspectiveinstancemonitor,masakari-processmonitor
+
+name: python3-minimal
+version: 3.14.3-0ubuntu2
+commands: py3clean,py3compile,py3versions,python3
+visible-pkgname: python3
+
+name: python3-mistralclient
+version: 1:6.2.0-1
+commands: mistral
+
+name: python3-monascaclient
+version: 2.8.0-0ubuntu2
+commands: monasca
+
+name: python3-netaddr
+version: 1.3.0-1build1
+commands: netaddr
+
+name: python3-neutron
+version: 2:28.0.0-0ubuntu1
+commands: ml2ovn-trace,neutron-db-manage,neutron-dhcp-agent,neutron-ipset-cleanup,neutron-keepalived-state-change,neutron-l3-agent,neutron-macvtap-agent,neutron-metadata-agent,neutron-metering-agent,neutron-netns-cleanup,neutron-openvswitch-agent,neutron-ovn-agent,neutron-ovn-db-sync-util,neutron-ovn-maintenance-worker,neutron-ovn-metadata-agent,neutron-ovn-migration-mtu,neutron-ovs-cleanup,neutron-periodic-workers,neutron-remove-duplicated-port-bindings,neutron-rootwrap,neutron-rootwrap-daemon,neutron-rpc-server,neutron-sanitize-port-binding-profile-allocation,neutron-sanitize-port-mac-addresses,neutron-sanity-check,neutron-sriov-nic-agent,neutron-status,neutron-usage-audit
+
+name: python3-neutron-vpnaas
+version: 2:28.0.0-0ubuntu1
+commands: neutron-ovn-vpn-agent,neutron-vpn-netns-wrapper
+
+name: python3-nova
+version: 3:33.0.0-0ubuntu3
+commands: nova-compute,nova-conductor,nova-manage,nova-novncproxy,nova-policy,nova-rootwrap,nova-rootwrap-daemon,nova-scheduler,nova-serialproxy,nova-spicehtml5proxy,nova-status
+
+name: python3-novaclient
+version: 2:18.12.0-3
+commands: nova
+
+name: python3-numpy
+version: 1:2.3.5+ds-3ubuntu1
+commands: f2py,f2py3,f2py3.14,numpy-config
+
+name: python3-numpy-dev
+version: 1:2.3.5+ds-3ubuntu1
+commands: dh_numpy3
+
+name: python3-openstackclient
+version: 9.0.0-3
+commands: openstack
+
+name: python3-openstacksdk
+version: 4.8.0-0ubuntu1
+commands: openstack-inventory
+
+name: python3-oslo.concurrency
+version: 7.4.0-2
+commands: lockutils-wrapper
+
+name: python3-oslo.config
+version: 1:10.2.0-0ubuntu1
+commands: oslo-config-generator,oslo-config-validator
+
+name: python3-oslo.log
+version: 8.1.0-2
+commands: convert-json
+
+name: python3-oslo.messaging
+version: 17.3.0-2ubuntu1
+commands: oslo-messaging-send-notification
+
+name: python3-oslo.metrics
+version: 0.15.1-2
+commands: oslo-metrics
+
+name: python3-oslo.policy
+version: 5.0.0-2
+commands: oslopolicy-checker,oslopolicy-convert-json-to-yaml,oslopolicy-list-redundant,oslopolicy-policy-generator,oslopolicy-policy-upgrade,oslopolicy-sample-generator,oslopolicy-validator
+
+name: python3-oslo.privsep
+version: 3.10.1-1
+commands: privsep-helper
+
+name: python3-oslo.rootwrap
+version: 7.8.0-0ubuntu1
+commands: oslo-rootwrap,oslo-rootwrap-daemon
+
+name: python3-osprofiler
+version: 4.3.0-4ubuntu1
+commands: osprofiler
+
+name: python3-ovn-octavia-provider
+version: 10.0.0-0ubuntu1
+commands: octavia-ovn-db-sync-util
+
+name: python3-pastescript
+version: 3.7.0-1build1
+commands: paster3
+
+name: python3-pbr
+version: 7.0.3-2
+commands: pbr
+
+name: python3-pecan
+version: 1.5.1-6build1
+commands: gunicorn_pecan,pecan
+
+name: python3-pint
+version: 0.25.2-2
+commands: pint-convert
+
+name: python3-placement
+version: 1:15.0.0-0ubuntu1
+commands: placement-manage,placement-status
+
+name: python3-ply
+version: 3.11-10
+commands: dh_python3-ply
+
+name: python3-pygments
+version: 2.19.2+dfsg-1
+commands: pygmentize
+
+name: python3-pyroute2
+version: 0.8.1-4
+commands: pyroute2-cli,pyroute2-decoder,pyroute2-dhcp-client,pyroute2-test-platform,ss2
+
+name: python3-pysaml2
+version: 7.5.4-0ubuntu1
+commands: make_metadata,mdexport,merge_metadata,parse_xsd2
+
+name: python3-qrcode
+version: 8.2-1
+commands: python3-qr,qr
+
+name: python3-rtslib-fb
+version: 2.1.74-0ubuntu6
+commands: convert-to-json,targetctl
+
+name: python3-samba
+version: 2:4.23.6+dfsg-1ubuntu2
+commands: samba-gpupdate,samba-tool
+
+name: python3-serial
+version: 3.5-2build1
+commands: pyserial-miniterm,pyserial-ports
+
+name: python3-speechd
+version: 0.12.1-2ubuntu1
+commands: spd-conf
+
+name: python3-sphinx
+version: 8.2.3-12
+commands: sphinx-apidoc,sphinx-autogen,sphinx-build,sphinx-quickstart
+
+name: python3-swift
+version: 2.37.1-0ubuntu2
+commands: swift-drive-audit,swift-init
+
+name: python3-swiftclient
+version: 1:4.10.0-1
+commands: swift
+
+name: python3-tabulate
+version: 0.9.0-1build1
+commands: tabulate
+
+name: python3-troveclient
+version: 1:8.10.0-1
+commands: trove
+
+name: python3-twisted
+version: 25.5.0-5
+commands: cftp3,ckeygen3,conch3,mailmail3,pyhtmlizer3,tkconch3,trial3,twist3,twistd3
+
+name: python3-unidiff
+version: 0.7.5-2build1
+commands: python3-unidiff
+
+name: python3-vitrageclient
+version: 5.3.0-0ubuntu1
+commands: vitrage
+
+name: python3-websockify
+version: 0.13.0+dfsg1-2ubuntu1
+commands: websockify
+
+name: python3-xmlschema
+version: 4.1.0-1build1
+commands: xmlschema-json2xml,xmlschema-validate,xmlschema-xml2json
+
+name: python3-yaql
+version: 3.1.0-3
+commands: yaql
+
+name: python3.14
+version: 3.14.4-1
+commands: pdb3.14,pydoc3.14,pygettext3.14
+
+name: python3.14-dbg
+version: 3.14.4-1
+commands: python3.14-dbg,python3.14-dbg-config,python3.14d,python3.14d-config
+
+name: python3.14-dev
+version: 3.14.4-1
+commands: python3.14-config
+
+name: python3.14-minimal
+version: 3.14.4-1
+commands: python3.14
+visible-pkgname: python3.14
+
+name: qemu-system-arm
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-aarch64,qemu-system-arm,qemu-system-arm64,qemu-system-armel,qemu-system-armhf
+
+name: qemu-system-arm-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: qemu-system-aarch64,qemu-system-arm,qemu-system-arm64,qemu-system-armel,qemu-system-armhf
+
+name: qemu-system-common
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-pr-helper,qemu-vmsr-helper
+
+name: qemu-system-common-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: qemu-pr-helper,qemu-vmsr-helper
+
+name: qemu-system-mips
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-mips,qemu-system-mips64,qemu-system-mips64el,qemu-system-mipsel
+
+name: qemu-system-misc
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-alpha,qemu-system-avr,qemu-system-hppa,qemu-system-loong64,qemu-system-loongarch64,qemu-system-m68k,qemu-system-microblaze,qemu-system-microblazeel,qemu-system-or1k,qemu-system-rx,qemu-system-sh4,qemu-system-sh4eb,qemu-system-tricore,qemu-system-xtensa,qemu-system-xtensaeb
+
+name: qemu-system-ppc
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-powerpc,qemu-system-ppc,qemu-system-ppc64,qemu-system-ppc64el,qemu-system-ppc64le
+
+name: qemu-system-ppc-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: qemu-system-powerpc,qemu-system-ppc,qemu-system-ppc64,qemu-system-ppc64el,qemu-system-ppc64le
+
+name: qemu-system-riscv
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-riscv32,qemu-system-riscv64
+
+name: qemu-system-s390x
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-s390x
+
+name: qemu-system-s390x-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: qemu-system-s390x
+
+name: qemu-system-sparc
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-system-sparc,qemu-system-sparc64
+
+name: qemu-system-x86
+version: 1:10.2.1+ds-1ubuntu3
+commands: kvm,kvm-spice,qemu-system-amd64,qemu-system-i386,qemu-system-x86_64,qemu-system-x86_64-microvm,qemu-system-x86_64-spice
+
+name: qemu-system-x86-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: kvm,kvm-spice,qemu-system-amd64,qemu-system-i386,qemu-system-x86_64,qemu-system-x86_64-microvm,qemu-system-x86_64-spice
+
+name: qemu-utils
+version: 1:10.2.1+ds-1ubuntu3
+commands: qemu-img,qemu-io,qemu-nbd,qemu-storage-daemon
+
+name: qemu-utils-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: qemu-img,qemu-io,qemu-nbd,qemu-storage-daemon
+
+name: quota
+version: 4.09-1build1
+commands: convertquota,edquota,quota,quota_nld,quotacheck,quotaoff,quotaon,quotastats,quotasync,repquota,rpc.rquotad,setquota,warnquota,xqmstats
+
+name: rabbitmq-server
+version: 4.0.5-10ubuntu5
+commands: rabbitmq-diagnostics,rabbitmq-plugins,rabbitmq-queues,rabbitmq-server,rabbitmq-streams,rabbitmq-upgrade,rabbitmqadmin,rabbitmqctl
+
+name: radosgw
+version: 20.2.0-0ubuntu2
+commands: radosgw,radosgw-es,radosgw-object-expirer,radosgw-token,rgw-gap-list,rgw-gap-list-comparator,rgw-orphan-list
+
+name: radvd
+version: 1:2.20-1build1
+commands: radvd
+
+name: rake
+version: 13.3.1-1
+commands: rake
+
+name: raptor2-utils
+version: 2.0.16-6build1
+commands: rapper
+
+name: raspi-utils-otp
+version: 20250514-0ubuntu3
+commands: otpset
+
+name: rasqal-utils
+version: 0.9.33-3
+commands: roqet
+
+name: rdate
+version: 1:1.11-3ubuntu3
+commands: rdate
+
+name: rdma-core
+version: 61.0-2ubuntu3
+commands: iwpmd,rdma-ndd,rdma_topo
+
+name: re2c
+version: 4.4-1
+commands: re2c,re2d,re2go,re2hs,re2js,re2ocaml,re2py,re2rust,re2swift,re2v,re2zig
+
+name: realmd
+version: 0.17.1-3build3
+commands: realm
+
+name: recode
+version: 3.7.15-3
+commands: recode
+
+name: redland-utils
+version: 1.0.17-8
+commands: rdfproc,redland-db-upgrade
+
+name: remmina
+version: 1.4.40+dfsg-2ubuntu1
+commands: remmina,remmina-file-wrapper,remmina-gnome
+
+name: resource-agents-common
+version: 1:4.17.0-1ubuntu2
+commands: ocf-tester,ocft,sfex_init,sfex_stat
+
+name: resources
+version: 1.10.2-0ubuntu3
+commands: resources
+
+name: restic
+version: 0.18.1-3ubuntu1
+commands: restic
+
+name: retry
+version: 1.0.6-1
+commands: retry
+
+name: rfkill
+version: 2.41.3-3ubuntu2
+commands: rfkill
+
+name: rhythmbox
+version: 3.4.9-3ubuntu3
+commands: rhythmbox,rhythmbox-client
+
+name: rpcbind
+version: 1.2.7-1build2
+commands: rpcbind,rpcinfo
+
+name: rpcsvc-proto
+version: 1.4.3-1build1
+commands: rpcgen
+
+name: rrdtool
+version: 1.9.0-2build1
+commands: rrdcgi,rrdcreate,rrdinfo,rrdtool,rrdupdate
+
+name: rsync
+version: 3.4.1+ds1-7
+commands: rrsync,rsync,rsync-ssl
+
+name: rsyslog
+version: 8.2512.0-1ubuntu4
+commands: rsyslogd
+
+name: rtkit
+version: 0.14-1
+commands: rtkitctl
+
+name: ruby
+version: 1:3.3build1
+commands: erb,irb,rdbg,rdoc,ri,ruby
+
+name: ruby-rackup
+version: 2.3.1-1
+commands: rackup
+
+name: ruby-rubygems
+version: 3.6.7-2ubuntu2
+commands: gem,update_rubygems
+
+name: ruby-tilt
+version: 2.7.0-1
+commands: tilt
+
+name: ruby3.3
+version: 3.3.8-2ubuntu3
+commands: bundle3.3,bundler3.3,erb3.3,gem3.3,irb3.3,racc3.3,rake3.3,rbs3.3,rdbg3.3,rdoc3.3,ri3.3,ruby3.3,syntax_suggest3.3,typeprof3.3
+
+name: run-one
+version: 1.17-0ubuntu3
+commands: keep-one-running,run-one,run-one-constantly,run-one-until-failure,run-one-until-success,run-this-one
+
+name: runc
+version: 1.4.0-0ubuntu1
+commands: fs-idmap,key_label,memfd-bind,pidfd-kill,remap-rootfs,runc
+
+name: runc-stable
+version: 1.3.4-0ubuntu1
+commands: fs-idmap,memfd-bind,pidfd-kill,remap-rootfs,runc
+
+name: rust-coreutils
+version: 0.8.0-0ubuntu3
+commands: coreutils
+
+name: rustc
+version: 1.93.1ubuntu1
+commands: rust-clang,rust-lld,rust-llvm-dwp,rustc,rustdoc
+
+name: rustc-1.93
+version: 1.93.1+dfsg-0ubuntu6
+commands: rust-1.93-clang,rust-1.93-lld,rust-1.93-llvm-dwp,rustc-1.93,rustdoc-1.93
+
+name: rygel
+version: 45.0-1ubuntu1
+commands: rygel
+
+name: s390-tools
+version: 2.41.0-0ubuntu3
+commands: genprotimg,pvattest,pvextract-hdr,pvimg,pvsecret,pvverify
+
+name: sa-compile
+version: 4.0.2-3
+commands: sa-compile
+
+name: samba
+version: 2:4.23.6+dfsg-1ubuntu2
+commands: eventlogadm,mvxattr,nmbd,oLschema2ldif,pdbedit,profiles,sharesec,smbd,smbstatus
+
+name: samba-common-bin
+version: 2:4.23.6+dfsg-1ubuntu2
+commands: dbwrap_tool,net,nmblookup,samba-log-parser,samba-regedit,smbcontrol,smbpasswd,testparm,winexe
+
+name: sane-airscan
+version: 0.99.36-2ubuntu1
+commands: airscan-discover
+
+name: sane-utils
+version: 1.4.0-1ubuntu1
+commands: gamma4scanimage,sane-find-scanner,saned,scanimage,umax_pp
+
+name: sasl2-bin
+version: 2.1.28+dfsg1-9ubuntu3
+commands: sasl-sample-client,sasl-sample-server,saslauthd,sasldbconverter2,sasldblistusers2,saslpasswd2,saslpluginviewer,testsaslauthd
+
+name: sbsigntool
+version: 0.9.4-3.1ubuntu9
+commands: kmodsign,sbattach,sbkeysync,sbsiglist,sbsign,sbvarsign,sbverify
+
+name: sbuild
+version: 0.91.2ubuntu3
+commands: sbuild
+
+name: sbuild-schroot
+version: 0.91.2ubuntu3
+commands: sbuild-abort,sbuild-adduser,sbuild-apt,sbuild-checkpackages,sbuild-clean,sbuild-createchroot,sbuild-destroychroot,sbuild-distupgrade,sbuild-hold,sbuild-shell,sbuild-unhold,sbuild-update,sbuild-upgrade
+
+name: schroot
+version: 1.6.13-8
+commands: schroot
+
+name: screen
+version: 4.9.1-3ubuntu2
+commands: screen
+
+name: seahorse
+version: 47.0.1-3build1
+commands: seahorse
+
+name: sed
+version: 4.9-2build3
+commands: sed
+
+name: sensible-utils
+version: 0.0.26build1
+commands: select-editor,sensible-browser,sensible-editor,sensible-pager,sensible-terminal
+
+name: setserial
+version: 2.17-58build1
+commands: setserial
+
+name: sg3-utils
+version: 1.48-3ubuntu3
+commands: rescan-scsi-bus.sh,scsi_logging_level,scsi_mandat,scsi_readcap,scsi_ready,scsi_satl,scsi_start,scsi_stop,scsi_temperature,sg_bg_ctl,sg_compare_and_write,sg_copy_results,sg_dd,sg_decode_sense,sg_emc_trespass,sg_format,sg_get_config,sg_get_elem_status,sg_get_lba_status,sg_ident,sg_inq,sg_logs,sg_luns,sg_map,sg_map26,sg_modes,sg_opcodes,sg_persist,sg_prevent,sg_raw,sg_rbuf,sg_rdac,sg_read,sg_read_attr,sg_read_block_limits,sg_read_buffer,sg_read_long,sg_readcap,sg_reassign,sg_referrals,sg_rem_rest_elem,sg_rep_density,sg_rep_pip,sg_rep_zones,sg_requests,sg_reset,sg_reset_wp,sg_rmsn,sg_rtpg,sg_safte,sg_sanitize,sg_sat_datetime,sg_sat_identify,sg_sat_phy_event,sg_sat_read_gplog,sg_sat_set_features,sg_scan,sg_seek,sg_senddiag,sg_ses,sg_ses_microcode,sg_start,sg_stpg,sg_stream_ctl,sg_sync,sg_test_rwbuf,sg_timestamp,sg_turs,sg_unmap,sg_verify,sg_vpd,sg_wr_mode,sg_write_attr,sg_write_buffer,sg_write_long,sg_write_same,sg_write_verify,sg_write_x,sg_xcopy,sg_z_act_query,sg_zone,sginfo,sgm_dd,sgp_dd
+
+name: sgml-base
+version: 1.31+nmu1build1
+commands: install-sgmlcatalog,update-catalog
+
+name: shared-mime-info
+version: 2.4-5build3
+commands: update-mime-database
+
+name: shim-signed
+version: 1.59+15.8-0ubuntu2
+commands: update-secureboot-policy
+
+name: shotwell
+version: 0.32.13-2ubuntu1
+commands: shotwell
+
+name: showtime
+version: 50.0-0ubuntu1
+commands: showtime
+
+name: shtool
+version: 2.0.8-10ubuntu2
+commands: shtool,shtoolize
+
+name: siege
+version: 4.1.6-1ubuntu2
+commands: bombardment,siege,siege.config,siege2csv
+
+name: simple-scan
+version: 48.1-0ubuntu3
+commands: simple-scan
+
+name: slapd
+version: 2.6.10+dfsg-1ubuntu5
+commands: slapacl,slapadd,slapauth,slapcat,slapd,slapdn,slapindex,slapmodify,slappasswd,slapschema,slaptest
+
+name: smartmontools
+version: 7.5-2
+commands: smartctl,smartd,update-smart-drivedb
+
+name: smbclient
+version: 2:4.23.6+dfsg-1ubuntu2
+commands: cifsdd,mdsearch,rpcclient,smbcacls,smbclient,smbcquotas,smbget,smbspool,smbtar,smbtree
+
+name: snapd
+version: 2.74.1+ubuntu26.04.4
+commands: snap,snapctl,snapfuse
+
+name: snmp
+version: 5.9.4+dfsg-2ubuntu3
+commands: agentxtrap,encode_keychange,fixproc,snmp-bridge-mib,snmpbulkget,snmpbulkwalk,snmpcheck,snmpconf,snmpdelta,snmpdf,snmpget,snmpgetnext,snmpinform,snmpnetstat,snmpping,snmpps,snmpset,snmpstatus,snmptable,snmptest,snmptls,snmptranslate,snmptrap,snmpusm,snmpvacm,snmpwalk
+
+name: snmpd
+version: 5.9.4+dfsg-2ubuntu3
+commands: net-snmp-create-v3-user,snmpd
+
+name: socat
+version: 1.8.1.1-1
+commands: filan,procan,socat,socat-broker.sh,socat-chain.sh,socat-mux.sh,socat1
+
+name: software-properties-common
+version: 0.120
+commands: add-apt-repository,apt-add-repository
+
+name: sos
+version: 4.10.2-1
+commands: sos
+
+name: spamassassin
+version: 4.0.2-3
+commands: sa-awl,sa-check_spamd,sa-learn,sa-update,spamassassin,spamassassin-maint
+
+name: spamc
+version: 4.0.2-3
+commands: spamc
+
+name: spamd
+version: 4.0.2-3
+commands: spamd
+
+name: speech-dispatcher
+version: 0.12.1-2ubuntu1
+commands: spd-say,spdsend,speech-dispatcher
+
+name: sphinx-common
+version: 8.2.3-12
+commands: dh_sphinxdoc
+
+name: spice-vdagent
+version: 0.23.0-1
+commands: spice-vdagent,spice-vdagentd
+
+name: sqlite3
+version: 3.46.1-9
+commands: sqlite3
+
+name: squashfs-tools
+version: 1:4.7.5-1
+commands: mksquashfs,sqfscat,sqfstar,unsquashfs
+
+name: squid
+version: 7.2-2ubuntu2
+commands: squid,squid-gnutls
+
+name: ss-dev
+version: 2.0-1.47.2-3ubuntu4
+commands: mk_cmds
+
+name: ssh-import-id
+version: 5.11-0ubuntu4
+commands: ssh-import-id,ssh-import-id-gh,ssh-import-id-lp
+
+name: ssl-cert
+version: 1.1.3ubuntu2
+commands: make-ssl-cert
+
+name: sssd-common
+version: 2.12.0-1ubuntu5
+commands: sss_ssh_authorizedkeys,sss_ssh_knownhosts,sss_ssh_knownhostsproxy,sssd
+
+name: sssd-tools
+version: 2.12.0-1ubuntu5
+commands: sss_cache,sss_debuglevel,sss_obfuscate,sss_override,sss_seed,sssctl
+
+name: strace
+version: 6.19+ds-0ubuntu5
+commands: strace,strace-log-merge
+
+name: strongswan-swanctl
+version: 6.0.4-1ubuntu2
+commands: swanctl
+
+name: sudo
+version: 1.9.17p2-1ubuntu3
+commands: cvtsudoers.ws,sudo,sudo.ws,sudo_logsrvd,sudo_sendlog.ws,sudoedit,sudoreplay.ws,visudo,visudo.ws
+
+name: sudo-rs
+version: 0.2.13-0ubuntu1
+commands: su-rs,sudo,sudo-rs,sudoedit,sudoedit-rs,visudo,visudo-rs
+
+name: swift
+version: 2.37.1-0ubuntu2
+commands: swift-config,swift-dispersion-populate,swift-dispersion-report,swift-form-signature,swift-get-nodes,swift-oldies,swift-orphans,swift-recon,swift-recon-cron,swift-ring-builder,swift-ring-builder-analyzer,swift-ring-composer
+
+name: swift-account
+version: 2.37.1-0ubuntu2
+commands: swift-account-audit,swift-account-auditor,swift-account-info,swift-account-reaper,swift-account-replicator,swift-account-server
+
+name: swift-container
+version: 2.37.1-0ubuntu2
+commands: swift-container-auditor,swift-container-deleter,swift-container-info,swift-container-reconciler,swift-container-replicator,swift-container-server,swift-container-sharder,swift-container-sync,swift-container-updater,swift-manage-shard-ranges,swift-reconciler-enqueue
+
+name: swift-object
+version: 2.37.1-0ubuntu2
+commands: swift-object-auditor,swift-object-info,swift-object-reconstructor,swift-object-relinker,swift-object-replicator,swift-object-server,swift-object-updater
+
+name: swift-object-expirer
+version: 2.37.1-0ubuntu2
+commands: swift-object-expirer
+
+name: swift-proxy
+version: 2.37.1-0ubuntu2
+commands: swift-proxy-server,swift-reload
+
+name: switcheroo-control
+version: 3.0-2
+commands: switcherooctl
+
+name: swtpm
+version: 0.10.1+ds-1ubuntu3
+commands: swtpm
+
+name: swtpm-tools
+version: 0.10.1+ds-1ubuntu3
+commands: swtpm_bios,swtpm_cert,swtpm_ioctl,swtpm_localca,swtpm_setup
+
+name: sysfsutils
+version: 2.1.1-7build1
+commands: systool,update-sysfs
+
+name: sysprof
+version: 50.0-1
+commands: sysprof,sysprof-agent,sysprof-cat,sysprof-cli
+
+name: sysstat
+version: 12.7.7-0ubuntu2
+commands: cifsiostat,iostat,mpstat,pidstat,sadf,sar,sar.sysstat,tapestat
+
+name: system-config-printer-common
+version: 1.5.18-4ubuntu2
+commands: scp-dbus-service
+
+name: systemd
+version: 259.5-0ubuntu3
+commands: busctl,hostnamectl,journalctl,kernel-install,localectl,loginctl,networkctl,run0,systemctl,systemd-ac-power,systemd-analyze,systemd-ask-password,systemd-cat,systemd-cgls,systemd-cgtop,systemd-confext,systemd-creds,systemd-delta,systemd-detect-virt,systemd-escape,systemd-firstboot,systemd-id128,systemd-inhibit,systemd-machine-id-setup,systemd-mount,systemd-mute-console,systemd-notify,systemd-path,systemd-pty-forward,systemd-run,systemd-socket-activate,systemd-stdio-bridge,systemd-sysext,systemd-sysusers,systemd-tmpfiles,systemd-tty-ask-password-agent,systemd-umount,systemd-vpick,timedatectl,varlinkctl
+
+name: systemd-container
+version: 259.5-0ubuntu3
+commands: importctl,machinectl,mount.ddi,portablectl,systemd-dissect,systemd-nspawn,systemd-vmspawn
+
+name: systemd-cryptsetup
+version: 259.5-0ubuntu3
+commands: systemd-cryptenroll,systemd-cryptsetup
+
+name: systemd-oomd
+version: 259.5-0ubuntu3
+commands: oomctl
+
+name: systemd-resolved
+version: 259.5-0ubuntu3
+commands: resolvconf,resolvectl
+
+name: systemd-sysv
+version: 259.5-0ubuntu3
+commands: halt,init,poweroff,reboot,shutdown
+
+name: sysvinit-utils
+version: 3.15-5ubuntu1
+commands: fstab-decode,killall5,pidof
+
+name: t1utils
+version: 1.41-4build4
+commands: t1ascii,t1asm,t1binary,t1disasm,t1mac,t1unmac
+
+name: tar
+version: 1.35+dfsg-4
+commands: rmt,rmt-tar,tar,tarcat
+
+name: targetcli-fb
+version: 1:3.0.1-0.1build1
+commands: targetcli,targetclid
+
+name: tcl
+version: 8.6.16build1
+commands: tclsh
+
+name: tcl-dev
+version: 8.6.16build1
+commands: tcltk-depends
+
+name: tcl8.6
+version: 8.6.17+dfsg-1build1
+commands: tclsh8.6
+
+name: tcpdump
+version: 4.99.6-1
+commands: tcpdump
+
+name: tdb-tools
+version: 2:1.4.14+samba4.23.6+dfsg-1ubuntu2
+commands: tdbbackup,tdbbackup.tdbtools,tdbdump,tdbrestore,tdbtool
+
+name: tecla
+version: 49.0-2
+commands: tecla
+
+name: tftp-hpa
+version: 5.3+20251209-2
+commands: tftp
+
+name: tftpd-hpa
+version: 5.3+20251209-2
+commands: in.tftpd
+
+name: thermald
+version: 2.5.11-0ubuntu1
+commands: thermald
+
+name: thin-provisioning-tools
+version: 1.1.0-4ubuntu2
+commands: cache_check,cache_dump,cache_metadata_size,cache_repair,cache_restore,cache_writeback,era_check,era_dump,era_invalidate,era_restore,pdata_tools,thin_check,thin_delta,thin_dump,thin_ls,thin_metadata_pack,thin_metadata_size,thin_metadata_unpack,thin_migrate,thin_repair,thin_restore,thin_rmap,thin_trim
+
+name: thunderbird
+version: 2:1snap1-0ubuntu5
+commands: thunderbird
+
+name: time
+version: 1.9-0.4
+commands: time
+
+name: tinycdb
+version: 0.81-2build1
+commands: cdb
+
+name: tinysparql
+version: 3.11.0-1
+commands: tinysparql
+
+name: tk
+version: 8.6.16build1
+commands: wish
+
+name: tk8.6
+version: 8.6.17-1build1
+commands: wish8.6
+
+name: tlp
+version: 1.8.0-1ubuntu2
+commands: bluetooth,nfc,run-on-ac,run-on-bat,tlp,tlp-stat,wifi,wwan
+
+name: tlp-rdw
+version: 1.8.0-1ubuntu2
+commands: tlp-rdw
+
+name: tmispell-voikko
+version: 0.7.1-5build4
+commands: ispell,tmispell
+
+name: tmux
+version: 3.6a-2
+commands: tmux
+
+name: tnftp
+version: 20260211-1
+commands: ftp,tnftp
+
+name: trace-cmd
+version: 3.3.3-1ubuntu2
+commands: trace-cmd
+
+name: transmission-gtk
+version: 4.1.1+dfsg-1ubuntu1
+commands: transmission-gtk
+
+name: u-boot-menu
+version: 4.2.4ubuntu2
+commands: u-boot-update
+
+name: u-boot-tools
+version: 2025.10-0ubuntu2
+commands: dumpimage,kwboot,mkeficapsule,mkenvimage,mkimage,mksunxiboot
+
+name: ubiquity
+version: 26.04.1
+commands: archdetect,autopartition,autopartition-crypto,autopartition-loop,autopartition-lvm,block-attr,blockdev-keygen,blockdev-wipe,check-missing-firmware,debconf-get,debconf-set,fetch-url,get_mountoptions,hw-detect,in-target,list-devices,log-output,mapdevfs,parted_devices,parted_server,partman,partman-command,partman-commit,partmap,perform_recipe,perform_recipe_by_lvm,preseed_command,register-module,search-path,select_mountoptions,select_mountpoint,set-date-epoch,sysfs-update-devnames,ubiquity,ubiquity-bluetooth-agent,ubiquity-dm,update-dev,user-params
+
+name: ubiquity-casper
+version: 26.04.2
+commands: casper-a11y-enable,casper-reconfigure
+
+name: ubuntu-drivers-common
+version: 1:0.10.9
+commands: gpu-manager,quirks-handler,u-d-c-print-pci-ids,ubuntu-drivers
+
+name: ubuntu-helper-virt-hwe
+version: 1:10.2.1+ds-1ubuntu4
+commands: apt_hook_ubuntu_virt,ubuntu_virt_helper
+
+name: ubuntu-insights
+version: 0.9.3ubuntu
+commands: ubuntu-insights
+
+name: ubuntu-pro-client
+version: 37.2ubuntu
+commands: pro,ua,ubuntu-advantage
+
+name: ubuntu-raspi-settings-desktop
+version: 26.04.2
+commands: update-v3d-config
+
+name: ubuntu-release-upgrader-core
+version: 1:26.04.18
+commands: do-release-upgrade
+
+name: ubuntu-report
+version: 1.7.3ubuntu4
+commands: ubuntu-report
+
+name: ucf
+version: 3.0052ubuntu1
+commands: ucf,ucfq,ucfr
+
+name: uchardet
+version: 0.0.8-2
+commands: uchardet
+
+name: udev
+version: 259.5-0ubuntu3
+commands: systemd-hwdb,udevadm
+
+name: udisks2
+version: 2.10.91-1ubuntu2
+commands: udisksctl,umount.udisks2
+
+name: ufw
+version: 0.36.2-9build1
+commands: ufw
+
+name: uidmap
+version: 1:4.17.4-2ubuntu3
+commands: getsubids,newgidmap,newuidmap
+
+name: unattended-upgrades
+version: 2.12ubuntu9
+commands: unattended-upgrade,unattended-upgrades
+
+name: unminimize
+version: 0.5build1
+commands: unminimize
+
+name: unzip
+version: 6.0-29ubuntu1
+commands: funzip,unzip,unzipsfx,zipgrep,zipinfo
+
+name: update-inetd
+version: 4.54build1
+commands: update-inetd
+
+name: update-manager
+version: 1:26.04.5
+commands: update-manager
+
+name: update-manager-core
+version: 1:26.04.5
+commands: hwe-support-status,ubuntu-security-status
+
+name: update-motd
+version: 3.12build1
+commands: update-motd
+
+name: update-notifier
+version: 3.207
+commands: update-notifier
+
+name: upower
+version: 1.91.1-1
+commands: upower
+
+name: usb-creator-gtk
+version: 0.4.1build1
+commands: usb-creator-gtk
+
+name: usb-modeswitch
+version: 2.6.2-1ubuntu1
+commands: usb_modeswitch,usb_modeswitch_dispatcher
+
+name: usbmuxd
+version: 1.1.1-7
+commands: usbmuxd
+
+name: usbutils
+version: 1:019-1
+commands: lsusb,usb-devices,usbhid-dump,usbreset
+
+name: user-session-migration
+version: 0.5.1
+commands: user-session-migration
+
+name: user-setup
+version: 1.107ubuntu2
+commands: user-setup
+
+name: util-linux
+version: 2.41.3-3ubuntu2
+commands: agetty,blkdiscard,blkid,blockdev,choom,chrt,dmesg,fallocate,findfs,findmnt,flock,fsck,fsfreeze,fstrim,getopt,getty,hardlink,i386,ionice,ipcmk,ipcrm,ipcs,linux32,linux64,logger,lsblk,lscpu,lsipc,lslocks,lsns,mcookie,mkfs,mkswap,more,mountpoint,namei,nsenter,pager,partx,prlimit,readprofile,rtcwake,runuser,setarch,setpriv,setsid,setterm,su,sulogin,swaplabel,taskset,uclampset,unshare,whereis,wipefs,x86_64,zramctl
+
+name: util-linux-extra
+version: 2.41.3-3ubuntu2
+commands: addpart,bits,blkpr,blkzone,chcpu,chmem,coresched,ctrlaltdel,delpart,enosys,exch,fadvise,fincore,fsck.cramfs,fsck.minix,hwclock,isosize,ldattach,lsclocks,lsfd,lsirq,lslogins,lsmem,mkfs.bfs,mkfs.cramfs,mkfs.minix,newgrp,pipesz,pivot_root,rename.ul,resizepart,sg,switch_root,waitpid,wdctl
+
+name: uuid-runtime
+version: 2.41.3-3ubuntu2
+commands: uuidd,uuidgen,uuidparse
+
+name: valgrind
+version: 1:3.26.0-0ubuntu1
+commands: callgrind_annotate,callgrind_control,cg_annotate,cg_diff,cg_merge,ms_print,valgrind,valgrind-di-server,valgrind-listener,valgrind.bin,vgdb,vgstack
+
+name: valkey-sentinel
+version: 9.0.3-0ubuntu2
+commands: valkey-sentinel
+
+name: valkey-server
+version: 9.0.3-0ubuntu2
+commands: valkey-server
+
+name: valkey-tools
+version: 9.0.3-0ubuntu2
+commands: valkey-benchmark,valkey-check-aof,valkey-check-rdb,valkey-cli
+
+name: vim
+version: 2:9.1.2141-1ubuntu4
+commands: editor,ex,rview,rvim,vi,view,vim,vim.basic,vimdiff
+
+name: vim-common
+version: 2:9.1.2141-1ubuntu4
+commands: helpztags
+
+name: vim-runtime
+version: 2:9.1.2141-1ubuntu4
+commands: vimtutor
+
+name: vim-tiny
+version: 2:9.1.2141-1ubuntu4
+commands: editor,ex,rview,vi,view,vim.tiny
+
+name: virgl-server
+version: 1.2.0-2ubuntu2
+commands: virgl_test_server
+
+name: vsftpd
+version: 3.0.5-0.4
+commands: vsftpd,vsftpdwho
+
+name: w3m
+version: 0.5.3+git20230121-2.3
+commands: pager,w3m,w3mman,www-browser
+
+name: wakeonlan
+version: 0.42-6
+commands: wakeonlan
+
+name: walinuxagent
+version: 2.15.0.1-0ubuntu2
+commands: ephemeral-disk-warning,waagent,waagent2.0
+
+name: wdiff
+version: 1.2.2-9build1
+commands: wdiff
+
+name: wget
+version: 1.25.0-2ubuntu4
+commands: wget
+
+name: whiptail
+version: 0.52.25-1ubuntu3
+commands: whiptail
+
+name: whois
+version: 5.6.6
+commands: mkpasswd,whois
+
+name: whoopsie
+version: 0.2.82ubuntu
+commands: whoopsie
+
+name: whoopsie-preferences
+version: 23build4
+commands: whoopsie-preferences
+
+name: winbind
+version: 2:4.23.6+dfsg-1ubuntu2
+commands: ntlm_auth,wbinfo,winbindd
+
+name: winpr-utils
+version: 3.24.2+dfsg-1ubuntu1
+commands: winpr-hash,winpr-makecert
+
+name: wireguard-tools
+version: 1.0.20250521-1ubuntu1
+commands: wg,wg-quick
+
+name: wireplumber
+version: 0.5.13-1ubuntu1
+commands: wireplumber,wpctl,wpexec
+
+name: wpasupplicant
+version: 2:2.11-0ubuntu5
+commands: wpa_action,wpa_cli,wpa_passphrase,wpa_supplicant
+
+name: wsdd
+version: 2:0.8-5ubuntu1
+commands: wsdd
+
+name: x11-common
+version: 1:7.7+26ubuntu1
+commands: X11
+
+name: x11-utils
+version: 7.7+7build1
+commands: appres,editres,listres,viewres,xdpyinfo,xdriinfo,xev,xfd,xfontsel,xkill,xlsatoms,xlsclients,xlsfonts,xmessage,xprop,xvinfo,xwininfo
+
+name: x11-xkb-utils
+version: 7.7+9build1
+commands: setxkbmap,xkbbell,xkbcomp,xkbevd,xkbprint,xkbvleds,xkbwatch
+
+name: x11-xserver-utils
+version: 7.7+11build1
+commands: iceauth,sessreg,showrgb,xcmsdb,xgamma,xhost,xkeystone,xmodmap,xrandr,xrdb,xrefresh,xset,xsetmode,xsetpointer,xsetroot,xstdcmap,xvidtune
+
+name: xauth
+version: 1:1.1.2-1.1build1
+commands: xauth
+
+name: xbrlapi
+version: 6.7-1ubuntu6
+commands: xbrlapi
+
+name: xclip
+version: 0.13-4build1
+commands: xclip,xclip-copyfile,xclip-cutfile,xclip-pastefile
+
+name: xcvt
+version: 0.1.3-1build1
+commands: cvt
+
+name: xdg-dbus-proxy
+version: 0.1.7-1
+commands: xdg-dbus-proxy
+
+name: xdg-terminal-exec
+version: 0.14.0-1
+commands: xdg-terminal-exec
+
+name: xdg-user-dirs
+version: 0.19-1
+commands: xdg-user-dir,xdg-user-dirs-update
+
+name: xdg-user-dirs-gtk
+version: 0.16-1
+commands: xdg-user-dirs-gtk-update
+
+name: xdg-utils
+version: 1.2.1-2ubuntu2
+commands: browse,open,xdg-desktop-icon,xdg-desktop-menu,xdg-email,xdg-icon-resource,xdg-mime,xdg-open,xdg-screensaver,xdg-settings
+
+name: xfonts-utils
+version: 1:7.7+7build1
+commands: bdftopcf,bdftruncate,fonttosfnt,mkfontdir,mkfontscale,ucs2any,update-fonts-alias,update-fonts-dir,update-fonts-scale
+
+name: xfsdump
+version: 3.2.0-2build1
+commands: xfsdump,xfsinvutil,xfsrestore
+
+name: xfsprogs
+version: 6.18.0-3
+commands: fsck.xfs,mkfs.xfs,xfs_admin,xfs_bmap,xfs_copy,xfs_db,xfs_estimate,xfs_freeze,xfs_fsr,xfs_growfs,xfs_info,xfs_io,xfs_logprint,xfs_mdrestore,xfs_metadump,xfs_mkfile,xfs_ncheck,xfs_property,xfs_protofile,xfs_quota,xfs_repair,xfs_rtcp,xfs_scrub,xfs_scrub_all,xfs_spaceman
+
+name: xml-core
+version: 0.19build1
+commands: dh_installxmlcatalogs,update-xmlcatalog
+
+name: xmlsec1
+version: 1.3.9-1
+commands: xmlsec1
+
+name: xorriso
+version: 1:1.5.6-1.1ubuntu4
+commands: osirrox,xorrecord,xorriso,xorrisofs
+
+name: xserver-xorg-core
+version: 2:21.1.22-1ubuntu1
+commands: X,Xorg,gtf
+
+name: xserver-xorg-dev
+version: 2:21.1.22-1ubuntu1
+commands: dh_xsf_substvars
+
+name: xserver-xorg-video-vmware
+version: 1:13.4.0-2build1
+commands: vmwarectrl
+
+name: xsltproc
+version: 1.1.45-0.1
+commands: xsltproc
+
+name: xwayland
+version: 2:24.1.10-1
+commands: Xwayland
+
+name: xxd
+version: 2:9.1.2141-1ubuntu4
+commands: xxd
+
+name: xz-utils
+version: 5.8.3-1
+commands: lzma,lzmainfo,unxz,xz,xzcat,xzcmp,xzdiff,xzegrep,xzfgrep,xzgrep,xzless,xzmore
+
+name: yelp
+version: 49.0-5
+commands: gnome-help,yelp
+
+name: zenity
+version: 4.2.1-1
+commands: zenity
+
+name: zerofree
+version: 1.1.1-1build6
+commands: zerofree
+
+name: zfs-zed
+version: 2.4.1-1ubuntu5
+commands: zed
+
+name: zfsutils-linux
+version: 2.4.1-1ubuntu5
+commands: dbufstat,fsck.zfs,mount.zfs,zarcstat,zarcsummary,zdb,zfs,zfs_ids_to_path,zgenhostid,zhack,zilstat,zpool,zpool_influxdb,zstream,zstreamdump,zvol_wait
+
+name: zip
+version: 3.0-15ubuntu3
+commands: zip,zipcloak,zipnote,zipsplit
+
+name: zsh
+version: 5.9-8ubuntu3
+commands: rzsh,zsh,zsh5
+
+name: zstd
+version: 1.5.7+dfsg-3
+commands: pzstd,unzstd,zstd,zstdcat,zstdgrep,zstdless,zstdmt
+

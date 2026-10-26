@@ -1,0 +1,4 @@
+....................s....                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_device_readiness.py:122: symlink creation is unavailable on this host
+24 passed, 1 skipped in 139.45s (0:02:19)

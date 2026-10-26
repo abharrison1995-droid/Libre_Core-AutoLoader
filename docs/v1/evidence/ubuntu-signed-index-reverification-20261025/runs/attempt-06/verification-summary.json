@@ -1,0 +1,303 @@
+{
+  "arch_material_acquired": false,
+  "captured_utc": "2026-10-25T22:22:34.532307+00:00",
+  "downloaded_payload_execution": false,
+  "executing_toolchain": {
+    "dpkg_deb": {
+      "host_relative": true,
+      "path": "/usr/bin/dpkg-deb",
+      "sha256": "66a1f5c65bc66cf20a35eb0695bf783bfb365bc80a45006d8a9d97fd406536e0"
+    },
+    "python": {
+      "host_relative": true,
+      "path": "/usr/bin/python3",
+      "sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+      "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]"
+    }
+  },
+  "gpgv_home": {
+    "entries_after_verification": [],
+    "entries_before": [],
+    "mode": "0o700",
+    "no_user_gpgv_conf": true,
+    "path": "/tmp/lc-ubuntu-gpgv-review-pn6ke52c",
+    "removed_after_checks": true
+  },
+  "gpgv_no_config_policy": {
+    "host_relative_documentation": true,
+    "local_manpage_gzip_size": 2382,
+    "local_manpage_path": "/usr/share/man/man1/gpgv.1.gz",
+    "local_manpage_sha256": "f2cc540c3ef40b4001411bdad4faff7f7a56e4760b2d3b5315b73478d2d69203",
+    "statements_observed": [
+      "There are no configuration files",
+      "an explicit --keyring prevents lookup of the default keyring",
+      "--homedir is documented by the local manpage",
+      "--keyring, --status-fd, and --output are advertised by gpgv --help"
+    ],
+    "unsupported_options_omitted": [
+      "--no-options",
+      "--batch",
+      "--no-default-keyring"
+    ]
+  },
+  "gpgv_payload_binding": {
+    "all_bytes_match": true,
+    "extracted": {
+      "path": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads/gpgv/usr/bin/gpgv",
+      "sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+      "size": 302296
+    },
+    "installed": {
+      "path": "/usr/bin/gpgv",
+      "sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+      "size": 302296
+    },
+    "reextraction_root": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/runs/attempt-06/extracted/package-payloads",
+    "windows_tls_deb": {
+      "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "size": 155072
+    }
+  },
+  "gpgv_version_output": "gpgv (GnuPG) 2.4.8\nlibgcrypt 1.12.0\nCopyright (C) 2025 g10 Code GmbH\nLicense GNU GPL-3.0-or-later <https://gnu.org/licenses/gpl.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n",
+  "inputs": {
+    "gpg_2.4.8-4ubuntu3.1_amd64.deb": {
+      "sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "size": 636848,
+      "verified": true
+    },
+    "gpgv_2.4.8-4ubuntu3.1_amd64.deb": {
+      "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "size": 155072,
+      "verified": true
+    },
+    "resolute-main-Packages.xz": {
+      "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24",
+      "size": 1480032,
+      "verified": true
+    },
+    "resolute-updates-main-Packages.xz": {
+      "sha256": "553c802aee13bedfcf262a111a16b41918ea3a8b1dc98c2fd49c465883af27e4",
+      "size": 744388,
+      "verified": true
+    },
+    "resolute-updates_InRelease": {
+      "sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad",
+      "size": 137401,
+      "verified": true
+    },
+    "resolute_InRelease": {
+      "sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c",
+      "size": 135549,
+      "verified": true
+    },
+    "ubuntu-archive-keyring.gpg": {
+      "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+      "size": 3607,
+      "verified": true
+    },
+    "ubuntu-keyring_2023.11.28.1build1_all.deb": {
+      "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "size": 11228,
+      "verified": true
+    }
+  },
+  "keyring_payload_binding": {
+    "all_bytes_match": true,
+    "downloaded_tls_keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+    "extracted_from_tls_deb_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+  },
+  "package_installation": false,
+  "package_records": [
+    {
+      "architecture": "amd64",
+      "exactly_one_package_record": true,
+      "filename": "pool/main/g/gnupg2/gpgv_2.4.8-4ubuntu3.1_amd64.deb",
+      "index": "resolute-updates-main-Packages.xz",
+      "inrelease": "resolute-updates_InRelease",
+      "package": "gpgv",
+      "sha256": "0fcce72656439d90821bbd23580afc794a01ec2f28622ae31b4f5394a830bb09",
+      "size": 155072,
+      "version": "2.4.8-4ubuntu3.1",
+      "windows_schannel_verify_result": 0,
+      "windows_tls_archive_sha256_matches": true,
+      "windows_tls_status": 200
+    },
+    {
+      "architecture": "amd64",
+      "exactly_one_package_record": true,
+      "filename": "pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb",
+      "index": "resolute-updates-main-Packages.xz",
+      "inrelease": "resolute-updates_InRelease",
+      "package": "gpg",
+      "sha256": "fb8da4f691b6e2139fa5cdf7f54d000ef1b7b27753efb2dbdc5a9546057a62c6",
+      "size": 636848,
+      "version": "2.4.8-4ubuntu3.1",
+      "windows_schannel_verify_result": 0,
+      "windows_tls_archive_sha256_matches": true,
+      "windows_tls_status": 200
+    },
+    {
+      "architecture": "all",
+      "exactly_one_package_record": true,
+      "filename": "pool/main/u/ubuntu-keyring/ubuntu-keyring_2023.11.28.1build1_all.deb",
+      "index": "resolute-main-Packages.xz",
+      "inrelease": "resolute_InRelease",
+      "package": "ubuntu-keyring",
+      "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+      "size": 11228,
+      "version": "2023.11.28.1build1",
+      "windows_schannel_verify_result": 0,
+      "windows_tls_archive_sha256_matches": true,
+      "windows_tls_status": 200
+    }
+  ],
+  "proposal_only": true,
+  "release_freshness": {
+    "resolute-updates_InRelease": {
+      "age_seconds_at_capture": 11269,
+      "codename": "resolute",
+      "date_text": "Sun, 25 Oct 2026 19:14:45 UTC",
+      "date_utc": "2026-10-25T19:14:45+00:00",
+      "fresh_at_captured_utc": true,
+      "future_tolerance_seconds": 300,
+      "max_age_seconds": 1209600,
+      "suite": "resolute-updates",
+      "valid_until_present": false,
+      "valid_until_text": null,
+      "valid_until_utc": null
+    },
+    "resolute_InRelease": {
+      "age_seconds_at_capture": 16002919,
+      "codename": "resolute",
+      "date_text": "Thu, 23 Apr 2026 17:07:15 UTC",
+      "date_utc": "2026-04-23T17:07:15+00:00",
+      "fresh_at_captured_utc": true,
+      "future_tolerance_seconds": 300,
+      "max_age_seconds": 34560000,
+      "suite": "resolute",
+      "valid_until_present": false,
+      "valid_until_text": null,
+      "valid_until_utc": null
+    }
+  },
+  "release_index_bindings": {
+    "resolute-main-Packages.xz": {
+      "inrelease": "resolute_InRelease",
+      "matches_signed_release_body": true,
+      "release_path": "main/binary-amd64/Packages.xz",
+      "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24",
+      "size": 1480032
+    },
+    "resolute-updates-main-Packages.xz": {
+      "inrelease": "resolute-updates_InRelease",
+      "matches_signed_release_body": true,
+      "release_path": "main/binary-amd64/Packages.xz",
+      "sha256": "553c802aee13bedfcf262a111a16b41918ea3a8b1dc98c2fd49c465883af27e4",
+      "size": 744388
+    }
+  },
+  "run_id": "attempt-06",
+  "runtime": {
+    "binary": {
+      "path": "/usr/bin/gpgv",
+      "sha256": "95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+      "size": 302296
+    },
+    "dt_needed": [
+      "libz.so.1",
+      "libbz2.so.1.0",
+      "libgcrypt.so.20",
+      "libgpg-error.so.0",
+      "libc.so.6"
+    ],
+    "ldd_output": "\tlinux-vdso.so.1 (0x000072b20c161000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x000072b20c0e5000)\n\tlibbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x000072b20c0d0000)\n\tlibgcrypt.so.20 => /usr/lib/x86_64-linux-gnu/libgcrypt.so.20 (0x000072b20bf19000)\n\tlibgpg-error.so.0 => /usr/lib/x86_64-linux-gnu/libgpg-error.so.0 (0x000072b20beed000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x000072b20bc00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000072b20c163000)\n",
+    "ldd_path": "/usr/bin/ldd",
+    "ldd_sha256": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+    "pt_interp": "/lib64/ld-linux-x86-64.so.2",
+    "readelf_path": "/usr/bin/readelf",
+    "readelf_sha256": "c857339616bbbfa5eba32733e22365048903fbaf6ed2126b897dd138bcb741fc",
+    "resolution_observation_is_host_relative": true,
+    "resolved_runtime_objects": [
+      {
+        "is_symlink": true,
+        "reported_path": "/lib64/ld-linux-x86-64.so.2",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+        "sha256": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+        "size": 254864
+      },
+      {
+        "is_symlink": true,
+        "reported_path": "/usr/lib/x86_64-linux-gnu/libz.so.1",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/libz.so.1.3.1",
+        "sha256": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b",
+        "size": 121272
+      },
+      {
+        "is_symlink": true,
+        "reported_path": "/usr/lib/x86_64-linux-gnu/libbz2.so.1.0",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/libbz2.so.1.0.4",
+        "sha256": "7138aeb748f73c150b1d34d67de69139a441910cd7b269076ba3c8b986dea9a7",
+        "size": 83120
+      },
+      {
+        "is_symlink": true,
+        "reported_path": "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.7.0",
+        "sha256": "caec49e99c245de42e4d1fb28f1a31291d85313c88dafcdfea851b064aa766f1",
+        "size": 1796752
+      },
+      {
+        "is_symlink": true,
+        "reported_path": "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.41.1",
+        "sha256": "406246f1b22422bac96081fcf655ce2746e6ebcd72268497083eab9f57ddafa0",
+        "size": 178512
+      },
+      {
+        "is_symlink": false,
+        "reported_path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+        "sha256": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+        "size": 2190608
+      },
+      {
+        "is_symlink": true,
+        "reported_path": "/lib64/ld-linux-x86-64.so.2",
+        "resolved_path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+        "sha256": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+        "size": 254864
+      }
+    ]
+  },
+  "schema": "ubuntu-signed-index-reverification-v1",
+  "signatures": [
+    {
+      "exit": 0,
+      "good_signature_message": true,
+      "inrelease": "resolute_InRelease",
+      "primary_fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+      "validsig_line": "[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-04-23 1776964050 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C"
+    },
+    {
+      "exit": 0,
+      "good_signature_message": true,
+      "inrelease": "resolute-updates_InRelease",
+      "primary_fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+      "validsig_line": "[GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-25 1792955701 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C"
+    }
+  ],
+  "source_manifests": {
+    "prior_apt": {
+      "entries": 104,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/SHA256SUMS",
+      "verified": true
+    },
+    "windows_tls": {
+      "entries": 46,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/windows-tls-corroboration-20261025/SHA256SUMS",
+      "verified": true
+    }
+  },
+  "stage_a_authorized": false,
+  "status": "HOST_RELATIVE_REVERIFICATION_PASSED_PROPOSAL_ONLY"
+}

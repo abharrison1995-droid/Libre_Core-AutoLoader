@@ -1,0 +1,3 @@
+bundle=/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025
+run_id=attempt-06
+argv=/usr/bin/env -i LANG=C LC_ALL=C PATH=/usr/bin:/bin TZ=UTC PYTHONDONTWRITEBYTECODE=1 PYTHONOPTIMIZE=0 /usr/bin/python3 -B verify_capture.py attempt-06

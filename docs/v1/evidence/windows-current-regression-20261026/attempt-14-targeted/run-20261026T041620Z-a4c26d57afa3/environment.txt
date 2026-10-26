@@ -1,0 +1,65 @@
+utc=2026-10-26T04:16:20.0918892Z
+windows=Microsoft Windows NT 10.0.19044.0
+powershell=7.6.5
+python_path=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+python_version=Python 3.12.14
+git_head=2e28a81b11e6a4fe97472ed0dadb8ea71429127b
+git_status_begin
+ M docs/v1/ACCEPTANCE_MATRIX.md
+ M docs/v1/DECISIONS.md
+ M docs/v1/KNOWN_ISSUES.md
+ M docs/v1/PROGRESS.md
+ M docs/v1/RELEASE_CHECKLIST.md
+ M docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/README.md
+ M tests/test_offline_vm_build_executor.py
+ M tests/test_offline_vm_evidence.py
+ M tests/test_offline_vm_evidence_adapter.py
+ M tests/test_offline_vm_worker.py
+ M tests/test_ui.py
+ M tests/test_usb_builder.py
+ M usb_builder/offline_vm_build.py
+ M usb_builder/offline_vm_build_service.py
+ M usb_builder/offline_vm_evidence.py
+ M usb_builder/offline_vm_guest_worker.py
+ M usb_builder/offline_vm_worker.py
+ M usb_builder/systemd/librecore-offline-build.service
+ M usb_builder/systemd/librecore-offline-preflight.service
+?? .pytesttmp-win-v1-20261026/
+?? .pytesttmp-win-v1-20261026c/
+?? .pytesttmp-win-v1-20261026d/
+?? current-8ea32c5.bundle
+?? docs/v1/evidence/arch-historical-trust-dossier-20261025/
+?? docs/v1/evidence/native-qemu-fwcfg-20261025/
+?? docs/v1/evidence/native-qemu-whpx-20261025/
+?? docs/v1/evidence/pacman-minus-two-signature-id-20261026/
+?? docs/v1/evidence/pending-worker-child-status-20261026/
+?? docs/v1/evidence/software-regression-20261025/
+?? docs/v1/evidence/ubuntu-signed-index-reverification-20261025/
+?? docs/v1/evidence/ubuntu-trust-corroboration-20261025/
+?? docs/v1/evidence/ubuntu-verifier-provenance-20261025/
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/SHA256SUMS
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-no-fdc-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/guest-initramfs-shell-capture-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt
+?? docs/v1/evidence/windows-current-regression-20261026/
+?? docs/v1/evidence/windows-targeted-typing-20261026/
+?? docs/v1/evidence/windows-tls-corroboration-20261025/
+?? docs/v1/evidence/worker-package-seed-inventory-20261025/
+?? docs/v1/evidence/worker-package-seed-policy-20261025/
+?? gates.sh
+?? "label\357\200\272 dos\357\201\234nunit\357\200\272 sectors\357\201\234n\357\201\234nstart=2048, size=522240, type=c\357\201\234n"
+?? native-arch-gates.exit
+?? native-python-packages.txt
+?? printf
+?? qemu-qemu64-tcg.bmp
+?? qemu-qemu64-tcg.png
+?? qemu-screen-diagnostic.bmp
+?? qemu-screen-diagnostic.ppm
+?? retry.sh
+?? source.tar.gz
+?? tests/test_offline_vm_image.py
+?? tests/test_offline_vm_package_closure.py
+?? usb_builder/offline_vm_image.py
+?? usb_builder/offline_vm_package_closure.py
+git_status_end

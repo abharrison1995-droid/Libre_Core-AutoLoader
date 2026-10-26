@@ -1,0 +1,13 @@
+ARGV_JSON=["/usr/bin/curl", "--fail", "--location", "--noproxy", "*", "--connect-timeout", "20", "--max-time", "180", "--output", "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/packages/gpg_2.4.8-4ubuntu3.1_amd64.deb", "http://archive.ubuntu.com/ubuntu/pool/main/g/gnupg2/gpg_2.4.8-4ubuntu3.1_amd64.deb"]
+STDOUT_BEGIN
+STDOUT_END
+STDERR_BEGIN
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0
+100 621.9k 100 621.9k   0      0  95079      0   00:06   00:06          95222
+100 621.9k 100 621.9k   0      0  95075      0   00:06   00:06          95222
+100 621.9k 100 621.9k   0      0  95073      0   00:06   00:06          95222
+100 621.9k 100 621.9k   0      0  95070      0   00:06   00:06          95222
+STDERR_END

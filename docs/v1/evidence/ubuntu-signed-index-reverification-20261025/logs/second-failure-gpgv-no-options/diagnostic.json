@@ -1,0 +1,7 @@
+{
+  "reason": "Ubuntu gpgv 2.4.8 rejects --no-options; no signature result was produced",
+  "no_index_or_keyring_mismatch": true,
+  "status": "EXPECTED_GPGV_OPTION_FAILURE",
+  "no_signature_failure": true,
+  "gpgv_executable_hash_was_prevalidated": true
+}

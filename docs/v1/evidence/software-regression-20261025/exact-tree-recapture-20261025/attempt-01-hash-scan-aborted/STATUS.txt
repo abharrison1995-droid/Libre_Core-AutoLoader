@@ -1,0 +1,2 @@
+Status: ABORTED BEFORE TEST EXECUTION
+The capture script began hashing all repository files and included the Windows .venv. It was interrupted after 87 seconds to narrow the manifest to the actual project tree and avoid scanning bundled environment files. No pytest process started and this attempt provides no test result. Its partial manifest and captured Git state are preserved here.

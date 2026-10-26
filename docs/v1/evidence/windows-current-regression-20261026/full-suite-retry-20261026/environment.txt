@@ -1,0 +1,10 @@
+Python 3.12.14
+pytest 9.1.1
+Microsoft Windows 10.0.19044
+GIT_TEMPLATE_DIR=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.git-template-empty
+GIT_CONFIG_COUNT=1; core.longpaths=true
+TEMP/TMP/TMPDIR=C:\w\lc-v1wfr-20261026\system-tmp
+C_free_before=5449564160
+compressed_parent=C:\w\lc-v1wfr-20261026
+pytest_basetemp=C:\w\lc-v1wfr-20261026\pytest
+compression_preflight=Archive, Compressed

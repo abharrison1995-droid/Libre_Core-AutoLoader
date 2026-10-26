@@ -1,0 +1,4 @@
+platform=Windows
+python=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+python_version=3.12.14
+pytest_version=9.1.1

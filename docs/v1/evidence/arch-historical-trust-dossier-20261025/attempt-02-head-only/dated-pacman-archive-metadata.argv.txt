@@ -1,0 +1,5 @@
+﻿curl.exe "--noproxy" "*" "--proto" "=https" "--proto-redir" "=https" "--max-redirs" "3" "--max-time" "30" "--silent" "--show-error" "--location" "--head" "--dump-header" "C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\arch-historical-trust-dossier-20261025\attempt-02-head-only\dated-pacman-archive-metadata.response-headers.txt" "--output" "NUL" "--write-out" "http_code=%{http_code}
+url_effective=%{url_effective}
+num_redirects=%{num_redirects}
+ssl_verify_result=%{ssl_verify_result}
+certs=%{certs}" "https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst"

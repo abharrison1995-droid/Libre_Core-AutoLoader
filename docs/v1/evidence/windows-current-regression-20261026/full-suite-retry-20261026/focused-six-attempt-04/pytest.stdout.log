@@ -1,0 +1,18 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+rootdir: C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+configfile: pyproject.toml
+plugins: platformdirs-4.13.0, cov-7.1.0
+collecting ... collected 8 items
+
+tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_refuses_closure_claim PASSED [ 12%]
+tests/test_offline_vm_package_closure.py::test_seed_inventory_writer_cleans_failed_write SKIPPEDtory fsync) [ 25%]
+tests/test_offline_vm_worker.py::test_worker_rejects_preexisting_output_header_before_qemu SKIPPED [ 37%]
+tests/test_offline_vm_worker.py::test_guest_one_shot_checks_fixed_isolation_and_runs_no_commands PASSED [ 50%]
+tests/test_offline_vm_worker.py::test_guest_worker_image_identity_comes_from_exact_bounded_fw_cfg_entry PASSED [ 62%]
+tests/test_offline_vm_worker.py::test_fixed_guest_evidence_records_are_exact_and_bound_to_service_result PASSED [ 75%]
+tests/test_offline_vm_worker.py::test_fixed_guest_evidence_uses_concrete_path_for_posix_mount_protocol PASSED [ 87%]
+tests/test_offline_vm_worker.py::test_fixed_guest_evidence_rejects_wrong_package_inventory PASSED [100%]
+
+- generated xml file: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\full-suite-retry-20261026\focused-six-attempt-04\junit.xml -
+======================== 6 passed, 2 skipped in 3.88s =========================

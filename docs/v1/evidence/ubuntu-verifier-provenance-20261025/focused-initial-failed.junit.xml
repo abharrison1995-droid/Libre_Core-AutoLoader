@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="5" time="3.828" timestamp="2026-10-25T20:40:42.324294+00:00" hostname="DESKTOP-RUNVSTR"><testcase classname="docs.v1.evidence.ubuntu-verifier-provenance-20261025.test_verify_bundle" name="test_signed_release_row_binds_compressed_index_bytes" time="0.024" /><testcase classname="docs.v1.evidence.ubuntu-verifier-provenance-20261025.test_verify_bundle" name="test_deb822_rejects_duplicate_fields_and_orphan_continuations" time="0.002"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'orphan'&#10;  Actual message: 'Packages index field is malformed'">def test_deb822_rejects_duplicate_fields_and_orphan_continuations() -&gt; None:
+        with pytest.raises(EvidenceError, match="duplicate"):
+            parse_deb822_paragraphs(b"Package: a\nPackage: b\n\n")
+&gt;       with pytest.raises(EvidenceError, match="orphan"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'orphan'
+E         Actual message: 'Packages index field is malformed'
+
+docs/v1/evidence/ubuntu-verifier-provenance-20261025/test_verify_bundle.py:45: AssertionError</failure></testcase><testcase classname="docs.v1.evidence.ubuntu-verifier-provenance-20261025.test_verify_bundle" name="test_package_record_binds_identity_and_safe_archive_name" time="0.002" /><testcase classname="docs.v1.evidence.ubuntu-verifier-provenance-20261025.test_verify_bundle" name="test_archive_file_checks_hash_size_and_regular_single_link" time="1.618" /><testcase classname="docs.v1.evidence.ubuntu-verifier-provenance-20261025.test_verify_bundle" name="test_archive_file_rejects_symlink" time="0.125"><failure message="AssertionError: Regex pattern did not match.&#10;  Expected regex: 'bounded single-link'&#10;  Actual message: 'invalid expected archive size: linked.deb'">tmp_path = PosixPath('/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/pytest-tmp/test_archive_file_rejects_syml0')
+
+    def test_archive_file_rejects_symlink(tmp_path: Path) -&gt; None:
+        target = tmp_path / "target.deb"
+        target.write_bytes(b"data")
+        link = tmp_path / "linked.deb"
+        link.symlink_to(target)
+        record = {"Size": "4", "SHA256": hashlib.sha256(b"data").hexdigest()}
+&gt;       with pytest.raises(EvidenceError, match="bounded single-link"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'bounded single-link'
+E         Actual message: 'invalid expected archive size: linked.deb'
+
+docs/v1/evidence/ubuntu-verifier-provenance-20261025/test_verify_bundle.py:81: AssertionError</failure></testcase></testsuite></testsuites>

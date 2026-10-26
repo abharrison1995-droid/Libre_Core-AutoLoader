@@ -1,0 +1,6 @@
+ARGV_JSON=["dpkg-query", "-W", "-f=${Version}\t${Architecture}\t${db:Status-Abbrev}\n", "gpgv"]
+STDOUT_BEGIN
+2.4.8-4ubuntu3.1	amd64	ii 
+STDOUT_END
+STDERR_BEGIN
+STDERR_END

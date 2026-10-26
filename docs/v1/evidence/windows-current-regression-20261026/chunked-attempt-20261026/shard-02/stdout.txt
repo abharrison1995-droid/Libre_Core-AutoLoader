@@ -1,0 +1,5 @@
+.ss......................                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_artifact_engine.py:392: Host cannot create symlinks for this negative case: [WinError 1314] A required privilege is not held by the client: 'C:\\w\\lc-v1-win-shards-20261026\\pytest\\test_x200_generated_file_captu1\\work\\lbmk\\src\\coreboot\\default\\util\\cbfstool\\fmd_parser.h_shipped' -> 'C:\\w\\lc-v1-win-shards-20261026\\pytest\\test_x200_generated_file_captu1\\work\\lbmk\\src\\coreboot\\default\\util\\cbfstool\\fmd_parser.h'
+SKIPPED [1] tests\test_artifact_engine.py:400: Host cannot create directory symlinks for this negative case: [WinError 1314] A required privilege is not held by the client: 'C:\\w\\lc-v1-win-shards-20261026\\pytest\\test_x200_generated_file_captu2\\outside-util' -> 'C:\\w\\lc-v1-win-shards-20261026\\pytest\\test_x200_generated_file_captu2\\work\\lbmk\\src\\coreboot\\default\\util'
+23 passed, 2 skipped in 30.86s

@@ -1,0 +1,11 @@
+.....sss...ssssssssssssss                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_offline_vm_build_executor.py:1075: fixed Arch package tool paths are Linux-specific
+SKIPPED [1] tests\test_offline_vm_build_executor.py:1121: fixed builder process contract requires Linux/POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:1136: fixed builder process contract requires Linux/POSIX
+SKIPPED [1] tests\test_offline_vm_build_executor.py:1280: pacstrap receipt identity race requires POSIX inode metadata
+SKIPPED [7] tests\test_offline_vm_build_executor.py:1314: pacstrap receipt identity and mode checks require POSIX
+SKIPPED [1] tests\test_offline_vm_evidence.py:190: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [1] tests\test_offline_vm_evidence.py:208: evidence extraction contract requires POSIX no-follow and directory-fd operations
+SKIPPED [4] tests\test_offline_vm_evidence.py:250: evidence extraction contract requires POSIX no-follow and directory-fd operations
+8 passed, 17 skipped in 0.94s

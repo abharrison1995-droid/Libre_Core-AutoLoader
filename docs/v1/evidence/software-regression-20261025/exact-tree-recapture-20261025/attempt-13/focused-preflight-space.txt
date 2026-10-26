@@ -1,0 +1,4 @@
+tmpfs_available_kib=6291456
+evidence_available_kib=7805724
+focused_tmpfs_minimum_kib=262144
+evidence_filesystem_minimum_kib=1048576

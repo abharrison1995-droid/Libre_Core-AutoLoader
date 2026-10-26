@@ -1,0 +1,9 @@
+UTC: 2026-10-25T15:41:30Z
+HEAD: 2e28a81b11e6a4fe97472ed0dadb8ea71429127b
+User: uid=1000(alex) gid=1000(alex) groups=1000(alex),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users),991(kvm)
+Umask: 0022
+Python 3.14.4
+pytest 9.0.2
+Textual 2.1.2
+df: /mnt/c/Users/Alex/AppData/Local/Temp/librecore-autoloader-fwcfg-full-20261025: No such file or directory
+Scratch root: /mnt/c/Users/Alex/AppData/Local/Temp/librecore-autoloader-fwcfg-full-20261025

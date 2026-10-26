@@ -1,0 +1,40 @@
+{
+  "evidence_kind": "captured full software pytest regression",
+  "working_tree_head": "2e28a81b11e6a4fe97472ed0dadb8ea71429127b",
+  "exact_worktree_diff_retained": false,
+  "source_hash_manifest_retained": false,
+  "reproducibility_status": "Credible captured run; not a reproducible exact-tree gate",
+  "environment": {
+    "os": "Ubuntu WSL 2",
+    "python_version": "3.14.4",
+    "python_executable": "/home/alex/.venvs/autoloader-v1/bin/python",
+    "pytest_version": "9.1.1",
+    "textual_version": "8.2.8",
+    "test_scratch": "Linux /tmp"
+  },
+  "result": {
+    "passed": 1378,
+    "skipped": 4,
+    "failures": 0,
+    "errors": 0,
+    "pytest_elapsed_seconds": 777.97,
+    "pytest_exit": 0,
+    "junit_cases": 1382,
+    "junit_skipped": 4,
+    "junit_failures": 0,
+    "junit_errors": 0
+  },
+  "temporary_path_policy": {
+    "fixture": "pytest_tmp_cleanup.py",
+    "behavior": "Each test's tmp_path is retained through teardown, then that test's own path is removed. Directory write mode is restored only for post-test cleanup."
+  },
+  "invocation": {
+    "executable": "/home/alex/.venvs/autoloader-v1/bin/python",
+    "full_command_retained": false
+  },
+  "skip_status": {
+    "windows_only_tests": "Separately passed on Windows: 2 passed; see ../full-post-phase3-windows-20261025/README.md",
+    "host_pacman_preflights": "2 remain UNVALIDATED because trusted Arch pacman executable-ownership evidence is absent"
+  },
+  "excluded_diagnostic": "A partial C: DrvFS attempt was stopped after C: filled. Its first failure was the expected owner-only gitconfig check on DrvFS; the focused same test passed on Linux /tmp. It is excluded from this full-suite result."
+}

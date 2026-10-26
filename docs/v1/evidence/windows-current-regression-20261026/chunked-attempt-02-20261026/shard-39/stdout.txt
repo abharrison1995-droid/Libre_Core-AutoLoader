@@ -1,0 +1,8 @@
+.....ssssssssssss.                                                       [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_usb_builder.py:466: symlink creation is not available in this test environment
+SKIPPED [1] tests\test_usb_builder.py:472: staging requires POSIX ownership and mode semantics
+SKIPPED [4] tests\test_usb_builder.py:515: staging requires POSIX ownership and mode semantics
+SKIPPED [5] tests\test_usb_builder.py:536: shell status proof requires POSIX process semantics
+SKIPPED [1] tests\test_usb_builder.py:586: process-group timeout proof requires POSIX signals
+6 passed, 12 skipped in 1.40s

@@ -1,0 +1,69 @@
+{
+  "status": "PROPOSAL_REVIEW_REQUIRED",
+  "parser": "Pre-existing Ubuntu WSL /usr/bin/gpg, --batch --no-options --no-default-keyring; list-only operation, no import",
+  "private_gnupghome": "/tmp/lc-ubuntu-keyring-readonly-20261025",
+  "parser_identity_host_relative": {
+    "version_log": "logs/host-gpg-version.stdout.txt",
+    "sha256_log": "logs/host-gpg-sha256.stdout.txt",
+    "sha256": "c8f3dc07a34ab0a0a081368b482724b79a2a6d6b7aa856741c09edf7af854754",
+    "package_provenance_independently_established": false
+  },
+  "published_primary_fingerprints": [
+    {
+      "fingerprint": "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+      "label": "Ubuntu Archive Automatic Signing Key (2012)",
+      "documentation": "downloads/image-verification.html"
+    },
+    {
+      "fingerprint": "843938DF228D22F7B3742BC0D94AA3F0EFE21092",
+      "label": "Ubuntu CD Image Automatic Signing Key (2012)",
+      "documentation": "downloads/image-verification.html"
+    },
+    {
+      "fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+      "label": "Ubuntu Archive Automatic Signing Key (2018)",
+      "documentation": "downloads/image-verification.html"
+    }
+  ],
+  "downloaded_keyring_primary_fingerprints": [
+    "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+    "843938DF228D22F7B3742BC0D94AA3F0EFE21092",
+    "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+  ],
+  "existing_ubuntu_keyring_deb_payload_primary_fingerprints": [
+    "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+    "843938DF228D22F7B3742BC0D94AA3F0EFE21092",
+    "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+  ],
+  "common_published_fingerprints_present_in_both": [
+    "790BC7277767219C42C86F933B4FE6ACC0B21F32",
+    "843938DF228D22F7B3742BC0D94AA3F0EFE21092",
+    "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+  ],
+  "downloaded_keyring_fingerprints_not_listed_in_captured_image_doc": [],
+  "downloaded_archive_keyring": {
+    "path": "downloads/ubuntu-archive-keyring.gpg",
+    "size_bytes": 3607,
+    "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+  },
+  "existing_ubuntu_keyring_deb_payload": {
+    "path": "../ubuntu-verifier-provenance-20261025/extracted/ubuntu-keyring/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+    "size_bytes": 3607,
+    "sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31"
+  },
+  "byte_identical": true,
+  "source_deb_archive": {
+    "path": "../ubuntu-verifier-provenance-20261025/packages/ubuntu-keyring_2023.11.28.1build1_all.deb",
+    "size_bytes": 11228,
+    "sha256": "c377ccf26964f4c206c05c0bc7adb708e031beb919bb9a0ff63af983d064cd66",
+    "signature_validation_status": "Earlier WSL APT signed-index validation is host-relative; installed gpgv and root keyring provisioning are not independently authenticated"
+  },
+  "operations": {
+    "imported": false,
+    "package_installed": false,
+    "downloaded_payload_binary_executed": false,
+    "resolver_or_closure_run": false,
+    "arch_material_acquired": false,
+    "stage_a_authorized": false
+  }
+}

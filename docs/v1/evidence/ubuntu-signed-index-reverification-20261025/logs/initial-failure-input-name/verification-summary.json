@@ -1,0 +1,42 @@
+{
+  "arch_material_acquired": false,
+  "downloaded_payload_execution": false,
+  "error": "ValueError: missing or non-regular staged input: resolute-updates-Packages.xz",
+  "inputs": {
+    "resolute-main-Packages.xz": {
+      "sha256": "ed9ac41cb263efaecc5a06a0742dc56570e2fb5ff94c4f2e4b2fbdcddd73cf24",
+      "size": 1480032,
+      "verified": true
+    },
+    "resolute-updates_InRelease": {
+      "sha256": "814669b5013bfe42468b8deb780bc4b7e206173c5c30f398040cd31a4d9170ad",
+      "size": 137401,
+      "verified": true
+    },
+    "resolute_InRelease": {
+      "sha256": "45f95ce276cdba3e41870516a130e03c58b8b7a79e9546b0efe9e526d255740c",
+      "size": 135549,
+      "verified": true
+    }
+  },
+  "package_installation": false,
+  "package_records": [],
+  "proposal_only": true,
+  "runtime": {},
+  "schema": "ubuntu-signed-index-reverification-v1",
+  "signatures": [],
+  "source_manifests": {
+    "prior_apt": {
+      "entries": 104,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-verifier-provenance-20261025/SHA256SUMS",
+      "verified": true
+    },
+    "windows_tls": {
+      "entries": 46,
+      "manifest": "/mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/windows-tls-corroboration-20261025/SHA256SUMS",
+      "verified": true
+    }
+  },
+  "stage_a_authorized": false,
+  "status": "FAILED"
+}

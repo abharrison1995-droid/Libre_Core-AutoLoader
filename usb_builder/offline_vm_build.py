@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import signal
@@ -27,9 +28,12 @@ from typing import Any, Callable, Mapping, NoReturn, Protocol, Sequence
 
 from usb_builder import build_usb
 from usb_builder import offline_vm_evidence as evidence_bundle
+from usb_builder import offline_vm_package_closure as package_closure
 from usb_builder.offline_vm_worker import (
     LOCKED_PACKAGES,
     MAX_ISO_BYTES,
+    OFFLINE_PACKAGES_MOUNT,
+    OFFLINE_SOURCE_MOUNT,
     OfflineVmContractError,
     RESULT_ISO_OFFSET,
     _path_has_symlink_component,
@@ -40,11 +44,13 @@ from usb_builder.offline_vm_worker import (
 )
 
 
-BUILD_MANIFEST_FORMAT = "librecore-offline-vm-build-manifest-v1"
+BUILD_MANIFEST_FORMAT = "librecore-offline-vm-build-manifest-v2"
 BUILD_RECEIPT_FORMAT = "librecore-offline-vm-build-receipt-v1"
-BUILD_RESULT_FORMAT = "librecore-offline-vm-build-result-v1"
+BUILD_RESULT_FORMAT = "librecore-offline-vm-build-result-v2"
+BUILD_PROCESS_RESULT_FORMAT = "librecore-offline-vm-build-process-result-v1"
 BUILD_RESULT_READY_FORMAT = "librecore-offline-vm-build-ready-v1"
 BUILD_MANIFEST_RELATIVE = "worker/build-manifest.json"
+PACKAGE_CLOSURE_RELATIVE = "worker/package-closure.json"
 PACSTRAP_SOURCE_RELATIVE = "worker/pacstrap"
 PACSTRAP_PATCH_RELATIVE = "usb_builder/patches/arch-install-scripts-31-2-pacstrap-status.patch"
 PACSTRAP_PATH = "/usr/bin/pacstrap"
@@ -71,6 +77,12 @@ WORKER_PROFILE = "/mnt/librecore-source/usb_builder/archiso_profile"
 WORKER_WORK = "/run/librecore-scratch/archiso-work"
 WORKER_OUTPUT = "/run/librecore-scratch/image-output"
 WORKER_PACSTRAP_BIN = "/run/librecore-scratch/bin"
+SOURCE_MOUNT_PATH = OFFLINE_SOURCE_MOUNT
+PACKAGE_MOUNT_PATH = OFFLINE_PACKAGES_MOUNT
+PACKAGE_DATABASE_SNAPSHOT_PATH = Path("/run/librecore-package-dbs")
+PACKAGE_DATABASE_SNAPSHOT_RECORD = "snapshot-index.json"
+PACKAGE_DATABASE_SNAPSHOT_FORMAT = "librecore-repository-database-snapshot-v1"
+BUILD_MANIFEST_COPY_PATH = Path(WORKER_ROOT) / "build-manifest.json"
 BUILD_SERVICE_NAME = "librecore-offline-build.service"
 BUILD_PREFLIGHT_SERVICE_NAME = "librecore-offline-preflight.service"
 SYSTEMD_UNIT_PATH = "/usr/lib/systemd/system/librecore-offline-build.service"
@@ -96,10 +108,13 @@ SYSTEMD_UNIT_SEARCH_PATHS = (
 CAPABILITY_BOUNDING_MASK = "00000000000000c0"  # CAP_SETUID | CAP_SETGID for pinned map helpers only.
 BUILD_TIMEOUT_SECONDS = 4 * 60 * 60
 SERVICE_START_GRACE_SECONDS = 30
+MAX_PACSTRAP_EXIT_OBSERVATIONS = 4096
+MAX_BUILD_PROCESS_RESULT_BYTES = 64 * 1024
 MAX_ATTACHED_IMAGE_BYTES = 64 * 1024 * 1024 * 1024
 MAX_REPOSITORY_DATABASE_BYTES = 512 * 1024 * 1024
 MAX_REPOSITORY_DATABASE_MEMBERS = 250_000
 MAX_REPOSITORY_PACKAGE_DESC_BYTES = 1024 * 1024
+MAX_PACKAGE_BUILD_METADATA_BYTES = 16 * 1024 * 1024
 PACMAN_DATABASE_RELATIVE = {
     "core": "repos/core/os/x86_64/core.db",
     "extra": "repos/extra/os/x86_64/extra.db",
@@ -111,18 +126,21 @@ PACMAN_REPOSITORY_ROOTS = {
 PACMAN_CONFIG_BYTES = (
     b"[options]\n"
     b"Architecture = x86_64\n"
+    b"DBPath = /run/librecore-scratch/pacman-state\n"
     b"SigLevel = Required DatabaseOptional\n"
     b"LocalFileSigLevel = Required\n"
     b"\n[core]\n"
+    b"Server = file:///run/librecore-package-dbs/repos/core/os/$arch\n"
     b"Server = file:///mnt/librecore-packages/repos/core/os/$arch\n"
     b"\n[extra]\n"
+    b"Server = file:///run/librecore-package-dbs/repos/extra/os/$arch\n"
     b"Server = file:///mnt/librecore-packages/repos/extra/os/$arch\n"
 )
 BUILD_SERVICE_UNIT_BYTES = (
     b"[Unit]\n"
     b"Description=LibreCore sealed offline V1 image builder\n"
     b"After=local-fs.target\n"
-    b"RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch\n"
+    b"RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs\n"
     b"ConditionPathExists=/run/librecore-scratch/build-invocation.json\n"
     b"ConditionPathExists=!/run/librecore-scratch/build-service-started.json\n"
     b"ConditionPathExists=!/run/librecore-scratch/build-service-result.json\n"
@@ -146,7 +164,7 @@ BUILD_SERVICE_UNIT_BYTES = (
     b"RestrictAddressFamilies=AF_UNIX\n"
     b"ProtectSystem=strict\n"
     b"ProtectHome=yes\n"
-    b"ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages\n"
+    b"ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs\n"
     b"ReadWritePaths=/run/librecore-scratch\n"
     b"KillMode=control-group\n"
     b"RuntimeMaxSec=4h\n"
@@ -166,7 +184,7 @@ BUILD_PREFLIGHT_UNIT_BYTES = (
     b"[Unit]\n"
     b"Description=LibreCore sealed offline V1 NNP=1 build preflight\n"
     b"After=local-fs.target\n"
-    b"RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch\n"
+    b"RequiresMountsFor=/mnt/librecore-source /mnt/librecore-packages /run/librecore-scratch /run/librecore-package-dbs\n"
     b"ConditionPathExists=/dev/disk/by-id/virtio-LC-REQUEST-RO\n"
     b"ConditionPathExists=!/run/librecore-worker/preflight-started.json\n"
     b"\n[Service]\n"
@@ -189,8 +207,8 @@ BUILD_PREFLIGHT_UNIT_BYTES = (
     b"ProtectSystem=strict\n"
     b"ProtectHome=yes\n"
     b"ReadOnlyPaths=/mnt/librecore-source /mnt/librecore-packages /dev/disk/by-id/virtio-LC-REQUEST-RO\n"
-    b"ReadWritePaths=/run/librecore-scratch\n"
-    b"RuntimeDirectory=librecore-scratch librecore-worker\n"
+    b"ReadWritePaths=/run/librecore-scratch /run/librecore-package-dbs\n"
+    b"RuntimeDirectory=librecore-scratch librecore-worker librecore-package-dbs\n"
     b"RuntimeDirectoryMode=0700\n"
     b"KillMode=control-group\n"
     b"RuntimeMaxSec=4h30min\n"
@@ -218,6 +236,13 @@ class OfflineVmBuildError(OfflineVmContractError):
 
 def _reject(message: str) -> NoReturn:
     raise OfflineVmBuildError(message)
+
+
+def _fchmod(fd: int, mode: int) -> None:
+    fchmod = getattr(os, "fchmod", None)
+    if not callable(fchmod):
+        _reject("descriptor mode setting is unavailable on this platform")
+    fchmod(fd, mode)
 
 
 def _linux_runtime_available() -> bool:
@@ -369,7 +394,7 @@ def _snapshot_lock(source_root: Path, request: Mapping[str, object]) -> dict[str
 
 def _read_build_manifest(package_root: Path) -> tuple[dict[str, Any], bytes]:
     path = _safe_file(package_root, BUILD_MANIFEST_RELATIVE, "build manifest")
-    raw = path.read_bytes()
+    raw = _read_bound_file(path, None, "build manifest", MAX_PACKAGE_BUILD_METADATA_BYTES)
     try:
         value = json.loads(raw.decode("ascii"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -379,7 +404,7 @@ def _read_build_manifest(package_root: Path) -> tuple[dict[str, Any], bytes]:
     expected_fields = {
         "format", "operation_id", "request_sha256", "source_sha256", "package_image_sha256",
         "snapshot_lock_sha256", "profile_inventory_sha256", "package_list_sha256",
-        "repository_databases", "packages", "pacstrap_overlay",
+        "package_closure_path", "package_closure_sha256", "repository_databases", "packages", "pacstrap_overlay",
     }
     if set(value) != expected_fields or value.get("format") != BUILD_MANIFEST_FORMAT:
         _reject("package build manifest has unknown or missing fields")
@@ -523,6 +548,16 @@ class BuildProcessResult:
 
 
 @dataclass(frozen=True)
+class VerifiedBuildInputs:
+    manifest: dict[str, Any]
+    pacstrap_source: Path
+    profile_directory: Path
+    repository_payloads: Mapping[str, tuple[bytes, bytes | None]]
+    manifest_raw: bytes
+    closure_raw: bytes
+
+
+@dataclass(frozen=True)
 class GuestBuildResult:
     status: str
     operation_id: str
@@ -534,10 +569,196 @@ class GuestBuildResult:
     elapsed_seconds: float
     commands_run: tuple[str, ...]
     cleanup_complete: bool
+    build_process_result: BuildProcessResult | None = None
+
+
+def _parse_build_process_result(value: object) -> BuildProcessResult | None:
+    """Parse a bounded, versioned copy of the fixed service's observed result."""
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        _reject("fixed build process result is not an object")
+    expected = {
+        "format", "service_name", "argv_sha256", "returncode", "timed_out", "elapsed_seconds",
+        "no_new_privs_before", "no_new_privs_during", "network_namespace_before",
+        "network_namespace_during", "pacstrap_exit_codes", "account", "uid", "gid",
+        "supplementary_gids", "cap_effective", "cap_permitted", "cap_ambient", "interfaces",
+        "ipv4_routes", "ipv6_routes", "cap_bounding",
+    }
+    if set(value) != expected or value.get("format") != BUILD_PROCESS_RESULT_FORMAT:
+        _reject("fixed build process result has unknown or missing fields")
+
+    def bounded_text(raw: object, label: str, limit: int = 512) -> str:
+        if not isinstance(raw, str) or len(raw.encode("utf-8", "strict")) > limit or any(ord(ch) < 0x20 for ch in raw):
+            _reject(f"fixed build process result {label} is malformed")
+        return raw
+
+    def bounded_int(raw: object, label: str, minimum: int, maximum: int) -> int:
+        if isinstance(raw, bool) or not isinstance(raw, int) or not minimum <= raw <= maximum:
+            _reject(f"fixed build process result {label} is malformed")
+        return raw
+
+    argv_sha256 = bounded_text(value.get("argv_sha256"), "argv digest", 64)
+    if re.fullmatch(r"[0-9a-f]{64}", argv_sha256) is None:
+        _reject("fixed build process result argv digest is malformed")
+    returncode_value = value.get("returncode")
+    returncode = None if returncode_value is None else bounded_int(returncode_value, "return code", -255, 255)
+
+    def exact_bool(raw: object, label: str) -> bool:
+        if not isinstance(raw, bool):
+            _reject(f"fixed build process result {label} is malformed")
+        return raw
+
+    timed_out = exact_bool(value.get("timed_out"), "timeout observation")
+    before_nnp = exact_bool(value.get("no_new_privs_before"), "initial NNP observation")
+    during_nnp = exact_bool(value.get("no_new_privs_during"), "build NNP observation")
+    elapsed_value = value.get("elapsed_seconds")
+    if isinstance(elapsed_value, bool) or not isinstance(elapsed_value, (int, float)):
+        _reject("fixed build process result elapsed time is malformed")
+    elapsed_seconds = float(elapsed_value)
+    if not math.isfinite(elapsed_seconds) or not 0 <= elapsed_seconds <= 24 * 60 * 60:
+        _reject("fixed build process result elapsed time is outside its bound")
+
+    raw_codes = value.get("pacstrap_exit_codes")
+    if not isinstance(raw_codes, list) or len(raw_codes) > MAX_PACSTRAP_EXIT_OBSERVATIONS:
+        _reject("fixed build process result pacstrap observations exceed their bound")
+    pacstrap_exit_codes = tuple(
+        bounded_int(item, "pacstrap exit code", -1, 255) for item in raw_codes
+    )
+    raw_supplementary = value.get("supplementary_gids")
+    if not isinstance(raw_supplementary, list) or len(raw_supplementary) > 64:
+        _reject("fixed build process result supplementary groups are malformed")
+    supplementary_gids = tuple(
+        bounded_int(item, "supplementary group", 0, 2**31 - 1) for item in raw_supplementary
+    )
+
+    def string_tuple(raw: object, label: str, max_items: int = 64) -> tuple[str, ...]:
+        if not isinstance(raw, list) or len(raw) > max_items:
+            _reject(f"fixed build process result {label} are malformed")
+        return tuple(bounded_text(item, label, 512) for item in raw)
+
+    for cap_name in ("cap_effective", "cap_permitted", "cap_ambient", "cap_bounding"):
+        cap_value = bounded_text(value.get(cap_name), cap_name, 32)
+        if cap_name == "cap_effective":
+            cap_effective = cap_value
+        elif cap_name == "cap_permitted":
+            cap_permitted = cap_value
+        elif cap_name == "cap_ambient":
+            cap_ambient = cap_value
+        else:
+            cap_bounding = cap_value
+
+    return BuildProcessResult(
+        service_name=bounded_text(value.get("service_name"), "service name"),
+        argv_sha256=argv_sha256,
+        returncode=returncode,
+        timed_out=timed_out,
+        elapsed_seconds=elapsed_seconds,
+        no_new_privs_before=before_nnp,
+        no_new_privs_during=during_nnp,
+        network_namespace_before=bounded_text(value.get("network_namespace_before"), "initial network namespace"),
+        network_namespace_during=bounded_text(value.get("network_namespace_during"), "build network namespace"),
+        pacstrap_exit_codes=pacstrap_exit_codes,
+        account=bounded_text(value.get("account"), "account", 128),
+        uid=bounded_int(value.get("uid"), "uid", 0, 2**31 - 1),
+        gid=bounded_int(value.get("gid"), "gid", 0, 2**31 - 1),
+        supplementary_gids=supplementary_gids,
+        cap_effective=cap_effective,
+        cap_permitted=cap_permitted,
+        cap_ambient=cap_ambient,
+        interfaces=string_tuple(value.get("interfaces"), "interfaces"),
+        ipv4_routes=string_tuple(value.get("ipv4_routes"), "IPv4 routes"),
+        ipv6_routes=string_tuple(value.get("ipv6_routes"), "IPv6 routes"),
+        cap_bounding=cap_bounding,
+    )
+
+
+def _build_process_result_payload(result: BuildProcessResult | None) -> dict[str, object] | None:
+    """Serialize the actual BuildProcessResult without inferring child outcomes."""
+    if result is None:
+        return None
+    if not isinstance(result, BuildProcessResult):
+        _reject("fixed build process result has an unexpected type")
+    payload: dict[str, object] = {
+        "format": BUILD_PROCESS_RESULT_FORMAT,
+        "service_name": result.service_name,
+        "argv_sha256": result.argv_sha256,
+        "returncode": result.returncode,
+        "timed_out": result.timed_out,
+        "elapsed_seconds": result.elapsed_seconds,
+        "no_new_privs_before": result.no_new_privs_before,
+        "no_new_privs_during": result.no_new_privs_during,
+        "network_namespace_before": result.network_namespace_before,
+        "network_namespace_during": result.network_namespace_during,
+        "pacstrap_exit_codes": list(result.pacstrap_exit_codes),
+        "account": result.account,
+        "uid": result.uid,
+        "gid": result.gid,
+        "supplementary_gids": list(result.supplementary_gids),
+        "cap_effective": result.cap_effective,
+        "cap_permitted": result.cap_permitted,
+        "cap_ambient": result.cap_ambient,
+        "interfaces": list(result.interfaces),
+        "ipv4_routes": list(result.ipv4_routes),
+        "ipv6_routes": list(result.ipv6_routes),
+        "cap_bounding": result.cap_bounding,
+    }
+    # Round-trip the serialization through the strict parser before publishing.
+    parsed = _parse_build_process_result(payload)
+    if parsed != result or len(canonical_json(payload)) > MAX_BUILD_PROCESS_RESULT_BYTES:
+        _reject("fixed build process result is not a bounded canonical snapshot")
+    return payload
+
+
+def _validate_successful_build_process_result(
+    result: BuildProcessResult | None,
+    *,
+    command_argv_sha256: str,
+    expected_network_namespace: str | None = None,
+    expected_uid: int | None = None,
+    expected_gid: int | None = None,
+) -> BuildProcessResult:
+    """Require the exact successful fixed-service observation for a candidate."""
+    if not isinstance(result, BuildProcessResult):
+        _reject("fixed build candidate has no observed process result")
+    _build_process_result_payload(result)
+    zero_capabilities = {"0", "00000000", "0000000000000000"}
+    if (
+        result.service_name != BUILD_SERVICE_NAME
+        or result.argv_sha256 != command_argv_sha256
+        or result.returncode != 0
+        or type(result.returncode) is not int
+        or result.timed_out is not False
+        or not math.isfinite(result.elapsed_seconds)
+        or not 0 <= result.elapsed_seconds <= BUILD_TIMEOUT_SECONDS + SERVICE_START_GRACE_SECONDS
+        or result.no_new_privs_before is not True
+        or result.no_new_privs_during is not False
+        or not re.fullmatch(r"net:\[[0-9]+\]", result.network_namespace_before)
+        or result.network_namespace_before != result.network_namespace_during
+        or (expected_network_namespace is not None and result.network_namespace_before != expected_network_namespace)
+        or not result.pacstrap_exit_codes
+        or len(result.pacstrap_exit_codes) > MAX_PACSTRAP_EXIT_OBSERVATIONS
+        or any(type(code) is not int or code != 0 for code in result.pacstrap_exit_codes)
+        or result.account != "fwbuild"
+        or result.uid <= 0
+        or result.gid <= 0
+        or (expected_uid is not None and result.uid != expected_uid)
+        or (expected_gid is not None and result.gid != expected_gid)
+        or result.supplementary_gids != (result.gid,)
+        or any(value not in zero_capabilities for value in (
+            result.cap_effective, result.cap_permitted, result.cap_ambient,
+        ))
+        or result.cap_bounding != CAPABILITY_BOUNDING_MASK
+        or result.interfaces != ("lo",)
+        or result.ipv4_routes
+        or result.ipv6_routes
+    ):
+        _reject("fixed build process observation does not meet candidate success policy")
+    return result
 
 
 def _manifest_file_set(manifest: Mapping[str, Any]) -> set[str]:
-    expected = {BUILD_MANIFEST_RELATIVE, PACSTRAP_SOURCE_RELATIVE}
+    expected = {BUILD_MANIFEST_RELATIVE, PACKAGE_CLOSURE_RELATIVE, PACSTRAP_SOURCE_RELATIVE}
     dbs = manifest.get("repository_databases")
     packages = manifest.get("packages")
     overlay = manifest.get("pacstrap_overlay")
@@ -547,40 +768,87 @@ def _manifest_file_set(manifest: Mapping[str, Any]) -> set[str]:
         _reject("package archive inventory is empty or malformed")
     if not isinstance(overlay, dict) or set(overlay) != {"path", "source_sha256", "patch_sha256", "patched_sha256"}:
         _reject("pacstrap overlay manifest is malformed")
+    if manifest.get("package_closure_path") != PACKAGE_CLOSURE_RELATIVE:
+        _reject("package closure path differs from the fixed package image contract")
+    if not isinstance(manifest.get("package_closure_sha256"), str) or re.fullmatch(
+        r"[0-9a-f]{64}", str(manifest.get("package_closure_sha256")),
+    ) is None:
+        _reject("package closure hash is malformed")
     for name, record in dbs.items():
         if not isinstance(record, dict) or set(record) != {"path", "sha256", "signature_path", "signature_sha256"}:
             _reject("repository database manifest entry is malformed")
         if record.get("path") != PACMAN_DATABASE_RELATIVE[name]:
             _reject("repository database path differs from the fixed snapshot layout")
         expected.add(record["path"])
-        if record.get("signature_path") != record["path"] + ".sig" or not isinstance(record.get("signature_sha256"), str):
-            _reject("every pinned repository database requires its adjacent signed snapshot signature")
-        if re.fullmatch(r"[0-9a-f]{64}", record["signature_sha256"]) is None:
-            _reject("repository database signature hash is malformed")
-        expected.add(record["signature_path"])
+        signature_path = record.get("signature_path")
+        signature_sha256 = record.get("signature_sha256")
+        if signature_path is None:
+            if signature_sha256 is not None:
+                _reject("absent optional repository database signature has a hash")
+        else:
+            if signature_path != record["path"] + ".sig" or not isinstance(signature_sha256, str):
+                _reject("repository database signature path/hash is malformed")
+            if re.fullmatch(r"[0-9a-f]{64}", signature_sha256) is None:
+                _reject("repository database signature hash is malformed")
+            expected.add(signature_path)
     seen_names: set[str] = set()
+    seen_archives: set[str] = set()
     for record in packages:
-        fields = {"name", "version", "archive_path", "archive_size", "archive_sha256", "signature_path", "signature_sha256"}
+        fields = {
+            "name", "version", "repo", "arch", "filename", "database_sha256",
+            "archive_path", "archive_size", "archive_sha256", "signature_blob_sha256",
+            "included_by", "signature_path", "signature_sha256",
+        }
         if not isinstance(record, dict) or set(record) != fields:
             _reject("package archive manifest entry is malformed")
         name = record.get("name")
         version = record.get("version")
+        repo = record.get("repo")
+        arch = record.get("arch")
+        filename = record.get("filename")
         archive = record.get("archive_path")
         if not isinstance(name, str) or re.fullmatch(r"[a-zA-Z0-9@._+-]+", name) is None or name in seen_names:
             _reject("package names are malformed or duplicated")
         if not isinstance(version, str) or not version or any(ch.isspace() for ch in version):
             _reject("package version is malformed")
-        if not isinstance(archive, str) or not any(archive.startswith(root + "/") for root in PACMAN_REPOSITORY_ROOTS.values()):
-            _reject("package archive is outside the fixed local repository layout")
+        if repo not in PACMAN_REPOSITORY_ROOTS or arch not in package_closure.ALLOWED_ARCHITECTURES:
+            _reject("package repository or architecture is outside the fixed package closure policy")
+        if not isinstance(filename, str) or filename not in {
+            f"{name}-{version}-{arch}.pkg.tar.zst", f"{name}-{version}-{arch}.pkg.tar.xz",
+        }:
+            _reject("package filename does not exactly match its name, version, architecture, and archive suffix")
+        database_record = dbs.get(repo)
+        if not isinstance(database_record, dict) or record.get("database_sha256") != database_record.get("sha256"):
+            _reject("package row is not bound to its exact repository database hash")
+        expected_archive = f"{PACMAN_REPOSITORY_ROOTS[repo]}/{filename}"
+        if archive != expected_archive:
+            _reject("package archive path is outside its exact repository and filename")
         rel = PurePosixPath(archive)
-        if rel.is_absolute() or any(part in ("", ".", "..") for part in rel.parts) or not archive.endswith(".pkg.tar.zst"):
+        if rel.is_absolute() or any(part in ("", ".", "..") for part in rel.parts):
             _reject("package archive path is malformed")
+        if record.get("archive_size") is None or isinstance(record.get("archive_size"), bool) or not isinstance(record.get("archive_size"), int) or record["archive_size"] <= 0:
+            _reject("package archive size is malformed")
+        for hash_field in ("archive_sha256", "signature_blob_sha256", "signature_sha256"):
+            if not isinstance(record.get(hash_field), str) or re.fullmatch(r"[0-9a-f]{64}", str(record.get(hash_field))) is None:
+                _reject(f"package {hash_field} is malformed")
+        included_by = record.get("included_by")
+        if (
+            not isinstance(included_by, list)
+            or not included_by
+            or any(not isinstance(scope, str) for scope in included_by)
+            or len(included_by) != len(set(included_by))
+            or any(scope not in {"worker_root", "target_usb_root"} for scope in included_by)
+        ):
+            _reject("package root membership is malformed")
         if record.get("signature_path") != archive + ".sig" or not isinstance(record.get("signature_sha256"), str):
             _reject("every package archive must have its adjacent detached signature")
         if re.fullmatch(r"[0-9a-f]{64}", record["signature_sha256"]) is None:
             _reject("package detached signature hash is malformed")
         expected.add(archive)
         expected.add(archive + ".sig")
+        if archive in seen_archives:
+            _reject("package archive paths are duplicated")
+        seen_archives.add(archive)
         seen_names.add(name)
     if overlay.get("path") != PACSTRAP_SOURCE_RELATIVE:
         _reject("pacstrap overlay source path differs from the fixed package image path")
@@ -590,16 +858,545 @@ def _manifest_file_set(manifest: Mapping[str, Any]) -> set[str]:
     return expected
 
 
+def _request_nested_value(request: Mapping[str, object], section: str, key: str) -> object | None:
+    """Read one nested request binding without treating arbitrary objects as mappings."""
+    value = request.get(section)
+    return value.get(key) if isinstance(value, Mapping) else None
+
+
+def _validate_manifest_archive_union(
+    manifest: Mapping[str, Any], closure_value: object,
+) -> None:
+    """Require the staged archive set to equal the independently resolved union."""
+    if not isinstance(closure_value, dict):
+        _reject("package closure document is malformed")
+    if (
+        closure_value.get("format") != package_closure.CLOSURE_FORMAT
+        or closure_value.get("status") != "METADATA_CLOSURES_COMPLETE_SIGNATURES_UNVERIFIED"
+        or closure_value.get("provider_ambiguity_policy") != package_closure.PROVIDER_AMBIGUITY_POLICY
+    ):
+        _reject("package closure is not the supported complete, ambiguity-rejecting metadata result")
+    inventory = closure_value.get("physical_archive_inventory")
+    package_rows = manifest.get("packages")
+    if not isinstance(inventory, list) or not inventory or not isinstance(package_rows, list):
+        _reject("package closure or staged archive inventory is empty or malformed")
+    fields = (
+        "repo", "name", "version", "arch", "filename", "database_sha256", "size",
+        "archive_sha256", "signature_blob_sha256", "included_by",
+    )
+
+    def normalized(rows: list[object], *, is_manifest: bool) -> dict[tuple[str, str, str, str], tuple[object, ...]]:
+        output: dict[tuple[str, str, str, str], tuple[object, ...]] = {}
+        for row in rows:
+            if not isinstance(row, dict):
+                _reject("package closure/archive row is not an object")
+            values: tuple[object, ...]
+            if is_manifest:
+                key_fields = (row.get("repo"), row.get("name"), row.get("version"), row.get("arch"))
+                values = (
+                    row.get("repo"), row.get("name"), row.get("version"), row.get("arch"),
+                    row.get("filename"), row.get("database_sha256"), row.get("archive_size"),
+                    row.get("archive_sha256"), row.get("signature_blob_sha256"), row.get("included_by"),
+                )
+            else:
+                key_fields = (row.get("repo"), row.get("name"), row.get("version"), row.get("arch"))
+                values = tuple(row.get(field) for field in fields)
+            if any(not isinstance(part, str) or not part for part in key_fields):
+                _reject("package closure/archive identity is malformed")
+            key = (str(key_fields[0]), str(key_fields[1]), str(key_fields[2]), str(key_fields[3]))
+            included_by = values[-1]
+            expected_scopes = (
+                [scope for scope in ("worker_root", "target_usb_root") if isinstance(included_by, list) and scope in included_by]
+            )
+            if (
+                not isinstance(included_by, list)
+                or not included_by
+                or any(not isinstance(item, str) for item in included_by)
+                or included_by != expected_scopes
+                or any(item not in {"worker_root", "target_usb_root"} for item in included_by)
+            ):
+                _reject("package closure/archive root membership is malformed")
+            if key in output:
+                _reject("package closure/archive inventory contains a duplicate identity")
+            output[key] = values
+        return output
+
+    expected_archives = normalized(inventory, is_manifest=False)
+    staged_archives = normalized(package_rows, is_manifest=True)
+    if staged_archives != expected_archives:
+        _reject("staged package archives differ from the exact worker/target closure union")
+
+
+def _read_bound_file(path: Path, expected_sha256: str | None, label: str, max_bytes: int) -> bytes:
+    """Read one bounded single-link file while binding its opened inode and bytes."""
+    try:
+        before = path.lstat()
+    except OSError as exc:
+        raise OfflineVmBuildError(f"{label} is missing") from exc
+    if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size <= 0 or before.st_size > max_bytes:
+        _reject(f"{label} has an unsafe type, link count, or size")
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError as exc:
+        raise OfflineVmBuildError(f"{label} could not be opened safely") from exc
+    try:
+        opened = os.fstat(fd)
+        identity = (before.st_dev, before.st_ino, before.st_size)
+        if (opened.st_dev, opened.st_ino, opened.st_size) != identity:
+            _reject(f"{label} changed while opening")
+        digest = hashlib.sha256()
+        chunks: list[bytes] = []
+        total = 0
+        while True:
+            part = os.read(fd, min(1024 * 1024, max_bytes + 1 - total))
+            if not part:
+                break
+            total += len(part)
+            if total > max_bytes:
+                _reject(f"{label} exceeded its fixed byte bound")
+            digest.update(part)
+            chunks.append(part)
+        after = os.fstat(fd)
+        if (
+            (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+            != (opened.st_dev, opened.st_ino, opened.st_size, opened.st_mtime_ns, opened.st_ctime_ns)
+        ):
+            _reject(f"{label} changed while being read")
+        if expected_sha256 is not None and digest.hexdigest() != expected_sha256:
+            _reject(f"{label} SHA-256 differs from its pinned identity")
+        return b"".join(chunks)
+    finally:
+        os.close(fd)
+
+
+def _read_verified_repository_database_payloads(
+    manifest: Mapping[str, Any],
+    package_root: Path,
+    operations: GuestBuildOperations,
+    repository_pins: Mapping[str, object],
+) -> dict[str, tuple[bytes, bytes | None]]:
+    if set(repository_pins) != {"core", "extra"}:
+        _reject("snapshot repository database pins are malformed")
+    _manifest_file_set(manifest)
+    records = manifest.get("repository_databases")
+    if not isinstance(records, dict) or set(records) != {"core", "extra"}:
+        _reject("package manifest repository database set is malformed")
+    output: dict[str, tuple[bytes, bytes | None]] = {}
+    for repo, relative_path in PACMAN_DATABASE_RELATIVE.items():
+        record = records.get(repo)
+        expected_hash = repository_pins.get(repo)
+        if not isinstance(record, dict) or not isinstance(expected_hash, str):
+            _reject("repository database pin or record is malformed")
+        if record.get("path") != relative_path or record.get("sha256") != expected_hash:
+            _reject(f"{repo} database differs from the exact dated snapshot pin")
+        database = _safe_file(package_root, relative_path, f"{repo} database")
+        raw = _read_bound_file(database, expected_hash, f"{repo} database", MAX_REPOSITORY_DATABASE_BYTES)
+        signature_path = record.get("signature_path")
+        signature_hash = record.get("signature_sha256")
+        signature_raw: bytes | None = None
+        if signature_path is None:
+            if signature_hash is not None:
+                _reject(f"{repo} absent optional database signature has a hash")
+        else:
+            if signature_path != relative_path + ".sig" or not isinstance(signature_hash, str):
+                _reject(f"{repo} database signature path/hash is malformed")
+            signature = _safe_file(package_root, signature_path, f"{repo} database signature")
+            signature_raw = _read_bound_file(
+                signature, signature_hash, f"{repo} database signature", MAX_REPOSITORY_DATABASE_BYTES,
+            )
+            if not operations.verify_detached_signature(signature, database):
+                _reject(f"{repo} database signature is invalid")
+            _read_bound_file(signature, signature_hash, f"{repo} database signature after verification", MAX_REPOSITORY_DATABASE_BYTES)
+            _read_bound_file(database, expected_hash, f"{repo} database after signature verification", MAX_REPOSITORY_DATABASE_BYTES)
+        output[repo] = (raw, signature_raw)
+    return output
+
+
+def _fsync_directory(path: Path) -> None:
+    if not sys.platform.startswith("linux"):
+        _reject("repository database snapshot durability requires Linux directory fsync")
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0))
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _create_repository_database_snapshot(
+    *,
+    root: Path,
+    request: Mapping[str, object],
+    manifest: Mapping[str, Any],
+    manifest_raw: bytes,
+    closure_raw: bytes,
+    repository_payloads: Mapping[str, tuple[bytes, bytes | None]],
+) -> None:
+    """Create the private hash-checked DB copy selected by the fixed pacman config."""
+    try:
+        root_info = root.lstat()
+    except OSError as exc:
+        raise OfflineVmBuildError("precreated repository snapshot root is missing") from exc
+    if (
+        not stat.S_ISDIR(root_info.st_mode)
+        or stat.S_ISLNK(root_info.st_mode)
+        or stat.S_IMODE(root_info.st_mode) != 0o700
+        or (os.name == "posix" and root_info.st_uid != _linux_effective_uid())
+        or any(root.iterdir())
+    ):
+        _reject("repository snapshot root is not a fresh private runtime directory")
+    records = manifest.get("repository_databases")
+    if not isinstance(records, dict) or set(records) != {"core", "extra"} or set(repository_payloads) != {"core", "extra"}:
+        _reject("repository snapshot package/database inventory is incomplete")
+    request_sha = _sha256_bytes(canonical_json(dict(request)))
+    bindings: dict[str, object] = {
+        "format": PACKAGE_DATABASE_SNAPSHOT_FORMAT,
+        "operation_id": request.get("operation_id"),
+        "request_sha256": request_sha,
+        "source_sha256": _request_nested_value(request, "source", "sha256"),
+        "package_image_sha256": _request_nested_value(request, "packages", "sha256"),
+        "snapshot_lock_sha256": _request_nested_value(request, "snapshot", "lock_sha256"),
+        "package_closure_sha256": manifest.get("package_closure_sha256"),
+        "build_manifest_sha256": _sha256_bytes(manifest_raw),
+        "closure_document_sha256": _sha256_bytes(closure_raw),
+        "repository_databases": {},
+    }
+    expected_dirs: set[Path] = set()
+    published_files: list[Path] = []
+    repo_records: dict[str, object] = {}
+    try:
+        for repo, relative in PACMAN_DATABASE_RELATIVE.items():
+            manifest_record = records.get(repo)
+            if not isinstance(manifest_record, dict):
+                _reject("repository snapshot manifest row is malformed")
+            raw, signature_raw = repository_payloads[repo]
+            db_digest = manifest_record.get("sha256")
+            if not isinstance(db_digest, str) or _sha256_bytes(raw) != db_digest:
+                _reject(f"{repo} database bytes changed before the private snapshot copy")
+            target = root.joinpath(*PurePosixPath(relative).parts)
+            directory = target.parent
+            missing: list[Path] = []
+            cursor = directory
+            while cursor != root:
+                missing.append(cursor)
+                cursor = cursor.parent
+            for path in reversed(missing):
+                if path.exists() or path.is_symlink():
+                    if path not in expected_dirs:
+                        _reject("repository database snapshot path already exists")
+                    existing_info = path.lstat()
+                    if (
+                        not stat.S_ISDIR(existing_info.st_mode)
+                        or stat.S_ISLNK(existing_info.st_mode)
+                        or stat.S_IMODE(existing_info.st_mode) != 0o700
+                        or (os.name == "posix" and existing_info.st_uid != _linux_effective_uid())
+                    ):
+                        _reject("repository database snapshot directory changed during creation")
+                    continue
+                _create_private_directory(path)
+                expected_dirs.add(path)
+            _write_exclusive_private(target, raw, 0o400)
+            published_files.append(target)
+            signature_relative: str | None = None
+            signature_digest: str | None = None
+            if signature_raw is not None:
+                signature_relative = relative + ".sig"
+                signature_digest = _sha256_bytes(signature_raw)
+                if (
+                    manifest_record.get("signature_path") != signature_relative
+                    or manifest_record.get("signature_sha256") != signature_digest
+                ):
+                    _reject(f"{repo} optional database signature changed before the private snapshot copy")
+                signature_target = root.joinpath(*PurePosixPath(signature_relative).parts)
+                _write_exclusive_private(signature_target, signature_raw, 0o400)
+                published_files.append(signature_target)
+            elif manifest_record.get("signature_path") is not None or manifest_record.get("signature_sha256") is not None:
+                _reject(f"{repo} database signature presence differs from the verified package image")
+            repo_records[repo] = {
+                "path": relative,
+                "sha256": db_digest,
+                "signature_path": signature_relative,
+                "signature_sha256": signature_digest,
+            }
+
+        for relative, raw in (
+            (BUILD_MANIFEST_RELATIVE, manifest_raw),
+            (PACKAGE_CLOSURE_RELATIVE, closure_raw),
+        ):
+            destination = root.joinpath(*PurePosixPath(relative).parts)
+            directory = destination.parent
+            if not directory.exists():
+                _create_private_directory(directory)
+                expected_dirs.add(directory)
+            _write_exclusive_private(destination, raw, 0o400)
+            published_files.append(destination)
+
+        bindings["repository_databases"] = repo_records
+        index_path = root / PACKAGE_DATABASE_SNAPSHOT_RECORD
+        index_raw = canonical_json(bindings)
+        _write_exclusive_private(index_path, index_raw, 0o400)
+        published_files.append(index_path)
+        for directory in sorted(expected_dirs, key=lambda item: len(item.parts), reverse=True):
+            _fsync_directory(directory)
+        _fsync_directory(root)
+        for directory in sorted(expected_dirs, key=lambda item: len(item.parts), reverse=True):
+            directory.chmod(0o500)
+        root.chmod(0o500)
+        _fsync_directory(root)
+    except BaseException:
+        for directory in sorted(expected_dirs, key=lambda item: len(item.parts), reverse=True):
+            try:
+                directory.chmod(0o700)
+            except OSError:
+                pass
+        try:
+            root.chmod(0o700)
+        except OSError:
+            pass
+        for path in reversed(published_files):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        for directory in sorted(expected_dirs, key=lambda item: len(item.parts), reverse=True):
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+        raise
+
+
+def _remove_repository_database_snapshot(root: Path) -> None:
+    """Remove only the fixed private snapshot tree, surfacing unsafe state/errors."""
+    if root != PACKAGE_DATABASE_SNAPSHOT_PATH:
+        _reject("refusing to clean a non-fixed repository snapshot path")
+    try:
+        root_info = root.lstat()
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise OfflineVmBuildError("private repository snapshot could not be inspected for cleanup") from exc
+    if (
+        not stat.S_ISDIR(root_info.st_mode)
+        or stat.S_ISLNK(root_info.st_mode)
+        or stat.S_IMODE(root_info.st_mode) not in {0o500, 0o700}
+        or (os.name == "posix" and root_info.st_uid != _linux_effective_uid())
+    ):
+        _reject("private repository snapshot has unsafe identity during cleanup")
+
+    allowed_files = {
+        PACKAGE_DATABASE_SNAPSHOT_RECORD,
+        BUILD_MANIFEST_RELATIVE,
+        PACKAGE_CLOSURE_RELATIVE,
+        *(relative for relative in PACMAN_DATABASE_RELATIVE.values()),
+        *(relative + ".sig" for relative in PACMAN_DATABASE_RELATIVE.values()),
+    }
+    allowed_directories = {
+        "worker",
+        "repos",
+        "repos/core",
+        "repos/core/os",
+        "repos/core/os/x86_64",
+        "repos/extra",
+        "repos/extra/os",
+        "repos/extra/os/x86_64",
+    }
+    entries = list(root.rglob("*"))
+    directories: list[Path] = []
+    files: list[Path] = []
+    for path in entries:
+        relative = path.relative_to(root).as_posix()
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or (not stat.S_ISDIR(info.st_mode) and info.st_nlink != 1):
+            _reject("private repository snapshot has linked state during cleanup")
+        if os.name == "posix" and info.st_uid != _linux_effective_uid():
+            _reject("private repository snapshot has unexpected ownership during cleanup")
+        if stat.S_ISDIR(info.st_mode):
+            if relative not in allowed_directories or stat.S_IMODE(info.st_mode) not in {0o500, 0o700}:
+                _reject("private repository snapshot has an unexpected directory during cleanup")
+            directories.append(path)
+        elif stat.S_ISREG(info.st_mode):
+            if relative not in allowed_files or stat.S_IMODE(info.st_mode) != 0o400:
+                _reject("private repository snapshot has an unexpected file during cleanup")
+            files.append(path)
+        else:
+            _reject("private repository snapshot has a special file during cleanup")
+
+    for directory in directories:
+        directory.chmod(0o700)
+    root.chmod(0o700)
+    for path in files:
+        path.unlink()
+    for path in sorted(directories, key=lambda item: len(item.parts), reverse=True):
+        path.rmdir()
+    root.rmdir()
+    _fsync_directory(root.parent)
+
+
+def _verify_repository_database_snapshot(
+    *,
+    root: Path,
+    request: Mapping[str, object],
+    snapshot_lock: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, bytes]]:
+    """Validate the exact private snapshot tree consumed by the build service."""
+    try:
+        root_info = root.lstat()
+    except OSError as exc:
+        raise OfflineVmBuildError("private repository database snapshot is missing") from exc
+    if (
+        not stat.S_ISDIR(root_info.st_mode)
+        or stat.S_ISLNK(root_info.st_mode)
+        or stat.S_IMODE(root_info.st_mode) != 0o500
+        or (os.name == "posix" and root_info.st_uid != _linux_effective_uid())
+    ):
+        _reject("private repository database snapshot root has unsafe owner or mode")
+    index_path = _safe_file(root, PACKAGE_DATABASE_SNAPSHOT_RECORD, "repository database snapshot index")
+    index_raw = _read_bound_file(index_path, None, "repository database snapshot index", MAX_PACKAGE_BUILD_METADATA_BYTES)
+    try:
+        index = json.loads(index_raw.decode("ascii"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise OfflineVmBuildError("repository database snapshot index is malformed") from exc
+    if not isinstance(index, dict) or canonical_json(index) != index_raw:
+        _reject("repository database snapshot index is not canonical JSON")
+    expected_fields = {
+        "format", "operation_id", "request_sha256", "source_sha256", "package_image_sha256",
+        "snapshot_lock_sha256", "package_closure_sha256", "build_manifest_sha256",
+        "closure_document_sha256", "repository_databases",
+    }
+    expected_bindings = {
+        "format": PACKAGE_DATABASE_SNAPSHOT_FORMAT,
+        "operation_id": request.get("operation_id"),
+        "request_sha256": _sha256_bytes(canonical_json(dict(request))),
+        "source_sha256": _request_nested_value(request, "source", "sha256"),
+        "package_image_sha256": _request_nested_value(request, "packages", "sha256"),
+        "snapshot_lock_sha256": _request_nested_value(request, "snapshot", "lock_sha256"),
+    }
+    if set(index) != expected_fields or any(index.get(key) != value for key, value in expected_bindings.items()):
+        _reject("repository database snapshot does not bind this exact worker request")
+    manifest_path = _safe_file(root, BUILD_MANIFEST_RELATIVE, "read-only copied build manifest")
+    manifest_raw = _read_bound_file(manifest_path, index.get("build_manifest_sha256"), "copied build manifest", MAX_PACKAGE_BUILD_METADATA_BYTES)
+    try:
+        manifest = json.loads(manifest_raw.decode("ascii"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise OfflineVmBuildError("copied build manifest is malformed") from exc
+    if not isinstance(manifest, dict) or canonical_json(manifest) != manifest_raw:
+        _reject("copied build manifest is not canonical JSON")
+    closure_path = _safe_file(root, PACKAGE_CLOSURE_RELATIVE, "read-only copied package closure")
+    closure_raw = _read_bound_file(closure_path, index.get("closure_document_sha256"), "copied package closure", MAX_PACKAGE_BUILD_METADATA_BYTES)
+    if manifest.get("package_closure_sha256") != _sha256_bytes(closure_raw) or index.get("package_closure_sha256") != manifest.get("package_closure_sha256"):
+        _reject("copied package closure differs from its preflight manifest binding")
+    closure_value = json.loads(closure_raw.decode("ascii"))
+    _validate_manifest_archive_union(manifest, closure_value)
+    repository_pins = snapshot_lock.get("repository_database_sha256")
+    if not isinstance(repository_pins, dict) or set(repository_pins) != {"core", "extra"}:
+        _reject("snapshot lock database pin map is malformed")
+    repo_records = index.get("repository_databases")
+    manifest_records = manifest.get("repository_databases")
+    if not isinstance(repo_records, dict) or set(repo_records) != {"core", "extra"} or repo_records != manifest_records:
+        _reject("private database copy inventory differs from its validated build manifest")
+    expected_files = {
+        PACKAGE_DATABASE_SNAPSHOT_RECORD,
+        BUILD_MANIFEST_RELATIVE,
+        PACKAGE_CLOSURE_RELATIVE,
+    }
+    expected_dirs: set[str] = set()
+    for relative in (BUILD_MANIFEST_RELATIVE, PACKAGE_CLOSURE_RELATIVE):
+        expected_dirs.update(
+            str(parent)
+            for parent in PurePosixPath(relative).parents
+            if str(parent) != "."
+        )
+    database_bytes: dict[str, bytes] = {}
+    for repo, relative in PACMAN_DATABASE_RELATIVE.items():
+        record = repo_records.get(repo)
+        expected_pin = repository_pins.get(repo)
+        if not isinstance(record, dict) or set(record) != {"path", "sha256", "signature_path", "signature_sha256"}:
+            _reject("private repository database row is malformed")
+        if record.get("path") != relative or record.get("sha256") != expected_pin:
+            _reject(f"private {repo} database differs from its exact snapshot pin")
+        db_path = _safe_file(root, relative, f"private {repo} database")
+        db_raw = _read_bound_file(db_path, str(expected_pin), f"private {repo} database", MAX_REPOSITORY_DATABASE_BYTES)
+        database_bytes[repo] = db_raw
+        expected_files.add(relative)
+        signature_path = record.get("signature_path")
+        signature_hash = record.get("signature_sha256")
+        if signature_path is None:
+            if signature_hash is not None:
+                _reject(f"private {repo} absent database signature has a hash")
+        else:
+            if signature_path != relative + ".sig" or not isinstance(signature_hash, str):
+                _reject(f"private {repo} database signature record is malformed")
+            signature_file = _safe_file(root, signature_path, f"private {repo} database signature")
+            _read_bound_file(signature_file, signature_hash, f"private {repo} database signature", MAX_REPOSITORY_DATABASE_BYTES)
+            expected_files.add(signature_path)
+        expected_dirs.update(str(parent) for parent in PurePosixPath(relative).parents if str(parent) != ".")
+    observed_files: set[str] = set()
+    observed_dirs: set[str] = set()
+    for path in root.rglob("*"):
+        relative = path.relative_to(root).as_posix()
+        info = path.lstat()
+        if stat.S_ISLNK(info.st_mode) or (stat.S_ISREG(info.st_mode) and info.st_nlink != 1):
+            _reject("private repository snapshot contains a symlink or hard link")
+        if os.name == "posix" and info.st_uid != _linux_effective_uid():
+            _reject("private repository snapshot entry has unexpected ownership")
+        if path.is_dir():
+            if not stat.S_ISDIR(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o500:
+                _reject("private repository snapshot directory has unsafe mode")
+            observed_dirs.add(relative)
+        elif path.is_file():
+            if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o400:
+                _reject("private repository snapshot file has unsafe mode")
+            observed_files.add(relative)
+        else:
+            _reject("private repository snapshot contains a special file")
+    if observed_files != expected_files or observed_dirs != expected_dirs:
+        _reject("private repository snapshot contains missing or unmanifested files")
+    return manifest, database_bytes
+
+
+def _verify_repository_database_inputs(
+    manifest: Mapping[str, Any],
+    package_root: Path,
+    operations: GuestBuildOperations,
+    repository_pins: Mapping[str, object],
+) -> dict[str, Path]:
+    """Hash the exact DB inputs and verify any optional detached signatures."""
+    records = manifest.get("repository_databases")
+    if not isinstance(records, dict):
+        _reject("package manifest repository database set is malformed")
+    _read_verified_repository_database_payloads(manifest, package_root, operations, repository_pins)
+    return {
+        repo: _safe_file(package_root, relative, f"{repo} database")
+        for repo, relative in PACMAN_DATABASE_RELATIVE.items()
+    }
+
+
+def verify_repository_database_inputs_after_build(
+    request: Mapping[str, object],
+    source_root: Path,
+    package_root: Path,
+    operations: GuestBuildOperations,
+) -> None:
+    """Recheck the guest-owned private hash-checked DB copy before publication."""
+    lock = _snapshot_lock(source_root, request)
+    _verify_repository_database_snapshot(
+        root=package_root,
+        request=request,
+        snapshot_lock=lock,
+    )
+
+
 def _validate_build_manifest(
     *,
     request: Mapping[str, object],
     source_root: Path,
     package_root: Path,
     operations: GuestBuildOperations,
-) -> tuple[dict[str, Any], Path, Path]:
+) -> VerifiedBuildInputs:
     lock = _snapshot_lock(source_root, request)
     request_sha = _sha256_bytes(canonical_json(dict(request)))
-    manifest, _ = _read_build_manifest(package_root)
+    manifest, manifest_raw = _read_build_manifest(package_root)
     source_binding = request.get("source")
     package_binding = request.get("packages")
     snapshot_binding = request.get("snapshot")
@@ -630,33 +1427,44 @@ def _validate_build_manifest(
         _reject("operation pacstrap overlay is not bound to the exact locked status patch")
 
     repository_pins = lock.get("repository_database_sha256")
-    if not isinstance(repository_pins, dict) or set(repository_pins) != {"core", "extra"}:
+    if not isinstance(repository_pins, dict):
         _reject("snapshot lock database pins are malformed")
-    repository_versions: dict[str, str] = {}
-    for repo_name, record in manifest["repository_databases"].items():
-        if record.get("sha256") != repository_pins.get(repo_name):
-            _reject(f"{repo_name} database differs from the exact dated snapshot pin")
-        database = _safe_file(package_root, record["path"], f"{repo_name} database")
-        if _sha256_path(database) != record["sha256"]:
-            _reject(f"{repo_name} database hash differs from the package manifest")
-        signature_path = record.get("signature_path")
-        if signature_path is not None:
-            signature = _safe_file(package_root, signature_path, f"{repo_name} database signature")
-            if not isinstance(record.get("signature_sha256"), str) or _sha256_path(signature) != record["signature_sha256"]:
-                _reject(f"{repo_name} database signature hash differs from its manifest")
-            if not operations.verify_detached_signature(signature, database):
-                _reject(f"{repo_name} database signature is invalid")
-        else:
-            _reject(f"{repo_name} database is missing its detached signature")
-        database_map = operations.repository_database_versions(database)
-        if not isinstance(database_map, Mapping) or not database_map:
-            _reject(f"{repo_name} database package inventory is unavailable")
-        for package_name, package_version in database_map.items():
-            if package_name in repository_versions:
-                _reject("same package name appears in both pinned repositories")
-            if not isinstance(package_name, str) or not isinstance(package_version, str):
-                _reject("repository package inventory has malformed names or versions")
-            repository_versions[package_name] = package_version
+    repository_payloads = _read_verified_repository_database_payloads(
+        manifest, package_root, operations, repository_pins,
+    )
+    snapshot_binding = request.get("snapshot")
+    if not isinstance(snapshot_binding, dict) or not isinstance(snapshot_binding.get("lock_sha256"), str):
+        _reject("request snapshot lock binding is malformed")
+    snapshot_raw = _read_bound_file(
+        _safe_file(source_root, "usb_builder/snapshot.lock.json", "snapshot lock"),
+        snapshot_binding["lock_sha256"],
+        "snapshot lock",
+        2 * 1024 * 1024,
+    )
+    closure_path = _safe_file(package_root, PACKAGE_CLOSURE_RELATIVE, "package closure")
+    closure_raw = _read_bound_file(
+        closure_path,
+        manifest.get("package_closure_sha256") if isinstance(manifest.get("package_closure_sha256"), str) else None,
+        "package closure",
+        MAX_PACKAGE_BUILD_METADATA_BYTES,
+    )
+    try:
+        closure_value = json.loads(closure_raw.decode("ascii"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise OfflineVmBuildError("package closure is malformed") from exc
+    if not isinstance(closure_value, dict) or canonical_json(closure_value) != closure_raw:
+        _reject("package closure is not canonical JSON")
+    _validate_manifest_archive_union(manifest, closure_value)
+    try:
+        package_closure.validate_package_closure_lock(
+            closure_value,
+            repository_payloads["core"][0],
+            repository_payloads["extra"][0],
+            snapshot_raw,
+            resolver=None,
+        )
+    except package_closure.PackageClosureError as exc:
+        raise OfflineVmBuildError(f"pinned package closure is unavailable or invalid: {exc}") from exc
 
     package_names = _profile_package_names(source_root, request)
     profile = request.get("profile")
@@ -681,8 +1489,6 @@ def _validate_build_manifest(
         actual_name, actual_version = operations.package_identity(archive)
         if actual_name != record["name"] or actual_version != record["version"]:
             _reject(f"{record['name']} package identity differs from its archive metadata")
-        if repository_versions.get(actual_name) != actual_version:
-            _reject(f"{actual_name} package version is not present in its pinned repository database")
         declared[actual_name] = actual_version
     if not set(package_names).issubset(declared):
         _reject("a profile package is absent from the signed local repository manifest")
@@ -697,7 +1503,14 @@ def _validate_build_manifest(
     patch_source = _safe_file(source_root, PACSTRAP_PATCH_RELATIVE, "pacstrap status patch")
     if _sha256_path(patch_source) != overlay["patch_sha256"]:
         _reject("source image pacstrap patch bytes differ from the exact snapshot lock")
-    return manifest, pacstrap_source, _safe_directory(source_root, "usb_builder/archiso_profile", "profile directory")
+    return VerifiedBuildInputs(
+        manifest=manifest,
+        pacstrap_source=pacstrap_source,
+        profile_directory=_safe_directory(source_root, "usb_builder/archiso_profile", "profile directory"),
+        repository_payloads=repository_payloads,
+        manifest_raw=manifest_raw,
+        closure_raw=closure_raw,
+    )
 
 
 def _safe_directory(root: Path, relative: str, label: str) -> Path:
@@ -779,7 +1592,7 @@ def _write_exclusive_private(path: Path, payload: bytes, mode: int = 0o600) -> N
         raise OfflineVmBuildError("fixed guest operation file could not be created") from exc
     try:
         if os.name == "posix":
-            os.fchmod(fd, mode)
+            _fchmod(fd, mode)
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or stat.S_IMODE(info.st_mode) != mode:
             _reject("fixed guest operation file has unsafe inode identity or mode")
@@ -840,6 +1653,75 @@ def _verify_private_file(path: Path, *, expected_mode: int = 0o600, expected_sha
     return info
 
 
+def _read_pacstrap_exit_code_snapshot(path: Path, initial_info: os.stat_result) -> tuple[int, ...]:
+    """Copy the bounded exit-code receipt from the exact operation-owned file."""
+    max_bytes = MAX_PACSTRAP_EXIT_OBSERVATIONS * 4
+
+    def identity(info: os.stat_result) -> tuple[int, int, int, int, int, int, int, int]:
+        return (
+            info.st_dev,
+            info.st_ino,
+            info.st_size,
+            info.st_mtime_ns,
+            info.st_ctime_ns,
+            info.st_mode,
+            info.st_nlink,
+            info.st_uid,
+        )
+
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
+    try:
+        fd = os.open(path, flags)
+    except OSError as exc:
+        raise OfflineVmBuildError("pacstrap exit-code receipt could not be opened safely") from exc
+    try:
+        opened = os.fstat(fd)
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or opened.st_nlink != 1
+            or stat.S_IMODE(opened.st_mode) != 0o600
+            or identity(opened) != identity(initial_info)
+            or opened.st_size > max_bytes
+        ):
+            return (-1,)
+        chunks: list[bytes] = []
+        remaining = max_bytes + 1
+        while remaining:
+            chunk = os.read(fd, min(remaining, 8192))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        raw = b"".join(chunks)
+        after = os.fstat(fd)
+        current = path.lstat()
+    except OSError as exc:
+        raise OfflineVmBuildError("pacstrap exit-code receipt changed while being copied") from exc
+    finally:
+        os.close(fd)
+    if (
+        len(raw) > max_bytes
+        or identity(opened) != identity(after)
+        or identity(after) != identity(current)
+        or after.st_size != len(raw)
+    ):
+        return (-1,)
+    # The fixed wrapper writes exactly one decimal exit code followed by LF.
+    # Treat a truncated last write, CRLF conversion, alternate byte separators,
+    # or non-canonical decimal spelling as an invalid observation.
+    if not raw or not raw.endswith(b"\n"):
+        return (-1,)
+    codes: list[int] = []
+    for line in raw[:-1].split(b"\n"):
+        if not line or any(byte < ord("0") or byte > ord("9") for byte in line):
+            return (-1,)
+        code = int(line)
+        if not 0 <= code <= 255 or str(code).encode("ascii") != line:
+            return (-1,)
+        codes.append(code)
+    return tuple(codes)
+
+
 def _invocation_sha256(invocation: BuildInvocation) -> str:
     return _sha256_bytes(canonical_json({
         "operation_id": invocation.operation_id,
@@ -866,7 +1748,7 @@ def _claim_one_shot(operation_root: Path, request_sha256: str) -> None:
         raise OfflineVmBuildError("guest build one-shot claim could not be created") from exc
     try:
         if os.name == "posix":
-            os.fchmod(fd, 0o600)
+            _fchmod(fd, 0o600)
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or stat.S_IMODE(info.st_mode) != 0o600:
             _reject("guest build claim file has unsafe identity or mode")
@@ -925,7 +1807,7 @@ def prepare_guest_build(
 
     validate_guest_isolation(request, isolation)
     validate_preflight_security(security, isolation)
-    if source_root != Path("/mnt/librecore-source") or package_root != Path("/mnt/librecore-packages") or scratch_root != Path(WORKER_ROOT):
+    if source_root != SOURCE_MOUNT_PATH or package_root != PACKAGE_MOUNT_PATH or scratch_root != Path(WORKER_ROOT):
         _reject("guest source, package, or scratch roots differ from the fixed mount layout")
     try:
         scratch_info = scratch_root.lstat()
@@ -949,12 +1831,13 @@ def prepare_guest_build(
         _reject("read-only package block device hash differs from the worker request")
     _snapshot_lock(source_root, request)
     _verify_source_profile(source_root, request)
-    manifest, pacstrap_source, _ = _validate_build_manifest(
+    verified_inputs = _validate_build_manifest(
         request=request,
         source_root=source_root,
         package_root=package_root,
         operations=operations,
     )
+    manifest = verified_inputs.manifest
     request_sha256 = _sha256_bytes(canonical_json(dict(request)))
     if manifest.get("request_sha256") != request_sha256:
         _reject("package build manifest does not bind the canonical request bytes")
@@ -964,6 +1847,15 @@ def prepare_guest_build(
     operations.claim_one_shot(scratch_root, request_sha256)
     created: list[Path] = []
     try:
+        created.append(PACKAGE_DATABASE_SNAPSHOT_PATH)
+        _create_repository_database_snapshot(
+            root=PACKAGE_DATABASE_SNAPSHOT_PATH,
+            request=request,
+            manifest=verified_inputs.manifest,
+            manifest_raw=verified_inputs.manifest_raw,
+            closure_raw=verified_inputs.closure_raw,
+            repository_payloads=verified_inputs.repository_payloads,
+        )
         _write_exclusive_private(Path(BUILD_REQUEST_PATH), canonical_json(dict(request)), 0o600)
         created.append(Path(BUILD_REQUEST_PATH))
         overlay_dir = scratch_root / "bin"
@@ -971,7 +1863,7 @@ def prepare_guest_build(
         created.append(overlay_dir)
         pacstrap_real = overlay_dir / "pacstrap.real"
         expected_overlay_hash = manifest["pacstrap_overlay"]["patched_sha256"]
-        actual_overlay_hash = operations.stage_pacstrap(pacstrap_source, pacstrap_real, expected_overlay_hash)
+        actual_overlay_hash = operations.stage_pacstrap(verified_inputs.pacstrap_source, pacstrap_real, expected_overlay_hash)
         if actual_overlay_hash != expected_overlay_hash:
             _reject("staged operation pacstrap overlay differs from its exact locked hash")
         if pacstrap_real.is_symlink() or not pacstrap_real.is_file() or _sha256_path(pacstrap_real) != expected_overlay_hash:
@@ -994,15 +1886,23 @@ def prepare_guest_build(
         _write_invocation(invocation)
         created.append(Path(BUILD_INVOCATION_PATH))
         return invocation
-    except BaseException:
+    except BaseException as original_error:
+        cleanup_errors: list[BaseException] = []
         for path in reversed(created):
             try:
-                if path.is_dir() and not path.is_symlink():
+                if path == PACKAGE_DATABASE_SNAPSHOT_PATH:
+                    _remove_repository_database_snapshot(path)
+                elif path.is_dir() and not path.is_symlink():
                     path.rmdir()
                 else:
                     path.unlink(missing_ok=True)
-            except OSError:
-                pass
+            except (OSError, OfflineVmBuildError) as cleanup_error:
+                cleanup_errors.append(cleanup_error)
+        if cleanup_errors:
+            raise OfflineVmBuildError(
+                "preflight failed and operation-owned cleanup was incomplete: "
+                + "; ".join(str(error) for error in cleanup_errors)
+            ) from original_error
         raise
 
 
@@ -1090,7 +1990,7 @@ class FixedMkarchisoOperations:
         started = self._clock()
         try:
             if os.name == "posix":
-                os.fchmod(log_fd, 0o600)
+                _fchmod(log_fd, 0o600)
             log_info = os.fstat(log_fd)
             if not stat.S_ISREG(log_info.st_mode) or log_info.st_nlink != 1 or stat.S_IMODE(log_info.st_mode) != 0o600:
                 _reject("fixed builder log has unsafe inode identity or mode")
@@ -1119,17 +2019,8 @@ class FixedMkarchisoOperations:
         finally:
             os.close(log_fd)
         elapsed = max(0.0, self._clock() - started)
-        status_bytes = status_path.read_bytes()
-        codes: list[int] = []
-        for line in status_bytes.splitlines():
-            if not line or any(byte < ord("0") or byte > ord("9") for byte in line):
-                codes = [-1]
-                break
-            code = int(line)
-            if not 0 <= code <= 255:
-                codes = [-1]
-                break
-            codes.append(code)
+        status_after_build = _verify_private_file(status_path, expected_mode=0o600)
+        codes = _read_pacstrap_exit_code_snapshot(status_path, status_after_build)
         return BuildProcessResult(
             service_name=BUILD_SERVICE_NAME,
             argv_sha256=_invocation_sha256(invocation),
@@ -1140,7 +2031,7 @@ class FixedMkarchisoOperations:
             no_new_privs_during=self._service_state.no_new_privs,
             network_namespace_before=self._service_state.network_namespace,
             network_namespace_during=self._service_state.network_namespace,
-            pacstrap_exit_codes=tuple(codes),
+            pacstrap_exit_codes=codes,
             account=self._service_state.account,
             uid=self._service_state.uid,
             gid=self._service_state.gid,
@@ -1626,7 +2517,7 @@ def _verify_installed_service_unit(path: Path = Path(SYSTEMD_UNIT_PATH)) -> None
         expected={
             **_service_expected_properties(
                 no_new_privileges="no",
-                readonly_paths="/mnt/librecore-source /mnt/librecore-packages",
+                readonly_paths="/mnt/librecore-source /mnt/librecore-packages /run/librecore-package-dbs",
             ),
             "ExecStart": "/usr/bin/python -B -m usb_builder.offline_vm_build_service",
         },
@@ -1689,7 +2580,7 @@ def _load_service_result(invocation: BuildInvocation) -> GuestBuildResult:
         _reject("fixed build result has no matching final-ready receipt")
     expected_keys = {
         "format", "status", "operation_id", "request_sha256", "iso_path", "iso_size", "iso_sha256",
-        "command_argv_sha256", "elapsed_seconds", "commands_run", "cleanup_complete",
+        "command_argv_sha256", "elapsed_seconds", "commands_run", "cleanup_complete", "build_process_result",
     }
     if set(payload) != expected_keys or payload.get("format") != BUILD_RESULT_FORMAT:
         _reject("fixed build service result has unknown or missing fields")
@@ -1703,6 +2594,9 @@ def _load_service_result(invocation: BuildInvocation) -> GuestBuildResult:
     iso_path = payload.get("iso_path")
     iso_size = payload.get("iso_size")
     iso_hash = payload.get("iso_sha256")
+    process_result = _parse_build_process_result(payload.get("build_process_result"))
+    if type(payload.get("cleanup_complete")) is not bool:
+        _reject("fixed build service cleanup state is malformed")
     if status == "CANDIDATE_ISO_PENDING_HOST_VALIDATION":
         if (
             not isinstance(iso_path, str)
@@ -1716,6 +2610,10 @@ def _load_service_result(invocation: BuildInvocation) -> GuestBuildResult:
             or payload.get("cleanup_complete") is not True
         ):
             _reject("fixed build service candidate identity is malformed")
+        _validate_successful_build_process_result(
+            process_result,
+            command_argv_sha256=_invocation_sha256(invocation),
+        )
     elif iso_path is not None or iso_size != 0 or iso_hash is not None:
         _reject("incomplete fixed build service result cannot claim candidate bytes")
     elapsed = payload.get("elapsed_seconds")
@@ -1735,6 +2633,7 @@ def _load_service_result(invocation: BuildInvocation) -> GuestBuildResult:
         elapsed_seconds=float(elapsed),
         commands_run=(BUILD_SERVICE_NAME,),
         cleanup_complete=payload["cleanup_complete"],
+        build_process_result=process_result,
     )
 
 
@@ -1837,6 +2736,7 @@ def execute_authorized_guest_build(
     validate_build_service_security(service_state)
     started = time.monotonic()
     elapsed = 0.0
+    observed_process_result: BuildProcessResult | None = None
     result_record = GuestBuildResult(
         status="INCOMPLETE_BUILD_EXECUTION",
         operation_id=invocation.operation_id,
@@ -1852,30 +2752,20 @@ def execute_authorized_guest_build(
     cleanup_complete = False
     try:
         result = operations.run_fixed_builder(invocation)
+        if isinstance(result, BuildProcessResult):
+            observed_process_result = result
+        else:
+            _reject("fixed build operation returned an unexpected process result type")
         elapsed = time.monotonic() - started
-        if (
-            result.service_name != BUILD_SERVICE_NAME
-            or result.argv_sha256 != _invocation_sha256(invocation)
-            or result.no_new_privs_before is not True
-            or result.no_new_privs_during is not False
-            or result.network_namespace_before != service_state.network_namespace
-            or result.network_namespace_during != service_state.network_namespace
-            or result.timed_out
-            or result.returncode != 0
-            or not result.pacstrap_exit_codes
-            or any(code != 0 for code in result.pacstrap_exit_codes)
-            or result.account != "fwbuild"
-            or result.uid != service_state.uid
-            or result.gid != service_state.gid
-            or result.supplementary_gids != (result.gid,)
-            or any(value not in {"0", "00000000", "0000000000000000"} for value in (
-                result.cap_effective, result.cap_permitted, result.cap_ambient,
-            ))
-            or result.cap_bounding != CAPABILITY_BOUNDING_MASK
-            or result.interfaces != ("lo",)
-            or result.ipv4_routes
-            or result.ipv6_routes
-        ):
+        try:
+            _validate_successful_build_process_result(
+                result,
+                command_argv_sha256=_invocation_sha256(invocation),
+                expected_network_namespace=service_state.network_namespace,
+                expected_uid=service_state.uid,
+                expected_gid=service_state.gid,
+            )
+        except OfflineVmBuildError:
             result_record = GuestBuildResult(
                 status="INCOMPLETE_BUILD_EXECUTION",
                 operation_id=invocation.operation_id,
@@ -1887,6 +2777,7 @@ def execute_authorized_guest_build(
                 elapsed_seconds=elapsed,
                 commands_run=(BUILD_SERVICE_NAME,),
                 cleanup_complete=False,
+                build_process_result=observed_process_result,
             )
         else:
             outputs = tuple(operations.list_iso_outputs(Path(WORKER_OUTPUT)))
@@ -1910,6 +2801,7 @@ def execute_authorized_guest_build(
                 elapsed_seconds=elapsed,
                 commands_run=(BUILD_SERVICE_NAME,),
                 cleanup_complete=False,
+                build_process_result=observed_process_result,
             )
     except (OSError, subprocess.SubprocessError, OfflineVmBuildError):
         result_record = GuestBuildResult(
@@ -1923,6 +2815,7 @@ def execute_authorized_guest_build(
             elapsed_seconds=max(elapsed, time.monotonic() - started),
             commands_run=(BUILD_SERVICE_NAME,),
             cleanup_complete=False,
+            build_process_result=observed_process_result,
         )
     finally:
         try:
@@ -1942,6 +2835,7 @@ def execute_authorized_guest_build(
             elapsed_seconds=max(elapsed, time.monotonic() - started),
             commands_run=(BUILD_SERVICE_NAME,),
             cleanup_complete=False,
+            build_process_result=observed_process_result,
         )
     return replace(result_record, cleanup_complete=True)
 
@@ -1977,6 +2871,7 @@ def run_guest_build_once(
         elapsed_seconds=result.elapsed_seconds,
         commands_run=result.commands_run,
         cleanup_complete=result.cleanup_complete,
+        build_process_result=result.build_process_result,
     )
 
 
@@ -2002,7 +2897,7 @@ def _claim_host_validation(operation_root: Path, operation_id: str, request_sha2
     fd = os.open(claim, flags, 0o600)
     try:
         if os.name == "posix":
-            os.fchmod(fd, 0o600)
+            _fchmod(fd, 0o600)
         os.write(fd, canonical_json({"format": BUILD_RECEIPT_FORMAT, "request_sha256": request_sha256}))
         os.fsync(fd)
     finally:
@@ -2096,7 +2991,7 @@ def validate_candidate_with_usb_builder(
 
 
 PACKAGE_EVIDENCE_FORMAT = "librecore-offline-vm-package-inventory-v1"
-PROVENANCE_EVIDENCE_FORMAT = "librecore-offline-vm-provenance-v1"
+PROVENANCE_EVIDENCE_FORMAT = "librecore-offline-vm-provenance-v2"
 TARGET_ROOT_INVENTORY_FORMAT = "librecore-target-root-inventory-v1"
 MAX_HOST_EVIDENCE_RECORD_BYTES = 1024 * 1024
 
@@ -2240,6 +3135,55 @@ def _parse_host_evidence_record(raw: bytes, label: str) -> dict[str, Any]:
         raise OfflineVmBuildError(f"host {label} record is malformed: {exc}") from exc
 
 
+def _validate_command_status_evidence(
+    raw: bytes,
+    *,
+    binding: evidence_bundle.EvidenceBinding,
+) -> BuildProcessResult:
+    """Validate the exact service-level row and its captured child result."""
+    if len(raw) > MAX_BUILD_PROCESS_RESULT_BYTES:
+        _reject("command status record exceeds its bound")
+    record = _parse_host_evidence_record(raw, "command status")
+    expected_keys = {
+        "format", "service", "status", "exit_code", "argv_sha256", "operation_id",
+        "request_sha256", "candidate_iso_sha256", "candidate_iso_size", "build_process_result",
+    }
+    exit_code = record.get("exit_code")
+    candidate_size = record.get("candidate_iso_size")
+    if (
+        set(record) != expected_keys
+        or record.get("format") != evidence_bundle.FORMAT
+        or record.get("service") != BUILD_SERVICE_NAME
+        or record.get("status") != "EXITED_ZERO"
+        or type(exit_code) is not int
+        or exit_code != 0
+        or record.get("argv_sha256") != binding.command_argv_sha256
+        or record.get("operation_id") != binding.operation_id
+        or record.get("request_sha256") != binding.request_sha256
+        or record.get("candidate_iso_sha256") != binding.candidate_iso_sha256
+        or type(candidate_size) is not int
+        or candidate_size != binding.candidate_iso_size
+    ):
+        _reject("command status is not the exact bound fixed-service success record")
+    try:
+        process_result = _parse_build_process_result(record.get("build_process_result"))
+        return _validate_successful_build_process_result(
+            process_result,
+            command_argv_sha256=binding.command_argv_sha256,
+        )
+    except OfflineVmBuildError as exc:
+        raise OfflineVmBuildError(f"command status has no valid successful build process observation: {exc}") from exc
+
+
+def _validate_exact_provenance_record(raw: bytes, expected: Mapping[str, object]) -> None:
+    """Require a canonical provenance row with exactly the supplied bindings."""
+    if len(raw) > MAX_HOST_EVIDENCE_RECORD_BYTES:
+        _reject("build provenance record exceeds its bound")
+    record = _parse_host_evidence_record(raw, "build provenance")
+    if set(record) != set(expected) or record != dict(expected):
+        _reject("build provenance record has unknown fields or differs from its exact evidence bindings")
+
+
 def _validate_package_evidence(
     raw: bytes,
     *,
@@ -2272,6 +3216,7 @@ def _validate_provenance_evidence(
     raw: bytes,
     *,
     binding: evidence_bundle.EvidenceBinding,
+    command_status_sha256: str,
     package_image_sha256: str,
     package_inventory_sha256: str,
     wheel_entry: evidence_bundle.VerifiedEntry,
@@ -2290,6 +3235,7 @@ def _validate_provenance_evidence(
         "candidate_iso_sha256": binding.candidate_iso_sha256,
         "candidate_iso_size": binding.candidate_iso_size,
         "command_argv_sha256": binding.command_argv_sha256,
+        "command_status_sha256": command_status_sha256,
         "package_inventory_sha256": package_inventory_sha256,
         "wheel_sha256": wheel_entry.sha256,
         "wheel_size": wheel_entry.size,
@@ -2369,7 +3315,10 @@ def validate_evidence_bundle_with_usb_builder(
     extraction_root = operation_root / evidence_bundle.EXTRACTION_DIRECTORY
     package_entry, package_raw = _validated_evidence_file(extraction_root, extracted_bundle, "package-inventory")
     provenance_entry, provenance_raw = _validated_evidence_file(extraction_root, extracted_bundle, "provenance")
-    _, _command_status_raw = _validated_evidence_file(extraction_root, extracted_bundle, "command-status")
+    command_status_entry, command_status_raw = _validated_evidence_file(
+        extraction_root, extracted_bundle, "command-status",
+    )
+    _validate_command_status_evidence(command_status_raw, binding=binding)
     wheel_entry, _wheel_raw = _validated_evidence_file(extraction_root, extracted_bundle, "wheel")
     package_values = parsed["packages"]
     if not isinstance(package_values, dict):
@@ -2403,6 +3352,7 @@ def validate_evidence_bundle_with_usb_builder(
     _validate_provenance_evidence(
         provenance_raw,
         binding=binding,
+        command_status_sha256=_sha256_bytes(command_status_raw),
         package_image_sha256=str(package_values["sha256"]),
         package_inventory_sha256=_sha256_bytes(package_raw),
         wheel_entry=wheel_entry,
@@ -2421,6 +3371,7 @@ def validate_evidence_bundle_with_usb_builder(
         or final_bundle.volume_sha256 != header.get("evidence_sha256")
         or final_header != header
         or package_entry.sha256 != _sha256_bytes(package_raw)
+        or command_status_entry.sha256 != _sha256_bytes(command_status_raw)
         or provenance_entry.sha256 != _sha256_bytes(provenance_raw)
     ):
         _reject("candidate or evidence bytes changed during host validation")

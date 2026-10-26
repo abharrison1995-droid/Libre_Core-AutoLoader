@@ -1,0 +1,11 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe
+rootdir: C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+configfile: pyproject.toml
+plugins: platformdirs-4.13.0, cov-7.1.0
+collecting ... collected 1 item
+
+tests/test_x220_coreboot_workflow.py::test_x220_write_and_restore_entrypoints_are_unconditionally_blocked PASSED [100%]
+
+- generated xml file: C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-04\junit.xml -
+============================== 1 passed in 0.82s ==============================

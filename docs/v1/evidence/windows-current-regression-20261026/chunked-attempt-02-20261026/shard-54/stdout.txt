@@ -1,0 +1,5 @@
+..............ss.........                                                [100%]
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_usb_builder.py:5050: requires Linux process groups and /proc
+SKIPPED [1] tests\test_usb_builder.py:5107: requires Linux /proc
+23 passed, 2 skipped in 0.96s

@@ -1,0 +1,2 @@
+Set PYTHONPATH=C:\Users\Alex\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\Lib\site-packages
+& C:\Users\Alex\Desktop\Libre_Core-AutoLoader\.venv\Scripts\python.exe -m pytest -p no:cacheprovider -q --junitxml 'C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\wheel-smoke-bundled-runtime-20261026\junit.xml' tests/test_recovery_runbook_package.py::test_installed_wheel_contains_runbook_accepted_by_readiness_gate

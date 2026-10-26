@@ -1,6 +1,249 @@
 # V1 known issues
 
+## Current-source Ubuntu Linux regression — 2026-10-26
+
+The full current-source Ubuntu WSL 2 POSIX suite passed **1,388 tests, skipped
+4, and had 0 failures or errors** across 1,392 JUnit cases. The 204-path
+source, POSIX snapshot, and post-run manifests match. Two Windows-specific
+checks were skipped under Linux. Two Arch pacman ownership probes remain
+**UNVALIDATED** because trusted ownership evidence is unavailable. See the
+[full Linux regression evidence](evidence/current-linux-regression-20261026/attempt-01/README.md).
+
+This closes the software regression gate for the captured source tree when
+combined with the current-source Windows run. Stage A package trust, signed
+package closure, production worker image deployment, product Live USB
+build/boot, and all three real-device acceptance workflows remain unresolved.
+Hardware writes and recovery are still deferred.
+
+## Current-source wheel and native Windows follow-up — 2026-10-26
+
+The strengthened no-index wheel smoke passed. It verifies all seven packaged
+worker modules, their installed import locations, five lock/systemd resources,
+all `Requires-Dist` and `Provides-Extra` entries and Python requirement metadata
+against `pyproject.toml`, and both CLI help commands for the source snapshot
+recorded in its run receipt.
+This remains limited packaging evidence: it does not establish dependency
+closure or a clean-environment install. The project `.venv` lacked
+`setuptools`/`wheel`; the run used the existing bundled workspace runtime for
+those build tools while pip build/install operations remained offline. See the
+[wheel evidence](evidence/current-source-wheel-install-20261026/README.md).
+
+The focused shared CLI/Textual controller evidence has a complete short-path
+rerun with eight passes and one intentional POSIX-directory-fsync skip. The
+initial longer-path run is retained with its two synthetic fixture failures.
+This is route-contract evidence only. The complete current-source Windows
+selection has since passed in the sharded attempt-15 run; physical workflows
+remain open. See the
+[full Windows evidence](evidence/windows-current-regression-20261026/chunked-attempt-02-20261026/README.md)
+and [the focused controller runs](evidence/shared-controller-regression-20261026/README.md).
+
+The current-source Win32-targeted mypy gate passed with no issues in 119
+production Python files; static-analysis details are in the
+[mypy evidence](evidence/windows-mypy-win32-rerun-20261026/README.md).
+The matching Linux-targeted mypy check also passed on all 119 files from
+Ubuntu WSL 2 using an isolated tmpfs cache; see the
+[Linux-targeted evidence](evidence/linux-mypy-rerun-20261026/README.md).
+Neither check validates native guest builds, a Live USB, or hardware.
+
+Stage A for Arch package acquisition remains blocked. The read-only audit of
+the retained verifier and signer evidence found no independent Ubuntu trust
+root, no date-applicable Arch certification/revocation chain, no cryptographic
+verification of the exact pacman `-2` signature, and no complete signed
+package closure. This audit acquired no new material; a retained 119-byte
+detached-signature packet exists, but no package archive or imported key is in
+the reviewed evidence. See the
+[trust-gate audit](evidence/arch-trust-gate-audit-20261026/README.md).
+
+A focused Windows run of the 17 marked definitions completed **35 skipped, 0
+failed, 0 errors**. This confirms Windows selection behavior only, not the
+Linux-only worker cases or the full Windows suite. The earlier Windows worker
+selection remains failed (**135 passed, 150 skipped, 35 failed**); all 35
+failures were Linux-only guest-publication/private-directory cases. The
+markers now skip those cases on Windows, and the focused result is retained in
+the [marker rerun evidence](evidence/windows-offline-worker-regression-20261026/marker-rerun-20261026/README.md).
+The existing Windows reject-before-publication check passed again on current
+source; see the [guard evidence](evidence/windows-offline-worker-regression-20261026/host-guard-rerun-20261026/README.md).
+Attempt 14's targeted two-test run passed; its 28.16 MiB scratch remains because exact-root
+cleanup was blocked by policy. See the [attempt-14 evidence](evidence/windows-current-regression-20261026/attempt-14-targeted/README.md)
+and the preserved [failed selection](evidence/windows-offline-worker-regression-20261026/run-20261026T043228Z-2857/).
+
+The complete current-source Windows selection passed in 61 shards:
+**1,118 passed, 274 skipped, 0 failed, 0 errors**. The skips are predominantly
+Linux/POSIX contracts. Its wheel smoke was skipped because the project virtual
+environment lacked installed `setuptools` and `wheel`; a focused native
+Windows rerun with existing bundled tools passed **1 test**. Windows results do
+not validate Linux worker execution or host ownership probes. The earlier
+unsharded attempts remain incomplete; see
+[attempt-15 evidence](evidence/windows-current-regression-20261026/chunked-attempt-02-20261026/README.md).
+
+## Previous full software regression — attempt 13 — 2026-10-26
+
+The POSIX-snapshot Ubuntu WSL suite passed **1,388 tests, skipped 4, and had
+0 failures or errors** (1,392 JUnit cases; exit `0`). The focused regression
+for attempt 12's seven environment-sensitive fixture failures plus the new
+umask `0002` check passed (**8 passed**). Production evidence-mode rejection
+remains strict. Pre/post source comparison receipts match, and the root wrapper
+verified exact scratch cleanup. See the
+[attempt-13 evidence](evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-13/README.md).
+
+Two Windows-specific checks and two Arch pacman ownership checks were skipped
+in this Ubuntu run. The Windows checks have current native coverage, including
+the full sharded attempt-15 selection; trusted Arch pacman executable-
+ownership evidence remains unavailable and `UNVALIDATED`. Package closure,
+deployed worker VM/image execution, Live USB build/boot, and all three physical
+firmware workflows remain open. Hardware work is deferred; no physical
+firmware write or recovery was performed.
+
+## Previous full software regression — attempt 10 — 2026-10-26
+
+The exact current-source Ubuntu WSL 2 suite completed with **1,385 passed,
+4 skipped, 0 failed, and 0 errors** (1,389 cases; exit `0`). Two Windows-only
+checks were skipped on WSL, and two Arch pacman executable-ownership probes
+remain `UNVALIDATED` pending trusted ownership evidence. The 204-entry source
+manifest matches its post-run recheck. See the
+[attempt-10 evidence](evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-10/README.md).
+
+At that earlier checkpoint the native Windows suite remained unvalidated; the
+current-source sharded attempt-15 run later passed its full Windows selection.
+Package closure, deployed worker VM/image execution, Live USB build/boot, and
+all three physical firmware workflows remain open. No physical hardware
+validation has been performed.
+The two Windows-only tests skipped by WSL passed separately on current source
+under native Windows (2 passed); see the [attempt-12 evidence](evidence/windows-current-regression-20261026/attempt-12/README.md).
+Two native full-suite attempts were interrupted at 31% by the C: free-space
+guard, with no complete summary or JUnit result; see the
+[Windows regression record](evidence/windows-current-regression-20261026/README.md).
+The six cases mapped from partial output have focused evidence of 6 passed and
+2 intended POSIX/Linux skips; this does not validate the rest of the Windows
+suite.
+
+## Current-source targeted checks — 2026-10-26
+
+Since the full WSL attempt below, guarded POSIX API wrappers and four source
+pins were updated. SOL accepted the narrow typing change. Win32-target mypy
+passes on 119 files (see the [retained mypy evidence](evidence/windows-targeted-typing-20261026/README.md)). LUNA reports 19 POSIX/source-closure checks and 2
+publication/mode checks passed in Ubuntu WSL, a separate overlapping 9-test WSL
+selection passed, and 8 Windows-compatible tests passed. These focused runs did
+not retain raw logs or JUnit reports. Five additional current-tree native
+Windows safety tests passed: X220 and X200 flash/restore block checks (2 total)
+and T430 incompatible-IVprep/post-install rejection checks (3). See the
+retained [attempt 04](evidence/windows-current-regression-20261026/attempt-04/README.md),
+[attempt 05](evidence/windows-current-regression-20261026/attempt-05/README.md),
+and [attempt 06](evidence/windows-current-regression-20261026/attempt-06/README.md)
+evidence. Attempt 03 is recorded as a failed invocation that collected no tests.
+The latest full Ubuntu source suite is recorded in attempt 13 above. At that
+checkpoint, the full native Windows suite remained unvalidated; attempt 15
+above later completed the current Windows test selection.
+
+## Historical full software regression — attempt 08, prior tree — 2026-10-26
+
+The previous exact-tree snapshot, before the typing follow-up above, completed
+with **1,385 passed, 4 skipped,
+and 0 failed** in 823.62 seconds (1,389 JUnit cases; pytest exit `0`). JUnit
+reports no failures or errors. The refreshed `offline_vm_build.py` source pin
+was included in this run. Two Windows-specific cases and two Arch pacman
+ownership checks were skipped; the latter remain `UNVALIDATED` pending trusted
+ownership evidence. The two Windows cases passed natively before the typing
+follow-up (**2 passed in 8.94 seconds**), but no full current-source Windows run is
+recorded. See the [native Windows evidence](evidence/windows-current-regression-20261026/README.md).
+Full WSL evidence is in the
+[attempt-08 record](evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-08/README.md).
+
+The test result passed, while the runner's unprivileged cleanup returned `2`
+because fixture files in its private `/tmp` scratch were root-owned. The exact
+attempt-specific scratch path was verified and removed by WSL root; this is
+documented separately and the original `cleanup.exit` remains unchanged.
+Attempt 07 is retained as the failed pre-pin-refresh run, with both stale-pin
+failures documented in its
+[status record](evidence/pending-worker-child-status-20261026/attempt-07-full-suite-status.md).
+
+Attempt 06 previously passed **1,378 tests with 4 skipped and no failures**;
+see the [attempt-06 record](evidence/software-regression-20261025/exact-tree-recapture-20261025/attempt-06/README.md).
+Two Windows-only tests passed separately (**2 passed**; see
+[Windows regression evidence](evidence/software-regression-20261025/full-post-phase3-windows-20261025/README.md)).
+Two Arch pacman ownership preflights remain skipped and `UNVALIDATED` because
+trusted Arch executable-ownership evidence is absent. These software runs do
+not validate worker deployment, package closure, VM/image execution, product
+build/boot, or hardware workflows; those gates remain pending.
+
 This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707bc6395e`; it will be updated as fixes land.
+
+## Current blocker — verifier trust bootstrap — 2026-10-25
+
+SOL accepted the Ubuntu verifier provenance bundle as a **host-relative
+proposal only**. It shows signed-index/package consistency using the Ubuntu
+archive keyring and `gpgv` already installed in WSL; it does not independently
+authenticate either component's provisioning. Arch key/package acquisition
+remains blocked pending an independently authenticated verifier and Ubuntu
+root-keyring chain, plus reviewed Arch master-key material and package-signer
+certification/revocation evidence. This acceptance is not authorization to
+acquire Arch inputs. See the [verifier provenance evidence](evidence/ubuntu-verifier-provenance-20261025/README.md).
+
+SOL also accepted the [Windows TLS corroboration evidence](evidence/windows-tls-corroboration-20261025/README.md)
+as transport corroboration only, not Stage-A authorization. Native Windows
+Schannel and the Windows certificate stores corroborated the HTTPS transport
+and exact bytes of the same three Ubuntu package archives, matching their
+signed-index sizes and SHA-256 values (`ssl_verify_result=0`). The supplemental
+`X509Chain` used `RevocationMode=NoCheck`; revocation was not independently
+evidenced by that supplemental chain. This does not independently authenticate
+the Ubuntu root-keyring/verifier provisioning or the Arch signer/master
+certification and revocation chain. Arch key/package acquisition remains
+blocked.
+
+A separate [Ubuntu documentation/keyring capture](evidence/ubuntu-trust-corroboration-20261025/README.md)
+was accepted by SOL as a host-relative proposal only. Windows Schannel fetched
+the official verification pages and archive keyring; the three primary
+fingerprints in the page match both the downloaded keyring and the keyring
+payload in the previously captured `.deb`. This is transport/cross-source
+corroboration only: the Windows trust store is host-relative, no independent
+Ubuntu signature authenticated the capture, the supplemental X509Chain used
+`RevocationMode=NoCheck`, and the list-only WSL `gpg` remains host-relative.
+Ubuntu root-keyring/verifier provenance and Arch master/signer
+certification/revocation remain open. The current Arch master-key page is not
+historical evidence of signer state for the pinned 2026-09-30 snapshot; dated
+certification/revocation evidence remains open. Stage A and Arch key/package
+acquisition remain blocked.
+
+### Ubuntu signed-index re-verification — host-relative proposal — 2026-10-25
+
+The [offline re-verification bundle](evidence/ubuntu-signed-index-reverification-20261025/README.md)
+records successful checks of both retained Ubuntu `InRelease` signatures under
+`F6ECB3762474EDA9D21B7022871920D1991BC93C`, exact signed-index bindings, and
+one package row per captured `gpgv`, `gpg`, and `ubuntu-keyring` archive. The
+re-extracted `gpgv` payload matches the installed executable and the exact
+Windows Schannel-captured `.deb` bytes. This is still a host-relative proposal:
+Windows trust is tied to its active root store, and Ubuntu keyring/gpgv/runtime
+provisioning has not been independently authenticated. SOL accepted this
+evidence as a host-relative proposal only. Stage A and Arch
+acquisition remain blocked. The bundle preserves failed
+attempts and does not claim package installation, worker, image, VM, or
+hardware success.
+
+No Arch key/package acquisition, key import, package closure, worker image,
+VM/guest run, firmware write, or recovery operation is validated by this
+proposal.
+
+### Arch historical signer state — unresolved — 2026-10-25
+
+The [historical-trust dossier](evidence/arch-historical-trust-dossier-20261025/README.md)
+captures the current Arch master-key page and checks the official dated
+2026-09-30 Archive paths against the existing pinned DB hashes and package
+metadata rows. The official keyring release page and immutable packaging
+commit corroborate the `20260909-1` packaging chronology; the commit changes
+`.SRCINFO`/`PKGBUILD`, not the keyset, and no signature was verified in that
+dossier. The current five-master-key page does not prove the historical
+2026-09-30 signer, certification or revocation state. The original dossier
+captured page content and HEAD metadata, not key, package or signature bytes. A
+later signature-only follow-up identifies the issuer fingerprint in the
+pinned pacman `-2` OpenPGP packet as
+`0429897de5f3bdac537a30696d42bdd116e0068f` and matches the captured 119-byte
+signature to the pinned DB-row `PGPSIG` digest. The signature was not
+cryptographically verified, and key control and historical certification or
+revocation state remain unproven. SOL accepted the dossier as bounded research
+evidence after independently checking its 73-entry manifest and confirming
+that it does not claim historical signer proof. Stage A and all Arch
+key/package acquisition remain blocked. See the
+[signature metadata follow-up](evidence/pacman-minus-two-signature-id-20261026/README.md).
 
 ## Current open findings — 2026-10-21
 
@@ -178,3 +421,13 @@ This list is evidence-based at baseline commit `d5e6810327bad6782f48326ee3f3d707
 ## Hardware state
 
 T430 1vyrain, X200 Libreboot and X220 Coreboot: **HARDWARE PENDING**. No physical probe/read, measured voltage, backup, complete validated firmware ROM, write, post-write read-back, recovery or hardware boot evidence is recorded. Earlier X200 component compilation did not produce a complete validated artifact.
+
+## Resolved software finding — pacstrap child-status receipt — 2026-10-26
+
+The pending-only worker's pacstrap receipt parser now rejects incomplete or
+non-canonical decimal status rows; the focused Ubuntu WSL selection passed 25
+tests with pytest exit `0`. The reported pre-fix red-run output was not
+retained. SOL accepted the focused fix. This correction does not unblock worker deployment or Arch trust
+acquisition; package closure, VM/image execution, product build/boot, and all
+three hardware workflows remain pending. See the
+[focused evidence bundle](evidence/pending-worker-child-status-20261026/README.md).

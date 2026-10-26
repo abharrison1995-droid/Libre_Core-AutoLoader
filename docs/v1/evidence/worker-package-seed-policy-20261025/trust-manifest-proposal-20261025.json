@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "manifest_id": "arch-2026-09-30-trust-chain-proposal-20261025",
+  "created_date": "2026-10-25",
+  "status": "ACQUISITION_BLOCKED",
+  "scope": "Proposal only. No package archive or key material was downloaded or imported; no verifier was run; no package closure, image, or worker is established.",
+  "snapshot": {
+    "date": "2026-09-30",
+    "repository_base": "https://archive.archlinux.org/repos/2026/09/30",
+    "lock_path": "usb_builder/snapshot.lock.json",
+    "lock_sha256": "5d66df5f5e6eacd0770399985b65507e84f208a7fbd1352faca13c0ead456cb1",
+    "db_sha256": {
+      "core": "08d52f5e83f72a9e9f8464441da87b9a399f4decc7110fcfa3825f7c0af42dd2",
+      "extra": "d2262e9def7afc76960c5242624cc14029afa47a9407acd84a29aed3a44f1663"
+    },
+    "db_signature_policy": "Required DatabaseOptional",
+    "db_signature_note": "DB bytes are hash-pinned before and after use. A supplied DB signature must verify. Hashes of DB-embedded PGPSIG bytes are not independent authenticity pins; the actual archive signature check is still required."
+  },
+  "arch_master_policy": {
+    "official_source": "https://archlinux.org/master-keys/",
+    "observed_date": "2026-10-25",
+    "temporal_limit": "Current page observed on 2026-10-25; not an archival capture proving the same set on 2026-09-30.",
+    "threshold": "At least 3 valid certifications from 3 distinct pinned master keys out of these 5. The official Arch page says package maintainer keys should have at least three master-key signatures.",
+    "material_rule": "Fetch only material from a source linked by the official Arch page; require exact full primary fingerprint below. Preserve material/source metadata and validate owner signatures, certifications, expiry, and designated revocations with an accepted verifier. Keyserver listings alone are not verification. No key bytes have been fetched or checked.",
+    "keys": [
+      {"owner":"Levente Polyak","fingerprint":"D8AFDDA07A5B6EDFA7D8CCDAD6D055F927843F1C","owner_signing_fingerprint":"E240B57E2C4630BA768E2F26FC1B547C8D8172C8","revoker":"Evangelos Foutras","revoker_fingerprint":"86CFFCA918CF3AF47147588051E8B148A9999C34","material_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xD8AFDDA07A5B6EDFA7D8CCDAD6D055F927843F1C","owner_key_source":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0xE240B57E2C4630BA768E2F26FC1B547C8D8172C8"},
+      {"owner":"David Runge","fingerprint":"2AC0A42EFB0B5CBC7A0402ED4DC95B6D7BE9892E","owner_signing_fingerprint":"991F6E3F0765CF6295888586139B09DA5BF0D338","revoker":"Christian Hesse","revoker_fingerprint":"02FD1C7A934E614545849F19A6234074498E9CEE","material_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2AC0A42EFB0B5CBC7A0402ED4DC95B6D7BE9892E","owner_key_source":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0x991F6E3F0765CF6295888586139B09DA5BF0D338"},
+      {"owner":"Johannes Löthberg","fingerprint":"69E6471E3AE065297529832E6BA0F5A2037F4F41","owner_signing_fingerprint":"5134EF9EAF65F95B6BB1608E50FB9B273A9D0BB5","revoker":"Maxime Gauduin","revoker_fingerprint":"95220BE99CE6FF778AE0DC670F65C7D881506130","material_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x69E6471E3AE065297529832E6BA0F5A2037F4F41","owner_key_source":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0x5134EF9EAF65F95B6BB1608E50FB9B273A9D0BB5"},
+      {"owner":"Leonidas Spyropoulos","fingerprint":"3572FA2A1B067F22C58AF155F8B821B42A6FDCD7","owner_signing_fingerprint":"2191B89431BAC0A8B96DE93D244740D17C7FD0EC","revoker":"Frederik Schwan","revoker_fingerprint":"05C7775A9E8B977407FE08E69D4C5AA15426DA0A","material_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3572FA2A1B067F22C58AF155F8B821B42A6FDCD7","owner_key_source":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0x2191B89431BAC0A8B96DE93D244740D17C7FD0EC"},
+      {"owner":"Christian Heusel","fingerprint":"99B6618472A3B3B814185BAED7D3D823B88BDB9B","owner_signing_fingerprint":"F00B96D15228013FFC9C9D0393B11DAA4C197E3D","revoker":"Robin Candau","revoker_fingerprint":"262A58EC6C51F7EA395B2E2DFDC3040B92ACA748","material_url":"https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99B6618472A3B3B814185BAED7D3D823B88BDB9B","owner_key_source":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0xF00B96D15228013FFC9C9D0393B11DAA4C197E3D"}
+    ]
+  },
+  "bootstrap_signer": {
+    "name": "Christian Hesse",
+    "primary_fingerprint": "02FD1C7A934E614545849F19A6234074498E9CEE",
+    "keyring_package_page": "https://archlinux.org/packages/core/any/archlinux-keyring/",
+    "keyring_source_commit": "https://gitlab.archlinux.org/archlinux/packaging/packages/archlinux-keyring/-/commit/56acf30f9492d6b6e9cc7c16fd1d969afc462046",
+    "certification_listing": "https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0x02FD1C7A934E614545849F19A6234074498E9CEE",
+    "observed_master_certifications": [
+      {"fingerprint":"2AC0A42EFB0B5CBC7A0402ED4DC95B6D7BE9892E","listed_time_utc":"2021-10-28T20:12:01Z"},
+      {"fingerprint":"D8AFDDA07A5B6EDFA7D8CCDAD6D055F927843F1C","listed_time_utc":"2022-01-12T23:41:42Z"},
+      {"fingerprint":"69E6471E3AE065297529832E6BA0F5A2037F4F41","listed_time_utc":"2022-11-29T22:00:41Z"},
+      {"fingerprint":"3572FA2A1B067F22C58AF155F8B821B42A6FDCD7","listed_time_utc":"2023-10-25T01:02:46Z"},
+      {"fingerprint":"99B6618472A3B3B814185BAED7D3D823B88BDB9B","listed_time_utc":"2026-01-26T13:47:19Z"}
+    ],
+    "certification_status": "Observed keyserver listings and current official Arch page only; no certificate/signature bytes were cryptographically verified.",
+    "required_checks": ["Verify at least three distinct pinned-master certifications.","Validate any signing subkey binding and its validity at signature time.","Check signer, subkey, certification expiry and designated revocations at signature time and before acceptance.","Reject unknown primary fingerprints, invalid/missing certification paths, expired-at-signature keys, or applicable revocations."]
+  },
+  "packages": {
+    "archlinux-keyring": {
+      "repo":"core","version":"20260909-1","arch":"any","filename":"archlinux-keyring-20260909-1-any.pkg.tar.zst","size_bytes":1273532,"sha256":"6a8ea16f51d3b305c18322d5884ca959f12c32a3f186873090fdc18465605293","packager_metadata":"Christian Hesse <eworm@archlinux.org>","build_time_utc":"2026-09-09T07:45:27Z","official_signature_time_utc":"2026-09-09T07:47:00Z","official_page":"https://archlinux.org/packages/core/any/archlinux-keyring/","archive_url":"https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst","signature_url":"https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/archlinux-keyring-20260909-1-any.pkg.tar.zst.sig","db_pgpsig_length":119,"db_pgpsig_sha256":"5942acd5b5e27a45051c447b8054696465872e834af1a5bd3cb85e2881cf6cf8","signature_verified":false,"archive_downloaded":false,"keyring_imported":false
+    },
+    "pacman": {
+      "repo":"core","version":"7.1.0.r9.g54d9411-2","arch":"x86_64","filename":"pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst","size_bytes":991730,"sha256":"2092ec7a0391416e4a1757c455bc071d7b58a124cedc83f582cb7d37d52f211b","packager_metadata":"Christian Hesse <eworm@archlinux.org>","archive_url":"https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst","signature_url":"https://archive.archlinux.org/repos/2026/09/30/core/os/x86_64/pacman-7.1.0.r9.g54d9411-2-x86_64.pkg.tar.zst.sig","db_pgpsig_length":119,"db_pgpsig_sha256":"3e31debd8c57ac1c84c9586e57611e95e8a2ff7dfb8f3b54be95028ee36644e2","pacman_sha256_in_snapshot_lock":"bef41dfdb55bf620aa6d5b50a657b6d04b894d1b48da7d447a9d23a29ff66478","vercmp_sha256_in_snapshot_lock":null,"signer_expectation":"Christian Hesse is only a candidate based on the DB packager field. The current package page is -3 and does not prove the exact -2 signer; inspect and verify the exact archived signature before extraction.","signature_verified":false,"archive_downloaded":false,"extracted":false,"vercmp_executed":false
+    }
+  },
+  "signature_policy": {
+    "archive_signature_required": true,
+    "db_signature_rule": "Optional only as pinned; exact DB hashes remain mandatory before and after use; verify a DB signature if supplied.",
+    "expected_keyring_signer_primary_fingerprint":"02FD1C7A934E614545849F19A6234074498E9CEE",
+    "signer_expectation_limit":"Christian Hesse is the expected signer for the keyring package based on its official page, and a candidate signer for pacman based only on metadata. The exact archived pacman -2 signature has not been observed or verified. If its verified signature names another primary key, stop and require separate review before accepting it.",
+    "subkey_rule":"Allow a signing subkey only when its binding to the accepted primary key verifies and it is valid at signature time.",
+    "certification_threshold":"3 distinct valid certifications among the 5 pinned master fingerprints.",
+    "revocation_expiry_rule":"Validate signer, subkey, certifications and masters at signature time. Reject invalid, expired-at-signature, unbound, or applicable-revoked material; recheck designated revokers before acceptance.",
+    "time_rule":"Reject package signatures later than 2026-09-30T23:59:59Z or outside key validity. For archlinux-keyring require consistency with the official page's 2026-09-09T07:47:00Z time. Packet time is not an independent trusted timestamp.",
+    "trustdb_rule":"Use isolated disposable key data and only the explicit five-master allowlist. No ambient keyrings, keyserver refresh, trust-all, TOFU, or automatic import. Do not trust every key shipped in archlinux-keyring.",
+    "pgpsig_rule":"The DB PGPSIG digest is not an independent trust pin; verify the fetched detached signature over the exact archive and record its digest only after it is bound to that row."
+  },
+  "verifier_candidate": {
+    "id":"ubuntu-wsl-gpgv",
+    "status":"OBSERVED_CANDIDATE_NOT_ACCEPTED",
+    "observed_by":"Parent-agent read-only host inspection; not independently reverified in this phase.",
+    "path":"/usr/bin/gpgv",
+    "version":"2.4.8-4ubuntu3.1",
+    "binary_sha256":"95ecd00d02b79d091f103af175b1dbf95b5b0c66503104bfcea447cca7e3829d",
+    "apt_origin_observed":"resolute main/updates/security",
+    "ubuntu_keyring_path":"/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+    "ubuntu_keyring_sha256":"80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+    "ubuntu_archive_fingerprints_from_official_docs":["790BC7277767219C42C86F933B4FE6ACC0B21F32","F6ECB3762474EDA9D21B7022871920D1991BC93C"],
+    "official_sources":["https://documentation.ubuntu.com/security/software-integrity/archive-verification/","https://documentation.ubuntu.com/security/software-integrity/image-verification/"],
+    "trust_boundary":"Authenticated Ubuntu APT metadata would establish Ubuntu package origin, not Arch package trust. Arch package signatures still require the separate pinned Arch chain.",
+    "unproven":["Exact signed Ubuntu InRelease/Packages, package stanza and .deb archive are not retained or verified.","Installed gpgv bytes are not bound to an authenticated package payload; Ubuntu keyring file is not bound to its authenticated package payload.","APT source configuration and insecure/unauthenticated overrides are not captured and audited.","gpgv alone does not establish Arch certification/revocation paths; an authenticated certificate-audit method is not pinned.","No verifier was run on Arch key or package data."],
+    "acceptance_requirements":["Authenticate the exact Ubuntu InRelease and Packages chain using the Ubuntu archive-key fingerprints above.","Bind the exact gpgv .deb and installed binary hash, and the archive-keyring .deb and installed keyring hash, to authenticated package metadata.","Audit APT source and config for Trusted=yes, AllowUnauthenticated, AllowInsecureRepositories, AllowDowngradeToInsecureRepositories, or equivalent bypasses.","Pin an authenticated certificate/revocation audit capability as well as detached-signature verification.","Obtain SOL read-only acceptance before Stage A."],
+    "ubuntu_security_doc_note":"Ubuntu documentation explains signed APT archive metadata and warns that Trusted=yes and allow-unauthenticated/insecure settings disable verification."
+  },
+  "other_verifier_candidates": [
+    {"candidate":"C:\\msys64\\usr\\bin\\gpg.exe","sha256":"14953ED8B4549020E185C0F7AB600BB9D0384457EA74DA9D574E8D31139AFF4F","authenticode":"NotSigned","decision":"Rejected; do not execute/use."},
+    {"candidate":"Gpg4win","url":"https://www.gpg4win.org/download.html","decision":"Unresolved; located integrity page lists an expired code-signing certificate and does not establish a current 2026 installer signer pin."}
+  ],
+  "two_stage_gate": {
+    "stage_a":{"status":"BLOCKED_PENDING_SOL_REVIEW","only_archives_that_may_be_acquired_after_approval":["exact archlinux-keyring archive + detached signature","exact pacman 7.1.0.r9.g54d9411-2 archive + detached signature"],"preconditions":["SOL approves signer/master chain, verifier provenance, policy, and exact rows.","Verifier and certificate-audit tool are independently authenticated and binary-bound.","Pinned key material passes fingerprint, certification, expiry, and designated-revocation checks.","Archive filename, size, and SHA match pinned DB row.","Keyring package signature passes before extraction or key import; extraction is bounded and isolated."],"forbidden":["host/ambient keyring import","executing pacman or vercmp","bulk package acquisition","closure publication or image build"]},
+    "stage_b":{"status":"PENDING_STAGE_A_AND_SEPARATE_SOL_REVIEW","review":["authenticated pacman archive/signature","bounded extraction inventory","exact usr/bin/vercmp hash, mode, ELF identity and dependencies"],"rule":"Do not execute vercmp until separate review accepts its exact identity/dependencies. Do not bulk-download closure packages until an independent recomputation from both hash-pinned DBs is reviewed and accepted."}
+  },
+  "source_observations": [
+    {"url":"https://archlinux.org/master-keys/","kind":"Official Arch page","observed":"Five current master fingerprints, designated revokers, three-master maintainer certification policy.","date":"2026-10-25","limit":"Current page, not an archived 2026-09-30 capture."},
+    {"url":"https://archlinux.org/packages/core/any/archlinux-keyring/","kind":"Official Arch package page","observed":"Exact 20260909-1 release, Christian Hesse signer listing, signature time 2026-09-09 07:47 UTC.","date":"2026-10-25"},
+    {"url":"https://archlinux.org/packages/core/x86_64/pacman/","kind":"Official Arch package page","observed":"Current page is -3; it is not evidence for exact pinned -2 signature metadata.","date":"2026-10-25"},
+    {"url":"https://keyserver.ubuntu.com/pks/lookup?exact=on&fingerprint=on&op=vindex&search=0x02FD1C7A934E614545849F19A6234074498E9CEE","kind":"Keyserver page linked by official Arch master page","observed":"Christian Hesse primary fingerprint and five master certification rows; listing is not cryptographic verification.","date":"2026-10-25"},
+    {"url":"https://documentation.ubuntu.com/security/software-integrity/archive-verification/","kind":"Official Ubuntu security documentation","observed":"APT archive authentication flow and signature-bypass configuration warnings.","date":"2026-10-25"}
+  ],
+  "explicit_nonclaims": ["No key material or Arch packages downloaded/imported.","No Arch package signature/certification cryptographically verified.","Ubuntu gpgv is only an observed candidate, not independently reverified or accepted.","No vercmp extracted/executed and no recursive package closure established.","No package repository, image, VM/worker build or boot, product build, firmware write, recovery operation, or hardware acceptance claimed."]
+}

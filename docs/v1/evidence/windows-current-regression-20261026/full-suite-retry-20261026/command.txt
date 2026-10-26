@@ -1,0 +1,1 @@
+GIT_TEMPLATE_DIR=.git-template-empty; core.longpaths=true; TEMP=TMP=TMPDIR=C:\w\lc-v1wfr-20261026\system-tmp; .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider --basetemp=C:\w\lc-v1wfr-20261026\pytest --junitxml=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\full-suite-retry-20261026\junit.xml -q --color=no tests

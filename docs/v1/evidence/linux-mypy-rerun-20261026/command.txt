@@ -1,0 +1,1 @@
+wsl.exe -d Ubuntu -- bash -lc 'cd /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader && PYTHONDONTWRITEBYTECODE=1 /home/alex/librecore-v1-testvenv-288f42c-ready/bin/python -m mypy --no-incremental --cache-dir=/dev/shm/librecore-mypy-cache --platform linux autoloader usb_builder'

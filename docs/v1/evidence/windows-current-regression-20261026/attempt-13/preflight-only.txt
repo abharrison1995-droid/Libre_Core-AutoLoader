@@ -1,0 +1,33 @@
+status=probe-only-passed
+attempt_directory=docs/v1/evidence/windows-current-regression-20261026/attempt-13
+runner=run-native-windows-full-suite.ps1
+mode=-PreflightOnly
+latest_run_directory=run-20261026T041029Z-9c75ef582175
+runner_executed=true
+compression_probe_executed=true
+probe_filesystem=NTFS
+probe_free_bytes_before=7991623680
+probe_free_gib_before=7.44
+probe_free_bytes_after=7992733696
+minimum_live_free_gib=2
+full_suite_start_gate_gib=10
+full_suite_gate=blocked-at-current-free-space
+probe_logical_bytes=1048576
+probe_allocation_before_compact_bytes=1048576
+probe_allocation_after_compact_bytes=1048576
+probe_allocation_after_force_bytes=65536
+probe_compression_ratio=16:1
+compact_commands=compact.exe /C /I /Q and compact.exe /C /I /Q /F on the same exact disposable file
+compact_exit_codes=0,0
+probe_cleanup=passed; exact probe, directory and marker-verified scratch removed
+run_hash_manifest=passed
+source_snapshot_created=false
+python_launched=false
+pytest_suite_executed=false
+hardware_accessed=false
+latest_preflight_receipt_note=run-20261026T041029Z-9c75ef582175/preflight.txt retains the initial compression_probe_started=false sentinel beside final probe-only-passed and compression_probe=passed fields; it also contains a duplicate pytest_started=false. The probe did run, as shown by its compression-probe and cleanup receipts.
+future_receipt_behavior=runner now sets the in-memory compression_probe_started field true when the probe begins and does not append a second pytest_started=false; future preflight receipts will report the executed probe consistently.
+historical_failed_run_directory=run-20261026T040202Z-aa3e6cd92697
+historical_failed_classification=probe-only-failed; its raw run-status remains prelaunch-blocked from the earlier classifier bug
+historical_receipt_preserved=true
+evidence_preservation=Both run directories remain intact. Existing C:\w\lc-v1wfr-20261026, earlier attempt directories and repository pytest scratch were left unchanged.

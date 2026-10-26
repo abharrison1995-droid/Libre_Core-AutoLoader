@@ -1,0 +1,1 @@
+wsl -d Ubuntu -- bash /mnt/c/Users/Alex/Desktop/Libre_Core-AutoLoader/docs/v1/evidence/ubuntu-signed-index-reverification-20261025/run_verification.sh

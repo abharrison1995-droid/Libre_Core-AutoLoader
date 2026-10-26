@@ -1,0 +1,12 @@
+sssssssssss.sssss...sss                                                  [100%]
+=========================== short test summary info ===========================
+SKIPPED [11] tests\test_offline_vm_worker.py:1655: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1773: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1812: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1855: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:1891: durable renameat2 publication is Linux-only
+SKIPPED [1] tests\test_offline_vm_worker.py:1945: guest publication exercises Linux-only runtime guards
+SKIPPED [1] tests\test_offline_vm_worker.py:2417: umask is a POSIX process setting
+SKIPPED [1] tests\test_offline_vm_worker.py:2435: guest service E2E requires Linux private-directory ownership and mode semantics
+SKIPPED [1] tests\test_offline_vm_worker.py:2558: guest service E2E requires Linux private-directory ownership and mode semantics
+4 passed, 19 skipped in 2.42s

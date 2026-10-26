@@ -1,0 +1,339 @@
+UTC: 2026-10-25T17:39:03Z
+2e28a81b11e6a4fe97472ed0dadb8ea71429127b
+uid=1000(alex) gid=1000(alex) groups=1000(alex),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),100(users),991(kvm)
+0022
+Python 3.14.4
+pytest 9.0.2
+Textual 2.1.2
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G   38G  918G   4% /
+ M .gitattributes
+ M .gitignore
+ M LICENSE
+ M autoloader.spec
+ M autoloader/__init__.py
+ M autoloader/__main__.py
+ M autoloader/app.py
+ M autoloader/config.py
+ M autoloader/database/__init__.py
+ M autoloader/database/bios_versions.py
+ M autoloader/database/compatibility.py
+ M autoloader/database/flash_chips.py
+ M autoloader/database/middleton.py
+ M autoloader/database/models.py
+ M autoloader/detection/__init__.py
+ M autoloader/detection/bios.py
+ M autoloader/detection/ec.py
+ M autoloader/detection/model.py
+ M autoloader/ec_mod/__init__.py
+ M autoloader/ec_mod/battery.py
+ M autoloader/ec_mod/keyboard.py
+ M autoloader/exceptions.py
+ M autoloader/flasher/__init__.py
+ M autoloader/flasher/backup.py
+ M autoloader/flasher/backup_service.py
+ M autoloader/flasher/flashrom.py
+ M autoloader/flasher/internal.py
+ M autoloader/flasher/readback.py
+ M autoloader/flasher/recovery.py
+ M autoloader/flasher/spi.py
+ M autoloader/flasher/splitter.py
+ M autoloader/flasher/verify.py
+ M autoloader/guides/__init__.py
+ M autoloader/guides/disassembly/__init__.py
+ M autoloader/guides/disassembly/t400.py
+ M autoloader/guides/disassembly/t420.py
+ M autoloader/guides/disassembly/t430.py
+ M autoloader/guides/disassembly/t440p.py
+ M autoloader/guides/disassembly/t480.py
+ M autoloader/guides/disassembly/t500.py
+ M autoloader/guides/disassembly/x200.py
+ M autoloader/guides/disassembly/x201.py
+ M autoloader/guides/disassembly/x220.py
+ M autoloader/guides/disassembly/x230.py
+ M autoloader/guides/guide_engine.py
+ M autoloader/guides/programmer_setup/__init__.py
+ M autoloader/guides/programmer_setup/bus_pirate.py
+ M autoloader/guides/programmer_setup/ch341a.py
+ M autoloader/guides/programmer_setup/raspberry_pi.py
+ M autoloader/orchestrator.py
+ M autoloader/reversion/__init__.py
+ M autoloader/rom_builder/__init__.py
+ M autoloader/rom_builder/blob_extractor.py
+ M autoloader/rom_builder/bootsplash.py
+ M autoloader/rom_builder/configurator.py
+ M autoloader/rom_builder/me_cleaner.py
+ M autoloader/ui/__init__.py
+ M autoloader/ui/screens/__init__.py
+ M autoloader/ui/screens/ec_config.py
+ M autoloader/ui/screens/verify_screen.py
+ M autoloader/ui/screens/welcome.py
+ M autoloader/ui/theme.py
+ M autoloader/ui/widgets/__init__.py
+ M autoloader/ui/widgets/checklist.py
+ M autoloader/ui/widgets/diagram_viewer.py
+ M autoloader/ui/widgets/log_panel.py
+ M autoloader/ui/widgets/progress_bar.py
+ M autoloader/utils.py
+ M docs/v1/ACCEPTANCE_MATRIX.md
+ M docs/v1/ARCHITECTURE.md
+ M docs/v1/DECISIONS.md
+ M docs/v1/KNOWN_ISSUES.md
+ M docs/v1/PROGRESS.md
+ M docs/v1/RELEASE_CHECKLIST.md
+ M docs/v1/evidence/current-source-wheel-20261021/README.md
+ M docs/v1/evidence/current-source-wheel-20261021/SHA256SUMS
+ M docs/v1/evidence/current-source-wheel-20261021/run.json
+ M docs/v1/evidence/live-linux-vm-20261016/attempt1-initial-run/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt1-initial-run/run-result.json
+ M docs/v1/evidence/live-linux-vm-20261016/attempt2-bounded-run/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt3-full-system-inspection/SHA256SUMS
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry1/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry3/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry4/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry5/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry6/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry7/hmp-transcript.txt
+ M docs/v1/evidence/live-linux-vm-20261016/attempt4-disposable-arch-guest/results/retry8/hmp-transcript.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/README.md
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/SHA256SUMS
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/bios/final-status.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/launcher-attempt-1.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/analysis.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/checksums.sha256
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-01.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-02.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-03.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-04.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-05.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-06.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/hmp-screendump-vga-after-f9-07.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run10-vnc/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/checksums.sha256
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-as-run.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-exception.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-failure-summary.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/launcher-traceback.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run11-vnc/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/analysis.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/checksums.sha256
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-repeat-attempt.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-01.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-02.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-03.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-04.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-05.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-06.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-07.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-08.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-09.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-10.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-11.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-12.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-13.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-14.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-15.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-16.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-17.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-18.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-19.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-20.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/hmp-screendump-vga-after-f9-21.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/launcher-traceback.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run12-vnc/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run3-emergency/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run3-emergency/stop-reason.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/client-error.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run4-vnc/stop-reason.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/launcher-error.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run7-vnc/stop-reason.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/analysis.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/checksums.sha256
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/grab.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-marker-visible.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/hmp-tty9-before-marker.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/direct-kernel/run9-vnc/rfb-second-client-attempt.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/SHA256SUMS
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/result.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/run_mask_diag.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/nsresourced-mask-20261015/runner-exception.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/rootfs-unit-inspection/run8-startup-chain-excerpt.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/bios-20261015/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/bios-20261015/hmp-status.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-20261015/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-20261015/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-critical-chain.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-guest-time.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-initial-failed.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-initial-jobs.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-modprobe-at-overlay-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-modprobe-at-tun-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-nsresourced-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-nsresourced-socket.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-pcrphase-sysinit-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-sysext-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-time-wait-sync-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-tmpfiles-setup-dev-early-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-systemd-tmpfiles-setup-dev-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-journal-var-lib-machines-mount.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-kernel-cmdline.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-kernel-release.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-marker-visible.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-proc-modules.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-processes.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-modprobe-at-overlay-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-modprobe-at-tun-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-nsresourced-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-nsresourced-socket.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-pcrphase-sysinit-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-sysext-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-time-wait-sync-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-tmpfiles-setup-dev-early-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-systemd-tmpfiles-setup-dev-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-show-var-lib-machines-mount.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-modprobe-at-overlay-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-modprobe-at-tun-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-nsresourced-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-nsresourced-socket.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-pcrphase-sysinit-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-sysext-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-time-wait-sync-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-tmpfiles-setup-dev-early-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-systemd-tmpfiles-setup-dev-service.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-status-var-lib-machines-mount.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-screendump-vga-after-f9-01.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/hmp-tty9-switch.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-capture-20261015/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-info-20261015/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-info-20261015/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-banner.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-quit.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-marker-visible.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-read-only-summary.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/hmp-screendump-vga-after-f9-01.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/direct-kernel-readonly-20261015/launcher.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/generate_sums.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/offline-namespace-views-20261015.txt
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_capture.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_info.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/stock-arch-comparison/run_stock_debug_shell_readonly.py
+ M docs/v1/evidence/live-usb-b2-diagnostic-20261014/uefi/final-status.txt
+ M docs/v1/evidence/live-usb-b2/SHA256SUMS
+ M docs/v1/evidence/live-usb-b2/bios/run-evidence.json
+ M docs/v1/evidence/live-usb-b2/uefi/run-evidence.json
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/protocol.txt
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/pty_qemu_runner.py
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry13-direct-kernel/qmp_control.py
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/SHA256SUMS
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/audit_serial.py
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/input-hashes-after.txt
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/input-hashes-before.txt
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/launch_retry14.sh
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/observe_retry14.py
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry14-observation-only/protocol.txt
+ M docs/v1/evidence/native-arch-build-20261021/boot-diagnostic-retry6-tty2/attempt-result.txt
+ M docs/v1/evidence/native-qemu-windows-20261021/README.md
+ M docs/v1/evidence/native-qemu-windows-20261021/SHA256SUMS
+ M docs/v1/evidence/native-qemu-windows-20261021/local-iso-copy.sha256
+ M docs/v1/evidence/native-qemu-windows-20261021/ppm_to_png.py
+ M docs/v1/evidence/native-qemu-windows-20261021/run.json
+ M docs/v1/evidence/offline-namespace-arch-wsl-20261015/production-mount-preflight-20261015.txt
+ M docs/v1/evidence/offline-namespace-ubuntu-wsl-20261015/result.txt
+ M docs/v1/evidence/offline-worker-regression-20261023/diff-check-windows.exit
+ M docs/v1/evidence/offline-worker-regression-20261023/windows-import-smoke.exit
+ M docs/v1/evidence/offline-worker-regression-20261023/windows-long-path-diagnostic.exit
+ M docs/v1/evidence/offline-worker-regression-20261023/windows-platform-specific-tests.exit
+ M docs/v1/evidence/offline-worker-regression-20261023/windows-unc-basetemp-diagnostic.exit
+ M docs/v1/evidence/rootless-archiso-namespace-primitive-20261016/raw-probe-output-20261016.txt
+ M docs/v1/evidence/safety-coverage-20261017/SHA256SUMS
+ M docs/v1/evidence/software-regression-20261016/wheel-build-and-install-rc1.txt
+ M docs/v1/evidence/software-regression-20261016/windows-post-rc1-initial-failed.xml
+ M docs/v1/evidence/software-regression-20261017/SHA256SUMS
+ M docs/v1/evidence/software-regression-20261017/windows-safety-coverage-followup-short.xml
+ M docs/v1/evidence/software-regression-20261017/windows-safety-coverage-followup.xml
+ M docs/v1/evidence/software-regression-20261017/windows-safety-crash-replay-final.xml
+ M docs/v1/evidence/software-regression-20261020/SHA256SUMS
+ M docs/v1/evidence/software-regression-20261020/windows-runtime-followup.xml
+ M docs/v1/evidence/software-regression-20261021/SHA256SUMS
+ M docs/v1/evidence/software-regression-worker-20261022/executor-recovered-windows.xml
+ M docs/v1/evidence/software-regression-worker-20261022/windows-pytest.log
+ M docs/v1/evidence/software-regression-worker-20261022/windows-ui-current.xml
+ M docs/v1/evidence/vm-arch-boxes-20261020/SHA256SUMS
+ M docs/v1/evidence/vm-arch-boxes-virtio-20261020/SHA256SUMS
+ M docs/v1/evidence/vm-bringup-20261020/SHA256SUMS
+ M docs/v1/evidence/vm-bringup-20261020/archiso-tcg-direct-20261020-argv.json
+ M docs/v1/evidence/vm-bringup-20261020/archiso-tcg-direct-retry1-20261020-argv.json
+ M docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-20261020-argv.json
+ M docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-20261020-retry1-argv.json
+ M docs/v1/evidence/vm-bringup-20261020/archiso-whpx-direct-picdefault-20261020-argv.json
+ M docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/README.md
+ M docs/v1/evidence/vm-preflight-20261017/SHA256SUMS
+ M docs/v1/evidence/x200-artifact-preflight-20261015/SHA256SUMS
+ M docs/v1/evidence/x200-upstream-compile-resume-20261021/SHA256SUMS
+ M docs/v1/evidence/x200-upstream-compile-smoke-20261015/README.md
+ M docs/v1/evidence/x200-upstream-compile-smoke-20261015/SHA256SUMS
+ M docs/v1/evidence/x200-upstream-compile-smoke-20261015/assessment.json
+ M install.ps1
+ M pyproject.toml
+ M requirements.txt
+ M test_vm/README.md
+ M test_vm/launch_vm.bat
+ M test_vm/launch_vm.py
+ M test_vm/mock_chips/generate_mock_chips.py
+ M test_vm/smbios_profiles.json
+ M tests/__init__.py
+ M tests/test_database.py
+ M tests/test_detection.py
+ M tests/test_flasher.py
+ M tests/test_guides.py
+ M tests/test_offline_vm_build_executor.py
+ M tests/test_offline_vm_evidence.py
+ M tests/test_offline_vm_evidence_adapter.py
+ M tests/test_offline_vm_worker.py
+ M tests/test_orchestrator.py
+ M tests/test_phase03_spi_safety.py
+ M tests/test_rom_builder.py
+ M tests/test_splitter.py
+ M tests/test_ui.py
+ M tests/test_usb_builder.py
+ M usb_builder/offline_vm_build.py
+ M usb_builder/offline_vm_build_service.py
+ M usb_builder/offline_vm_evidence.py
+ M usb_builder/offline_vm_guest_worker.py
+ M usb_builder/offline_vm_worker.py
+ M usb_builder/ventoy/ventoy.json
+?? current-8ea32c5.bundle
+?? docs/v1/evidence/native-qemu-fwcfg-20261025/
+?? docs/v1/evidence/native-qemu-whpx-20261025/
+?? docs/v1/evidence/software-regression-20261025/
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/SHA256SUMS
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/boot-screen-no-fdc-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/guest-initramfs-shell-capture-20261023.bmp
+?? docs/v1/evidence/vm-iso-tcg-diagnostic-20261023/run-record-20261023.txt
+?? docs/v1/evidence/worker-package-seed-inventory-20261025/
+?? gates.sh
+?? "label: dos\\nunit: sectors\\n\\nstart=2048, size=522240, type=c\\n"
+?? native-arch-gates.exit
+?? native-python-packages.txt
+?? printf
+?? qemu-qemu64-tcg.bmp
+?? qemu-qemu64-tcg.png
+?? qemu-screen-diagnostic.bmp
+?? qemu-screen-diagnostic.ppm
+?? retry.sh
+?? source.tar.gz
+?? tests/test_offline_vm_image.py
+?? tests/test_offline_vm_package_closure.py
+?? usb_builder/offline_vm_image.py
+?? usb_builder/offline_vm_package_closure.py
+cba1dcbdeb5c4a7dcaa77bac60a1b920871247b528a5e692aa318e3f1c6e0f79  -

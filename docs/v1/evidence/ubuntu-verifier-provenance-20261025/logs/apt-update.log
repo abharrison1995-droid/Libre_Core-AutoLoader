@@ -1,0 +1,125 @@
+Get:1 http://security.ubuntu.com/ubuntu resolute-security InRelease [137 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute InRelease [136 kB]
+inside VerifyGetSigners
+Executing  --dump-options
+Executing /usr/bin/gpgv-sq --dump-options
+Executing /usr/bin/gpgv --dump-options
+Read line: --verbose
+Read line: --quiet
+Read line: --keyring
+Read line: --output
+Read line: --ignore-time-conflict
+Read line: --status-fd
+Read line: --logger-fd
+Read line: --log-file
+Read line: --homedir
+Read line: --weak-digest
+Read line: --enable-special-filenames
+Read line: --debug
+Read line: --assert-pubkey-algo
+Read line: --help
+Read line: --version
+Read line: --warranty
+Read line: --dump-option-table
+Read line: --dump-options
+Trying Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+Get:3 http://archive.ubuntu.com/ubuntu resolute-updates InRelease [137 kB]
+Preparing to exec:  /usr/bin/gpgv --ignore-time-conflict --keyring /tmp/apt.tKKXrm.gpg --status-fd 3 --assert-pubkey-algo=>=rsa2048,ed25519,ed448,nistp256,nistp384,nistp512,brainpoolP256r1,brainpoolP320r1,brainpoolP384r1,brainpoolP512r1,secp256k1 /tmp/apt.sig.XTC7uq /tmp/apt.data.pxtFvH
+Read: [GNUPG:] NEWSIG
+
+Read: [GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0
+
+Read: [GNUPG:] SIG_ID 5iE8Bd7bpAcYM5VKoQC6K7sDLPw 2026-10-25 1792934883
+
+Read: [GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>
+
+Got GOODSIG 871920D1991BC93C !
+Read: [GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-25 1792934883 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C
+
+Got trusted VALIDSIG, key ID: F6ECB3762474EDA9D21B7022871920D1991BC93C
+Read: [GNUPG:] ASSERT_PUBKEY_ALGO F6ECB3762474EDA9D21B7022871920D1991BC93C 1 rsa4096
+
+gpgv exited with status 0
+Summary:
+  Good: GOODSIG 871920D1991BC93C
+  Valid: F6ECB3762474EDA9D21B7022871920D1991BC93C
+  Bad: 
+  Worthless: 
+  SoonWorthless: 
+  LaterWorthless: 
+  NoPubKey: 
+  Signed-By: F6ECB3762474EDA9D21B7022871920D1991BC93C!
+  NODATA: no
+gpgv succeeded
+inside VerifyGetSigners
+Trying Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+Get:4 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages [606 kB]
+Preparing to exec:  /usr/bin/gpgv --ignore-time-conflict --keyring /tmp/apt.n3gRDG.gpg --status-fd 3 --assert-pubkey-algo=>=rsa2048,ed25519,ed448,nistp256,nistp384,nistp512,brainpoolP256r1,brainpoolP320r1,brainpoolP384r1,brainpoolP512r1,secp256k1 /tmp/apt.sig.YguhbM /tmp/apt.data.cvdqsu
+Read: [GNUPG:] NEWSIG
+
+Read: [GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0
+
+Read: [GNUPG:] SIG_ID u7N3KdZlUUFKlEUkoinMi3cQWWU 2026-04-23 1776964050
+
+Read: [GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>
+
+Got GOODSIG 871920D1991BC93C !
+Read: [GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-04-23 1776964050 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C
+
+Got trusted VALIDSIG, key ID: F6ECB3762474EDA9D21B7022871920D1991BC93C
+Read: [GNUPG:] ASSERT_PUBKEY_ALGO F6ECB3762474EDA9D21B7022871920D1991BC93C 1 rsa4096
+
+gpgv exited with status 0
+Summary:
+  Good: GOODSIG 871920D1991BC93C
+  Valid: F6ECB3762474EDA9D21B7022871920D1991BC93C
+  Bad: 
+  Worthless: 
+  SoonWorthless: 
+  LaterWorthless: 
+  NoPubKey: 
+  Signed-By: F6ECB3762474EDA9D21B7022871920D1991BC93C!
+  NODATA: no
+gpgv succeeded
+inside VerifyGetSigners
+Trying Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+Get:5 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages [1480 kB]
+Get:6 http://security.ubuntu.com/ubuntu resolute-security/main Translation-en [141 kB]
+Preparing to exec:  /usr/bin/gpgv --ignore-time-conflict --keyring /tmp/apt.qYWckz.gpg --status-fd 3 --assert-pubkey-algo=>=rsa2048,ed25519,ed448,nistp256,nistp384,nistp512,brainpoolP256r1,brainpoolP320r1,brainpoolP384r1,brainpoolP512r1,secp256k1 /tmp/apt.sig.MrqtEX /tmp/apt.data.4FFYHB
+Read: [GNUPG:] NEWSIG
+
+Read: [GNUPG:] KEY_CONSIDERED F6ECB3762474EDA9D21B7022871920D1991BC93C 0
+
+Read: [GNUPG:] SIG_ID maKI+3HDH/sDYcAWt2NggagcaOI 2026-10-25 1792955701
+
+Read: [GNUPG:] GOODSIG 871920D1991BC93C Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>
+
+Got GOODSIG 871920D1991BC93C !
+Read: [GNUPG:] VALIDSIG F6ECB3762474EDA9D21B7022871920D1991BC93C 2026-10-25 1792955701 0 4 0 1 10 01 F6ECB3762474EDA9D21B7022871920D1991BC93C
+
+Got trusted VALIDSIG, key ID: F6ECB3762474EDA9D21B7022871920D1991BC93C
+Read: [GNUPG:] ASSERT_PUBKEY_ALGO F6ECB3762474EDA9D21B7022871920D1991BC93C 1 rsa4096
+
+gpgv exited with status 0
+Summary:
+  Good: GOODSIG 871920D1991BC93C
+  Valid: F6ECB3762474EDA9D21B7022871920D1991BC93C
+  Bad: 
+  Worthless: 
+  SoonWorthless: 
+  LaterWorthless: 
+  NoPubKey: 
+  Signed-By: F6ECB3762474EDA9D21B7022871920D1991BC93C!
+  NODATA: no
+gpgv succeeded
+Get:7 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Components [46.8 kB]
+Get:8 http://security.ubuntu.com/ubuntu resolute-security/main amd64 c-n-f Metadata [4616 B]
+Get:9 http://archive.ubuntu.com/ubuntu resolute/main Translation-en [524 kB]
+Get:10 http://archive.ubuntu.com/ubuntu resolute/main amd64 Components [395 kB]
+Get:11 http://archive.ubuntu.com/ubuntu resolute/main amd64 c-n-f Metadata [32.4 kB]
+Get:12 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages [744 kB]
+Get:13 http://archive.ubuntu.com/ubuntu resolute-updates/main Translation-en [176 kB]
+Get:14 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Components [110 kB]
+Get:15 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 c-n-f Metadata [5756 B]
+Fetched 4677 kB in 34s (136 kB/s)
+Reading package lists...

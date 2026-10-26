@@ -1,0 +1,31 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 25 Oct 2026 22:35:21 GMT
+Content-Type: text/html; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Cache-Control: max-age=0, private, must-revalidate
+Content-Security-Policy: 
+Etag: W/"b9c636bf63333948ba8234bdd420e2de"
+Nel: {"max_age": 0}
+Permissions-Policy: interest-cohort=()
+Ratelimit-Limit: 60
+Ratelimit-Name: throttle_unauthenticated_web
+Ratelimit-Observed: 1
+Ratelimit-Remaining: 599
+Ratelimit-Reset: 1792968000
+Referrer-Policy: strict-origin-when-cross-origin
+Set-Cookie: _gitlab_session=9e7839273fc38421b4f58ff50621d564; path=/; secure; HttpOnly; SameSite=None
+Strict-Transport-Security: max-age=63072000
+Vary: Accept-Encoding
+Vary: Accept
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Gitlab-Meta: {"correlation_id":"01M5TK8G96VTKCWZ916MPX1G98","version":"1"}
+X-Permitted-Cross-Domain-Policies: none
+X-Request-Id: 01M5TK8G96VTKCWZ916MPX1G98
+X-Runtime: 0.249743
+X-Ua-Compatible: IE=edge
+X-Xss-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+

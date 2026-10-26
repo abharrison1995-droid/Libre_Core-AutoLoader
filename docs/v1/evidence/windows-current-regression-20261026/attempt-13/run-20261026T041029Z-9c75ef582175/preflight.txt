@@ -1,0 +1,17 @@
+status=probe-only-passed
+mode=probe-only
+utc=2026-10-26T04:10:29.3782123Z
+repository=C:\Users\Alex\Desktop\Libre_Core-AutoLoader
+attempt=C:\Users\Alex\Desktop\Libre_Core-AutoLoader\docs\v1\evidence\windows-current-regression-20261026\attempt-13
+drive_root=C:\
+drive_format=NTFS
+free_bytes_before=7991623680
+minimum_start_free_bytes=10737418240
+minimum_live_free_bytes=2147483648
+maximum_snapshot_bytes=2147483648
+pytest_started=false
+compression_probe_started=false
+compression_probe=passed
+source_snapshot=not-created
+pytest_started=false
+free_bytes_after_probe=7992733696

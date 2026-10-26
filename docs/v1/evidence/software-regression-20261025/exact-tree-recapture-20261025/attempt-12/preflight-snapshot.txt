@@ -1,0 +1,3 @@
+snapshot_archive_bytes=19599360
+snapshot_required_with_reserve_kib=150212
+snapshot_filesystem_available_before_copy_kib=804088
